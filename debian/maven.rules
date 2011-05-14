@@ -1,8 +1,8 @@
 # Force the version of the javax apis
-javax.servlet servlet-api jar 2.5
-javax.servlet.jsp jsp-api jar 2.1
-javax.el el-api jar 2.1
+javax.servlet servlet-api jar 3.0
+javax.servlet.jsp jsp-api jar 2.2
+javax.el el-api jar 2.2
 # Convert tomcat version of the standard apis to the javax apis
-s/org.apache.tomcat/javax.servlet/ servlet-api jar s/.*/2.5/
-s/org.apache.tomcat/javax.servlet.jsp/ jsp-api jar s/.*/2.1/
-s/org.apache.tomcat/javax.el/ el-api jar s/.*/2.1/
+s/org.apache.tomcat/javax.servlet/ servlet-api jar s/.*/3.0/
+s/org.apache.tomcat/javax.servlet.jsp/ jsp-api jar s/.*/2.2/
+s/org.apache.tomcat/javax.el/ el-api jar s/.*/2.2/

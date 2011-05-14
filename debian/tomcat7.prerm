@@ -1,0 +1,16 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    remove)
+	[ -f /etc/default/tomcat7 ] && . /etc/default/tomcat7
+	[ -z "$TOMCAT7_USER" ] && TOMCAT7_USER="tomcat7"
+	# Remove auth for tomcat7 to open privileged ports via authbind.
+	TOMCAT_UID="`id -u $TOMCAT7_USER`"
+	if [ -f "/etc/authbind/byuid/$TOMCAT_UID" ]; then
+		rm -f /etc/authbind/byuid/$TOMCAT_UID
+	fi
+    ;;
+esac
+
+#DEBHELPER#

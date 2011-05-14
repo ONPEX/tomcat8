@@ -1,0 +1,10 @@
+Document: servlet30-api
+Title: Java Servlet 3.0 API Documentation
+Author: Apache Software Foundation
+Abstract: Javadoc documentation for Java Servlet 3.0 API.
+Section: Programming
+
+Format: HTML
+Index: /usr/share/doc/libservlet3.0-java/api/index.html
+Files: /usr/share/doc/libservlet3.0-java/api/*
+

@@ -1,3 +1,0 @@
-debian/poms/servlet-api.pom --no-parent
-debian/poms/jsp-api.pom --no-parent
-debian/poms/el-api.pom --no-parent

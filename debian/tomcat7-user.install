@@ -1,0 +1,5 @@
+conf/*.xml /usr/share/tomcat7/skel/conf/
+conf/catalina.properties /usr/share/tomcat7/skel/conf/
+debian/logging.properties /usr/share/tomcat7/skel/conf/
+debian/tomcat7-instance-create /usr/bin/
+debian/setenv.sh /usr/share/tomcat7/skel/bin/

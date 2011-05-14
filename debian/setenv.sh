@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 
-CATALINA_HOME=/usr/share/tomcat6
+CATALINA_HOME=/usr/share/tomcat7
 
 # The first existing directory is used for JAVA_HOME (if JAVA_HOME is not
 # defined in $DEFAULT)

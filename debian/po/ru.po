@@ -1,11 +1,11 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the tomcat6 package.
+# This file is distributed under the same license as the tomcat7 package.
 #
 # Yuri Kozlov <yuray@komyakino.ru>, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: tomcat6 6.0.28-4\n"
-"Report-Msgid-Bugs-To: tomcat6@packages.debian.org\n"
+"Project-Id-Version: tomcat7 7.0.12-1\n"
+"Report-Msgid-Bugs-To: tomcat7@packages.debian.org\n"
 "POT-Creation-Date: 2010-08-06 04:08+0200\n"
 "PO-Revision-Date: 2010-08-11 19:27+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
@@ -19,54 +19,54 @@ msgstr ""
 
 #. Type: string
 #. Description
-#: ../tomcat6.templates:1001
-msgid "Dedicated system account for the tomcat6 daemon:"
-msgstr "Отдельная системная учётная запись для службы tomcat6:"
+#: ../tomcat7.templates:1001
+msgid "Dedicated system account for the tomcat7 daemon:"
+msgstr "Отдельная системная учётная запись для службы tomcat7:"
 
 #. Type: string
 #. Description
-#: ../tomcat6.templates:1001
+#: ../tomcat7.templates:1001
 msgid ""
-"The tomcat6 server must use a dedicated account for its operation so that "
+"The tomcat7 server must use a dedicated account for its operation so that "
 "the system's security is not compromised by running it with superuser "
 "privileges."
 msgstr ""
 "Для того, чтобы не подвергать риску безопасность системы, "
-"сервер tomcat6 требуется запускать с правами отдельной "
+"сервер tomcat7 требуется запускать с правами отдельной "
 "системной учётной записи."
 
 #. Type: string
 #. Description
-#: ../tomcat6.templates:2001
-msgid "Dedicated system group for the tomcat6 daemon:"
-msgstr "Отдельная системная группа для службы tomcat6:"
+#: ../tomcat7.templates:2001
+msgid "Dedicated system group for the tomcat7 daemon:"
+msgstr "Отдельная системная группа для службы tomcat7:"
 
 #. Type: string
 #. Description
-#: ../tomcat6.templates:2001
+#: ../tomcat7.templates:2001
 msgid ""
-"The tomcat6 server must use a dedicated group for its operation so that the "
+"The tomcat7 server must use a dedicated group for its operation so that the "
 "system's security is not compromised by running it with superuser privileges."
 msgstr ""
 "Для того, чтобы не подвергать риску безопасность системы, "
-"сервер tomcat6 требуется запускать с правами отдельной "
+"сервер tomcat7 требуется запускать с правами отдельной "
 "группы."
 
 #. Type: string
 #. Description
-#: ../tomcat6.templates:3001
-msgid "Please choose the tomcat6 JVM Java options:"
-msgstr "Параметры Java для JVM tomcat6:"
+#: ../tomcat7.templates:3001
+msgid "Please choose the tomcat7 JVM Java options:"
+msgstr "Параметры Java для JVM tomcat7:"
 
 #. Type: string
 #. Description
-#: ../tomcat6.templates:3001
+#: ../tomcat7.templates:3001
 msgid "Tomcat's JVM will be launched with a specific set of Java options."
 msgstr "Tomcat JVM будет запущена с определённым набором параметров Java."
 
 #. Type: string
 #. Description
-#: ../tomcat6.templates:3001
+#: ../tomcat7.templates:3001
 msgid ""
 "Note that if you use -XX:+UseConcMarkSweepGC you should add the -XX:"
 "+CMSIncrementalMode option if you run Tomcat on a machine with exactly one "

@@ -1,0 +1,3 @@
+debian/poms/tomcat-servlet-api.pom --no-parent
+debian/poms/tomcat-jsp-api.pom --no-parent
+debian/poms/tomcat-el-api.pom --no-parent

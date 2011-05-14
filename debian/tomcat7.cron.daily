@@ -1,6 +1,6 @@
 #!/bin/sh
 
-NAME=tomcat6
+NAME=tomcat7
 DEFAULT=/etc/default/$NAME
 
 # The following variables can be overwritten in $DEFAULT

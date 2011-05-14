@@ -23,21 +23,10 @@ checkport() {
   type=$1
   port=$2
   # Fail if port is non-numeric
-  if ! echo $port | grep -Eq '^\-?[0-9]+$' ; then
+  num=`expr ${port} + 1 2> /dev/null`
+  if [ $? != 0 ] || [ $num -lt 2 ]; then
     echo "Error: ${type} port '${port}' is not a valid TCP port number."
     exit 1
-  fi
-  
-  # If Control port is -1 , no need to check any further. 
-  if [ "$type" = "Control" ] && [ $port -eq -1 ]; then
-   echo "Warning: Control port disabled. You will have to shutdown the server manually, by using OS signals."
-   return
-  fi
-  
-  # Fail if port is 0 or negative 
-  if [ $port -le 0 ]; then
-   echo "Error: ${type} port '${port}' is not a valid TCP port number."
-   exit 1
   fi
 
   # Fail if port is above 65535
@@ -126,25 +115,21 @@ mkdir ${TARGET}/logs
 mkdir ${TARGET}/webapps
 mkdir ${TARGET}/work
 mkdir ${TARGET}/temp
-cp -r /usr/share/tomcat6/skel/* ${TARGET}
-
-# Create necessary symbolic links so that eclipse can be properly configured
-ln -s /usr/share/tomcat6/lib ${TARGET}/lib
-ln -s /usr/share/tomcat6/bin/bootstrap.jar ${TARGET}/bin/bootstrap.jar
+cp -r /usr/share/tomcat7/skel/* ${TARGET}
 
 sed -i -e "s/Connector port=\"8080\"/Connector port=\"${HPORT}\"/;s/Server port=\"8005\" shutdown=\"SHUTDOWN\"/Server port=\"${CPORT}\" shutdown=\"${CWORD}\"/" ${TARGET}/conf/server.xml
 
 cat > ${TARGET}/bin/startup.sh << EOT
 #!/bin/sh
 export CATALINA_BASE=${FULLTARGET}
-/usr/share/tomcat6/bin/startup.sh
+/usr/share/tomcat7/bin/startup.sh
 echo "Tomcat started"
 EOT
 
 cat > ${TARGET}/bin/shutdown.sh << EOT
 #!/bin/sh
 export CATALINA_BASE=${FULLTARGET}
-/usr/share/tomcat6/bin/shutdown.sh
+/usr/share/tomcat7/bin/shutdown.sh
 echo "Tomcat stopped"
 EOT
 

@@ -1,15 +1,16 @@
 #!/bin/sh
 #
-# /etc/init.d/tomcat6 -- startup script for the Tomcat 6 servlet engine
+# /etc/init.d/tomcat7 -- startup script for the Tomcat 6 servlet engine
 #
 # Written by Miquel van Smoorenburg <miquels@cistron.nl>.
 # Modified for Debian GNU/Linux	by Ian Murdock <imurdock@gnu.ai.mit.edu>.
 # Modified for Tomcat by Stefan Gybas <sgybas@debian.org>.
 # Modified for Tomcat6 by Thierry Carrez <thierry.carrez@ubuntu.com>.
+# Modified for Tomcat7 by Ernesto Hernandez-Novich <emhn@itverx.com.ve>.
 # Additional improvements by Jason Brittain <jason.brittain@mulesoft.com>.
 #
 ### BEGIN INIT INFO
-# Provides:          tomcat6
+# Provides:          tomcat7
 # Required-Start:    $local_fs $remote_fs $network
 # Required-Stop:     $local_fs $remote_fs $network
 # Should-Start:      $named
@@ -23,10 +24,10 @@
 set -e
 
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
-NAME=tomcat6
+NAME=tomcat7
 DESC="Tomcat servlet engine"
 DEFAULT=/etc/default/$NAME
-JVM_TMP=/tmp/tomcat6-tmp
+JVM_TMP=/tmp/tomcat7-tmp
 
 if [ `id -u` -ne 0 ]; then
 	echo "You need root privileges to run this script"
@@ -48,9 +49,9 @@ fi
 
 # The following variables can be overwritten in $DEFAULT
 
-# Run Tomcat 6 as this user ID and group ID
-TOMCAT6_USER=tomcat6
-TOMCAT6_GROUP=tomcat6
+# Run Tomcat 7 as this user ID and group ID
+TOMCAT7_USER=tomcat7
+TOMCAT7_GROUP=tomcat7
 
 # The first existing directory is used for JAVA_HOME (if JAVA_HOME is not
 # defined in $DEFAULT)
@@ -71,7 +72,7 @@ CATALINA_HOME=/usr/share/$NAME
 CATALINA_BASE=/var/lib/$NAME
 
 # Use the Java security manager? (yes/no)
-TOMCAT6_SECURITY=no
+TOMCAT7_SECURITY=no
 
 # Default Java options
 # Set java.awt.headless=true if JAVA_OPTS is not set so the
@@ -100,13 +101,13 @@ if [ -z "$CATALINA_TMPDIR" ]; then
 	CATALINA_TMPDIR="$JVM_TMP"
 fi
 
-# Set the JSP compiler if set in the tomcat6.default file
+# Set the JSP compiler if set in the tomcat7.default file
 if [ -n "$JSP_COMPILER" ]; then
 	JAVA_OPTS="$JAVA_OPTS -Dbuild.compiler=\"$JSP_COMPILER\""
 fi
 
 SECURITY=""
-if [ "$TOMCAT6_SECURITY" = "yes" ]; then
+if [ "$TOMCAT7_SECURITY" = "yes" ]; then
 	SECURITY="-security"
 fi
 
@@ -148,9 +149,9 @@ catalina_sh() {
 	# Run the catalina.sh script as a daemon
 	set +e
 	touch "$CATALINA_PID" "$CATALINA_BASE"/logs/catalina.out
-	chown $TOMCAT6_USER "$CATALINA_PID" "$CATALINA_BASE"/logs/catalina.out
-	start-stop-daemon --start -b -u "$TOMCAT6_USER" -g "$TOMCAT6_GROUP" \
-		-c "$TOMCAT6_USER" -d "$CATALINA_TMPDIR" -p "$CATALINA_PID" \
+	chown $TOMCAT7_USER "$CATALINA_PID" "$CATALINA_BASE"/logs/catalina.out
+	start-stop-daemon --start -b -u "$TOMCAT7_USER" -g "$TOMCAT7_GROUP" \
+		-c "$TOMCAT7_USER" -d "$CATALINA_TMPDIR" -p "$CATALINA_PID" \
 		-x /bin/bash -- -c "$AUTHBIND_COMMAND $TOMCAT_SH"
 	status="$?"
 	set +a -e
@@ -171,12 +172,12 @@ case "$1" in
 
 	log_daemon_msg "Starting $DESC" "$NAME"
 	if start-stop-daemon --test --start --pidfile "$CATALINA_PID" \
-		--user $TOMCAT6_USER --exec "$JAVA_HOME/bin/java" \
+		--user $TOMCAT7_USER --exec "$JAVA_HOME/bin/java" \
 		>/dev/null; then
 
 		# Regenerate POLICY_CACHE file
 		umask 022
-		echo "// AUTO-GENERATED FILE from /etc/tomcat6/policy.d/" \
+		echo "// AUTO-GENERATED FILE from /etc/tomcat7/policy.d/" \
 			> "$POLICY_CACHE"
 		echo ""  >> "$POLICY_CACHE"
 		cat $CATALINA_BASE/conf/policy.d/*.policy \
@@ -188,12 +189,12 @@ case "$1" in
 			log_failure_msg "could not create JVM temporary directory"
 			exit 1
 		}
-		chown $TOMCAT6_USER "$JVM_TMP"
+		chown $TOMCAT7_USER "$JVM_TMP"
 
 		catalina_sh start $SECURITY
 		sleep 5
         	if start-stop-daemon --test --start --pidfile "$CATALINA_PID" \
-			--user $TOMCAT6_USER --exec "$JAVA_HOME/bin/java" \
+			--user $TOMCAT7_USER --exec "$JAVA_HOME/bin/java" \
 			>/dev/null; then
 			if [ -f "$CATALINA_PID" ]; then
 				rm -f "$CATALINA_PID"
@@ -213,7 +214,7 @@ case "$1" in
 	set +e
 	if [ -f "$CATALINA_PID" ]; then 
 		start-stop-daemon --stop --pidfile "$CATALINA_PID" \
-			--user "$TOMCAT6_USER" \
+			--user "$TOMCAT7_USER" \
 			--retry=TERM/20/KILL/5 >/dev/null
 		if [ $? -eq 1 ]; then
 			log_progress_msg "$DESC is not running but pid file exists, cleaning up"
@@ -233,7 +234,7 @@ case "$1" in
    status)
 	set +e
 	start-stop-daemon --test --start --pidfile "$CATALINA_PID" \
-		--user $TOMCAT6_USER --exec "$JAVA_HOME/bin/java" \
+		--user $TOMCAT7_USER --exec "$JAVA_HOME/bin/java" \
 		>/dev/null 2>&1
 	if [ "$?" = "0" ]; then
 
@@ -258,7 +259,7 @@ case "$1" in
 	;;
   try-restart)
         if start-stop-daemon --test --start --pidfile "$CATALINA_PID" \
-		--user $TOMCAT6_USER --exec "$JAVA_HOME/bin/java" \
+		--user $TOMCAT7_USER --exec "$JAVA_HOME/bin/java" \
 		>/dev/null; then
 		$0 start
 	fi

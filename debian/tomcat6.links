@@ -1,4 +1,0 @@
-/etc/tomcat6 /var/lib/tomcat6/conf
-/var/cache/tomcat6 /var/lib/tomcat6/work
-/var/log/tomcat6 /var/lib/tomcat6/logs
-/usr/share/doc/tomcat6-common/README.Debian.gz /usr/share/doc/tomcat6/README.Debian.gz

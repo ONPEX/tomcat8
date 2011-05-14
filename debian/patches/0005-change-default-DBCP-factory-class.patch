@@ -8,11 +8,9 @@ Subject: [PATCH] change default DBCP factory class
  webapps/docs/jndi-resources-howto.xml         |    4 ++--
  2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/java/org/apache/naming/factory/Constants.java b/java/org/apache/naming/factory/Constants.java
-index 22ef7aa..ab1d759 100644
 --- a/java/org/apache/naming/factory/Constants.java
 +++ b/java/org/apache/naming/factory/Constants.java
-@@ -49,7 +49,7 @@ public final class Constants {
+@@ -49,7 +49,7 @@
          Package + ".HandlerFactory";
  
      public static final String DBCP_DATASOURCE_FACTORY = 
@@ -21,11 +19,9 @@ index 22ef7aa..ab1d759 100644
  
      public static final String OPENEJB_EJB_FACTORY = 
          Package + ".OpenEjbFactory";
-diff --git a/webapps/docs/jndi-resources-howto.xml b/webapps/docs/jndi-resources-howto.xml
-index e721854..be94cd4 100644
 --- a/webapps/docs/jndi-resources-howto.xml
 +++ b/webapps/docs/jndi-resources-howto.xml
-@@ -656,9 +656,9 @@ conn.close();
+@@ -665,9 +665,9 @@
      <code>driverName</code> parameters to match your actual database's
      JDBC driver and connection URL.</p>
  
@@ -37,4 +33,3 @@ index e721854..be94cd4 100644
      as follows:</p>
      <ul>
      <li><strong>driverClassName</strong> - Fully qualified Java class name
--- 

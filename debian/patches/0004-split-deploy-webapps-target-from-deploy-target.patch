@@ -6,42 +6,25 @@ Subject: [PATCH] split deploy-webapps target from deploy target
  build.xml |   13 ++++++++-----
  1 files changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/build.xml b/build.xml
-index a77f604..376f810 100644
 --- a/build.xml
 +++ b/build.xml
-@@ -469,7 +469,7 @@
-     building a tomcat release.</echo>
+@@ -743,7 +743,7 @@
+     </xslt>
    </target>
  
--  <target name="deploy" depends="build-only,build-docs,warn.dbcp">
-+  <target name="deploy" depends="build-only,build-docs,warn.dbcp,deploy-webapps">
+-  <target name="deploy" depends="package,build-docs"
++  <target name="deploy" depends="package,build-docs,deploy-webapps"
+           description="Default. Builds a working Tomcat instance">
  
      <copy tofile="${tomcat.build}/bin/tomcat-native.tar.gz"
-             file="${tomcat-native.tar.gz}" />
-@@ -506,6 +506,13 @@
+@@ -781,6 +781,10 @@
        </fileset>
      </copy>
  
-+    <copy file="${tomcat-dbcp.jar}" todir="${tomcat.build}/lib" />
-+    <copy file="${jasper-jdt.jar}" todir="${tomcat.build}/lib" />
-+
 +  </target>
 +
-+  <target name="deploy-webapps" depends="build-only,build-docs">
++  <target name="deploy-webapps" depends="package,build-docs">
 +
      <!-- Copy other regular webapps -->
      <copy todir="${tomcat.build}/webapps">
        <fileset dir="webapps">
-@@ -629,10 +636,6 @@
-       </fileset>
-     </txt2html>
- 
--    <copy file="${tomcat-dbcp.jar}" todir="${tomcat.build}/lib"
--      failonerror="false"/>
--    <copy file="${jdt.jar}" todir="${tomcat.build}/lib" />
--
-   </target>
- 
-   <target name="clean-depend"
--- 

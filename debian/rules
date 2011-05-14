@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-JAVA_HOME := /usr/lib/jvm/default-java
+JAVA_HOME := /usr/lib/jvm/java-6-sun
 JAVA_CMD := $(JAVA_HOME)/bin/java
 BLDLIB := output/build/lib
 BLDBIN := output/build/bin
@@ -20,8 +20,7 @@ DEB_CLASSPATH = $(shell for jar in $(DEB_JARS); do \
 T_VER := $(shell dpkg-parsechangelog | egrep '^Version:' \
 	| cut -f 2 -d ' ' | cut -f 2 -d ' '|sed 's/-[^-]*$$//')
 T_JARS := tomcat-i18n-fr tomcat-i18n-es tomcat-i18n-ja catalina-ant
-T_EXTRAS_JARS := catalina-jmx-remote
-T_MAVENIZED_JARS := jasper-el annotations-api jasper catalina-ha catalina
+T_MAVENIZED_JARS := jasper-el annotations-api jasper catalina-ha catalina 
 T_VER_MAJOR := $(echo $(T_VER) | cut -d'.' -f1)
 T_VER_MINOR := $(echo $(T_VER) | cut -d'.' -f2)
 T_VER_BUILD := $(echo $(T_VER) | cut -d'.' -f3)
@@ -49,12 +48,11 @@ ANT_INVOKE := $(JAVA_CMD) -classpath "$(DEB_CLASSPATH)" \
 build: build-stamp
 build-stamp:
 	dh_testdir
-	$(ANT_INVOKE) deploy-webapps
-	$(ANT_INVOKE) -buildfile extras.xml jmx-remote
+	$(ANT_INVOKE) deploy
 	javadoc -subpackages "javax.servlet" -d "output/api" \
 		-sourcepath "java" -author -version -breakiterator \
 		-windowtitle "Tomcat API Documentation" -doctitle "Tomcat API" \
-		-bottom "Copyright &#169; 2000-2008 Apache Software Foundation. All Rights Reserved."
+		-bottom "Copyright &#169; 2000-2011 Apache Software Foundation. All Rights Reserved."
 	touch build-stamp
 
 clean:
@@ -62,6 +60,7 @@ clean:
 	dh_testroot
 	-$(ANT_INVOKE) clean
 	rm -rf "output/"
+	rm -rf .mh/
 	rm -f build-stamp
 	dh_clean
 
@@ -76,53 +75,79 @@ binary-indep: build install
 	dh_testroot
 	dh_installchangelogs
 	dh_installdocs
-	dh_installman -ptomcat6-user debian/tomcat6-instance-create.1
+	dh_installman -ptomcat7-user debian/tomcat7-instance-create.1
 	dh_installexamples
 	dh_installinit --error-handler=true -- defaults 92 08
 	dh_installdebconf
 	dh_installcron
 	mkdir -p debian/poms
 	cp res/maven/*.pom debian/poms
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/2.5/' debian/poms/servlet-api.pom
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/2.1/' debian/poms/el-api.pom
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/2.1/' debian/poms/jsp-api.pom
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/$(T_VER)/' debian/poms/*.pom
-	mh_installpoms -plibtomcat6-java
-	for i in $(T_MAVENIZED_JARS); do \
-		mh_installjar -plibtomcat6-java -l debian/poms/$$i.pom $(BLDLIB)/$$i.jar usr/share/tomcat6/lib/$$i.jar; done
-	mh_installjar -plibtomcat6-java -l --usj-name=catalina-tribes debian/poms/tribes.pom \
-		$(BLDLIB)/catalina-tribes.jar usr/share/tomcat6/lib/catalina-tribes.jar
-	mh_installjar -plibtomcat6-java -l --usj-name=tomcat-coyote debian/poms/coyote.pom \
-		$(BLDLIB)/tomcat-coyote.jar usr/share/tomcat6/lib/tomcat-coyote.jar
-	mh_installjar -plibtomcat6-java -l --usj-name=tomcat-juli debian/poms/juli.pom $(BLDBIN)/tomcat-juli.jar
+	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.0/'      \
+	              debian/poms/tomcat-servlet-api.pom
+	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/2.2/'      \
+	              debian/poms/tomcat-el-api.pom
+	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/2.2/'      \
+	              debian/poms/tomcat-jsp-api.pom
+	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/$(T_VER)/' \
+	              debian/poms/*.pom
+	mh_installpoms -plibtomcat7-java
+	for i in $(T_MAVENIZED_JARS); \
+	do \
+		mh_installjar -plibtomcat7-java -l           \
+	                      debian/poms/tomcat-$$i.pom     \
+	                      $(BLDLIB)/$$i.jar              \
+	                      usr/share/tomcat7/lib/$$i.jar; \
+	done
+	mh_installjar -plibtomcat7-java -l --usj-name=catalina-tribes \
+	              debian/poms/tomcat-tribes.pom \
+	              $(BLDLIB)/catalina-tribes.jar \
+	              usr/share/tomcat7/lib/catalina-tribes.jar
+	mh_installjar -plibtomcat7-java -l --usj-name=tomcat-api \
+	              debian/poms/tomcat-api.pom \
+	              $(BLDLIB)/tomcat-api.jar \
+	              usr/share/tomcat7/lib/tomcat-api.jar
+	mh_installjar -plibtomcat7-java -l --usj-name=tomcat-coyote \
+	              debian/poms/tomcat-coyote.pom \
+	              $(BLDLIB)/tomcat-coyote.jar \
+	              usr/share/tomcat7/lib/tomcat-coyote.jar
+	mh_installjar -plibtomcat7-java -l --usj-name=tomcat-dbcp \
+	              debian/poms/tomcat-dbcp.pom \
+	              $(BLDLIB)/tomcat-dbcp.jar \
+	              usr/share/tomcat7/lib/tomcat-dbcp.jar
+	mh_installjar -plibtomcat7-java -l --usj-name=tomcat-juli \
+	              debian/poms/tomcat-juli.pom \
+	              $(BLDBIN)/tomcat-juli.jar
+	mh_installjar -plibtomcat7-java -l --usj-name=tomcat-util \
+	              debian/poms/tomcat-util.pom \
+	              $(BLDLIB)/tomcat-util.jar \
+	              usr/share/tomcat7/lib/tomcat-util.jar
 	for i in $(T_JARS); do \
 		mv $(BLDLIB)/$$i.jar $(BLDLIB)/$$i-$(T_VER).jar && \
-		dh_install -plibtomcat6-java \
+		dh_install -plibtomcat7-java \
 			$(BLDLIB)/$$i-$(T_VER).jar usr/share/java && \
-		dh_link -plibtomcat6-java usr/share/java/$$i-$(T_VER).jar \
+		dh_link -plibtomcat7-java usr/share/java/$$i-$(T_VER).jar \
 			usr/share/java/$$i.jar && \
-		dh_link -ptomcat6-common usr/share/java/$$i-$(T_VER).jar \
-			usr/share/tomcat6/lib/$$i.jar; done
-	for i in $(T_EXTRAS_JARS); do \
-		mv output/extras/$$i.jar output/extras/$$i-$(T_VER).jar && \
-		dh_install -plibtomcat6-java \
-			output/extras/$$i-$(T_VER).jar usr/share/java && \
-		dh_link -plibtomcat6-java usr/share/java/$$i-$(T_VER).jar \
-			usr/share/java/$$i.jar && \
-		dh_link -ptomcat6-extras usr/share/java/$$i-$(T_VER).jar \
-			usr/share/tomcat6/lib/$$i.jar; done
+		dh_link -ptomcat7-common usr/share/java/$$i-$(T_VER).jar \
+			usr/share/tomcat7/lib/$$i.jar; done
 	dh_install --exclude=.bat --exclude=Thumbs.db
 	dh_link
-	mh_installpoms -plibservlet2.5-java
-	mh_installjar -plibservlet2.5-java -l -s debian/poms/servlet-api.pom output/build/lib/servlet-api.jar
-	mh_installjar -plibservlet2.5-java -l -s debian/poms/jsp-api.pom output/build/lib/jsp-api.jar
-	mh_installjar -plibservlet2.5-java -l -s debian/poms/el-api.pom output/build/lib/el-api.jar
+	mh_installpoms -plibservlet3.0-java
+	mh_installjar -plibservlet3.0-java -l -s         \
+	              debian/poms/tomcat-servlet-api.pom \
+	              output/build/lib/servlet-api.jar
+	mh_installjar -plibservlet3.0-java -l -s         \
+	              debian/poms/tomcat-jsp-api.pom     \
+	              output/build/lib/jsp-api.jar
+	mh_installjar -plibservlet3.0-java -l -s         \
+                      debian/poms/tomcat-el-api.pom      \
+                      output/build/lib/el-api.jar
 	rm -r debian/poms
-	rm -rf debian/tomcat6/usr/share/tomcat6/webapps/default_root/.svn \
-		debian/tomcat6/usr/share/tomcat6/webapps/default_root/META-INF/.svn
-	chmod a+x debian/tomcat6-common/usr/share/tomcat6/bin/*.sh
-	chmod a+x debian/tomcat6-user/usr/bin/tomcat6-instance-create
-	chmod a+x debian/tomcat6-user/usr/share/tomcat6/skel/bin/*.sh
+	rm -rf \
+           debian/tomcat7/usr/share/tomcat7/webapps/default_root/.svn \
+	   debian/tomcat7/usr/share/tomcat7/webapps/default_root/META-INF/.svn
+	chmod a+x debian/tomcat7-common/usr/share/tomcat7/bin/*.sh
+	chmod a+x debian/tomcat7-user/usr/bin/tomcat7-instance-create
+	chmod a+x debian/tomcat7-user/usr/share/tomcat7/skel/bin/*.sh
 	dh_compress
 	dh_fixperms
 	dh_installdeb

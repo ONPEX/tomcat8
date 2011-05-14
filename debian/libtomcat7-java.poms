@@ -1,0 +1,12 @@
+debian/poms/tomcat-annotations-api.pom
+debian/poms/tomcat-api.pom
+debian/poms/tomcat-catalina.pom
+debian/poms/tomcat-catalina-ha.pom
+debian/poms/tomcat-coyote.pom
+debian/poms/tomcat-dbcp.pom
+debian/poms/tomcat-jasper.pom
+debian/poms/tomcat-jasper-el.pom
+debian/poms/tomcat-juli.pom
+debian/poms/tomcat-tribes.pom
+debian/poms/tomcat-util.pom
+

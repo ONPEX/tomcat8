@@ -1,2 +1,0 @@
-output/build/bin/bootstrap.jar /usr/share/tomcat6/bin/
-bin/* /usr/share/tomcat6/bin/

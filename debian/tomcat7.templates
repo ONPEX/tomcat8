@@ -1,23 +1,23 @@
-Template: tomcat6/username
+Template: tomcat7/username
 Type: string
-Default: tomcat6
-_Description: Dedicated system account for the tomcat6 daemon:
- The tomcat6 server must use a dedicated account for its operation so that
+Default: tomcat7
+_Description: Dedicated system account for the tomcat7 daemon:
+ The tomcat7 server must use a dedicated account for its operation so that
  the system's security is not compromised by running it with superuser
  privileges.
 
-Template: tomcat6/groupname
+Template: tomcat7/groupname
 Type: string
-Default: tomcat6
-_Description: Dedicated system group for the tomcat6 daemon:
- The tomcat6 server must use a dedicated group for its operation so that
+Default: tomcat7
+_Description: Dedicated system group for the tomcat7 daemon:
+ The tomcat7 server must use a dedicated group for its operation so that
  the system's security is not compromised by running it with superuser
  privileges.
 
-Template: tomcat6/javaopts
+Template: tomcat7/javaopts
 Type: string
 Default: -Djava.awt.headless=true -Xmx128m -XX:+UseConcMarkSweepGC
-_Description: Please choose the tomcat6 JVM Java options:
+_Description: Please choose the tomcat7 JVM Java options:
  Tomcat's JVM will be launched with a specific set of Java options.
  .
  Note that if you use -XX:+UseConcMarkSweepGC you should add the

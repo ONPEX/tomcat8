@@ -1,13 +1,13 @@
-# Translation of tomcat6 debconf screens to French
+# Translation of tomcat7 debconf screens to French
 # Copyright (C) 2010 Debian French l10n team <debian-l10n-french@lists.debian.org>
-# This file is distributed under the same license as the tomcat6 package.
+# This file is distributed under the same license as the tomcat7 package.
 # Translator:
 # Steve Petruzzello <dlist@bluewin.ch>
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: tomcat6_6.0.28_4\n"
-"Report-Msgid-Bugs-To: tomcat6@packages.debian.org\n"
+"Project-Id-Version: tomcat7_7.0.12-1\n"
+"Report-Msgid-Bugs-To: tomcat7@packages.debian.org\n"
 "POT-Creation-Date: 2010-08-06 04:08+0200\n"
 "PO-Revision-Date: 2010-08-12 12:08+0200\n"
 "Last-Translator: Steve Petruzzello <dlist@bluewin.ch>\n"
@@ -18,48 +18,48 @@ msgstr ""
 
 #. Type: string
 #. Description
-#: ../tomcat6.templates:1001
-msgid "Dedicated system account for the tomcat6 daemon:"
-msgstr "Compte système dédié au démon tomcat6 :"
+#: ../tomcat7.templates:1001
+msgid "Dedicated system account for the tomcat7 daemon:"
+msgstr "Compte système dédié au démon tomcat7 :"
 
 #. Type: string
 #. Description
-#: ../tomcat6.templates:1001
+#: ../tomcat7.templates:1001
 msgid ""
-"The tomcat6 server must use a dedicated account for its operation so that "
+"The tomcat7 server must use a dedicated account for its operation so that "
 "the system's security is not compromised by running it with superuser "
 "privileges."
 msgstr ""
-"Le serveur tomcat6 nécessite un compte dédié pour fonctionner afin de ne pas "
+"Le serveur tomcat7 nécessite un compte dédié pour fonctionner afin de ne pas "
 "compromettre la sécurité du système en s'exécutant avec les privilèges du "
 "superutilisateur."
 
 #. Type: string
 #. Description
-#: ../tomcat6.templates:2001
-msgid "Dedicated system group for the tomcat6 daemon:"
-msgstr "Groupe système dédié au démon tomcat6 :"
+#: ../tomcat7.templates:2001
+msgid "Dedicated system group for the tomcat7 daemon:"
+msgstr "Groupe système dédié au démon tomcat7 :"
 
 #. Type: string
 #. Description
-#: ../tomcat6.templates:2001
+#: ../tomcat7.templates:2001
 msgid ""
-"The tomcat6 server must use a dedicated group for its operation so that the "
+"The tomcat7 server must use a dedicated group for its operation so that the "
 "system's security is not compromised by running it with superuser privileges."
 msgstr ""
-"Le serveur tomcat6 nécessite un groupe dédié pour fonctionner afin de ne pas "
+"Le serveur tomcat7 nécessite un groupe dédié pour fonctionner afin de ne pas "
 "compromettre la sécurité du système en s'exécutant avec les privilèges  du "
 "superutilisateur."
 
 #. Type: string
 #. Description
-#: ../tomcat6.templates:3001
-msgid "Please choose the tomcat6 JVM Java options:"
-msgstr "Options de la machine virtuelle Java pour tomcat6 :"
+#: ../tomcat7.templates:3001
+msgid "Please choose the tomcat7 JVM Java options:"
+msgstr "Options de la machine virtuelle Java pour tomcat7 :"
 
 #. Type: string
 #. Description
-#: ../tomcat6.templates:3001
+#: ../tomcat7.templates:3001
 msgid "Tomcat's JVM will be launched with a specific set of Java options."
 msgstr ""
 "La machine virtuelle Java (JVM) sera lancée avec un ensemble spécifique "
@@ -67,7 +67,7 @@ msgstr ""
 
 #. Type: string
 #. Description
-#: ../tomcat6.templates:3001
+#: ../tomcat7.templates:3001
 msgid ""
 "Note that if you use -XX:+UseConcMarkSweepGC you should add the -XX:"
 "+CMSIncrementalMode option if you run Tomcat on a machine with exactly one "

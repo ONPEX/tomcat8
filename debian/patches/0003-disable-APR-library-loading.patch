@@ -7,13 +7,11 @@ Subject: [PATCH] disable APR library loading
  conf/server.xml |    2 ++
  1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/conf/server.xml b/conf/server.xml
-index 500e39a..155b664 100644
 --- a/conf/server.xml
 +++ b/conf/server.xml
-@@ -22,7 +22,9 @@
- <Server port="8005" shutdown="SHUTDOWN">
- 
+@@ -24,7 +24,9 @@
+   <Listener className="org.apache.catalina.security.SecurityListener" />
+   -->
    <!--APR library loader. Documentation at /docs/apr.html -->
 +  <!--
    <Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="on" />
@@ -21,4 +19,3 @@ index 500e39a..155b664 100644
    <!--Initialize Jasper prior to webapps are loaded. Documentation at /docs/jasper-howto.html -->
    <Listener className="org.apache.catalina.core.JasperListener" />
    <!-- Prevent memory leaks due to use of particular java/javax APIs-->
--- 

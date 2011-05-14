@@ -1,8 +1,8 @@
 #!/bin/sh -e
 
 VERSION=$2
-TAR=../tomcat6_$VERSION.orig.tar.gz
-DIR=tomcat6-$VERSION
+TAR=../tomcat7_$VERSION.orig.tar.gz
+DIR=tomcat7-$VERSION
 TAG=$(echo TOMCAT_$VERSION | sed -e 's/\./_/g')
 
 svn export http://svn.apache.org/repos/asf/tomcat/tc6.0.x/tags/$TAG $DIR
