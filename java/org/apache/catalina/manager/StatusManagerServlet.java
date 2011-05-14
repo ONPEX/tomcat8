@@ -45,7 +45,7 @@ import org.apache.tomcat.util.res.StringManager;
  * This servlet will display a complete status of the HTTP/1.1 connector.
  *
  * @author Remy Maucherat
- * @version $Id: StatusManagerServlet.java 1086992 2011-03-30 15:41:02Z markt $
+ * @version $Id: StatusManagerServlet.java 1089638 2011-04-06 21:31:25Z rjung $
  */
 
 public class StatusManagerServlet
@@ -199,10 +199,12 @@ public class StatusManagerServlet
             completeStatus = true;
         }
         // use StatusTransformer to output status
-        StatusTransformer.writeHeader(writer,mode);
+        Object[] args = new Object[1];
+        args[0] = request.getContextPath();
+        StatusTransformer.writeHeader(writer,args,mode);
 
         // Body Header Section
-        Object[] args = new Object[2];
+        args = new Object[2];
         args[0] = request.getContextPath();
         if (completeStatus) {
             args[1] = sm.getString("statusServlet.complete");

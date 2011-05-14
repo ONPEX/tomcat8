@@ -55,7 +55,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: CoyoteAdapter.java 1086352 2011-03-28 19:19:23Z markt $
+ * @version $Id: CoyoteAdapter.java 1094055 2011-04-16 21:22:58Z markt $
  */
 public class CoyoteAdapter implements Adapter {
     
@@ -271,7 +271,7 @@ public class CoyoteAdapter implements Adapter {
             if (!request.isAsync() && !comet) {
                 // Error or timeout - need to tell listeners the request is over
                 // Have to test this first since state may change while in this
-                // method and this is only required if entering this methos in
+                // method and this is only required if entering this method in
                 // this state 
                 Context ctxt = (Context) request.getMappingData().context;
                 if (ctxt != null) {
@@ -317,6 +317,10 @@ public class CoyoteAdapter implements Adapter {
                 request.finishRequest();
                 response.finishResponse();
                 req.action(ActionCode.POST_REQUEST , null);
+                ((Context) request.getMappingData().context).logAccess(
+                        request, response,
+                        System.currentTimeMillis() - req.getStartTime(),
+                        false);
             }
 
         } catch (IOException e) {

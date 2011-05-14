@@ -211,6 +211,7 @@
     <include name="**/*.mdl"/>
     <include name="**/*.notice"/>
     <include name="**/*.nsi"/>
+    <include name="**/*.pl"/>
     <include name="**/*.policy"/>
     <include name="**/*.pom"/>
     <include name="**/*.project"/>
@@ -1062,6 +1063,7 @@
     <sequential>
       <junit printsummary="yes" fork="yes" dir="." showoutput="yes">
 
+        <jvmarg value="${test.jvmarg.egd}"/>
         <jvmarg value="-Djava.library.path=${test.apr.loc}"/>
         <jvmarg value="${test.formatter}"/>
 

@@ -46,7 +46,7 @@ import org.apache.tomcat.util.res.StringManager;
  * management and lifecycle support.
  *
  * @author Craig R. McClanahan
- * @version $Id: ValveBase.java 1029755 2010-11-01 17:22:33Z markt $
+ * @version $Id: ValveBase.java 1092670 2011-04-15 11:47:35Z markt $
  */
 
 public abstract class ValveBase extends LifecycleMBeanBase
@@ -64,7 +64,7 @@ public abstract class ValveBase extends LifecycleMBeanBase
 
     //------------------------------------------------------ Instance Variables
     /**
-     * Does this valve support async reporting
+     * Does this valve support Servlet 3+ async requests?
      */
     protected boolean asyncSupported;
     

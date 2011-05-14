@@ -100,7 +100,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: Request.java 1087416 2011-03-31 19:33:04Z markt $
+ * @version $Id: Request.java 1100944 2011-05-09 10:29:06Z markt $
  */
 
 public class Request
@@ -832,6 +832,15 @@ public class Request
         notes.remove(name);
     }
 
+
+    /**
+     * Set the port number of the server to process this request.
+     *
+     * @param port The server port
+     */
+    public void setLocalPort(int port) {
+        localPort = port;
+    }
 
     /**
      * Bind an object to a specified name in the internal notes associated

@@ -77,7 +77,7 @@ import org.apache.tomcat.util.res.StringManager;
  * @author Craig R. McClanahan
  * @author Sean Legassick
  * @author <a href="mailto:jon@latchkey.com">Jon S. Stevens</a>
- * @version $Id: StandardSession.java 1087416 2011-03-31 19:33:04Z markt $
+ * @version $Id: StandardSession.java 1094069 2011-04-16 22:25:28Z markt $
  */
 
 public class StandardSession implements HttpSession, Session, Serializable {
@@ -374,6 +374,15 @@ public class StandardSession implements HttpSession, Session, Serializable {
      */
     @Override
     public void setId(String id) {
+        setId(id, true);
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setId(String id, boolean notify) {
 
         if ((this.id != null) && (manager != null))
             manager.remove(this);
@@ -382,7 +391,10 @@ public class StandardSession implements HttpSession, Session, Serializable {
 
         if (manager != null)
             manager.add(this);
-        tellNew();
+        
+        if (notify) {
+            tellNew();
+        }
     }
 
 

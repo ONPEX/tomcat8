@@ -21,13 +21,13 @@
 # modules that Tomcat depends on.  Copy this file to "build.properties"
 # in the top-level source directory, and customize it as needed.
 #
-# $Id: build.properties.default 1087797 2011-04-01 16:47:12Z markt $
+# $Id: build.properties.default 1101230 2011-05-09 21:32:39Z markt $
 # -----------------------------------------------------------------------------
 
 # ----- Version Control Flags -----
 version.major=7
 version.minor=0
-version.build=12
+version.build=14
 version.patch=0
 version.suffix=
 
@@ -39,6 +39,9 @@ execute.test.nio=true
 # Still requires APR/native library to be present
 execute.test.apr=true
 test.haltonfailure=false
+
+# Workaround against http://bugs.sun.com/view_bug.do?bug_id=6202721
+test.jvmarg.egd=-Djava.security.egd=file:/dev/./urandom
 
 # ----- Default Base Path for Dependent Packages -----
 # Please note this path must be absolute, not relative,
@@ -136,14 +139,15 @@ tomcat-native.dll.i64=${tomcat-native.home}/tcnative-1.dll.i64
 
 # ----- Commons DBCP, version 1.1 or later -----
 commons-dbcp.version=1.4
-commons-dbcp.home=${base.path}/commons-dbcp-1.4-src
-commons-dbcp-src.loc.1=${base-commons.loc.1}/dbcp/source/commons-dbcp-1.4-src.tar.gz
-commons-dbcp-src.loc.2=${base-commons.loc.2}/dbcp/source/commons-dbcp-1.4-src.tar.gz
+commons-dbcp.home=${base.path}/commons-dbcp-${commons-dbcp.version}-src
+commons-dbcp-src.loc.1=${base-commons.loc.1}/dbcp/source/commons-dbcp-${commons-dbcp.version}-src.tar.gz
+commons-dbcp-src.loc.2=${base-commons.loc.2}/dbcp/source/commons-dbcp-${commons-dbcp.version}-src.tar.gz
 
 # ----- Commons Pool, version 1.1 or later -----
-commons-pool.home=${base.path}/commons-pool-1.5.5-src
-commons-pool-src.loc.1=${base-commons.loc.1}/pool/source/commons-pool-1.5.5-src.tar.gz
-commons-pool-src.loc.2=${base-commons.loc.2}/pool/source/commons-pool-1.5.5-src.tar.gz
+commons-pool.version=1.5.6
+commons-pool.home=${base.path}/commons-pool-${commons-pool.version}-src
+commons-pool-src.loc.1=${base-commons.loc.1}/pool/source/commons-pool-${commons-pool.version}-src.tar.gz
+commons-pool-src.loc.2=${base-commons.loc.2}/pool/source/commons-pool-${commons-pool.version}-src.tar.gz
 
 # ----- NSIS, version 2.0 or later -----
 nsis.home=${base.path}/nsis-2.46

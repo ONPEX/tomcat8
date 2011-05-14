@@ -45,7 +45,7 @@ import javax.naming.spi.ObjectFactory;
  * </ul>
  *
  * @author Craig R. McClanahan
- * @version $Id: MemoryUserDatabaseFactory.java 939305 2010-04-29 13:43:39Z kkolinko $
+ * @version $Id: MemoryUserDatabaseFactory.java 1094650 2011-04-18 16:59:26Z markt $
  * @since 4.1
  */
 
@@ -70,6 +70,7 @@ public class MemoryUserDatabaseFactory implements ObjectFactory {
      * @param environment The possibly null environment that is used in
      *  creating this object
      */
+    @Override
     public Object getObjectInstance(Object obj, Name name, Context nameCtx,
                                     Hashtable<?,?> environment)
         throws Exception {

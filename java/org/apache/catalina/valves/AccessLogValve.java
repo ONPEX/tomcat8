@@ -28,6 +28,7 @@ import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TimeZone;
@@ -116,7 +117,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * @author Takayuki Kaneko
  * @author Peter Rossbach
  * 
- * @version $Id: AccessLogValve.java 1067732 2011-02-06 19:08:13Z markt $
+ * @version $Id: AccessLogValve.java 1099553 2011-05-04 18:19:10Z markt $
  */
 
 public class AccessLogValve extends ValveBase implements AccessLog {
@@ -925,16 +926,20 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         @Override
         public void addElement(StringBuilder buf, Date date, Request request,
                 Response response, long time) {
+            String value = null;
             if (requestAttributesEnabled) {
                 Object host = request.getAttribute(REMOTE_HOST_ATTRIBUTE);
-                if (host == null) {
-                    buf.append(request.getRemoteHost());
-                } else {
-                    buf.append(host);
+                if (host != null) {
+                    value = host.toString();
                 }
-            } else {
-                buf.append(request.getRemoteHost());
             }
+            if (value == null || value.length() == 0) {
+                value = request.getRemoteHost();
+            }
+            if (value == null || value.length() == 0) {
+                value = "-";
+            }
+            buf.append(value);
         }
     }
     
@@ -1026,17 +1031,23 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         public void addElement(StringBuilder buf, Date date, Request request,
                 Response response, long time) {
             if (request != null) {
-                buf.append(request.getMethod());
-                buf.append(' ');
-                buf.append(request.getRequestURI());
-                if (request.getQueryString() != null) {
-                    buf.append('?');
-                    buf.append(request.getQueryString());
+                String method = request.getMethod();
+                if (method == null) {
+                    // No method means no request line
+                    buf.append('-');
+                } else {
+                    buf.append(request.getMethod());
+                    buf.append(' ');
+                    buf.append(request.getRequestURI());
+                    if (request.getQueryString() != null) {
+                        buf.append('?');
+                        buf.append(request.getQueryString());
+                    }
+                    buf.append(' ');
+                    buf.append(request.getProtocol());
                 }
-                buf.append(' ');
-                buf.append(request.getProtocol());
             } else {
-                buf.append("- - ");
+                buf.append('-');
             }
         }
     }
@@ -1241,12 +1252,15 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         @Override
         public void addElement(StringBuilder buf, Date date, Request request,
                 Response response, long time) {
-            String value = request.getHeader(header);
-            if (value == null) {
-                buf.append('-');
-            } else {
-                buf.append(value);
+            Enumeration<String> iter = request.getHeaders(header);
+            if (iter.hasMoreElements()) {
+                buf.append(iter.nextElement());
+                while (iter.hasMoreElements()) {
+                    buf.append(',').append(iter.nextElement());
+                }
+                return;
             }
+            buf.append('-');
         }
     }
 
@@ -1290,18 +1304,17 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         @Override
         public void addElement(StringBuilder buf, Date date, Request request,
                 Response response, long time) {
-           if (null != response) {
+            if (null != response) {
                 Iterator<String> iter = response.getHeaders(header).iterator();
-                boolean first = true;
-                while (iter.hasNext()) {
-                    if (!first) {
-                        buf.append(",");
-                    }
+                if (iter.hasNext()) {
                     buf.append(iter.next());
+                    while (iter.hasNext()) {
+                        buf.append(',').append(iter.next());
+                    }
+                    return;
                 }
-                return ;
             }
-            buf.append("-");
+            buf.append('-');
         }
     }
     

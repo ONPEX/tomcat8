@@ -76,7 +76,6 @@ public class Http11AprProtocol extends AbstractHttp11Protocol {
         setSoLinger(Constants.DEFAULT_CONNECTION_LINGER);
         setSoTimeout(Constants.DEFAULT_CONNECTION_TIMEOUT);
         setTcpNoDelay(Constants.DEFAULT_TCP_NO_DELAY);
-        setProcessorCache(-1);
     }
 
     private final Http11ConnectionHandler cHandler;
@@ -87,8 +86,8 @@ public class Http11AprProtocol extends AbstractHttp11Protocol {
     public int getPollTime() { return ((AprEndpoint)endpoint).getPollTime(); }
     public void setPollTime(int pollTime) { ((AprEndpoint)endpoint).setPollTime(pollTime); }
 
-    public void setPollerSize(int pollerSize) { ((AprEndpoint)endpoint).setPollerSize(pollerSize); }
-    public int getPollerSize() { return ((AprEndpoint)endpoint).getPollerSize(); }
+    public void setPollerSize(int pollerSize) { endpoint.setMaxConnections(pollerSize); }
+    public int getPollerSize() { return endpoint.getMaxConnections(); }
 
     public void setPollerThreadCount(int pollerThreadCount) { ((AprEndpoint)endpoint).setPollerThreadCount(pollerThreadCount); }
     public int getPollerThreadCount() { return ((AprEndpoint)endpoint).getPollerThreadCount(); }

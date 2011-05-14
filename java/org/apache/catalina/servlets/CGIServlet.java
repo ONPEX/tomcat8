@@ -233,7 +233,7 @@ import org.apache.catalina.util.IOTools;
  *
  * @author Martin T Dengler [root@martindengler.com]
  * @author Amy Roh
- * @version $Id: CGIServlet.java 1061412 2011-01-20 17:43:35Z kkolinko $
+ * @version $Id: CGIServlet.java 1096243 2011-04-23 21:53:00Z markt $
  * @since Tomcat 4.0
  *
  */
@@ -354,8 +354,7 @@ public final class CGIServlet extends HttpServlet {
      *
      */
     protected void printServletEnvironment(ServletOutputStream out,
-        HttpServletRequest req,
-        @SuppressWarnings("unused") HttpServletResponse res)
+        HttpServletRequest req, HttpServletResponse res)
     throws IOException {
 
         // Document the properties from ServletRequest
@@ -647,7 +646,7 @@ public final class CGIServlet extends HttpServlet {
      * <p>
      * </p>
      *
-     * @version  $Id: CGIServlet.java 1061412 2011-01-20 17:43:35Z kkolinko $
+     * @version  $Id: CGIServlet.java 1096243 2011-04-23 21:53:00Z markt $
      * @since    Tomcat 4.0
      *
      */
@@ -1377,7 +1376,7 @@ public final class CGIServlet extends HttpServlet {
      * and <code>setResponse</code> methods, respectively.
      * </p>
      *
-     * @version $Id: CGIServlet.java 1061412 2011-01-20 17:43:35Z kkolinko $
+     * @version $Id: CGIServlet.java 1096243 2011-04-23 21:53:00Z markt $
      */
 
     protected class CGIRunner {

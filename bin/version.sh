@@ -18,7 +18,7 @@
 # -----------------------------------------------------------------------------
 # Version Script for the CATALINA Server
 #
-# $Id: version.sh 562770 2007-08-04 22:13:58Z markt $
+# $Id: version.sh 1088179 2011-04-02 23:32:42Z kkolinko $
 # -----------------------------------------------------------------------------
 
 # resolve links - $0 may be a softlink
@@ -40,6 +40,7 @@ EXECUTABLE=catalina.sh
 # Check that target executable exists
 if [ ! -x "$PRGDIR"/"$EXECUTABLE" ]; then
   echo "Cannot find $PRGDIR/$EXECUTABLE"
+  echo "The file is absent or does not have execute permission"
   echo "This file is needed to run this program"
   exit 1
 fi

@@ -53,7 +53,7 @@ import org.apache.tomcat.util.res.StringManager;
  * track of deltas during a request.
  *
  * @author Filip Hanik
- * @version $Id: DeltaSession.java 1079891 2011-03-09 17:09:50Z rjung $
+ * @version $Id: DeltaSession.java 1099772 2011-05-05 12:38:44Z markt $
  */
 
 public class DeltaSession extends StandardSession implements Externalizable,ClusterSession,ReplicatedMapEntry {
@@ -244,16 +244,16 @@ public class DeltaSession extends StandardSession implements Externalizable,Clus
         this.isPrimarySession = primarySession;
     }
 
+
     /**
-     * Set the session identifier for this session without notify listeners.
-     *
-     * @param id
-     *            The new session identifier
+     * {@inheritDoc}
      */
-    public void setIdInternal(String id) {
-        this.id = id;
+    @Override
+    public void setId(String id, boolean notify) {
+        super.setId(id, notify);
         resetDeltaRequest();
     }
+
 
     /**
      * Set the session identifier for this session.
@@ -625,7 +625,9 @@ public class DeltaSession extends StandardSession implements Externalizable,Clus
         try {
             lock();
             super.setAttribute(name,value, notify);
-            if (addDeltaRequest && (deltaRequest != null)) deltaRequest.setAttribute(name, value);
+            if (addDeltaRequest && deltaRequest != null && !exclude(name)) {
+                deltaRequest.setAttribute(name, value);
+            }
         } finally {
             unlock();
         }
@@ -804,7 +806,9 @@ public class DeltaSession extends StandardSession implements Externalizable,Clus
             if (value == null) return;
 
             super.removeAttributeInternal(name,notify);
-            if (addDeltaRequest && (deltaRequest != null)) deltaRequest.removeAttribute(name);
+            if (addDeltaRequest && deltaRequest != null && !exclude(name)) {
+                deltaRequest.removeAttribute(name);
+            }
 
         }finally {
             unlock();

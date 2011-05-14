@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.jasper.compiler;
 
 import java.io.File;
@@ -22,14 +21,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.JarURLConnection;
-import java.util.Enumeration;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 import javax.servlet.ServletContext;
 
@@ -37,8 +36,12 @@ import org.apache.jasper.JasperException;
 import org.apache.jasper.util.ExceptionUtils;
 import org.apache.jasper.xmlparser.ParserUtils;
 import org.apache.jasper.xmlparser.TreeNode;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.JarScanner;
 import org.apache.tomcat.JarScannerCallback;
+import org.apache.tomcat.util.scan.NonClosingJarInputStream;
+
 
 /**
  * A container for all tag libraries that are defined "globally"
@@ -75,6 +78,10 @@ import org.apache.tomcat.JarScannerCallback;
 
 public class TldLocationsCache {
 
+    private static final Log log = LogFactory.getLog(TldLocationsCache.class);
+
+    private static final String KEY = TldLocationsCache.class.getName();
+
     /**
      * The types of URI one may specify for a tag library
      */
@@ -99,7 +106,7 @@ public class TldLocationsCache {
      */
     private Hashtable<String, TldLocation> mappings;
 
-    private boolean initialized;
+    private volatile boolean initialized;
     private ServletContext ctxt;
 
     /** Constructor. 
@@ -133,6 +140,24 @@ public class TldLocationsCache {
                 noTldJars.add(tokenizer.nextToken());
             }
         }
+    }
+
+
+    /**
+     * Obtains the TLD location cache for the given {@link ServletContext} and
+     * creates one if one does not currently exist.
+     */
+    public static synchronized TldLocationsCache getInstance(
+            ServletContext ctxt) {
+        if (ctxt == null) {
+            throw new IllegalArgumentException("ServletContext was null");
+        }
+        TldLocationsCache cache = (TldLocationsCache) ctxt.getAttribute(KEY);
+        if (cache == null) {
+            cache = new TldLocationsCache(ctxt);
+            ctxt.setAttribute(KEY, cache);
+        }
+        return cache;
     }
 
     /**
@@ -185,7 +210,7 @@ public class TldLocationsCache {
      * wonderful arrangements present when Tomcat gets embedded.
      *
      */
-    private void init() throws JasperException {
+    private synchronized void init() throws JasperException {
         if (initialized) return;
         try {
             tldScanWebXml();
@@ -368,34 +393,47 @@ public class TldLocationsCache {
      * (or a subdirectory of it), adding an implicit map entry to the taglib
      * map for any TLD that has a <uri> element.
      *
-     * @param conn The JarURLConnection to the JAR file to scan
+     * @param jarConn The JarURLConnection to the JAR file to scan
      * 
      * Keep in sync with o.a.c.startup.TldConfig
      */
-    private void tldScanJar(JarURLConnection conn) throws IOException {
+    private void tldScanJar(JarURLConnection jarConn) throws IOException {
 
-        JarFile jarFile = null;
-        String resourcePath = conn.getJarFileURL().toString();
+        // JarURLConnection#getJarFile() creates temporary copies of the JAR if
+        // the underlying resource is not a file URL. That can be slow so the
+        // InputStream for the resource is used
+        URL resourceURL = jarConn.getJarFileURL();
+        String resourcePath = resourceURL.toString();
+        
+        NonClosingJarInputStream jarInputStream = null;
+        
+        boolean foundTld = false;
         try {
-            conn.setUseCaches(false);
-            jarFile = conn.getJarFile();
-            Enumeration<JarEntry> entries = jarFile.entries();
-            while (entries.hasMoreElements()) {
-                JarEntry entry = entries.nextElement();
+            URLConnection resourceConn = resourceURL.openConnection();
+            resourceConn.setUseCaches(false);
+            jarInputStream =
+                new NonClosingJarInputStream(resourceConn.getInputStream());
+            JarEntry entry = jarInputStream.getNextJarEntry();
+            while (entry != null) {
                 String name = entry.getName();
-                if (!name.startsWith("META-INF/")) continue;
-                if (!name.endsWith(".tld")) continue;
-                InputStream stream = jarFile.getInputStream(entry);
-                tldScanStream(resourcePath, name, stream);
+                if (name.startsWith("META-INF/") && name.endsWith(".tld")) {
+                    foundTld = true;
+                    tldScanStream(resourcePath, name, jarInputStream);
+                }
+                entry = jarInputStream.getNextJarEntry();
             }
         } finally {
-            if (jarFile != null) {
+            if (jarInputStream != null) {
                 try {
-                    jarFile.close();
+                    jarInputStream.reallyClose();
                 } catch (Throwable t) {
                     ExceptionUtils.handleThrowable(t);
                 }
             }
+        }
+        if (!foundTld) {
+            log.info(Localizer.getMessage("jsp.tldCache.noTldInJar",
+                    resourcePath));
         }
     }
 
@@ -438,14 +476,6 @@ public class TldLocationsCache {
         } catch (JasperException e) {
             // Hack - makes exception handling simpler
             throw new IOException(e);
-        } finally {
-            if (stream != null) {
-                try {
-                    stream.close();
-                } catch (Throwable t) {
-                    ExceptionUtils.handleThrowable(t);
-                }
-            }
         }
     }
 

@@ -41,7 +41,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * use XSLT, that is unnecessarily complex.
  *
  * @author Peter Lin
- * @version $Id: StatusTransformer.java 1057279 2011-01-10 16:58:10Z markt $
+ * @version $Id: StatusTransformer.java 1089638 2011-04-06 21:31:25Z rjung $
  */
 
 public class StatusTransformer {
@@ -64,17 +64,18 @@ public class StatusTransformer {
      * Write an HTML or XML header.
      *
      * @param writer the PrintWriter to use
+     * @param args Path prefix for URLs
      * @param mode - 0 = HTML header, 1 = XML declaration
      *
      */
-    public static void writeHeader(PrintWriter writer, int mode) {
+    public static void writeHeader(PrintWriter writer, Object[] args, int mode) {
         if (mode == 0){
             // HTML Header Section
             writer.print(Constants.HTML_HEADER_SECTION);
         } else if (mode == 1){
             writer.write(Constants.XML_DECLARATION);
-            writer.write
-                (Constants.XML_STYLE);
+            writer.print(MessageFormat.format
+                     (Constants.XML_STYLE, args));
             writer.write("<status>");
         }
     }

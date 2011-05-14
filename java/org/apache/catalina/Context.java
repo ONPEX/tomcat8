@@ -58,7 +58,7 @@ import org.apache.tomcat.util.http.mapper.Mapper;
  * <p>
  *
  * @author Craig R. McClanahan
- * @version $Id: Context.java 1087643 2011-04-01 10:49:43Z markt $
+ * @version $Id: Context.java 1101069 2011-05-09 15:39:34Z markt $
  */
 
 public interface Context extends Container {
@@ -86,6 +86,11 @@ public interface Context extends Container {
      * Container event for clearing welcome files.
      */
     public static final String  CLEAR_WELCOME_FILES_EVENT = "clearWelcomeFiles";
+
+    /**
+     * Container event for changing the ID of a session.
+     */
+    public static final String CHANGE_SESSION_ID_EVENT = "changeSessionId";
 
     // ------------------------------------------------------------- Properties
 
@@ -291,6 +296,30 @@ public interface Context extends Container {
      * @param sessionCookiePath   The path to use
      */
     public void setSessionCookiePath(String sessionCookiePath);
+
+    
+    /**
+     * Is a / added to the end of the session cookie path to ensure browsers,
+     * particularly IE, don't send a session cookie for context /foo with
+     * requests intended for context /foobar.
+     * 
+     * @return <code>true</code> if the slash is added, otherwise
+     *         <code>false</code>  
+     */
+    public boolean getSessionCookiePathUsesTrailingSlash();
+    
+    
+    /**
+     * Configures if a / is added to the end of the session cookie path to
+     * ensure browsers, particularly IE, don't send a session cookie for context
+     * /foo with requests intended for context /foobar.
+     * 
+     * @param sessionCookiePathUsesTrailingSlash   <code>true</code> if the
+     *                                             slash is should be added,
+     *                                             otherwise <code>false</code>  
+     */
+    public void setSessionCookiePathUsesTrailingSlash(
+            boolean sessionCookiePathUsesTrailingSlash);
 
     
     /**

@@ -87,7 +87,7 @@ import org.apache.tomcat.util.res.StringManager;
  * requested sessions are migrated.
  * 
  * @author Peter Rossbach
- * @version $Id: JvmRouteBinderValve.java 1041511 2010-12-02 18:17:55Z markt $
+ * @version $Id: JvmRouteBinderValve.java 1094069 2011-04-16 22:25:28Z markt $
  */
 public class JvmRouteBinderValve extends ValveBase implements ClusterValve {
 
@@ -359,8 +359,7 @@ public class JvmRouteBinderValve extends ValveBase implements ClusterValve {
     protected void changeSessionID(Request request, String sessionId,
             String newSessionID, Session catalinaSession) {
         fireLifecycleEvent("Before session migration", catalinaSession);
-        // FIXME: setId trigger session Listener, but only chance to register manager with correct id!
-        catalinaSession.setId(newSessionID);
+        catalinaSession.setId(newSessionID, false);
         // FIXME: Why we remove change data from other running request?
         // setId also trigger resetDeltaRequest!!
         if (catalinaSession instanceof DeltaSession)

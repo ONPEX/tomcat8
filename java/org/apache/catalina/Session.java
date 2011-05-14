@@ -31,7 +31,7 @@ import javax.servlet.http.HttpSession;
  * between requests for a particular user of a web application.
  *
  * @author Craig R. McClanahan
- * @version $Id: Session.java 1044359 2010-12-10 13:54:16Z markt $
+ * @version $Id: Session.java 1094069 2011-04-16 22:25:28Z markt $
  */
 
 public interface Session {
@@ -118,11 +118,23 @@ public interface Session {
 
 
     /**
-     * Set the session identifier for this session.
+     * Set the session identifier for this session and notifies any associated
+     * listeners that a new session has been created.
      *
      * @param id The new session identifier
      */
     public void setId(String id);
+
+
+    /**
+     * Set the session identifier for this session and optionally notifies any
+     * associated listeners that a new session has been created.
+     *
+     * @param id        The new session identifier
+     * @param notify    Should any associated listeners be notified that a new
+     *                      session has been created? 
+     */
+    public void setId(String id, boolean notify);
 
 
     /**

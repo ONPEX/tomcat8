@@ -267,7 +267,7 @@
 
     <attribute name="bindOnInit" required="false">
       <p>Controls when the socket used by the connector is bound. By default it
-      is bound when the connector is initiated and unbund when the connector is
+      is bound when the connector is initiated and unbound when the connector is
       destroyed. If set to <code>false</code>, the socket will be bound when the
       connector is started and unbound when it is stopped.</p>
     </attribute>
@@ -350,6 +350,20 @@
       <strong>connectionTimeout</strong> attribute.</p>
     </attribute>
 
+    <attribute name="maxConnections" required="false">
+      <p>The maximum number of connections that the server will accept and
+      process at any given time. When this number has been reached, the server
+      will not accept any more connections until the number of connections
+      falls below this value. The operating system may still accept
+      connections based on the <code>acceptCount</code> setting. Default value
+      varies by connector type. For BIO the default is the value of
+      <strong>maxThreads</strong>. For NIO the default is <code>10000</code>.
+      For APR/native, the default is <code>8192</code>.</p>
+      <p>Note that for APR/native on Windows, the configured value will be
+      reduced to the highest multiple of 1024 that is less than or equal to
+      maxConnections. This is done for performance reasons.</p>
+    </attribute>
+
     <attribute name="maxHttpHeaderSize" required="false">
       <p>The maximum size of the request and response HTTP header, specified
       in bytes. If not specified, this attribute is set to 8192 (8 KB).</p>
@@ -371,15 +385,6 @@
       not specified, this attribute is set to 200. If an executor is associated
       with this connector, this attribute is ignored as the connector will 
       execute tasks using the executor rather than an internal thread pool.</p>
-    </attribute>
-
-    <attribute name="maxConnections" required="false">
-      <p>The maximum number of connections that the server will accept and process
-      at any given time. When this number has been reached, the server will not accept any more
-      connections until the number of connections reach below this value. The operating system may still accept connections based 
-      on the <code>acceptCount</code> setting.
-      This setting is currently only applicable to the blocking Java connectors (AJP/HTTP).
-      Default value is <code>10000</code>.</p>
     </attribute>
 
     <attribute name="maxTrailerSize" required="false">
@@ -406,8 +411,11 @@
     <attribute name="processorCache" required="false">
       <p>The protocol handler caches Processor objects to speed up performance.
       This setting dictates how many of these objects get cached.
-      <code>-1</code> means unlimited, default is <code>200</code>. Set this
-      value somewhere close to your maxThreads value.</p>
+      <code>-1</code> means unlimited, default is <code>200</code>. If not using
+      Servlet 3.0 asynchronous processing, a good default is to use the same as
+      the maxThreads setting. If using Servlet 3.0 asynchronous processing, a
+      good default is to use the larger of maxThreads and the maximum number of
+      expected concurrent requests (synchronous and asynchronous).</p>
     </attribute>
       
     <attribute name="restrictedUserAgents" required="false">
@@ -551,8 +559,20 @@
   
   <subsection name="BIO specific configuration">
     
-    <p>There are no BIO specific configuration settings.</p>
+    <p>The following attributes are specific to the BIO connector.</p>
     
+    <attributes>
+
+      <attribute name="disableKeepAlivePercentage" required="false">
+        <p>The percentage of processing threads that have to be in use before
+        HTTP keep-alives are disabled to improve scalability. Values less than
+        <code>0</code> will be changed to <code>0</code> and values greater than
+        <code>100</code> will be changed to <code>100</code>. If not specified,
+        the default value is <code>75</code>.</p>
+      </attribute>
+
+    </attributes>
+
   </subsection>
   
   <subsection name="NIO specific configuration">
@@ -651,21 +671,21 @@
         <p>(int)Tomcat will cache SocketProcessor objects to reduce garbage
         collection. The integer value specifies how many objects to keep in the
         cache at most. The default is <code>500</code>. Other values are
-        <code>-1</code> for unlimited cache and <code>0</code>for no cache.</p>
+        <code>-1</code> for unlimited cache and <code>0</code> for no cache.</p>
       </attribute>
 
       <attribute name="socket.keyCache" required="false">
         <p>(int)Tomcat will cache KeyAttachment objects to reduce garbage
         collection. The integer value specifies how many objects to keep in the
         cache at most. The default is <code>500</code>. Other values are
-        <code>-1</code> for unlimited cache and <code>0</code>for no cache.</p>
+        <code>-1</code> for unlimited cache and <code>0</code> for no cache.</p>
       </attribute>
 
       <attribute name="socket.eventCache" required="false">
         <p>(int)Tomcat will cache PollerEvent objects to reduce garbage
         collection. The integer value specifies how many objects to keep in the
         cache at most. The default is <code>500</code>. Other values are
-        <code>-1</code> for unlimited cache and <code>0</code>for no cache.</p>
+        <code>-1</code> for unlimited cache and <code>0</code> for no cache.</p>
       </attribute>
 
       <attribute name="selectorPool.maxSelectors" required="false">
@@ -725,7 +745,7 @@
         <p>Amount of sockets that the poller responsible for polling kept alive
         connections can hold at a given time. Extra connections will be closed
         right away. The default value is 8192, corresponding to 8192 keep-alive
-        connections.</p>
+        connections. This is a synonym for maxConnections.</p>
       </attribute>
 
       <attribute name="pollerThreadCount" required="false">
@@ -736,10 +756,10 @@
       </attribute>
 
       <attribute name="pollTime" required="false">
-        <p>Duration of a poll call. Lowering this value will slightly decrease
-        latency of connections being kept alive in some cases, but will use more
-        CPU as more poll calls are being made. The default value is 2000 (5ms).
-        </p>
+        <p>Duration of a poll call in microseconds. Lowering this value will
+        slightly decrease latency of connections being kept alive in some cases,
+        but will use more CPU as more poll calls are being made. The default
+        value is 2000 (2ms).</p>
       </attribute>
 
       <attribute name="sendfileSize" required="false">
@@ -1154,18 +1174,18 @@
 
     <p>Below is a small chart that shows how the connectors differentiate.</p>
     <source>
-                       Java Blocking Connector    Java Nio Blocking Connector      APR/native Connector
-                                 BIO                          NIO                          APR
-    Classname              Http11Protocol              Http11NioProtocol            Http11AprProtocol
-    Tomcat Version           3.x onwards                  6.x onwards                 5.5.x onwards
-    Support Polling              NO                           YES                          YES
-    Polling Size                 N/A             Unlimited - Restricted by mem   Unlimited - Configurable
-    Read HTTP Request         Blocking                   Non Blocking                    Blocking
-    Read HTTP Body            Blocking                   Sim Blocking                    Blocking
-    Write HTTP Response       Blocking                   Sim Blocking                    Blocking
-    SSL Support               Java SSL                     Java SSL                      OpenSSL
-    SSL Handshake             Blocking                   Non blocking                    Blocking
-    Max Connections          maxThreads                See polling size              See polling size
+                       Java Blocking Connector   Java Nio Blocking Connector   APR/native Connector
+                                 BIO                         NIO                       APR
+    Classname              Http11Protocol             Http11NioProtocol         Http11AprProtocol
+    Tomcat Version           3.x onwards                 6.x onwards              5.5.x onwards
+    Support Polling              NO                          YES                       YES
+    Polling Size                 N/A                   maxConnections             maxConnections
+    Read HTTP Request         Blocking                  Non Blocking                 Blocking
+    Read HTTP Body            Blocking                  Sim Blocking                 Blocking
+    Write HTTP Response       Blocking                  Sim Blocking                 Blocking
+    SSL Support               Java SSL                    Java SSL                   OpenSSL
+    SSL Handshake             Blocking                  Non blocking                 Blocking
+    Max Connections        maxConnections              maxConnections             maxConnections
     
     
     </source>
