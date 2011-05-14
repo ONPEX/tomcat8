@@ -65,7 +65,7 @@ import org.ietf.jgss.GSSName;
  * location) are identical to those currently supported by Tomcat 3.X.
  *
  * @author Craig R. McClanahan
- * @version $Id: RealmBase.java 1087655 2011-04-01 11:36:54Z markt $
+ * @version $Id: RealmBase.java 1088430 2011-04-03 22:38:23Z kkolinko $
  */
 
 public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
@@ -471,7 +471,6 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
                     try {
                         gssCredential = gssContext.getDelegCred();
                     } catch (GSSException e) {
-                        e.printStackTrace();
                         if (log.isDebugEnabled()) {
                             log.debug(sm.getString(
                                     "realmBase.delegatedCredentialFail", name),
@@ -830,7 +829,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
             if (roles.length == 0 && !constraint.getAllRoles()) {
                 if(constraint.getAuthConstraint()) {
                     if( log.isDebugEnabled() )
-                        log.debug("No role)s ");
+                        log.debug("No roles");
                     status = false; // No listed roles means no access at all
                     denyfromall = true;
                     break;

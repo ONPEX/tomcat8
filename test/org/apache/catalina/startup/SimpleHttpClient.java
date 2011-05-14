@@ -35,8 +35,7 @@ import java.util.List;
 /**
  * Simple client for unit testing. It isn't robust, it isn't secure and
  * should not be used as the basis for production code. Its only purpose
- * is to do the bare minimum for the unit tests. It does not support keep-alive
- * connections - make sure you send a Connection: close header with the request.
+ * is to do the bare minimum for the unit tests.
  */
 public abstract class SimpleHttpClient {
     public static final String TEMP_DIR =
@@ -68,6 +67,7 @@ public abstract class SimpleHttpClient {
     private String responseLine;
     private List<String> responseHeaders = new ArrayList<String>();
     private String responseBody;
+    private boolean useContentLength;
 
     public void setPort(int thePort) {
         port = thePort;
@@ -101,6 +101,10 @@ public abstract class SimpleHttpClient {
         return responseBody;
     }
 
+    public void setUseContentLength(boolean b) {
+        useContentLength = b;
+    }
+
     public String getSessionId() {
         for (String header : responseHeaders) {
             if (header.startsWith(SESSION_COOKIE_HEADER_PREFIX)) {
@@ -113,14 +117,15 @@ public abstract class SimpleHttpClient {
     }
 
     public void connect(int connectTimeout, int soTimeout) throws UnknownHostException, IOException {
+        final String encoding = "ISO-8859-1";
         SocketAddress addr = new InetSocketAddress("localhost", port);
         socket = new Socket();
         socket.setSoTimeout(soTimeout);
         socket.connect(addr,connectTimeout);
         OutputStream os = socket.getOutputStream();
-        writer = new OutputStreamWriter(os);
+        writer = new OutputStreamWriter(os, encoding);
         InputStream is = socket.getInputStream();
-        Reader r = new InputStreamReader(is);
+        Reader r = new InputStreamReader(is, encoding);
         reader = new BufferedReader(r);
     }
     public void connect() throws UnknownHostException, IOException {
@@ -130,7 +135,15 @@ public abstract class SimpleHttpClient {
     public void processRequest() throws IOException, InterruptedException {
         processRequest(true);
     }
+
     public void processRequest(boolean readBody) throws IOException, InterruptedException {
+        sendRequest();
+
+        readResponse(readBody);
+
+    }
+
+    public void sendRequest() throws InterruptedException, IOException {
         // Send the request
         boolean first = true;
         for (String requestPart : request) {
@@ -142,6 +155,13 @@ public abstract class SimpleHttpClient {
             writer.write(requestPart);
             writer.flush();
         }
+    }
+
+    public void readResponse(boolean readBody) throws IOException {
+        // Reset fields use to hold response
+        responseLine = null;
+        responseHeaders.clear();
+        responseBody = null;
 
         // Read the response
         responseLine = readLine();
@@ -160,22 +180,31 @@ public abstract class SimpleHttpClient {
         
         // Put the headers into the map
         String line = readLine();
+        int cl = -1;
         while (line!=null && line.length() > 0) {
             responseHeaders.add(line);
             line = readLine();
+            if (line != null && line.startsWith("Content-Length: ")) {
+                cl = Integer.parseInt(line.substring(16));
+            }
         }
         
         // Read the body, if any
         StringBuilder builder = new StringBuilder();
         if (readBody) {
-            line = readLine();
-            while (line != null) {
-                builder.append(line);
+            if (cl > -1 && useContentLength) {
+                char[] body = new char[cl];
+                reader.read(body);
+                builder.append(body);
+            } else {
                 line = readLine();
+                while (line != null) {
+                    builder.append(line);
+                    line = readLine();
+                }
             }
         }
         responseBody = builder.toString();
-
     }
 
     public String readLine() throws IOException {

@@ -42,7 +42,265 @@
   General, Catalina, Coyote, Jasper, Cluster, Web applications, Extras, Tribes,
   Other
 -->
-<section name="Tomcat 7.0.12 (markt)">
+<section name="Tomcat 7.0.14 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <update>
+        Stylistic improvements to MIME type sync script.
+        Based on a patch provided by Felix Schumacher. (rjung)
+      </update>
+      <fix>
+        Ensure that the SSLValve provides the SSL key size as an Integer rather
+        than a String. (markt)
+      </fix>
+      <fix>
+        Ensure that the RemoteIpValve works correctly with Servlet 3.0
+        asynchronous requests. (markt)
+      </fix>
+      <fix>
+        Use safe equality test when determining event type in the
+        MapperListener. (markt)
+      </fix>
+      <fix>
+        Use correct class loader when loading Servlet classes in
+        StandardWrapper. (markt)
+      </fix>
+      <add>
+        Provide additional configuration options for the RemoteIpValve and
+        RemoteIpFilter to allow greater control over the values returned by
+        ServletRequest#getServerPort() and ServletRequest#getLocalPort() when
+        Tomcat is behind a reverse proxy. (markt)
+      </add>
+      <fix>
+        Ensure session cookie paths end in <code>/</code> so that session
+        cookies created for a context with a path of <code>/foo</code> do not
+        get returned with requests mapped to a context with a path of
+        <code>/foobar</code>. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        <bug>51177</bug>: Ensure Tomcat&apos;s MapElResolver always returns
+        <code>Object.class</code> for <code>getType()</code> as required by the
+        EL specification. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 7.0.13 (markt)" rtext="not released">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        Correct mix-up in Realm Javadoc. (markt)
+      </fix>
+      <fix>
+        Fix display of response headers in AccessLogValve. (kkolinko)
+      </fix>
+      <update>
+        Implement display of multiple request headers in AccessLogValve:
+        print not just the value of the first header, but of the all of them,
+        separated by commas. (kkolinko)
+      </update>
+      <add>
+        <bug>50306</bug>: New StuckThreadDetectionValve to detect requests that
+        take a long time to process, which might indicate that their processing
+        threads are stuck. Based on a patch provided by TomLu. (slaurent)
+      </add>
+      <fix>
+        <bug>51038</bug>: Ensure that asynchronous requests are included in
+        access logs. (markt)
+      </fix>
+      <fix>
+        <bug>51042</bug>: Don&apos;t trigger session creation listeners when a
+        session ID is changed as part of the authentication process. (markt)
+      </fix>
+      <fix>
+        <bug>51050</bug>: Add additional common but non-standard file extension
+        to MIME type mappings for MPEG 4 files. Based on a patch by Cédrik Lime.
+        (markt)
+      </fix>
+      <add>
+        Add some additional common JARs that do not contain TLDs or web
+        fragments to the list of JARs to skip when scanning for TLDs and web
+        fragments. (markt)
+      </add>
+      <fix>
+        While scanning JARs for TLDs and fragments, avoid using JarFile and use
+        JarInputStream as in most circumstances where JARs are scanned, JarFile
+        will create a temporary copy of the JAR rather than using the resource
+        directly. This change significantly improves startup performance for
+        applications with lots of JARs to be scanned. (markt)
+      </fix>
+      <fix>
+        Ensure response is committed when <code>AsyncContext#complete()</code>
+        is called. (markt)
+      </fix>
+      <add>
+        Add a container event that is fired when a session&apos;s ID is changed,
+        e.g. on authentication. (markt)
+      </add>
+      <fix>
+        <bug>51099</bug>: Correctly implement non-default login configurations
+        (configured via the loginConfigName attribute) for the the SPNEGO
+        authenticator. (fhanik/markt)
+      </fix>
+      <add>
+        <bug>51119</bug>: Add JAAS authentication support to the
+        JMXRemoteLifecycleListener. Patch provided by Neil Laurance. (markt) 
+      </add>
+      <add>
+        <bug>51136</bug>: Provide methods that enable the name of a Context on
+        Context creation when using Tomcat in an embedded scenario. Based on a
+        patch provided by David Calavera. (markt)
+      </add>
+      <fix>
+        <bug>51137</bug>: Add additional Microsoft Office MIME type mappings.
+        (rjung)
+      </fix>
+      <add>
+        Partial sync of MIME type mapping with mime.types from the Apache web
+        server. About 600 MIME types added, some changed. (rjung)
+      </add>
+      <fix>
+        Make access logging more robust when logging requests that generate 400
+        responses since the request object is unlikely to be fully/correctly
+        populated in that case. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        <bug>50957</bug>: Fix regression in HTTP BIO connector that triggered
+        errors when processing pipe-lined requests. (markt)
+      </fix>
+      <fix>
+        <bug>50158</bug>: Ensure the asynchronous requests never timeout if the
+        timeout is set to zero or less. Based on a patch provided by Chris.
+        (markt)
+      </fix>
+      <fix>
+        <bug>51073</bug>: Throw an exception and do not start the APR connector
+        if it is configured for SSL and an invalid value is provided for
+        SSLProtocol. (markt)
+      </fix>
+      <fix>
+        Align all the connector implementations with the documented default
+        setting for processorCache of 200. This changes the default from -1
+        (unlimited) for the AJP-BIO, AJP-APR and HTTP-APR connectors. Additional
+        information was also added to the documentation on how to select an
+        appropriate value. 
+      </fix>
+      <fix>
+        Take account of time spent waiting for a processing thread when
+        calculating connection and keep-alive timeouts for the HTTP BIO
+        connector. (markt)
+      </fix>
+      <fix>
+        <bug>51095</bug>: Don&apos;t trigger a NullPointerException when the SSL
+        handshake fails with the HTTP-APR connector. Patch provided by Mike
+        Glazer. (markt)
+      </fix>
+      <fix>
+        Improve handling in AJP connectors of the case where too large a AJP
+        packet is received. (markt) 
+      </fix>
+      <fix>
+        Restore the automatic disabling of HTTP keep-alive with the BIO
+        connector once 75% of the processing threads are in use and make the
+        threshold configurable. (markt)
+      </fix>
+      <fix>
+        Make pollerSize and maxConnections synonyms for the APR connectors since
+        they perform the same function. (markt)
+      </fix>
+      <fix>
+        Use maxThreads rather than 10000 as the default maxConnections for the
+        BIO connectors. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        <bug>47371</bug>: Correctly coerce the empty string to zero when used as
+        an operand in EL arithmetic. Patch provided by gbt. (markt)
+      </fix>
+      <add>
+        Label JSP/tag file line and column numbers when reporting errors since
+        it may not be immediately obvious what the numbers represent. (markt)
+      </add>
+      <fix>
+        Correct a regression in the fix for <bug>49916</bug> that resulted in
+        JSPs being compiled twice rather than just once. (markt)
+      </fix>
+      <add>
+        Log JARs that are scanned for TLDs where no TLD is found so that users
+        can easily identify JARs that can be added to the list of JARs to skip.
+        (markt)
+      </add>
+      <update>
+        Use a single TLD location cache for a web application rather than one
+        per JSP compilation to speed up JSP compilation. (markt)
+      </update>
+      <add>
+        <bug>51124</bug>: Refactor BodyContentImpl to assist in determining the
+        root cause of this bug. Based on a patch by Ramiro. (markt)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Cluster">
+    <changelog>
+      <fix>
+        <bug>50950</bug>: Correct possible NotSerializableException for an
+        authenticated session when running with a security manager. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <update>
+        Configure Security Manager How-To to include a copy of the actual
+        conf/catalina.policy file when the documentation is built, rather
+        than maintaining a copy of its content. (kkolinko)
+      </update>
+      <fix>
+        Fix broken stylesheet URL in XML based manager status output. (rjung)
+      </fix>
+      <fix>
+        <bug>51156</bug>: Ensure session expiration option is available in
+        Manager application was running web applications that were defined in
+        server.xml. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <update>
+        Clarify error messages in *.sh files to mention that if a script is
+        not found it might be because execute permission is needed. (kkolinko)
+      </update>
+      <update>
+        Update commons pool to 1.5.6. (markt)
+      </update>
+      <fix>
+        <bug>51135</bug>: Fix auto-detection of JAVA_HOME for 64-bit Windows
+        platforms that only have a 32-bit JVM installed. (markt) 
+      </fix>
+      <fix>
+        <bug>51154</bug>: Remove duplicate @deprecated tags in ServletContext
+        Javadoc. Patch provided by sebb. (markt)
+      </fix>
+      <fix>
+        <bug>51155</bug>: Add comments to @deprecated tags that have none. Patch
+        provided by sebb. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 7.0.12 (markt)" rtext="released 2011-04-06">
   <subsection name="Catalina">
     <changelog>
       <add>
@@ -104,7 +362,7 @@
         also referred to as integrated Windows authentication. This includes
         user authentication, authorisation via the directory using the
         user&apos;s delegated credentials and exposing the user&apos;s delegated
-        credentials via a request attribute so applications can make use of the
+        credentials via a request attribute so applications can make use of them
         to impersonate the current user when accessing third-party systems that
         use a compatible authentication mechanism. Based on a patch provided by
         Michael Osipov. (markt)
@@ -1451,7 +1709,7 @@
   <subsection name="Catalina">
     <changelog>
       <fix>
-        <bug>49428</bug>: Re-implement the fix for bug <bug>49428</bug> &#150;
+        <bug>49428</bug>: Re-implement the fix for bug <bug>49428</bug> &#x2013;
         namespace issues for some Microsoft WebDAV clients. (kkolinko)
       </fix>
       <fix>

@@ -26,7 +26,7 @@ import org.apache.el.util.MessageFactory;
 /**
  * A helper class of Arithmetic defined by the EL Specification
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: ELArithmetic.java 1055055 2011-01-04 14:22:52Z markt $
+ * @version $Id: ELArithmetic.java 1099789 2011-05-05 13:39:09Z markt $
  */
 public abstract class ELArithmetic {
 
@@ -394,13 +394,12 @@ public abstract class ELArithmetic {
         if (isNumber(obj)) {
             return coerce((Number) obj);
         }
-        if (obj instanceof String) {
-            return coerce((String) obj);
-        }
         if (obj == null || "".equals(obj)) {
             return coerce(ZERO);
         }
-
+        if (obj instanceof String) {
+            return coerce((String) obj);
+        }
         if (obj instanceof Character) {
             return coerce(Short.valueOf((short) ((Character) obj).charValue()));
         }

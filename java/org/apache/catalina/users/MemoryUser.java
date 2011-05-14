@@ -32,7 +32,7 @@ import org.apache.catalina.util.RequestUtil;
  * {@link MemoryUserDatabase} implementation of {@link UserDatabase}.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: MemoryUser.java 939305 2010-04-29 13:43:39Z kkolinko $
+ * @version $Id: MemoryUser.java 1094650 2011-04-18 16:59:26Z markt $
  * @since 4.1
  */
 
@@ -116,6 +116,7 @@ public class MemoryUser extends AbstractUser {
     /**
      * Return the {@link UserDatabase} within which this User is defined.
      */
+    @Override
     public UserDatabase getUserDatabase() {
 
         return (this.database);

@@ -35,7 +35,7 @@ import org.ietf.jgss.GSSContext;
  * Container.
  *
  * @author Craig R. McClanahan
- * @version $Id: Realm.java 1087416 2011-03-31 19:33:04Z markt $
+ * @version $Id: Realm.java 1087819 2011-04-01 17:19:39Z markt $
  */
 
 public interface Realm {
@@ -108,8 +108,8 @@ public interface Realm {
 
 
     /**
-     * Return the Principal associated with the specified chain of X509
-     * client certificates.  If there is none, return <code>null</code>.
+     * Return the Principal associated with the specified {@link GSSContext}.
+     * If there is none, return <code>null</code>.
      *
      * @param gssContext The gssContext processed by the {@link Authenticator}.
      * @param storeCreds Should the realm attempt to store the delegated
@@ -119,10 +119,10 @@ public interface Realm {
     
     
     /**
-     * Return the Principal associated with the specified {@link GSSContext}.
-     * If there is none, return <code>null</code>.
+     * Return the Principal associated with the specified chain of X509
+     * client certificates.  If there is none, return <code>null</code>.
      *
-     * @param gssContext Array of client certificates, with the first one in
+     * @param certs Array of client certificates, with the first one in
      *  the array being the certificate of the client itself.
      */
     public Principal authenticate(X509Certificate certs[]);

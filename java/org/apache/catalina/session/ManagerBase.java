@@ -55,7 +55,7 @@ import org.apache.tomcat.util.res.StringManager;
  * be subclassed to create more sophisticated Manager implementations.
  *
  * @author Craig R. McClanahan
- * @version $Id: ManagerBase.java 1058357 2011-01-12 23:49:18Z markt $
+ * @version $Id: ManagerBase.java 1097899 2011-04-29 17:49:37Z markt $
  */
 
 public abstract class ManagerBase extends LifecycleMBeanBase
@@ -768,7 +768,11 @@ public abstract class ManagerBase extends LifecycleMBeanBase
      */
     @Override
     public void changeSessionId(Session session) {
-        session.setId(generateSessionId());
+        String oldId = session.getIdInternal();
+        session.setId(generateSessionId(), false);
+        String newId = session.getIdInternal();
+        container.fireContainerEvent(Context.CHANGE_SESSION_ID_EVENT,
+                new String[] {oldId, newId});
     }
     
     

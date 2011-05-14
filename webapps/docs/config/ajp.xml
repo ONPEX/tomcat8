@@ -268,6 +268,13 @@
       interface.</p>
     </attribute>
 
+    <attribute name="bindOnInit" required="false">
+      <p>Controls when the socket used by the connector is bound. By default it
+      is bound when the connector is initiated and unbound when the connector is
+      destroyed. If set to <code>false</code>, the socket will be bound when the
+      connector is started and unbound when it is stopped.</p>
+    </attribute>
+
     <attribute name="clientCertProvider" required="false">
       <p>When client certificate information is presented in a form other than
       instances of <code>java.security.cert.X509Certificate</code> it needs to
@@ -307,6 +314,20 @@
        connectionTimeout attribute.</p>
     </attribute>
 
+    <attribute name="maxConnections" required="false">
+      <p>The maximum number of connections that the server will accept and
+      process at any given time. When this number has been reached, the server
+      will not accept any more connections until the number of connections
+      falls below this value. The operating system may still accept
+      connections based on the <code>acceptCount</code> setting. Default value
+      varies by connector type. For BIO the default is the value of
+      <strong>maxThreads</strong>.For APR/native, the default is
+      <code>8192</code>.</p>
+      <p>Note that for APR/native on Windows, the configured value will be
+      reduced to the highest multiple of 1024 that is less than or equal to
+      maxConnections. This is done for performance reasons.</p>
+    </attribute>
+
     <attribute name="maxThreads" required="false">
       <p>The maximum number of request processing threads to be created
       by this <strong>Connector</strong>, which therefore determines the
@@ -327,14 +348,18 @@
       directive configured for mod_jk. Normally it is not necessary to change
       the maximum packet size. Problems with the default value have been
       reported when sending certificates or certificate chains. The default
-      value is 8192.</p>
+      value is 8192. If set to less than 8192 then the setting will ignored and
+      the default value of 8192 used.</p>
     </attribute>
 
     <attribute name="processorCache" required="false">
       <p>The protocol handler caches Processor objects to speed up performance.
       This setting dictates how many of these objects get cached.
-      <code>-1</code> means unlimited, default is <code>200</code>. Set this
-      value somewhere close to your maxThreads value.</p>
+      <code>-1</code> means unlimited, default is <code>200</code>. If not using
+      Servlet 3.0 asynchronous processing, a good default is to use the same as
+      the maxThreads setting. If using Servlet 3.0 asynchronous processing, a
+      good default is to use the larger of maxThreads and the maximum number of
+      expected concurrent requests (synchronous and asynchronous).</p>
     </attribute>
       
     <attribute name="requiredSecret" required="false">
@@ -369,10 +394,18 @@
 
   <subsection name="BIO specific configuration">
     
-    <p>The BIO implementation supports the following Java TCP socket attributes
-    in addition to the common Connector and AJP attributes listed above.</p>
+    <p>The BIO implementation supports the following attributes in addition to
+    the common Connector and AJP attributes listed above.</p>
   
     <attributes>
+      <attribute name="maxConnections" required="false">
+        <p>The maximum number of connections that the server will accept and
+        process at any given time. When this number has been reached, the server
+        will not accept any more connections until the number of connections
+        falls below this value. The operating system may still accept
+        connections based on the <code>acceptCount</code> setting. Default value
+        is <code>10000</code>.</p>
+      </attribute>
       <attribute name="socket.rxBufSize" required="false">
         <p>(int)The socket receive buffer (SO_RCVBUF) size in bytes. JVM default
         used if not set.</p>
@@ -457,9 +490,10 @@
   
     <attributes>
       <attribute name="pollTime" required="false">
-        <p>Duration of a poll call. Lowering this value will slightly decrease
-        latency of connections being kept alive in some cases, but will use more
-        CPU as more poll calls are being made. The default value is 2000 (2ms).
+        <p>Duration of a poll call in microseconds. Lowering this value will
+        slightly decrease latency of connections being kept alive in some cases
+        , but will use more CPU as more poll calls are being made. The default
+        value is 2000 (2ms).
         </p>
     </attribute>
 

@@ -38,8 +38,10 @@ class DefaultErrorHandler implements ErrorHandler {
     @Override
     public void jspError(String fname, int line, int column, String errMsg,
             Exception ex) throws JasperException {
-        throw new JasperException(fname + "(" + line + "," + column + ")"
-                + " " + errMsg, ex);
+        throw new JasperException(fname + " (" +
+                Localizer.getMessage("jsp.error.location",
+                        Integer.toString(line), Integer.toString(column)) +
+                ") " + errMsg, ex);
     }
     
     /*
@@ -72,7 +74,7 @@ class DefaultErrorHandler implements ErrorHandler {
         for (int i=0; i < details.length; i++) {
             if (details[i].getJspBeginLineNumber() >= 0) {
                 args = new Object[] {
-                        new Integer(details[i].getJspBeginLineNumber()), 
+                        Integer.valueOf(details[i].getJspBeginLineNumber()), 
                         details[i].getJspFileName() };
                 buf.append("\n\n");
                 buf.append(Localizer.getMessage("jsp.error.single.line.number",
@@ -83,7 +85,7 @@ class DefaultErrorHandler implements ErrorHandler {
                 buf.append(details[i].getJspExtract());
             } else {
                 args = new Object[] {
-                        new Integer(details[i].getJavaLineNumber()) };
+                        Integer.valueOf(details[i].getJavaLineNumber()) };
                 buf.append("\n\n");
                 buf.append(Localizer.getMessage("jsp.error.java.line.number",
                         args));

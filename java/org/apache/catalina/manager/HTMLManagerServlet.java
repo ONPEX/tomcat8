@@ -76,7 +76,7 @@ import org.apache.tomcat.util.res.StringManager;
 * @author Bip Thelin
 * @author Malcolm Edgar
 * @author Glenn L. Nielsen
-* @version $Id: HTMLManagerServlet.java 1057279 2011-01-10 16:58:10Z markt $
+* @version $Id: HTMLManagerServlet.java 1100145 2011-05-06 09:22:38Z markt $
 * @see ManagerServlet
 */
 
@@ -1235,7 +1235,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
         "</tr>\n<tr></tr>\n";
 
     private static final String STARTED_NONDEPLOYED_APPS_ROW_BUTTON_SECTION =
-        " <td class=\"row-left\" bgcolor=\"{13}\" rowspan=\"2\">\n" +
+        " <td class=\"row-left\" bgcolor=\"{13}\">\n" +
         "  &nbsp;<small>{1}</small>&nbsp;\n" +
         "  <form class=\"inline\" method=\"POST\" action=\"{2}\">" +
         "  <small><input type=\"submit\" value=\"{3}\"></small>" +
@@ -1245,7 +1245,15 @@ public final class HTMLManagerServlet extends ManagerServlet {
         "  </form>\n" +
         "  &nbsp;<small>{7}</small>&nbsp;\n" +
         " </td>\n" +
-        "</tr>\n<tr></tr>\n";
+        " </tr><tr>\n" +
+        " <td class=\"row-left\" bgcolor=\"{13}\">\n" +
+        "  <form method=\"POST\" action=\"{8}\">\n" +
+        "  <small>\n" +
+        "  &nbsp;<input type=\"submit\" value=\"{9}\">&nbsp;{10}&nbsp;<input type=\"text\" name=\"idle\" size=\"5\" value=\"{11}\">&nbsp;{12}&nbsp;\n" +
+        "  </small>\n" +
+        "  </form>\n" +
+        " </td>\n" +
+        "</tr>\n";
 
     private static final String STOPPED_NONDEPLOYED_APPS_ROW_BUTTON_SECTION =
         " <td class=\"row-left\" bgcolor=\"{13}\" rowspan=\"2\">\n" +

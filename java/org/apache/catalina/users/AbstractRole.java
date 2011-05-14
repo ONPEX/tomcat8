@@ -27,7 +27,7 @@ import org.apache.catalina.UserDatabase;
  * <p>Convenience base class for {@link Role} implementations.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: AbstractRole.java 939305 2010-04-29 13:43:39Z kkolinko $
+ * @version $Id: AbstractRole.java 1094650 2011-04-18 16:59:26Z markt $
  * @since 4.1
  */
 
@@ -55,6 +55,7 @@ public abstract class AbstractRole implements Role {
     /**
      * Return the description of this role.
      */
+    @Override
     public String getDescription() {
 
         return (this.description);
@@ -67,6 +68,7 @@ public abstract class AbstractRole implements Role {
      *
      * @param description The new description
      */
+    @Override
     public void setDescription(String description) {
 
         this.description = description;
@@ -78,6 +80,7 @@ public abstract class AbstractRole implements Role {
      * Return the role name of this role, which must be unique
      * within the scope of a {@link UserDatabase}.
      */
+    @Override
     public String getRolename() {
 
         return (this.rolename);
@@ -91,6 +94,7 @@ public abstract class AbstractRole implements Role {
      *
      * @param rolename The new role name
      */
+    @Override
     public void setRolename(String rolename) {
 
         this.rolename = rolename;
@@ -101,6 +105,7 @@ public abstract class AbstractRole implements Role {
     /**
      * Return the {@link UserDatabase} within which this Role is defined.
      */
+    @Override
     public abstract UserDatabase getUserDatabase();
 
 
@@ -113,6 +118,7 @@ public abstract class AbstractRole implements Role {
     /**
      * Make the principal name the same as the role name.
      */
+    @Override
     public String getName() {
 
         return (getRolename());

@@ -17,6 +17,11 @@
 
 package org.apache.el;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import javax.el.ELContext;
 import javax.el.ExpressionFactory;
 import javax.el.ValueExpression;
@@ -104,4 +109,57 @@ public class TestValueExpressionImpl extends TestCase {
         String result2 = (String) ve2.getValue(context);
         assertEquals("fooAPPLEbar", result2);
     }
+
+    public void testBug51177ObjectMap() {
+        ExpressionFactory factory = ExpressionFactory.newInstance();
+        ELContext context = new ELContextImpl();
+        
+        Object o1 = "String value";
+        Object o2 = new Integer(32);
+
+        Map<Object,Object> map = new HashMap<Object,Object>();
+        map.put("key1", o1);
+        map.put("key2", o2);
+        
+        ValueExpression var =
+            factory.createValueExpression(map, Map.class);
+        context.getVariableMapper().setVariable("map", var);
+
+        ValueExpression ve1 = factory.createValueExpression(
+                context, "${map.key1}", Object.class);
+        ve1.setValue(context, o2);
+        assertEquals(o2, ve1.getValue(context));
+        
+        ValueExpression ve2 = factory.createValueExpression(
+                context, "${map.key2}", Object.class);
+        ve2.setValue(context, o1);
+        assertEquals(o1, ve2.getValue(context));
+    }
+    
+    public void testBug51177ObjectList() {
+        ExpressionFactory factory = ExpressionFactory.newInstance();
+        ELContext context = new ELContextImpl();
+        
+        Object o1 = "String value";
+        Object o2 = new Integer(32);
+
+        List<Object> list = new ArrayList<Object>();
+        list.add(0, o1);
+        list.add(1, o2);
+        
+        ValueExpression var =
+            factory.createValueExpression(list, List.class);
+        context.getVariableMapper().setVariable("list", var);
+
+        ValueExpression ve1 = factory.createValueExpression(
+                context, "${list[0]}", Object.class);
+        ve1.setValue(context, o2);
+        assertEquals(o2, ve1.getValue(context));
+        
+        ValueExpression ve2 = factory.createValueExpression(
+                context, "${list[1]}", Object.class);
+        ve2.setValue(context, o1);
+        assertEquals(o1, ve2.getValue(context));
+    }
+
 }

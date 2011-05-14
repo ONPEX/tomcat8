@@ -33,7 +33,7 @@ import javax.management.NotificationFilter;
  * supplied by the application.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: BaseAttributeFilter.java 1038846 2010-11-24 22:08:38Z markt $
+ * @version $Id: BaseAttributeFilter.java 1096243 2011-04-23 21:53:00Z markt $
  */
 
 public class BaseAttributeFilter implements NotificationFilter {
@@ -122,6 +122,7 @@ public class BaseAttributeFilter implements NotificationFilter {
      *     includes the name of the attribute in this notification</li>
      * </ul>
      */
+    @Override
     public boolean isNotificationEnabled(Notification notification) {
 
         if (notification == null)

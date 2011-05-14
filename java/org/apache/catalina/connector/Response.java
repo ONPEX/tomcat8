@@ -62,7 +62,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: Response.java 1084949 2011-03-24 13:24:28Z markt $
+ * @version $Id: Response.java 1088458 2011-04-04 00:57:17Z kkolinko $
  */
 
 public class Response
@@ -913,7 +913,7 @@ public class Response
 
 
     /**
-     * Return an Iterable of all the header values associated with the
+     * Return a Collection of all the header values associated with the
      * specified header name.
      *
      * @param name Header name to look up

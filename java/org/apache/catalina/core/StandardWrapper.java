@@ -76,7 +76,7 @@ import org.apache.tomcat.util.modeler.Registry;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardWrapper.java 1079839 2011-03-09 15:34:51Z markt $
+ * @version $Id: StandardWrapper.java 1100832 2011-05-08 22:53:32Z markt $
  */
 @SuppressWarnings("deprecation") // SingleThreadModel
 public class StandardWrapper extends ContainerBase
@@ -1136,7 +1136,8 @@ public class StandardWrapper extends ContainerBase
         if (getServlet() == null) {
             Class<?> clazz = null;
             try {
-                clazz = getParentClassLoader().loadClass(getServletClass());
+                clazz = getParent().getLoader().getClassLoader().loadClass(
+                        getServletClass());
                 processServletSecurityAnnotation(clazz);
             } catch (ClassNotFoundException e) {
                 // Safe to ignore. No class means no annotations to process

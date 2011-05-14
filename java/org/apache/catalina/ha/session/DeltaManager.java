@@ -62,7 +62,7 @@ import org.apache.tomcat.util.res.StringManager;
  * @author Craig R. McClanahan
  * @author Jean-Francois Arcand
  * @author Peter Rossbach
- * @version $Id: DeltaManager.java 1062398 2011-01-23 12:01:29Z kkolinko $
+ * @version $Id: DeltaManager.java 1094069 2011-04-16 22:25:28Z markt $
  */
 
 public class DeltaManager extends ClusterManagerBase{
@@ -1387,12 +1387,7 @@ public CatalinaCluster getCluster() {
         // use container maxInactiveInterval so that session will expire correctly in case of primary transfer
         session.setMaxInactiveInterval(getMaxInactiveInterval());
         session.access();
-        if(notifySessionListenersOnReplication) {
-            session.setId(msg.getSessionID());
-        } else {
-            session.setIdInternal(msg.getSessionID());
-            add(session);
-        }
+        session.setId(msg.getSessionID(), notifySessionListenersOnReplication);
         session.resetDeltaRequest();
         session.endAccess();
 
@@ -1468,12 +1463,7 @@ public CatalinaCluster getCluster() {
         if (session != null) {
             String newSessionID = deserializeSessionId(msg.getSession());
             session.setPrimarySession(false);
-            if (notifySessionListenersOnReplication) {
-                session.setId(newSessionID);
-            } else {
-                session.setIdInternal(newSessionID);
-                add(session);
-            }
+            session.setId(newSessionID, notifyListenersOnReplication);
         }
     }
 

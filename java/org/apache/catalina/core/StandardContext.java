@@ -127,7 +127,7 @@ import org.apache.tomcat.util.threads.DedicatedThreadExecutor;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardContext.java 1087715 2011-04-01 14:24:43Z markt $
+ * @version $Id: StandardContext.java 1101069 2011-05-09 15:39:34Z markt $
  */
 
 public class StandardContext extends ContainerBase
@@ -770,6 +770,14 @@ public class StandardContext extends ContainerBase
     private String sessionCookiePath;
     
     
+    /**
+     * Is a / added to the end of the session cookie path to ensure browsers,
+     * particularly IE, don't send a session cookie for context /foo with
+     * requests intended for context /foobar.
+     */
+    private boolean sessionCookiePathUsesTrailingSlash = true;
+
+
     /**
      * The Jar scanner to use to search for Jars that might contain
      * configuration information such as TLDs or web-fragment.xml files. 
@@ -1637,6 +1645,20 @@ public class StandardContext extends ContainerBase
                 oldSessionCookiePath, sessionCookiePath);
     }
     
+
+    @Override
+    public boolean getSessionCookiePathUsesTrailingSlash() {
+        return sessionCookiePathUsesTrailingSlash;
+    }
+
+
+    @Override
+    public void setSessionCookiePathUsesTrailingSlash(
+            boolean sessionCookiePathUsesTrailingSlash) {
+        this.sessionCookiePathUsesTrailingSlash =
+            sessionCookiePathUsesTrailingSlash;
+    }
+
 
     /**
      * Return the "allow crossing servlet contexts" flag.
