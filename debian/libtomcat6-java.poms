@@ -1,0 +1,9 @@
+debian/poms/annotations-api.pom
+debian/poms/catalina.pom
+debian/poms/catalina-ha.pom
+debian/poms/coyote.pom
+debian/poms/jasper.pom
+debian/poms/jasper-el.pom
+debian/poms/juli.pom
+debian/poms/tribes.pom
+

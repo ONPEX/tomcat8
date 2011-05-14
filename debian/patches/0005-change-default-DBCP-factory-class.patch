@@ -1,0 +1,40 @@
+From: Thierry Carrez <thierry.carrez@ubuntu.com>
+Date: Mon, 28 Jun 2010 21:32:44 +0200
+Subject: [PATCH] change default DBCP factory class
+
+... to org.apache.commons.dbcp.BasicDataSourceFactory
+---
+ java/org/apache/naming/factory/Constants.java |    2 +-
+ webapps/docs/jndi-resources-howto.xml         |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/java/org/apache/naming/factory/Constants.java b/java/org/apache/naming/factory/Constants.java
+index 22ef7aa..ab1d759 100644
+--- a/java/org/apache/naming/factory/Constants.java
++++ b/java/org/apache/naming/factory/Constants.java
+@@ -49,7 +49,7 @@ public final class Constants {
+         Package + ".HandlerFactory";
+ 
+     public static final String DBCP_DATASOURCE_FACTORY = 
+-        "org.apache.tomcat.dbcp.dbcp.BasicDataSourceFactory";
++        "org.apache.commons.dbcp.BasicDataSourceFactory";
+ 
+     public static final String OPENEJB_EJB_FACTORY = 
+         Package + ".OpenEjbFactory";
+diff --git a/webapps/docs/jndi-resources-howto.xml b/webapps/docs/jndi-resources-howto.xml
+index e721854..be94cd4 100644
+--- a/webapps/docs/jndi-resources-howto.xml
++++ b/webapps/docs/jndi-resources-howto.xml
+@@ -656,9 +656,9 @@ conn.close();
+     <code>driverName</code> parameters to match your actual database's
+     JDBC driver and connection URL.</p>
+ 
+-    <p>The configuration properties for Tomcat's standard data source
++    <p>The configuration properties for our default data source
+     resource factory
+-    (<code>org.apache.tomcat.dbcp.dbcp.BasicDataSourceFactory</code>) are
++    (<code>org.apache.commons.dbcp.BasicDataSourceFactory</code>) are
+     as follows:</p>
+     <ul>
+     <li><strong>driverClassName</strong> - Fully qualified Java class name
+-- 

@@ -1,0 +1,6 @@
+conf/*.xml /usr/share/tomcat6/skel/conf/
+conf/catalina.properties /usr/share/tomcat6/skel/conf/
+conf/catalina.policy /usr/share/tomcat6/skel/conf/
+debian/logging.properties /usr/share/tomcat6/skel/conf/
+debian/tomcat6-instance-create /usr/bin/
+debian/setenv.sh /usr/share/tomcat6/skel/bin/

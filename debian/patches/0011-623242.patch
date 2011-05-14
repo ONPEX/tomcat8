@@ -1,0 +1,53 @@
+From: tony mancill <tmancill@debian.org>
+Date: Mon Apr 18 20:44:47 PDT 2011
+Subject: Context parameters are being overridden with parameters from the web application deployment descriptor
+Source: upstream, http://svn.apache.org/viewvc?view=revision&revision=1080224
+Bug: https://issues.apache.org/bugzilla/show_bug.cgi?id=50700
+Forwarded: not-needed
+
+--- a/java/org/apache/catalina/core/StandardContext.java 2011/03/10 13:52:10 1080223
++++ b/java/org/apache/catalina/core/StandardContext.java 2011/03/10 13:52:41 1080224
+@@ -31,6 +31,7 @@
+ import java.util.HashMap;
+ import java.util.Hashtable;
+ import java.util.Iterator;
++import java.util.Map;
+ import java.util.Stack;
+ import java.util.TreeMap;
+ 
+@@ -4805,23 +4806,29 @@
+      * the application parameters appropriately.
+      */
+     private void mergeParameters() {
++        Map<String,String> mergedParams = new HashMap<String,String>();
++        
+         String names[] = findParameters();
+         for (int i = 0; i < names.length; i++) {
+-            context.setInitParameter(names[i], findParameter(names[i]));
++            mergedParams.put(names[i], findParameter(names[i]));
+         }
+ 
+         ApplicationParameter params[] = findApplicationParameters();
+         for (int i = 0; i < params.length; i++) {
+             if (params[i].getOverride()) {
+-                if (context.getInitParameter(params[i].getName()) == null) {
+-                    context.setInitParameter(params[i].getName(),
++                if (mergedParams.get(params[i].getName()) == null) {
++                    mergedParams.put(params[i].getName(),
+                             params[i].getValue());
+                 }
+             } else {
+-                context.setInitParameter(params[i].getName(),
+-                        params[i].getValue());
++                mergedParams.put(params[i].getName(), params[i].getValue());
+             }
+         }
++        
++        for (Map.Entry<String,String> entry : mergedParams.entrySet()) {
++            context.setInitParameter(entry.getKey(), entry.getValue());
++        }
++
+     }
+ 
+     
+

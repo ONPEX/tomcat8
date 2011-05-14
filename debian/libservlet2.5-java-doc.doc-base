@@ -1,0 +1,10 @@
+Document: servlet25-api
+Title: Java Servlet 2.5 API Documentation
+Author: Apache Software Foundation
+Abstract: Javadoc documentation for Java Servlet 2.5 API.
+Section: Programming
+
+Format: HTML
+Index: /usr/share/doc/libservlet2.5-java/api/index.html
+Files: /usr/share/doc/libservlet2.5-java/api/*
+

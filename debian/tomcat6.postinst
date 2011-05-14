@@ -1,0 +1,66 @@
+#!/bin/sh
+set -e
+
+. /usr/share/debconf/confmodule
+TEMPLATE="/usr/share/tomcat6/defaults.template"
+CONFFILE="/etc/default/tomcat6"
+JAVA_OPTS="-Djava.awt.headless=true -Xmx128m -XX:+UseConcMarkSweepGC"
+
+case "$1" in
+    configure)
+
+	# Generate $CONFFILE from debconf seetings and $TEMPLATE
+	db_version 2.0
+	db_get tomcat6/username && TOMCAT6_USER="$RET" || TOMCAT6_USER="tomcat6"
+	db_get tomcat6/groupname && TOMCAT6_GROUP="$RET" || TOMCAT6_GROUP="tomcat6"
+	db_get tomcat6/javaopts && JAVA_OPTS="$RET" || JAVA_OPTS="-Djava.awt.headless=true -Xmx128m -XX:+UseConcMarkSweepGC"
+
+	tmpfile=`mktemp /tmp/tomcat6.XXXXXXXXXX`
+	chmod 644 $tmpfile
+	cat $TEMPLATE \
+		| sed "s%^TOMCAT6_USER=.*$%TOMCAT6_USER=$TOMCAT6_USER%" \
+		| sed "s%^TOMCAT6_GROUP=.*$%TOMCAT6_GROUP=$TOMCAT6_GROUP%" \
+		| sed "s%^JAVA_OPTS=.*$%JAVA_OPTS=\"$JAVA_OPTS\"%" \
+		>> $tmpfile
+	ucf --debconf-ok --sum-file /usr/share/tomcat6/defaults.md5sum $tmpfile $CONFFILE
+	rm -f $tmpfile
+
+	if ! getent group "$TOMCAT6_GROUP" > /dev/null 2>&1 ; then
+	    addgroup --system "$TOMCAT6_GROUP" --quiet
+	fi
+	if ! id $TOMCAT6_USER > /dev/null 2>&1 ; then
+	    adduser --system --home /usr/share/tomcat6 --no-create-home \
+		--ingroup "$TOMCAT6_GROUP" --disabled-password --shell /bin/false \
+		"$TOMCAT6_USER"
+	fi
+	chown -R $TOMCAT6_USER:adm /var/log/tomcat6 /var/cache/tomcat6
+	chmod 750 /var/log/tomcat6 /var/cache/tomcat6
+	# configuration files should not be modifiable by tomcat6 user, as this can be a security issue
+	# (an attacker may insert code in a webapp and have access to all tomcat configuration)
+	# but those files should be readable by tomcat6, so we set the group to tomcat6
+	chown -Rh root:$TOMCAT6_GROUP /etc/tomcat6/*
+	chmod 640 /etc/tomcat6/tomcat-users.xml
+	chown -Rh $TOMCAT6_USER:$TOMCAT6_GROUP /var/lib/tomcat6/webapps /var/lib/tomcat6/common /var/lib/tomcat6/server /var/lib/tomcat6/shared
+	chmod 775 /var/lib/tomcat6/webapps
+	chmod 775 /etc/tomcat6/Catalina /etc/tomcat6/Catalina/localhost
+
+	# Authorize user tomcat6 to open privileged ports via authbind.
+	TOMCAT_UID="`id -u $TOMCAT6_USER`"
+	if [ ! -f "/etc/authbind/byuid/$TOMCAT_UID" ]; then
+		if [ ! -d "/etc/authbind/byuid" ]; then
+			mkdir -p /etc/authbind/byuid
+			chmod 755 /etc/authbind
+			chmod 755 /etc/authbind/byuid
+		fi
+		echo '0.0.0.0/0:1,1023' >/etc/authbind/byuid/$TOMCAT_UID
+		chown $TOMCAT6_USER:$TOMCAT6_GROUP /etc/authbind/byuid/$TOMCAT_UID
+		chmod 700 /etc/authbind/byuid/$TOMCAT_UID
+	fi
+    ;;
+esac
+
+if [ ! -d /var/lib/tomcat6/webapps/ROOT ]; then
+    cp -r /usr/share/tomcat6-root/default_root /var/lib/tomcat6/webapps/ROOT
+fi
+
+#DEBHELPER#

@@ -1,0 +1,40 @@
+From: Arto Jantunen <viiru@debian.org>
+Date: Mon, 28 Jun 2010 21:19:14 +0200
+Subject: [PATCH] allow empty PID file
+
+---
+ bin/catalina.sh |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/bin/catalina.sh b/bin/catalina.sh
+index b7a8aa9..a023a1e 100755
+--- a/bin/catalina.sh
++++ b/bin/catalina.sh
+@@ -311,7 +311,7 @@ elif [ "$1" = "run" ]; then
+ elif [ "$1" = "start" ] ; then
+ 
+   if [ ! -z "$CATALINA_PID" ]; then
+-    if [ -f "$CATALINA_PID" ]; then
++    if [ -s "$CATALINA_PID" ]; then
+       echo "PID file ($CATALINA_PID) found. Is Tomcat still running? Start aborted."
+       exit 1
+     fi
+@@ -369,12 +369,16 @@ elif [ "$1" = "stop" ] ; then
+   fi
+ 
+   if [ ! -z "$CATALINA_PID" ]; then
+-    if [ -f "$CATALINA_PID" ]; then
++    if [ -s "$CATALINA_PID" ]; then
+       kill -0 `cat $CATALINA_PID` >/dev/null 2>&1
+       if [ $? -gt 0 ]; then
+         echo "PID file ($CATALINA_PID) found but no matching process was found. Stop aborted."
+         exit 1
+       fi
++    elif [ -f "$CATALINA_PID" ]; then
++        rm $CATALINA_PID
++        echo "\$CATALINA_PID was set ($CATALINA_PID) but the specified file is empty. Did Tomcat fail while starting? Stop aborted."
++        exit 1
+     else
+       echo "\$CATALINA_PID was set ($CATALINA_PID) but the specified file does not exist. Is Tomcat running? Stop aborted."
+       exit 1
+-- 

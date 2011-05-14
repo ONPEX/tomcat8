@@ -1,0 +1,21 @@
+From: Thomas Koch <thomas@koch.ro>
+Date: Mon, 28 Jun 2010 21:32:15 +0200
+Subject: [PATCH] set UTF-8 as default character encoding
+
+---
+ conf/server.xml |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/conf/server.xml b/conf/server.xml
+index 30673f6..03894e7 100644
+--- a/conf/server.xml
++++ b/conf/server.xml
+@@ -68,6 +68,7 @@
+     -->
+     <Connector port="8080" protocol="HTTP/1.1" 
+                connectionTimeout="20000" 
++               URIEncoding="UTF-8"
+                redirectPort="8443" />
+     <!-- A "Connector" using the shared thread pool-->
+     <!--
+-- 

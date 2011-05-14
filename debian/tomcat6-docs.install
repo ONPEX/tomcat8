@@ -1,0 +1,2 @@
+debian/context/docs.xml /etc/tomcat6/Catalina/localhost/
+output/build/webapps/docs /usr/share/tomcat6-docs/

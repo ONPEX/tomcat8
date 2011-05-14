@@ -1,0 +1,104 @@
+Getting started:
+  * After installing the tomcat6 package, the server should be accessible
+    at http://localhost:8080/
+  * If you install tomcat6-admin, then you need to edit 
+    /etc/tomcat6/tomcat-users.xml and add to it the following:
+      <role rolename="manager"/>
+      <user username="tomcat" password="s3cret" roles="manager"/>
+    Tomcat administration will be accessible on 
+    http://localhost:8080/manager/html
+  * Tomcat is not running under a Java security manager by default. If you
+    expose your Tomcat instance to the internet, please consider editing
+    your /etc/default/tomcat6 file and set TOMCAT6_SECURITY="yes", then
+    adjust policy files in /etc/tomcat6/policy.d/ as explained in
+    http://tomcat.apache.org/tomcat-6.0-doc/security-manager-howto.html
+  * To run more than one Tomcat instance on your server, install the package
+    tomcat6-user and run the tomcat6-instance-create utility.
+    You should remove the tomcat6 package if you don't want Tomcat to
+    start as a daemon at boot time.
+  * If you configure your Tomcat to listen on one
+    or more privileged ports (such as port 80 or port 443), then you
+    may now enable authbind in your /etc/default/tomcat6 file.  The
+    authbind package can allow your Tomcat JVM user (a non-root user)
+    to listen on privileged ports.  Set AUTHBIND="yes" to enable it,
+    and then configure your Tomcat to listen on any port number you
+    wish.  See the "man authbind" for information on configuring
+    authbind.
+
+NEWS:
+
+tomcat6 (6.0.20-dfsg1-2) unstable; urgency=low
+
+  * The tomcat6 package no longer uses the jsvc native service runner.
+    Instead, by default, the init script invokes the catalina.sh
+    script, and Tomcat does not attempt to open any server sockets on
+    ports below 1024.  If you configure your Tomcat to listen on one
+    or more privileged ports (such as port 80 or port 443), then you
+    may now enable authbind in your /etc/default/tomcat6 file.  The
+    authbind package can allow your Tomcat JVM user (a non-root user)
+    to listen on privileged ports.  Set AUTHBIND="yes" to enable it,
+    and then configure your Tomcat to listen on any port number you
+    wish.  See the "man authbind" for information on configuring
+    authbind.
+  * The Tomcat security manager is now disabled by default.  Previous
+    versions of this package enabled the Tomcat security manager by
+    default.  A large number of users reported exceptions where the
+    root cause was that the security manager was enabled by default.
+    In nearly all of these cases, the users are unfamiliar with the
+    Java security manager, and are not interested in trying to define
+    security manager rules for their webapps -- they just want it to
+    run.  Disabling the security manager fixes it for them.  Today,
+    most Tomcat users run Tomcat with the security manager disabled.
+    Those who intentionally enable it are the minority, and they tend
+    to know how it works.  If you are currently using the security
+    manager, and would like to continue using it after upgrading to
+    tomcat6-6.0.20-10 or higher, edit your /etc/default/tomcat6 file
+    and set TOMCAT6_SECURITY="yes".
+
+ -- Jason Brittain <jason.brittain@mulesoft.com>  Thu, 28 Jan 2010 17:15:03 +0000
+
+Differences introduced in the tomcat6-6.0.20-5 release:
+- New folders have been created in /var/lib/tomcat6 to allow an administrator to
+  add shared classes or libraries. The layout is as follow:
+   /var/lib/tomcat6/common - put there jar files to be loaded by the common classloader
+   /var/lib/tomcat6/common/classes - put there classes to be loaded by the common classloader
+   /var/lib/tomcat6/server - put there jar files to be loaded by the server classloader
+   /var/lib/tomcat6/server/classes - put there classes to be loaded by the server classloader
+   /var/lib/tomcat6/shared - put there jar files to be loaded by the shared classloader
+   /var/lib/tomcat6/shared/classes - put there classes to be loaded by the shared classloader
+
+ -- Ludovic Claude <ludovic.claude@laposte.net>  Sat, 25 Jul 2009 11:15:00 +0100
+
+Differences introduced in the tomcat6-6.0.18-0ubuntu4 release:
+
+- The default JVM temporary directory (java.io.tmpdir), which originally was
+  located in /var/lib/tomcat6/temp, was moved to /tmp/tomcat6-temp. You can
+  change its location by editing the JVM_TMP setting in /etc/default/tomcat6.
+  This directory will get purged every time Tomcat starts (or stops). The
+  default security policy was modified to allow webapps to use that directory
+  for temporary file creation.
+
+-- Thierry Carrez <thierry.carrez@ubuntu.com>  Wed, 26 Nov 2008 15:54:17 +0000
+
+Main differences with the Tomcat 5.5 packages:
+
+- These packages conform to the CATALINA_BASE spec described in RUNNING.txt,
+  in order to be able to run multiple instances of Tomcat on the same
+  machine.
+- The tomcat6 package installs the system instance and init scripts with
+  CATALINA_BASE in /var/lib/tomcat6. It installs a minimal ROOT webapp to
+  check that everything works correctly.
+- A new tomcat6-user package has been created. This package allows users to
+  create their own user instance of tomcat (CATALINA_BASE) by calling the
+  create-user-tomcat.sh script located in /usr/share/tomcat6/bin. It does not
+  require to install the system instance (tomcat6 package).
+- The new package tomcat6-common contains files common to tomcat6-user and
+  tomcat6. It implements the common CATALINA_HOME in /usr/share/tomcat6.
+- The docs (and associated webapp) have been put in a separate tomcat6-docs
+  package.
+- The -webapps package has been replaced by a tomcat6-examples package that
+  just contains the examples webapp.
+- The catalina.policy file for the system instance is now autogenerated in
+  /var/cache/tomcat6.
+
+-- Thierry Carrez <thierry.carrez@ubuntu.com>  Thu, 24 Jul 2008 09:52:31 +0200

@@ -1,0 +1,10 @@
+0001-set-UTF-8-as-default-character-encoding.patch
+0002-do-not-load-AJP13-connector-by-default.patch
+0003-disable-APR-library-loading.patch
+0004-split-deploy-webapps-target-from-deploy-target.patch
+0005-change-default-DBCP-factory-class.patch
+0006-add-JARs-below-var-to-class-loader.patch
+0007-add-OSGi-headers-to-servlet-api.patch
+0008-add-OSGI-headers-to-jsp-api.patch
+0010-Use-java.security.policy-file-in-catalina.sh.patch
+0011-623242.patch

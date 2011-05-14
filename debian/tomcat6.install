@@ -1,0 +1,7 @@
+conf/catalina.properties /etc/tomcat6/
+debian/logging.properties /etc/tomcat6/
+conf/*.xml /etc/tomcat6/
+debian/policy/*.policy /etc/tomcat6/policy.d/
+debian/default_root /usr/share/tomcat6-root/
+debian/defaults.template /usr/share/tomcat6/
+debian/defaults.md5sum /usr/share/tomcat6/

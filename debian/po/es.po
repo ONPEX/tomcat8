@@ -1,0 +1,94 @@
+# tomcat6 po-debconf translation to Spanish
+# Copyright (C) 2010 Software in the Public Interest, SPI Inc.
+# This file is distributed under the same license as the tomcat6 package.
+#
+# Changes:
+# - Initial translation
+#       Javier Fernández-Sanguino , 2010
+#
+#
+#  Traductores, si no conoce el formato PO, merece la pena leer la 
+#  documentación de gettext, especialmente las secciones dedicadas a este
+#  formato, por ejemplo ejecutando:
+#         info -n '(gettext)PO Files'
+#         info -n '(gettext)Header Entry'
+#
+# Equipo de traducción al español, por favor lean antes de traducir
+# los siguientes documentos:
+#
+# - El proyecto de traducción de Debian al español
+#   http://www.debian.org/intl/spanish/
+#   especialmente las notas y normas de traducción en
+#   http://www.debian.org/intl/spanish/notas
+#
+# - La guía de traducción de po's de debconf:
+#   /usr/share/doc/po-debconf/README-trans
+#   o http://www.debian.org/intl/l10n/po-debconf/README-trans
+#
+# Si tiene dudas o consultas sobre esta traducción consulte con el último
+# traductor (campo Last-Translator) y ponga en copia a la lista de
+# traducción de Debian al español (<debian-l10n-spanish@lists.debian.org>)
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: tomcat6 6.0.28\n"
+"Report-Msgid-Bugs-To: tomcat6@packages.debian.org\n"
+"POT-Creation-Date: 2010-08-06 04:08+0200\n"
+"PO-Revision-Date: 2010-08-08 02:14+0200\n"
+"Last-Translator: Javier Fernández-Sanguino <jfs@debian.org>\n"
+"Language-Team: Debian Spanish <debian-l10n-spanish@lists.debian.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-POFile-SpellExtra: tomcat Tomcat UseConcMarkSweepGC XX JVM cores\n"
+"X-POFile-SpellExtra: CMSIncrementalMode\n"
+
+#. Type: string
+#. Description
+#: ../tomcat6.templates:1001
+msgid "Dedicated system account for the tomcat6 daemon:"
+msgstr "Cuenta del sistema dedicada para el servicio tomcat6:"
+
+#. Type: string
+#. Description
+#: ../tomcat6.templates:1001
+msgid ""
+"The tomcat6 server must use a dedicated account for its operation so that "
+"the system's security is not compromised by running it with superuser "
+"privileges."
+msgstr "El servidor tomcat6 debe utilizar una cuenta dedicada para su operación para no comprometer la seguridad del sistema al ejecutarlo con privilegios de superusuario."
+
+#. Type: string
+#. Description
+#: ../tomcat6.templates:2001
+msgid "Dedicated system group for the tomcat6 daemon:"
+msgstr "Grupo de sistema dedicado para el servicio tomcat6:"
+
+#. Type: string
+#. Description
+#: ../tomcat6.templates:2001
+msgid ""
+"The tomcat6 server must use a dedicated group for its operation so that the "
+"system's security is not compromised by running it with superuser privileges."
+msgstr "El servidor tomcat6 debe utilizar un grupo dedicado para su operación para no comprometer la seguridad del sistema por ejecutarlo con los privilegios del superusuario."
+
+#. Type: string
+#. Description
+#: ../tomcat6.templates:3001
+msgid "Please choose the tomcat6 JVM Java options:"
+msgstr "Escoja las opciones del JVM Java de tomcat6:"
+
+#. Type: string
+#. Description
+#: ../tomcat6.templates:3001
+msgid "Tomcat's JVM will be launched with a specific set of Java options."
+msgstr "La JVM de Tomcat puede ejecutarse con un conjunto específico de opciones de Java."
+
+#. Type: string
+#. Description
+#: ../tomcat6.templates:3001
+msgid ""
+"Note that if you use -XX:+UseConcMarkSweepGC you should add the -XX:"
+"+CMSIncrementalMode option if you run Tomcat on a machine with exactly one "
+"CPU chip that contains one or two cores."
+msgstr "Tenga en cuenta que si utiliza -XX:+UseConcMarkSweepGC debería añadir la opción -XX:+CMSIncrementalMode si ejecuta Tomcat en un equipo que tenga exáctamente un chip de CPU y que contenga uno o dos cores."

@@ -1,0 +1,3 @@
+debian/context/examples.xml /etc/tomcat6/Catalina/localhost/
+output/build/webapps/examples /usr/share/tomcat6-examples/
+debian/policy/examples/*.policy /etc/tomcat6/policy.d/

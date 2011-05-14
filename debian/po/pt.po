@@ -1,0 +1,79 @@
+# Translation of tomcat6's debconf messages do Portuguese
+# Copyright (C) 2010 the tomcat6's copyright holder
+# This file is distributed under the same license as the tomcat6 package.
+#
+# Américo Monteiro <a_monteiro@netcabo.pt>, 2010.
+msgid ""
+msgstr ""
+"Project-Id-Version: tomcat6 6.0.28-4\n"
+"Report-Msgid-Bugs-To: tomcat6@packages.debian.org\n"
+"POT-Creation-Date: 2010-08-06 04:08+0200\n"
+"PO-Revision-Date: 2010-08-11 12:23+0100\n"
+"Last-Translator: Américo Monteiro <a_monteiro@netcabo.pt>\n"
+"Language-Team: Portuguese <traduz@debianpt.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Lokalize 1.0\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. Type: string
+#. Description
+#: ../tomcat6.templates:1001
+msgid "Dedicated system account for the tomcat6 daemon:"
+msgstr "Conta de sistema dedicada para o daemon do tomcat6:"
+
+#. Type: string
+#. Description
+#: ../tomcat6.templates:1001
+msgid ""
+"The tomcat6 server must use a dedicated account for its operation so that "
+"the system's security is not compromised by running it with superuser "
+"privileges."
+msgstr ""
+"O servidor tomcat6 precisa de usar um conta dedicada para a sua operação "
+"para que a segurança do sistema não seja comprometida ao corrê-lo com "
+"privilégios de super utilizador."
+
+#. Type: string
+#. Description
+#: ../tomcat6.templates:2001
+msgid "Dedicated system group for the tomcat6 daemon:"
+msgstr "Grupo de sistema dedicado para o daemon do tomcat6:"
+
+#. Type: string
+#. Description
+#: ../tomcat6.templates:2001
+msgid ""
+"The tomcat6 server must use a dedicated group for its operation so that the "
+"system's security is not compromised by running it with superuser privileges."
+msgstr ""
+"O servidor tomcat6 precisa de usar um grupo dedicado para a sua operação "
+"para que a segurança do sistema não seja comprometida ao corrê-lo com "
+"privilégios de super utilizador."
+
+#. Type: string
+#. Description
+#: ../tomcat6.templates:3001
+msgid "Please choose the tomcat6 JVM Java options:"
+msgstr "Por favor escolha as opções Java JVM do tomcat6:"
+
+#. Type: string
+#. Description
+#: ../tomcat6.templates:3001
+msgid "Tomcat's JVM will be launched with a specific set of Java options."
+msgstr ""
+"O JVM do Tomcat será lançado com um conjunto específico de opções Java."
+
+#. Type: string
+#. Description
+#: ../tomcat6.templates:3001
+msgid ""
+"Note that if you use -XX:+UseConcMarkSweepGC you should add the -XX:"
+"+CMSIncrementalMode option if you run Tomcat on a machine with exactly one "
+"CPU chip that contains one or two cores."
+msgstr ""
+"Note que se você usar -XX:+UseConcMarkSweepGC deverá adicionar a opção "
+"+CMSIncrementalMode se correr o Tomcat numa máquina com exactamente um chip "
+"CPU que contém um ou dois núcleos."
+
