@@ -1,6 +1,611 @@
-tomcat7 (7.0.12-1) stable-security; urgency=high
+tomcat7 (7.0.14-1) UNRELEASED; urgency=low
 
-  * Unofficial package.
+  [ Ernesto Hernández-Novich ]
+  * New upstream release.
 
- -- Ernesto Hernandez-Novich <emhn@itverx.comve>  Wed, 04 May 2011 17:31:06 -0430
+ -- Miguel Landaeta <miguel@miguel.cc>  Sun, 15 May 2011 12:28:41 -0430
 
+tomcat6 (6.0.32-4) UNRELEASED; urgency=low
+
+  * Team upload.
+  * Add Italian debconf translation.
+    Thanks to Dario Santamaria (Closes: #624376)
+
+ -- tony mancill <tmancill@debian.org>  Thu, 28 Apr 2011 20:17:30 -0700
+
+tomcat6 (6.0.32-3) unstable; urgency=low
+
+  * Team upload.
+  * Include upstream patch for ASF Bugzilla - Bug 50700
+    (Context parameters are being overridden with parameters from the 
+     web application deployment descriptor) (Closes: #623242)
+
+ -- tony mancill <tmancill@debian.org>  Mon, 18 Apr 2011 20:38:29 -0700
+
+tomcat6 (6.0.32-2) unstable; urgency=low
+
+  * Team upload.
+
+  [ tony mancill ]
+  * Patch debian/tomcat6-instance-create (LP: #707405)
+    tomcat6-instance-create should accept -1 as the value of -c option
+    as per http://tomcat.apache.org/tomcat-6.0-doc/config/server.html
+    Thanks to Dave Walker.  (Closes: #617553)
+  * Move tomcat6-instance-create manpage from section 2 to section 8.
+    Thanks to brian m. carlson (Closes: #607682)
+  * Add tomcat6-extras package. 
+    Currently includes only catalina-jmx-remote.jar  (Closes: #614333)
+
+  [ Thierry Carrez ]
+  * debian/tomcat6-instance-create: Eclipse can now be configured to use a
+    user instance of tomcat6 using tomcat6-instance-create without any
+    additional work. Patch from Abhinav Upadhyay (Closes: #551091, LP: #297675)
+
+ -- tony mancill <tmancill@debian.org>  Sun, 03 Apr 2011 21:16:08 -0700
+
+tomcat6 (6.0.32-1) unstable; urgency=low
+
+  * Team upload.
+  * New upstream release
+  * Remove following patches applied upstream:
+    CVE-2010-4172, CVE-2011-0534, CVE-2010-3718, CVE-2011-0013, 
+    0009-allow-empty-PID-file.patch
+  * Adjust 0004-split-deploy-webapps-target-from-deploy-target.patch
+
+ -- tony mancill <tmancill@debian.org>  Tue, 15 Feb 2011 22:41:42 -0800
+
+tomcat6 (6.0.28-10) unstable; urgency=medium
+
+  * Team upload.
+  * Add Portuguese/Brazilian debconf translation.
+    Thanks to José de Figueiredo (Closes: #608527)
+  * Add patches for CVE-2011-0534, CVE-2010-3718, CVE-2011-0013 
+    (Closes: #612257)
+
+ -- tony mancill <tmancill@debian.org>  Wed, 09 Feb 2011 21:49:33 -0800
+
+tomcat6 (6.0.28-9) unstable; urgency=medium
+
+  * Team upload.
+  * Update URL for manager application in README.Debian 
+    Thanks to Ernesto Ongaro (Closes: #606170)
+  * Add patch for CVE-2010-4172. (Closes: #606388)
+
+ -- tony mancill <tmancill@debian.org>  Thu, 09 Dec 2010 22:52:08 -0800
+
+tomcat6 (6.0.28-8) unstable; urgency=low
+
+  * Team upload.
+
+  [ Thierry Carrez (ttx) ]
+  * Do not fail to purge if /etc/tomcat6 was manually removed (LP: #648619)
+  * Add missing -p option in start-stop-daemon when starting tomcat6 to avoid
+    failing to start due to /bin/bash running (LP: #632554)
+  * Fix build failure (missing TraXLiaison class) by adding ant-nodeps
+    to the classpath.
+
+  [ tony mancill ]
+  * Use debconf to determine tomcat6 user and group to delete upon purge.
+    Thanks to Misha Koshelev.  (Closes: #599458)
+  * Add tomcat-native to Suggests: for tomcat6 binary package. 
+    Thanks to Eddy Petrisor  (Closes: #600590)
+  * Add Danish debconf template translation.
+    Thanks to Joe Dalton (Closes: #605070)
+  * Actually add the Czech debconf template translation. 
+    Thanks this time to Christian PERRIER (Closes: #597863)
+
+ -- tony mancill <tmancill@debian.org>  Sat, 04 Dec 2010 17:20:11 -0800
+
+tomcat6 (6.0.28-7) unstable; urgency=low
+
+  * Team upload.
+  * Add Czech debconf template translation.
+    Thanks to Michal Simunek. (Closes: #597863) 
+  * Add Spanish debconf template translation.
+    Thanks to Javier Fernández-Sanguino (Closes: #599230)
+  * Modify postinst to handle JAVA_OPTS strings containing the '/' 
+    character.  This was causing upgrade failures for users.
+    (Closes: #597814)
+
+ -- tony mancill <tmancill@debian.org>  Wed, 06 Oct 2010 14:40:19 -0700
+
+tomcat6 (6.0.28-6) unstable; urgency=low
+
+  * Team upload.
+  * Add Japanese debconf template translation.
+    Thanks to Hideki Yamane. (Closes: #595460) 
+  * Add Russian debconf template translation.
+    Thanks to Yuri Kozlov. (Closes: #592627) 
+  * Add Portuguese debconf template translation.
+    Thanks to Américo Monteiro. (Closes: #592655) 
+  * Add Swedish debconf template translation.
+    Thanks to Martin Bagge. (Closes: #593676)
+  * Add German debconf template translation.
+    Thanks to Holger Wansing. (Closes: #593200)
+
+ -- tony mancill <tmancill@debian.org>  Fri, 17 Sep 2010 21:30:27 -0700
+
+tomcat6 (6.0.28-5) unstable; urgency=low
+
+  * Team upload.
+
+  [Thierry Carrez (ttx)]
+  * Check for group existence to avoid postinst failure (LP: #611721)
+
+  [tony mancill]
+  * Add French debconf template translation.
+    Thanks to Steve Petruzzello.  (Closes: #594313) 
+
+ -- tony mancill <tmancill@debian.org>  Thu, 02 Sep 2010 21:49:08 -0700
+
+tomcat6 (6.0.28-4) unstable; urgency=medium
+
+  * Ignore most errors during purge. (Closes: #591867)
+  * Add po-debconf support.
+
+ -- Torsten Werner <twerner@debian.org>  Fri, 06 Aug 2010 04:08:40 +0200
+
+tomcat6 (6.0.28-3) unstable; urgency=low
+
+  * UNRELEASED
+  * Fix filename of /etc/tomcat6/tomcat-users in README.Debian. Thanks to
+    Olivier Berger. (Closes: #590085)
+
+ -- Torsten Werner <twerner@debian.org>  Fri, 23 Jul 2010 23:36:49 +0200
+
+tomcat6 (6.0.28-2) unstable; urgency=low
+
+  * Add debconf questions for user, group and Java options.
+  * Use ucf to install /etc/default/tomcat6 from a template
+  * Drop CATALINA_BASE and CATALINA_HOME from /etc/default/tomcat6 since we
+    shouldn't encourage users to change those anyway
+
+ -- Thierry Carrez <thierry.carrez@ubuntu.com>  Tue, 20 Jul 2010 14:36:48 +0200
+
+tomcat6 (6.0.28-1) unstable; urgency=low
+
+  [ Niels Thykier ]
+  * Removed depends on JREs for the library packages. It is no longer
+    required by the policy.
+
+  [ Torsten Werner ]
+  * New upstream release (Closes: #588813)
+    - Fixes CVE-2010-2227: DoS and information disclosure
+  * Remove 2 patches that were backports to 6.0.26.
+
+ -- Torsten Werner <twerner@debian.org>  Mon, 19 Jul 2010 18:22:52 +0200
+
+tomcat6 (6.0.26-5) unstable; urgency=medium
+
+  * Convert patches to dep3 format.
+  * Backport security fix from trunk to fix CVE-2010-1157. (Closes: #587447)
+  * Set urgency to medium due to the security fix.
+
+ -- Torsten Werner <twerner@debian.org>  Mon, 28 Jun 2010 21:41:31 +0200
+
+tomcat6 (6.0.26-4) unstable; urgency=low
+
+  [ Thierry Carrez ]
+  * Fix issues preventing from running Tomcat6 with a security manager:
+    - debian/tomcat6.init: Remove duplicate securitymanager options.
+    - debian/patches/catalina-sh-security-manager.patch: Use the right
+      location for the security.policy file in catalina.sh.
+    - Closes: #585379, LP: #591802. Thanks to Jeff Turner for the original
+      patches and to Adam Guthrie for the Lucid debdiff.
+  * Allow binding to any interface when using authbind, rather than only allow
+    binding to all (LP: #594989)
+  * Force backgrounding of catalina.sh in start-stop-daemon, to allow the init
+    script to be started through ssh -t (LP: #588481)
+
+  [ Torsten Werner ]
+  * Remove Paul from Uploaders list.
+
+ -- Thierry Carrez <thierry.carrez@ubuntu.com>  Thu, 24 Jun 2010 15:55:10 +0200
+
+tomcat6 (6.0.26-3) unstable; urgency=low
+
+  [ Marcus Better ]
+  * Apply upstream fix for deadlock in WebappClassLoader. (Closes: #583896)
+
+  [ Thierry Carrez ]
+  * debian/tomcat6.{install,postinst}: Do not store the default root webapp
+    in /usr/share/tomcat6/webapps as it increases confusion on what this
+    directory contains (and its relation with /var/lib/tomcat6/webapps).
+    Store it inside /usr/share/tomcat6-root instead (LP: #575303).
+
+ -- Marcus Better <marcus@better.se>  Mon, 31 May 2010 15:50:57 +0200
+
+tomcat6 (6.0.26-2) unstable; urgency=low
+
+  * debian/tomcat6.{postinst,prerm}: Respect TOMCAT6_USER and TOMCAT6_GROUP
+    as defined in /etc/default/tomcat6 when setting directory permissions and
+    authbind configuration (Closes: #581018, LP: #557300)
+  * debian/tomcat6.postinst: Use group "tomcat6" instead of "adm" for
+    permissions in /var/lib/tomcat6, so that group "adm" doesn't get write
+    permissions over /var/lib/tomcat6/webapps (LP: #569118)
+
+ -- Thierry Carrez <thierry.carrez@ubuntu.com>  Fri, 21 May 2010 13:51:15 +0200
+
+tomcat6 (6.0.26-1) unstable; urgency=low
+
+  * New upstream version
+  * Apply patch from Mark Scott to fix 
+    tomcat6-instance-create which failed when multiple commandline
+    options are provided, fix creation of FULLPATH (Closes: #575580)
+
+ -- Ludovic Claude <ludovic.claude@laposte.net>  Wed, 21 Apr 2010 23:07:09 +0100
+
+tomcat6 (6.0.24-5) unstable; urgency=low
+
+  * Added optimised garbage collection options to tomcat6's default options.
+    Thanks to Aaron J. Zirbes and Thierry Carrez for research and the patch.
+    (Closes: LP: #541520)
+  * Updated the changelog to mention closed CVE's in the 6.0.24-1 release.
+  * Applied patch from Arto Jantunen fixing an issue with cleaning up the
+    pid-file. (Closes: #574084)
+
+ -- Niels Thykier <niels@thykier.net>  Thu, 25 Mar 2010 23:45:32 +0100
+
+tomcat6 (6.0.24-4) unstable; urgency=low
+
+  * debian/tomcat6.postrm: fix removal of Tomcat (Closes: #567548)
+  * Set UTF-8 as default character encoding - Patch by Thomas Koch
+    (Closes: #573539)
+
+ -- Ludovic Claude <ludovic.claude@laposte.net>  Thu, 11 Mar 2010 23:45:34 +0100
+
+tomcat6 (6.0.24-3) unstable; urgency=medium
+
+  * Set the major, minor and build versions when calling Ant
+    (Closes: LP: #495505)
+  * Rebuild with a more recent version of maven-repo-helper which puts
+    the javax jars at the correct location in the Maven repository.
+    Fixes several FTBFS in other packages.
+
+ -- Ludovic Claude <ludovic.claude@laposte.net>  Wed, 03 Mar 2010 00:10:15 +0100
+
+tomcat6 (6.0.24-2) unstable; urgency=low
+
+  * Fix missing symlinks to tomcat-coyote.jar and
+    catalina-tribes.jar causing NoClassDefFoundException
+    at startup (last minute packaging change, sorry)
+    (Closes: #570220)
+  * tomcat6-admin, tomcat6-examples and tomcat6-docs now depend on
+    tomcat6-common instead of tomcat6, this allow users to install
+    those packages without requiring tomcat6 and its automatic startup scripts
+    being present. tomcat-users can be installed instead and allow full
+    control over when Tomcat is started or stopped.
+
+ -- Ludovic Claude <ludovic.claude@laposte.net>  Wed, 17 Feb 2010 22:59:21 +0100
+
+tomcat6 (6.0.24-1) unstable; urgency=low
+
+  [ Ludovic Claude ]
+  * New upstream version
+    - Fixes Directory traversal vulnerability (CVE-2009-2693,CVE-2009-2902)
+    - Fixes Autodeployment vulnerability (CVE-2009-2901)
+  * Update the POM files for the new version of Tomcat
+  * Bump up Standards-Version to 3.8.4
+  * Refresh patches deploy-webapps-build-xml.patch and var_loaders.patch
+  * Remove patch fix_context_name.patch as it has been applied upstream
+  * Fix the installation of servlet-api-2.5.jar: the jar
+    goes to /usr/share/java as in older versions (6.0.20-2)
+    and links to the jar are added to /usr/share/maven-repo
+  * Moved NEWS.Debian into README.Debian
+  * Add a link from /usr/share/doc/tomcat6-common/README.Debian to
+    /usr/share/doc/tomcat6/README.Debian to include a minimum of
+    documentation in the tomcat6 package and add some useful notes. 
+    (Closes: #563937, #563939)
+  * Remove poms from the Debian packaging, use upstream pom files
+
+  [ Jason Brittain ]
+  * Fixed a bug in the init script: When a start fails, the PID file was
+    being left in place.  Now the init script makes sure it is deleted.
+  * Fixed a packaging bug that results in the ROOT webapp not being properly
+    installed after an uninstall, then a reinstall.
+  * control: Corrected a couple of comments (no functional change).
+
+ -- Ludovic Claude <ludovic.claude@laposte.net>  Tue, 09 Feb 2010 23:06:51 +0100
+
+tomcat6 (6.0.20-dfsg1-2) unstable; urgency=low
+
+  * JSVC is no longer used by the package.  Instead, the init script invokes
+    the stock catalina.sh script.
+  * Authbind is now the standard method for binding Tomcat to ports lower
+    than 1024 (when using IPv4).
+  * The security manager now defaults to the disabled state, and is commented
+    that way in /etc/default/tomcat6.
+  * Reliable restarts are now implemented in the init script.
+    (Closes: #561559)
+  * Tomcat now sends STDOUT and STDERR to its usual, stock log file
+    CATALINA_BASE/logs/catalina.out (/var/log/tomcat6/catalina.out in this
+    package's case.
+
+ -- Jason Brittain <jason.brittain@mulesoft.com>  Wed, 27 Jan 2010 01:08:57 +0000
+
+tomcat6 (6.0.20-dfsg1-1) unstable; urgency=low
+
+  * Fix debian/orig-tar.sh to exclude binary only standard.jar and jstl.jar.
+    (Closes: #528119)
+  * Upload a cleaned tarball.
+  * Add ${misc:Depends} in debian/control.
+
+ -- Torsten Werner <twerner@debian.org>  Sat, 23 Jan 2010 19:40:38 +0100
+
+tomcat6 (6.0.20-9) unstable; urgency=low
+
+  * Fix spelling issues.
+  * Always set JSVC_CLASSPATH to a default value in init.
+
+ -- Niels Thykier <niels@thykier.net>  Sat, 19 Dec 2009 19:11:33 +0100
+
+tomcat6 (6.0.20-8) unstable; urgency=low
+
+  * Corrected some spelling mistakes in debian/control.
+    (Closes: #557377, #557378)
+  * Added patches to install the OSGi metadata in some of the jars.
+    (Closes: #558176)
+  * Updated 03catalina.policy to allow "setContextClassLoader".
+    - Fixes a problem where Sun's JVM would fail to generate log-files.
+    (Closes: LP: #410379)
+  * Updated /etc/default/tomcat6:
+    - Clarified that JAVA_OPTS are passed to jscv and not the JVM.
+    - Updated the JSP_COMPILER to javac (jikes is not in Debian anymore).
+    (Closes: LP: #440685)
+  * Use default-jdk and default-jre-headless instead of openjdk in
+    (Build-)Depends.
+  * Added more alternatives for java implementations to the Depends of
+    libservlet2.5-java.
+  * Exposed JSVC_CLASSPATH to the configuration file.
+    (Closes: LP: #475457)
+  * Updated description so it no longer refers to non-existent package.
+    (Closes: #559475)
+  * Used "set -e" in postinst and postrm instead of passing "-e" to sh
+    in the #!-line.
+  * Changed to 3.0 (quilt) source format.
+
+ -- Niels Thykier <niels@thykier.net>  Mon, 07 Dec 2009 21:17:55 +0100
+
+tomcat6 (6.0.20-7) unstable; urgency=low
+
+  * New patch fix_context_name.patch:
+    - Allow Service name != Engine name. Regression in fix for 42707.
+      Fix https://issues.apache.org/bugzilla/show_bug.cgi?id=47316
+    - This has been fixed in trunk and will be in 6.0.21
+  * Register libservlet2.5-java-doc API with doc-base
+  * Fix short description of tomcat6-docs by using "documentation" suffix
+
+ -- Damien Raude-Morvan <drazzib@debian.org>  Sat, 10 Oct 2009 21:41:55 +0200
+
+tomcat6 (6.0.20-6) unstable; urgency=low
+
+  [ Ludovic Claude ]
+  * tomcat6.postinst: set the ownership of files in /etc/tomcat6/
+    to root:tomcat6, to prevent an attacker running inside a tomcat6
+    instance to change the tomcat configuration
+  * debian/policy/02debian.policy: grant access to 
+    /usr/share/maven-repo/ as it is a valid source of Debian JARs.
+    (Closes: #545674)
+  * Bump up Standards-Version to 3.8.3
+    - add debian/README.source that describes the quilt patch system.
+  * debian/control: Add Conflicts on libtomcat6-java with old versions
+    of tomcat6-common (Closes: #542397)
+
+  [ Michael Koch ]
+  * Replace dh_clean -k by dh_prep.
+  * Added Ludovic and myself to Uploaders.
+  * Build-Depends on debhelper >= 7.
+
+ -- Michael Koch <konqueror@gmx.de>  Fri, 25 Sep 2009 07:14:07 +0200
+
+tomcat6 (6.0.20-5) unstable; urgency=low
+
+  * Fix jsp-api dependency in the Maven descriptors.
+  * Put tomcat-juli.jar in /usr/share/java instead of juli.jar.
+    This fixes a broken link which prevented tomcat to start
+    when logging is turned on, and restores the file layout
+    defined in 6.0.20-2.
+  * Restore links to the jars in usr/share/tomcat6/lib
+  * Change watch to download fresh sources from SVN. 
+    Should fix wrong encoding in tomcat-i18n-fr/es.jar in the next upstream
+    version. (Closes: #522067)
+  * Update ownership for files in /etc/tomcat6 and /var/lib/tomcat6/webapps.
+    The new owner is tomcat6:adm (Closes: #532284)
+  * Add additional directories for the common, server and shared classloader.
+    Directories are also compatible with Alfresco's packaging done for
+    Ubuntu. (Closes: #521318)
+  * Update checksum in postrm script to reflect changes
+    in the new upstream webapp
+  * postrm removes the extra directories created in /var/lib/tomcat6
+    to hold shared and common classes or jars.
+  * Added commented out default options for enabling debug mode.
+    (Closes: LP: #375493)
+
+ -- Ludovic Claude <ludovic.claude@laposte.net>  Wed, 05 Aug 2009 00:56:59 +0100
+
+tomcat6 (6.0.20-4) experimental; urgency=low
+
+  * Fix init script:
+    - Change Provides: tomcat6. (Closes: #532286)
+    - Check for /etc/default/rcS before sourcing it.
+  * Update Standards-Version: 3.8.2 (no changes).
+
+ -- Torsten Werner <twerner@debian.org>  Thu, 16 Jul 2009 23:36:32 +0200
+
+tomcat6 (6.0.20-3) experimental; urgency=low
+
+  * Add the Maven POM to the package
+  * Add a Build-Depends-Indep dependency on maven-repo-helper
+  * Use mh_installpom and mh_installjar to install the POM and the jar to the
+    Maven repository
+
+ -- Ludovic Claude <ludovic.claude@laposte.net>  Tue, 14 Jul 2009 14:17:27 +0100
+
+tomcat6 (6.0.20-2) unstable; urgency=low
+
+  * Expose tomcat-juli.jar as a library in /usr/share/java
+    as it is a dependency of jasper which is used also by jetty
+
+ -- Ludovic Claude <ludovic.claude@laposte.net>  Mon, 15 Jun 2009 13:33:13 +0100
+
+tomcat6 (6.0.20-1) unstable; urgency=low
+
+  * new upstream release (Closes: #531873)
+  * Remove patch tcnative-ipv6-fix-43327.patch that has been applied upstream.
+  * Refresh other patches.
+
+ -- Torsten Werner <twerner@debian.org>  Fri, 05 Jun 2009 23:38:44 +0200
+
+tomcat6 (6.0.18-dfsg1-1) unstable; urgency=low
+
+  [ Torsten Werner ]
+  * Remove jstl.jar and standard.jar from orig tarball because it comes without
+    source code. (Closes: #528119)
+
+  [ Marcus Better ]
+  * Let the init script exit silently if the package is
+    uninstalled. (Closes: #529301)
+
+ -- Torsten Werner <twerner@debian.org>  Tue, 19 May 2009 21:23:18 +0200
+
+tomcat6 (6.0.18-4) unstable; urgency=low
+
+  * Add patch tcnative-ipv6-fix-43327.patch provided by Thierry Carrez.
+    (Closes: #527033)
+  * Change Section: java (from web).
+  * Bump up Standards-Version: 3.8.1 (no changes).
+  * Remove redundant Depends: ant because we depend on ant-optional.
+
+ -- Torsten Werner <twerner@debian.org>  Sun, 10 May 2009 19:41:40 +0200
+
+tomcat6 (6.0.18-3) unstable; urgency=low
+
+  * Remove unneeded dirs and symlinks; thanks to Thierry Carrez. (Closes:
+    #517857)
+  * Improve the long description of all binary packages. (Closes: #518140)
+
+ -- Torsten Werner <twerner@debian.org>  Wed, 04 Mar 2009 21:58:41 +0100
+
+tomcat6 (6.0.18-2) unstable; urgency=low
+
+  * upload to unstable
+
+ -- Torsten Werner <twerner@debian.org>  Sat, 21 Feb 2009 11:31:20 +0100
+
+tomcat6 (6.0.18-1) experimental; urgency=low
+
+  * Merge changes from Ubuntu. Thanks to the Ubuntu developers we are shipping
+    a full Tomcat 6.0 server stack now. (Closes: #494674)
+  * Add myself to Uploaders.
+  * Switch to openjdk-6 which is not the default in Debian.
+
+ -- Torsten Werner <twerner@debian.org>  Sat, 07 Feb 2009 17:02:57 +0100
+
+tomcat6 (6.0.18-0ubuntu5) jaunty; urgency=low
+
+  [ Thierry Carrez ]
+  * Removed tomcat6-[admin,docs,examples].post[inst,rm] and let Tomcat webapp
+    autodeployment features handle application load/unload (LP: #302914)
+  * tomcat6-instance-create, tomcat6-instance-create.1, control:
+    Allow to change the HTTP port, control port and shutdown word on the
+    tomcat6-instance-create command line (LP: #300691).
+
+  [ Mathias Gug]
+  * debian/tomcat6-instance-create: move directoryname from an option to 
+    an argument.
+  * debian/tomcat6-instance-create.1: some updates to the man page.
+  * debian/control: update maintainer field to Ubuntu Core Developers now that
+    tomcat6 is in main.
+
+ -- Mathias Gug <mathiaz@ubuntu.com>  Wed, 07 Jan 2009 18:44:39 -0500
+
+tomcat6 (6.0.18-0ubuntu4) jaunty; urgency=low
+
+  * tomcat6.init, tomcat6.postinst, tomcat6.dirs, tomcat6.default,
+    README.debian: Use /tmp/tomcat6-temp instead of /var/lib/tomcat6/temp as
+    the JVM temporary directory and clean it at each restart (LP: #287452)
+  * policy/04webapps.policy: add rules to allow usage of java.io.tmpdir
+  * tomcat6.init, rules: Do not use TearDown, as this results in
+    LifecycleListener callbacks in webapps being bypassed (LP: #299436)
+  * rules: Compile at Java 1.5 level to allow usage of Java 5 JREs
+    (LP: #286427)
+  * control, rules, libservlet2.5-java-doc.install,
+    libservlet2.5-java-doc.links: New libservlet2.5-java-doc package ships
+    missing Servlet/JSP API documentation (LP: #279645)
+  * patches/use-commons-dbcp.patch: Change default DBCP factory class
+    to org.apache.commons.dbcp.BasicDataSourceFactory (LP: #283852)
+  * tomcat6.dirs, tomcat6.postinst, default_root/index.html: Create
+    Catalina/localhost in /etc/tomcat6 and make it writeable by the tomcat6
+    group, so that autodeploy and admin webapps work as expected (LP: #294277)
+  * patches/disable-apr-loading.patch: Disable APR library loading until we
+    properly provide it.
+  * patches/disable-ajp-connector: Do not load AJP13 connector by default
+    (LP: #300697)
+  * rules: minor fixes to prevent build being called twice.
+
+ -- Thierry Carrez <thierry.carrez@ubuntu.com>  Thu, 27 Nov 2008 12:47:42 +0000
+
+tomcat6 (6.0.18-0ubuntu3) intrepid; urgency=low
+
+  * debian/tomcat6.postinst:
+    - Make /var/lib/tomcat6/temp writeable by the tomcat6 user (LP: #287126)
+    - Make /var/lib/tomcat6/webapps writeable by tomcat6 group (LP: #287447)
+  * debian/tomcat6.init: make status return nonzero if tomcat6 is not running
+    (fixes LP: #288218)
+
+ -- Thierry Carrez <thierry.carrez@ubuntu.com>  Thu, 23 Oct 2008 18:19:15 +0200
+
+tomcat6 (6.0.18-0ubuntu2) intrepid; urgency=low
+
+  * debian/rules: call dh_installinit with --error-handler so that install
+    doesn't fail if Tomcat cannot be started during configure (LP: #274365)
+
+ -- Thierry Carrez <thierry.carrez@ubuntu.com>  Mon, 06 Oct 2008 13:55:21 +0200
+
+tomcat6 (6.0.18-0ubuntu1) intrepid; urgency=low
+
+  * New upstream version (LP: #260016)
+    - Fixes CVE-2008-2938: Directory traversal vulnerability (LP: #256802)
+    - Fixes CVE-2008-2370: Information disclosure vulnerability (LP: #256922)
+    - Fixes CVE-2008-1232: XSS through sendError vulnerability (LP: #256926)
+  * Dropped CVE-2008-1947.patch (fix is shipped in this upstream release)
+  * control: Improve short descriptions for the binary packages
+  * copyright: Added link to /usr/share/common-licenses/Apache-2.0
+  * control: To pull the right JRE, libtomcat6-java now depends on
+    default-jre-headless | java6-runtime-headless
+
+ -- Thierry Carrez <thierry.carrez@ubuntu.com>  Fri, 22 Aug 2008 09:15:11 +0200
+
+tomcat6 (6.0.16-1ubuntu1) intrepid; urgency=low
+
+  * Adding full Tomcat 6 server stack support (LP: #256052)
+    - tomcat6 handles the system instance (/var/lib/tomcat6)
+    - tomcat6-user allows users to create their own private instances
+    - tomcat6-common installs common files in /usr/share/tomcat6
+    - libtomcat6-java installs Tomcat 6 java libs in /usr/share/java
+    - tomcat6-docs installs the documentation webapp
+    - tomcat6-examples installs the examples webapp
+    - tomcat6-admin installs the manager and host-manager webapps
+  * Other key differences with the tomcat5.5 packages:
+    - default-jdk build support
+    - OpenJDK-6 JRE runtime support
+    - tomcat6 installs a minimal ROOT webapp
+    - new webapp locations follow Debian webapp policy
+    - webapps restart tomcat6 in postrm rather than in prerm
+    - added a doc-base entry
+    - use standard upstream server.xml
+    - initscript: try to check if Tomcat is really running before returning OK
+    - removed transitional configuration migration code
+    - autogenerate policy in /var/cache/tomcat6 rather than /etc/tomcat6
+    - logging.properties is customized to remove -webapps-related lines
+    - initscript: implement TearDown spec
+  * CVE-2008-1947 fix (cross-site-scripting issue in host-manager webapp)
+
+ -- Thierry Carrez <thierry.carrez@ubuntu.com>  Fri, 08 Aug 2008 15:37:48 +0200
+
+tomcat6 (6.0.16-1) unstable; urgency=low
+
+  * Initial release.
+    (Closes: #480964).
+
+ -- Paul Cager <paul-debian@home.paulcager.org>  Mon, 12 May 2008 23:04:49 +0000
