@@ -34,7 +34,7 @@ ANT_ARGS := -Dcompile.debug=true \
     -Dversion.minor="$(T_VER_MINOR)" \
     -Dversion.build="$(T_VER_BUILD)" \
     -Dversion.patch="0" \
-    -Dversion.suffix=""
+    -Dversion.suffix="" 
 
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	ANT_ARGS += -Dcompile.optimize=false
@@ -48,7 +48,7 @@ ANT_INVOKE := $(JAVA_CMD) -classpath "$(DEB_CLASSPATH)" \
 build: build-stamp
 build-stamp:
 	dh_testdir
-	$(ANT_INVOKE) deploy
+	$(ANT_INVOKE) deploy-webapps
 	javadoc -subpackages "javax.servlet" -d "output/api" \
 		-sourcepath "java" -author -version -breakiterator \
 		-windowtitle "Tomcat API Documentation" -doctitle "Tomcat API" \
@@ -63,6 +63,7 @@ clean:
 	rm -rf .mh/
 	rm -f build-stamp
 	dh_clean
+	mh_clean
 
 install: build
 	dh_testdir
@@ -110,10 +111,6 @@ binary-indep: build install
 	              debian/poms/tomcat-coyote.pom \
 	              $(BLDLIB)/tomcat-coyote.jar \
 	              usr/share/tomcat7/lib/tomcat-coyote.jar
-	mh_installjar -plibtomcat7-java -l --usj-name=tomcat-dbcp \
-	              debian/poms/tomcat-dbcp.pom \
-	              $(BLDLIB)/tomcat-dbcp.jar \
-	              usr/share/tomcat7/lib/tomcat-dbcp.jar
 	mh_installjar -plibtomcat7-java -l --usj-name=tomcat-juli \
 	              debian/poms/tomcat-juli.pom \
 	              $(BLDBIN)/tomcat-juli.jar

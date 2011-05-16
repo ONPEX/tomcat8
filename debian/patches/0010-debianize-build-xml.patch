@@ -1,0 +1,13 @@
+Index: tomcat7/build.xml
+===================================================================
+--- tomcat7.orig/build.xml	2011-05-16 14:03:11.886611990 +0100
++++ tomcat7/build.xml	2011-05-16 14:03:33.316575913 +0100
+@@ -465,7 +465,7 @@
+     </checkstyle>
+   </target>
+ 
+-  <target name="compile" depends="build-prepare,download-compile,validate">
++  <target name="compile" depends="build-prepare">
+ 
+     <!-- Compile internal server components -->
+     <javac srcdir="java" destdir="${tomcat.classes}"

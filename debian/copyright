@@ -113,7 +113,7 @@ License: Apache-2.0
 
 Files: debian/*
 Copyright:
-  2008, Canonical Ltd.
+  2008,2011, Canonical Ltd.
   2008, Paul Cager <paul-debian@home.paulcager.org>
   2010, Thierry Carrez <thierry.carrez@ubuntu.com>
   2011, Ernesto Hernanez-Novich <emhn@usb.ve>

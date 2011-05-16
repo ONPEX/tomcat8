@@ -7,3 +7,4 @@
 0007-add-OSGi-headers-to-servlet-api.patch
 0008-add-OSGI-headers-to-jsp-api.patch
 0009-Use-java.security.policy-file-in-catalina.sh.patch
+0010-debianize-build-xml.patch
