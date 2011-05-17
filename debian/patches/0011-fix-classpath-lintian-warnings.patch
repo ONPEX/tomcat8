@@ -1,0 +1,50 @@
+Description: Fix codeless-jar lintian warnings
+Author: Miguel Landaeta <miguel@miguel.cc>
+Forwarded: no
+Last-Update: 2011-05-16
+
+--- tomcat7-7.0.14.orig/build.xml
++++ tomcat7-7.0.14/build.xml
+@@ -605,8 +605,7 @@
+       filesId="files.jasper-el" />
+ 
+     <!-- i18n JARs -->
+-    <jar jarfile="${tomcat.build}/lib/tomcat-i18n-es.jar"
+-      manifest="${tomcat.manifests}/default.manifest" >
++    <zip destfile="${tomcat.build}/lib/tomcat-i18n-es.jar">
+       <fileset dir="${tomcat.classes}">
+         <include name="**/LocalStrings_es.properties" />
+       </fileset>
+@@ -614,9 +613,8 @@
+         fullpath="META-INF/NOTICE" />
+       <zipfileset file="${tomcat.manifests}/default.license"
+         fullpath="META-INF/LICENSE" />
+-    </jar>
+-    <jar jarfile="${tomcat.build}/lib/tomcat-i18n-fr.jar"
+-      manifest="${tomcat.manifests}/default.manifest" >
++    </zip>
++    <zip destfile="${tomcat.build}/lib/tomcat-i18n-fr.jar">
+       <fileset dir="${tomcat.classes}">
+         <include name="**/LocalStrings_fr.properties" />
+       </fileset>
+@@ -624,9 +622,8 @@
+         fullpath="META-INF/NOTICE" />
+       <zipfileset file="${tomcat.manifests}/default.license"
+         fullpath="META-INF/LICENSE" />
+-    </jar>
+-    <jar jarfile="${tomcat.build}/lib/tomcat-i18n-ja.jar"
+-      manifest="${tomcat.manifests}/default.manifest" >
++    </zip>
++    <zip destfile="${tomcat.build}/lib/tomcat-i18n-ja.jar">
+       <fileset dir="${tomcat.classes}">
+         <include name="**/LocalStrings_ja.properties" />
+       </fileset>
+@@ -634,7 +631,7 @@
+         fullpath="META-INF/NOTICE" />
+       <zipfileset file="${tomcat.manifests}/default.license"
+         fullpath="META-INF/LICENSE" />
+-    </jar>
++    </zip>
+ 
+   </target>
+ 
