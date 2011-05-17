@@ -48,7 +48,7 @@ ANT_INVOKE := $(JAVA_CMD) -classpath "$(DEB_CLASSPATH)" \
 build: build-stamp
 build-stamp:
 	dh_testdir
-	$(ANT_INVOKE) deploy-webapps
+	$(ANT_INVOKE) deploy
 	javadoc -subpackages "javax.servlet" -d "output/api" \
 		-sourcepath "java" -author -version -breakiterator \
 		-windowtitle "Tomcat API Documentation" -doctitle "Tomcat API" \
@@ -60,7 +60,6 @@ clean:
 	dh_testroot
 	-$(ANT_INVOKE) clean
 	rm -rf "output/"
-	rm -rf .mh/
 	rm -f build-stamp
 	dh_clean
 	mh_clean
