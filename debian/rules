@@ -82,6 +82,7 @@ binary-indep: build install
 	dh_installcron
 	mkdir -p debian/poms
 	cp res/maven/*.pom debian/poms
+	rm -f debian/poms/tomcat-dbcp.pom
 	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.0/'      \
 	              debian/poms/tomcat-servlet-api.pom
 	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/2.2/'      \
