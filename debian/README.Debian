@@ -25,3 +25,10 @@ Getting started:
     wish.  See the "man authbind" for information on configuring
     authbind.
 
+Deviations from upstream's tomcat7:
+
+  * In order to prevent library duplication, this version of tomcat
+    does provide tomcat-dbcp.jar.  Instead, it uses commons-dbcp.jar 
+    from the libcommons-dbcp-java package.  For more information, 
+    see:  https://bugs.launchpad.net/ubuntu/+source/tomcat6/+bug/283852
+
