@@ -1,9 +1,11 @@
 tomcat7 (7.0.14-1) unstable; urgency=low
 
-  [ Ernesto Hernández-Novich ]
+  * Team upload.
   * New upstream release.
+    Thank you to Ernesto Hernández-Novich for providing the basis of
+    this packaging.
 
- -- Miguel Landaeta <miguel@miguel.cc>  Sun, 15 May 2011 12:28:41 -0430
+ -- tony mancill <tmancill@debian.org>  Tue, 17 May 2011 21:10:22 -0700
 
 tomcat6 (6.0.32-4) UNRELEASED; urgency=low
 
