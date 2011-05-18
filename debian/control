@@ -63,6 +63,8 @@ Description: Servlet and JSP engine -- tools to create user instances
 Package: libtomcat7-java
 Architecture: all
 Depends: libecj-java,
+         libcommons-pool-java,
+         libcommons-dbcp-java,
          libservlet3.0-java (>= ${source:Version}), ${misc:Depends}
 Conflicts: libtomcat6-java
 Suggests: tomcat7 (>= ${source:Version})
