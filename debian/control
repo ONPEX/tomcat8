@@ -3,7 +3,7 @@ Section: java
 Priority: optional
 Maintainer: Debian Java Maintainers <pkg-java-maintainers@lists.alioth.debian.org>
 Uploaders: James Page <james.page@canonical.com>,
- Miguel Landaeta <miguel@miguel.cc>
+ Miguel Landaeta <miguel@miguel.cc>, tony mancill <tmancill@debian.org>
 Build-Depends: default-jdk, ant-optional, debhelper (>= 7), po-debconf
 Build-Depends-Indep: maven-repo-helper (>> 1.0.1), libecj-java
 Standards-Version: 3.9.2
@@ -64,6 +64,7 @@ Package: libtomcat7-java
 Architecture: all
 Depends: libecj-java,
          libservlet3.0-java (>= ${source:Version}), ${misc:Depends}
+Conflicts: libtomcat6-java
 Suggests: tomcat7 (>= ${source:Version})
 Description: Servlet and JSP engine -- core libraries
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
