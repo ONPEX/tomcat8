@@ -5,3 +5,4 @@ var/lib/tomcat7/server/classes
 var/lib/tomcat7/shared/classes
 var/cache/tomcat7
 etc/tomcat7/Catalina/localhost
+etc/logrotate.d

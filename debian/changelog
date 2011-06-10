@@ -1,8 +1,12 @@
 tomcat7 (7.0.14-2) UNRELEASED; urgency=low
 
+  [ Miguel Landaeta ]
   * Add missing deps and symlinks for commons-pool ands commons-dbcp jars.
 
- -- Miguel Landaeta <miguel@miguel.cc>  Wed, 18 May 2011 18:24:33 -0430
+  [ tony mancill ]
+  * Add logrotate file for catalina.out.
+
+ -- tony mancill <tmancill@debian.org>  Thu, 09 Jun 2011 23:20:41 -0700
 
 tomcat7 (7.0.14-1) unstable; urgency=low
 

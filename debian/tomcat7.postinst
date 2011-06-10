@@ -35,6 +35,13 @@ case "$1" in
 	fi
 	chown -R $TOMCAT7_USER:adm /var/log/tomcat7 /var/cache/tomcat7
 	chmod 750 /var/log/tomcat7 /var/cache/tomcat7
+
+	# replace the TOMCAT7USER token in /etc/logrotate.d/tomcat7
+	LOGROTATE_TOKEN="@@@TOMCAT7USER@@@"
+	if grep -q "$LOGROTATE_TOKEN" /etc/logrotate.d/tomcat7 ; then
+		sed --in-place "s/$LOGROTATE_TOKEN/$TOMCAT7_USER/" /etc/logrotate.d/tomcat7
+	fi
+
 	# configuration files should not be modifiable by tomcat7 user, as this can be a security issue
 	# (an attacker may insert code in a webapp and have access to all tomcat configuration)
 	# but those files should be readable by tomcat7, so we set the group to tomcat7

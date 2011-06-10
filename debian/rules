@@ -69,6 +69,7 @@ install: build
 	dh_testroot
 	dh_prep 
 	dh_installdirs
+	cp debian/logrotate debian/tomcat7/etc/logrotate.d/tomcat7
 
 binary-indep: build install
 	dh_testdir
