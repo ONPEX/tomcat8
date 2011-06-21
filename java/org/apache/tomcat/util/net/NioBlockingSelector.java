@@ -92,7 +92,7 @@ public class NioBlockingSelector {
             while ( (!timedout) && buf.hasRemaining()) {
                 if (keycount > 0) { //only write if we were registered for a write
                     int cnt = socket.write(buf); //write the data
-                    lastWrite.set(cnt);
+                    if (lastWrite != null) lastWrite.set(cnt);
                     if (cnt == -1)
                         throw new EOFException();
                     written += cnt;
@@ -166,7 +166,11 @@ public class NioBlockingSelector {
                 try {
                     if ( att.getReadLatch()==null || att.getReadLatch().getCount()==0) att.startReadLatch(1);
                     poller.add(att,SelectionKey.OP_READ, reference);
-                    att.awaitReadLatch(readTimeout,TimeUnit.MILLISECONDS);
+                    if (readTimeout < 0) {
+                        att.awaitReadLatch(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+                    } else {
+                        att.awaitReadLatch(readTimeout, TimeUnit.MILLISECONDS);
+                    }
                 }catch (InterruptedException ignore) {
                     Thread.interrupted();
                 }
@@ -178,7 +182,7 @@ public class NioBlockingSelector {
                     keycount = 1;
                     att.resetReadLatch();
                 }
-                if (readTimeout > 0 && (keycount == 0))
+                if (readTimeout >= 0 && (keycount == 0))
                     timedout = (System.currentTimeMillis() - time) >= readTimeout;
             } //while
             if (timedout)

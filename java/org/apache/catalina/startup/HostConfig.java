@@ -67,7 +67,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: HostConfig.java 1087534 2011-04-01 01:02:07Z markt $
+ * @version $Id: HostConfig.java 1125492 2011-05-20 18:11:53Z markt $
  */
 public class HostConfig
     implements LifecycleListener {
@@ -1312,7 +1312,7 @@ public class HostConfig
         if (host.getCreateDirs()) {
             File[] dirs = new File[] {appBase(),configBase()};
             for (int i=0; i<dirs.length; i++) {
-                if ( (!dirs[i].exists()) && (!dirs[i].mkdirs())) {
+                if ( (!dirs[i].isDirectory()) && (!dirs[i].mkdirs())) {
                     log.error(sm.getString("hostConfig.createDirs",dirs[i]));
                 }
             }

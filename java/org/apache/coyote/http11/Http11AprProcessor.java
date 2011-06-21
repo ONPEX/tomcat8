@@ -23,7 +23,6 @@ import java.io.InterruptedIOException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Locale;
-import java.util.concurrent.Executor;
 
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.Request;
@@ -42,7 +41,6 @@ import org.apache.tomcat.util.buf.ByteChunk;
 import org.apache.tomcat.util.buf.HexUtils;
 import org.apache.tomcat.util.buf.MessageBytes;
 import org.apache.tomcat.util.http.MimeHeaders;
-import org.apache.tomcat.util.net.AbstractEndpoint;
 import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 import org.apache.tomcat.util.net.AprEndpoint;
 import org.apache.tomcat.util.net.SSLSupport;
@@ -81,8 +79,6 @@ public class Http11AprProcessor extends AbstractHttp11Processor {
         outputBuffer = new InternalAprOutputBuffer(response, headerBufferSize);
         response.setOutputBuffer(outputBuffer);
         request.setResponse(response);
-        
-        ssl = endpoint.isSSLEnabled();
 
         initializeFilters(maxTrailerSize);
 
@@ -119,25 +115,9 @@ public class Http11AprProcessor extends AbstractHttp11Processor {
 
 
     /**
-     * SSL enabled ?
-     */
-    protected boolean ssl = false;
-    
-
-    /**
      * Socket associated with the current connection.
      */
     protected SocketWrapper<Long> socket = null;
-
-
-    /**
-     * Associated endpoint.
-     */
-    protected AprEndpoint endpoint;
-    @Override
-    protected AbstractEndpoint getEndpoint() {
-        return endpoint;
-    }
 
 
     /**
@@ -246,7 +226,7 @@ public class Http11AprProcessor extends AbstractHttp11Processor {
                     // and the method should return true
                     openSocket = true;
                     // Add the socket to the poller
-                    endpoint.getPoller().add(socketRef);
+                    ((AprEndpoint)endpoint).getPoller().add(socketRef);
                     if (endpoint.isPaused()) {
                         // 503 - Service unavailable
                         response.setStatus(503);
@@ -311,7 +291,8 @@ public class Http11AprProcessor extends AbstractHttp11Processor {
                     // committed, so we can't try and set headers.
                     if(keepAlive && !error) { // Avoid checking twice.
                         error = response.getErrorException() != null ||
-                                statusDropsConnection(response.getStatus());
+                                (!isAsync() &&
+                                statusDropsConnection(response.getStatus()));
                     }
                 } catch (InterruptedIOException e) {
                     error = true;
@@ -352,7 +333,7 @@ public class Http11AprProcessor extends AbstractHttp11Processor {
             if (sendfileData != null && !error) {
                 sendfileData.socket = socketRef;
                 sendfileData.keepAlive = keepAlive;
-                if (!endpoint.getSendfile().add(sendfileData)) {
+                if (!((AprEndpoint)endpoint).getSendfile().add(sendfileData)) {
                     openSocket = true;
                     break;
                 }
@@ -535,7 +516,7 @@ public class Http11AprProcessor extends AbstractHttp11Processor {
 
         } else if (actionCode == ActionCode.REQ_SSL_ATTRIBUTE ) {
 
-            if (ssl && (socketRef != 0)) {
+            if (endpoint.isSSLEnabled() && (socketRef != 0)) {
                 try {
                     // Cipher suite
                     Object sslO = SSLSocket.getInfoS(socketRef, SSL.SSL_INFO_CIPHER);
@@ -584,7 +565,7 @@ public class Http11AprProcessor extends AbstractHttp11Processor {
 
         } else if (actionCode == ActionCode.REQ_SSL_CERTIFICATE) {
 
-            if (ssl && (socketRef != 0)) {
+            if (endpoint.isSSLEnabled() && (socketRef != 0)) {
                 // Consume and buffer the request body, so that it does not
                 // interfere with the client's handshake messages
                 InputFilter[] inputFilters = inputBuffer.getFilters();
@@ -593,7 +574,7 @@ public class Http11AprProcessor extends AbstractHttp11Processor {
                 try {
                     // Configure connection to require a certificate
                     SSLSocket.setVerify(socketRef, SSL.SSL_CVERIFY_REQUIRE,
-                            endpoint.getSSLVerifyDepth());
+                            ((AprEndpoint)endpoint).getSSLVerifyDepth());
                     // Renegotiate certificates
                     if (SSLSocket.renegotiate(socketRef) == 0) {
                         // Don't look for certs unless we know renegotiation worked.
@@ -627,12 +608,14 @@ public class Http11AprProcessor extends AbstractHttp11Processor {
         } else if (actionCode == ActionCode.COMET_END) {
             comet = false;
         } else if (actionCode == ActionCode.COMET_CLOSE) {
-            endpoint.processSocketAsync(this.socket, SocketStatus.OPEN);
+            ((AprEndpoint)endpoint).processSocketAsync(this.socket,
+                    SocketStatus.OPEN);
         } else if (actionCode == ActionCode.COMET_SETTIMEOUT) {
             //no op
         } else if (actionCode == ActionCode.ASYNC_COMPLETE) {
             if (asyncStateMachine.asyncComplete()) {
-                endpoint.processSocketAsync(this.socket, SocketStatus.OPEN);
+                ((AprEndpoint)endpoint).processSocketAsync(this.socket,
+                        SocketStatus.OPEN);
             }
         } else if (actionCode == ActionCode.ASYNC_SETTIMEOUT) {
             if (param==null) return;
@@ -640,7 +623,8 @@ public class Http11AprProcessor extends AbstractHttp11Processor {
             socket.setTimeout(timeout);
         } else if (actionCode == ActionCode.ASYNC_DISPATCH) {
             if (asyncStateMachine.asyncDispatch()) {
-                endpoint.processSocketAsync(this.socket, SocketStatus.OPEN);
+                ((AprEndpoint)endpoint).processSocketAsync(this.socket,
+                        SocketStatus.OPEN);
             }
         }
         
@@ -661,7 +645,7 @@ public class Http11AprProcessor extends AbstractHttp11Processor {
         contentDelimitation = false;
         expectation = false;
         sendfileData = null;
-        if (ssl) {
+        if (endpoint.isSSLEnabled()) {
             request.scheme().setString("https");
         }
         MessageBytes protocolMB = request.protocol();
@@ -834,92 +818,20 @@ public class Http11AprProcessor extends AbstractHttp11Processor {
     }
 
 
-    /**
-     * Parse host.
-     */
-    public void parseHost(MessageBytes valueMB) {
-
-        if (valueMB == null || valueMB.isNull()) {
-            // HTTP/1.0
-            // Default is what the socket tells us. Overridden if a host is
-            // found/parsed
-            request.setServerPort(endpoint.getPort());
-            return;
-        }
-
-        ByteChunk valueBC = valueMB.getByteChunk();
-        byte[] valueB = valueBC.getBytes();
-        int valueL = valueBC.getLength();
-        int valueS = valueBC.getStart();
-        int colonPos = -1;
-        if (hostNameC.length < valueL) {
-            hostNameC = new char[valueL];
-        }
-
-        boolean ipv6 = (valueB[valueS] == '[');
-        boolean bracketClosed = false;
-        for (int i = 0; i < valueL; i++) {
-            char b = (char) valueB[i + valueS];
-            hostNameC[i] = b;
-            if (b == ']') {
-                bracketClosed = true;
-            } else if (b == ':') {
-                if (!ipv6 || bracketClosed) {
-                    colonPos = i;
-                    break;
-                }
-            }
-        }
-
-        if (colonPos < 0) {
-            if (!ssl) {
-                // 80 - Default HTTP port
-                request.setServerPort(80);
-            } else {
-                // 443 - Default HTTPS port
-                request.setServerPort(443);
-            }
-            request.serverName().setChars(hostNameC, 0, valueL);
-        } else {
-
-            request.serverName().setChars(hostNameC, 0, colonPos);
-
-            int port = 0;
-            int mult = 1;
-            for (int i = valueL - 1; i > colonPos; i--) {
-                int charValue = HexUtils.getDec(valueB[i + valueS]);
-                if (charValue == -1) {
-                    // Invalid character
-                    error = true;
-                    // 400 - Bad request
-                    response.setStatus(400);
-                    adapter.log(request, response, 0);
-                    break;
-                }
-                port = port + (charValue * mult);
-                mult = 10 * mult;
-            }
-            request.setServerPort(port);
-
-        }
-
-    }
-
-
     @Override
     protected boolean prepareSendfile(OutputFilter[] outputFilters) {
-        String fileName = (String) request.getAttribute("org.apache.tomcat.sendfile.filename");
+        String fileName = (String) request.getAttribute(
+                "org.apache.tomcat.sendfile.filename");
         if (fileName != null) {
             // No entity body sent here
-            outputBuffer.addActiveFilter
-                (outputFilters[Constants.VOID_FILTER]);
+            outputBuffer.addActiveFilter(outputFilters[Constants.VOID_FILTER]);
             contentDelimitation = true;
             sendfileData = new AprEndpoint.SendfileData();
             sendfileData.fileName = fileName;
-            sendfileData.start = 
-                ((Long) request.getAttribute("org.apache.tomcat.sendfile.start")).longValue();
-            sendfileData.end = 
-                ((Long) request.getAttribute("org.apache.tomcat.sendfile.end")).longValue();
+            sendfileData.start = ((Long) request.getAttribute(
+                    "org.apache.tomcat.sendfile.start")).longValue();
+            sendfileData.end = ((Long) request.getAttribute(
+                    "org.apache.tomcat.sendfile.end")).longValue();
             return true;
         }
         return false;
@@ -933,10 +845,5 @@ public class Http11AprProcessor extends AbstractHttp11Processor {
     @Override
     protected AbstractOutputBuffer getOutputBuffer() {
         return outputBuffer;
-    }
-    
-    @Override
-    public Executor getExecutor() {
-        return endpoint.getExecutor();
     }
 }

@@ -56,7 +56,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  *
  * @author Remy Maucherat
  * @author Jean-Francois Arcand
- * @version $Id: ApplicationContextFacade.java 1067134 2011-02-04 10:30:36Z markt $
+ * @version $Id: ApplicationContextFacade.java 1104557 2011-05-17 20:57:46Z kkolinko $
  */
 
 public class ApplicationContextFacade implements ServletContext {
@@ -237,7 +237,7 @@ public class ApplicationContextFacade implements ServletContext {
 
 
     /**
-     * @deprecated
+     * @deprecated As of Java Servlet API 2.1, with no direct replacement.
      */
     @Override
     @Deprecated
@@ -261,7 +261,7 @@ public class ApplicationContextFacade implements ServletContext {
 
 
     /**
-     * @deprecated
+     * @deprecated As of Java Servlet API 2.1, with no direct replacement.
      */
     @Override
     @SuppressWarnings("unchecked") // doPrivileged() returns the correct type
@@ -276,7 +276,7 @@ public class ApplicationContextFacade implements ServletContext {
 
 
     /**
-     * @deprecated
+     * @deprecated As of Java Servlet API 2.1, with no direct replacement.
      */
     @Override
     @SuppressWarnings("unchecked") // doPrivileged() returns the correct type
@@ -301,7 +301,8 @@ public class ApplicationContextFacade implements ServletContext {
 
 
     /**
-     * @deprecated
+     * @deprecated As of Java Servlet API 2.1, use
+     *  <code>log(String, Throwable)</code> instead
      */
     @Override
     @Deprecated

@@ -30,7 +30,7 @@ import javax.servlet.http.HttpSessionContext;
  * Facade for the StandardSession object.
  *
  * @author Remy Maucherat
- * @version $Id: StandardSessionFacade.java 1026782 2010-10-24 13:01:28Z markt $
+ * @version $Id: StandardSessionFacade.java 1104557 2011-05-17 20:57:46Z kkolinko $
  */
 
 public class StandardSessionFacade
@@ -108,7 +108,8 @@ public class StandardSessionFacade
 
 
     /**
-     * @deprecated
+     * @deprecated As of Version 2.1, this method is deprecated and has no
+     *             replacement.
      */
     @Override
     @Deprecated
@@ -124,7 +125,8 @@ public class StandardSessionFacade
 
 
     /**
-     * @deprecated
+     * @deprecated As of Version 2.2, this method is replaced by
+     *             {@link #getAttribute}.
      */
     @Override
     @Deprecated
@@ -140,7 +142,8 @@ public class StandardSessionFacade
 
 
     /**
-     * @deprecated
+     * @deprecated As of Version 2.2, this method is replaced by
+     *             {@link #getAttributeNames}
      */
     @Override
     @Deprecated
@@ -156,7 +159,8 @@ public class StandardSessionFacade
 
 
     /**
-     * @deprecated
+     * @deprecated As of Version 2.2, this method is replaced by
+     *             {@link #setAttribute}
      */
     @Override
     @Deprecated
@@ -172,7 +176,8 @@ public class StandardSessionFacade
 
 
     /**
-     * @deprecated
+     * @deprecated As of Version 2.2, this method is replaced by
+     *             {@link #removeAttribute}
      */
     @Override
     @Deprecated

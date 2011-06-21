@@ -45,7 +45,7 @@ import javax.servlet.UnavailableException;
  * <code>IllegalArgumentException</code>.
  *
  * @author Craig R. McClanahan
- * @version $Id: Wrapper.java 1077995 2011-03-04 15:17:22Z markt $
+ * @version $Id: Wrapper.java 1130618 2011-06-02 15:54:26Z markt $
  */
 
 public interface Wrapper extends Container {
@@ -386,4 +386,14 @@ public interface Wrapper extends Container {
      * Servlet associated with this wrapper.
      */
     public void servletSecurityAnnotationScan() throws ServletException;
+    
+    /**
+     * Is the Servlet overridable by a ServletContainerInitializer?
+     */
+    public boolean isOverridable();
+
+    /**
+     * Sets the overridable attribute for this Servlet.
+     */
+    public void setOverridable(boolean overridable);
 }

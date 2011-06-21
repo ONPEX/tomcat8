@@ -19,9 +19,12 @@ package org.apache.jasper;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.JarURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -60,17 +63,14 @@ public class JspCompilationContext {
     private final Log log = LogFactory.getLog(JspCompilationContext.class); // must not be static
 
     protected Map<String, JarResource> tagFileJarUrls;
-    protected boolean isPackagedTagFile;
 
     protected String className;
     protected String jspUri;
-    protected boolean isErrPage;
     protected String basePackageName;
     protected String derivedPackageName;
     protected String servletJavaFileName;
     protected String javaPath;
     protected String classFileName;
-    protected String contentType;
     protected ServletWriter writer;
     protected Options options;
     protected JspServletWrapper jsw;
@@ -97,14 +97,12 @@ public class JspCompilationContext {
 
     // jspURI _must_ be relative to the context
     public JspCompilationContext(String jspUri,
-                                 boolean isErrPage,
                                  Options options,
                                  ServletContext context,
                                  JspServletWrapper jsw,
                                  JspRuntimeContext rctxt) {
 
         this.jspUri = canonicalURI(jspUri);
-        this.isErrPage = isErrPage;
         this.options = options;
         this.jsw = jsw;
         this.context = context;
@@ -134,13 +132,10 @@ public class JspCompilationContext {
                                  JspServletWrapper jsw,
                                  JspRuntimeContext rctxt,
                                  JarResource tagJarResource) {
-        this(tagfile, false, options, context, jsw, rctxt);
+        this(tagfile, options, context, jsw, rctxt);
         this.isTagFile = true;
         this.tagInfo = tagInfo;
         this.tagJarResource = tagJarResource;
-        if (tagJarResource != null) {
-            isPackagedTagFile = true;
-        }
     }
 
     /* ==================== Methods to override ==================== */
@@ -390,16 +385,41 @@ public class JspCompilationContext {
         return jspUri;
     }
 
-    /**
-     * Are we processing something that has been declared as an
-     * errorpage? 
-     */
-    public boolean isErrorPage() {
-        return isErrPage;
-    }
-
-    public void setErrorPage(boolean isErrPage) {
-        this.isErrPage = isErrPage;
+    public long getJspLastModified() {
+        long result = -1;
+        URLConnection uc = null;
+        try {
+            URL jspUrl = getResource(getJspFile());
+            if (jspUrl == null) {
+                incrementRemoved();
+                return result;
+            }
+            uc = jspUrl.openConnection();
+            if (uc instanceof JarURLConnection) {
+                result = ((JarURLConnection) uc).getJarEntry().getTime();
+            } else {
+                result = uc.getLastModified();
+            }
+        } catch (IOException e) {
+            if (log.isDebugEnabled()) {
+                log.debug(Localizer.getMessage(
+                        "jsp.error.lastModified", getJspFile()), e);
+            }
+            result = -1;
+        } finally {
+            if (uc != null) {
+                try {
+                    uc.getInputStream().close();
+                } catch (IOException e) {
+                    if (log.isDebugEnabled()) {
+                        log.debug(Localizer.getMessage(
+                                "jsp.error.lastModified", getJspFile()), e);
+                    }
+                    result = -1;
+                }
+            }
+        }
+        return result;
     }
 
     public boolean isTagFile() {
@@ -516,19 +536,6 @@ public class JspCompilationContext {
             classFileName = getOutputDir() + getServletClassName() + ".class";
         }
         return classFileName;
-    }
-
-    /**
-     * Get the content type of this JSP.
-     *
-     * Content type includes content type and encoding.
-     */
-    public String getContentType() {
-        return contentType;
-    }
-
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
     }
 
     /**

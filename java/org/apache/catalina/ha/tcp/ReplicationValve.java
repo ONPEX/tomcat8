@@ -58,7 +58,7 @@ import org.apache.tomcat.util.res.StringManager;
  * @author Craig R. McClanahan
  * @author Filip Hanik
  * @author Peter Rossbach
- * @version $Id: ReplicationValve.java 1059379 2011-01-15 17:43:46Z kkolinko $
+ * @version $Id: ReplicationValve.java 1133197 2011-06-07 23:37:29Z markt $
  */
 
 public class ReplicationValve
@@ -121,7 +121,7 @@ public class ReplicationValve
     // ------------------------------------------------------------- Properties
 
     public ReplicationValve() {
-        super(false);
+        super(true);
     }
     
     /**
@@ -556,11 +556,13 @@ public class ReplicationValve
     }
 
     /**
-     * protocol cluster replications stats
+     * Protocol cluster replications stats
      * @param requestTime
      * @param clusterTime
      */
     protected  void updateStats(long requestTime, long clusterTime) {
+        // TODO: Async requests may trigger multiple replication requests. How,
+        //       if at all, should the stats handle this?
         synchronized(this) {
             lastSendTime=System.currentTimeMillis();
             totalSendTime+=lastSendTime - clusterTime;

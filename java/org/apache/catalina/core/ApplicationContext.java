@@ -86,7 +86,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: ApplicationContext.java 1078022 2011-03-04 15:52:01Z markt $
+ * @version $Id: ApplicationContext.java 1130618 2011-06-02 15:54:26Z markt $
  */
 
 public class ApplicationContext
@@ -1102,7 +1102,7 @@ public class ApplicationContext
 
         Wrapper wrapper = (Wrapper) context.findChild(servletName);
         
-        // Assume a 'complete' FilterRegistration is one that has a class and
+        // Assume a 'complete' ServletRegistration is one that has a class and
         // a name
         if (wrapper == null) {
             wrapper = context.createWrapper();
@@ -1111,7 +1111,11 @@ public class ApplicationContext
         } else {
             if (wrapper.getName() != null &&
                     wrapper.getServletClass() != null) {
-                return null;
+                if (wrapper.isOverridable()) {
+                    wrapper.setOverridable(false);
+                } else {
+                    return null;
+                }
             }
         }
 

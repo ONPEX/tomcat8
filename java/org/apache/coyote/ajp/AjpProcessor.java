@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.concurrent.Executor;
 
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.OutputBuffer;
@@ -187,16 +186,6 @@ public class AjpProcessor extends AbstractAjpProcessor {
 
 
     // ------------------------------------------------------------- Properties
-
-
-    /**
-     * The number of milliseconds Tomcat will wait for a subsequent request
-     * before closing the connection. The default is the same as for
-     * Apache HTTP Server (15 000 milliseconds).
-     */
-    protected int keepAliveTimeout = -1;
-    public int getKeepAliveTimeout() { return keepAliveTimeout; }
-    public void setKeepAliveTimeout(int timeout) { keepAliveTimeout = timeout; }
 
 
     // --------------------------------------------------------- Public Methods
@@ -392,12 +381,6 @@ public class AjpProcessor extends AbstractAjpProcessor {
 
     }
 
-    
-    @Override
-    public Executor getExecutor() {
-        return endpoint.getExecutor();
-    }
-    
     
     // ----------------------------------------------------- ActionHook Methods
 

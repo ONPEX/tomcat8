@@ -43,14 +43,14 @@ import org.apache.catalina.session.PersistentManager;
  *                              per session at any one time.
  *
  * @author Jean-Frederic Clere
- * @version $Id: PersistentValve.java 1055469 2011-01-05 14:28:30Z markt $
+ * @version $Id: PersistentValve.java 1133193 2011-06-07 23:12:18Z markt $
  */
 
 public class PersistentValve extends ValveBase {
 
     //------------------------------------------------------ Constructor
     public PersistentValve() {
-        super(false);
+        super(true);
     }
 
     // ----------------------------------------------------- Instance Variables
@@ -146,45 +146,52 @@ public class PersistentValve extends ValveBase {
         // Ask the next valve to process the request.
         getNext().invoke(request, response);
 
-        // Read the sessionid after the response.
-        // HttpSession hsess = hreq.getSession(false);
-        Session hsess;
-        try {
-            hsess = request.getSessionInternal();
-        } catch (Exception ex) {
-            hsess = null;
-        }
-        String newsessionId = null;
-        if (hsess!=null)
-            newsessionId = hsess.getIdInternal();
-
-        if (container.getLogger().isDebugEnabled())
-            container.getLogger().debug("newsessionId: " + newsessionId);
-        if (newsessionId!=null) {
-            /* store the session in the store and remove it from the manager */
-            if (manager instanceof PersistentManager) {
-                Session session = manager.findSession(newsessionId);
-                Store store = ((PersistentManager) manager).getStore();
-                if (store != null && session!=null &&
-                    session.isValid() &&
-                    !isSessionStale(session, System.currentTimeMillis())) {
-                    // ((StandardSession)session).passivate();
-                    store.save(session);
-                    ((PersistentManager) manager).removeSuper(session);
-                    session.recycle();
+        // If still processing async, don't try to store the session
+        // TODO: Are there some async states where it is would be safe to store
+        // the session?
+        if (!request.isAsync()) {
+            // Read the sessionid after the response.
+            // HttpSession hsess = hreq.getSession(false);
+            Session hsess;
+            try {
+                hsess = request.getSessionInternal();
+            } catch (Exception ex) {
+                hsess = null;
+            }
+            String newsessionId = null;
+            if (hsess!=null)
+                newsessionId = hsess.getIdInternal();
+    
+            if (container.getLogger().isDebugEnabled())
+                container.getLogger().debug("newsessionId: " + newsessionId);
+            if (newsessionId!=null) {
+                /* store the session and remove it from the manager */
+                if (manager instanceof PersistentManager) {
+                    Session session = manager.findSession(newsessionId);
+                    Store store = ((PersistentManager) manager).getStore();
+                    if (store != null && session!=null &&
+                        session.isValid() &&
+                        !isSessionStale(session, System.currentTimeMillis())) {
+                        // ((StandardSession)session).passivate();
+                        store.save(session);
+                        ((PersistentManager) manager).removeSuper(session);
+                        session.recycle();
+                    } else {
+                        if (container.getLogger().isDebugEnabled())
+                            container.getLogger().debug("newsessionId store: " +
+                                    store + " session: " + session +
+                                    " valid: " +
+                                    (session == null ? "N/A" : Boolean.toString(
+                                            session.isValid())) +
+                                    " stale: " + isSessionStale(session,
+                                            System.currentTimeMillis()));
+    
+                    }
                 } else {
                     if (container.getLogger().isDebugEnabled())
-                        container.getLogger().debug("newsessionId store: " +
-                                store + " session: " + session + " valid: " +
-                                (session == null ? "N/A" : Boolean.toString(
-                                        session.isValid())) +
-                                " stale: " + isSessionStale(session,
-                                        System.currentTimeMillis()));
-
+                        container.getLogger().debug("newsessionId Manager: " +
+                                manager);
                 }
-            } else {
-                if (container.getLogger().isDebugEnabled())
-                    container.getLogger().debug("newsessionId Manager: " + manager);
             }
         }
     }

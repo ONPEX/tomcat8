@@ -61,7 +61,18 @@ public class WebXml {
 
     private static final org.apache.juli.logging.Log log=
         org.apache.juli.logging.LogFactory.getLog(WebXml.class);
-    
+
+    // Global defaults are overridable but Servlets and Servlet mappings need to
+    // be unique. Duplicates normally trigger an error. This flag indicates if
+    // newly added Servlet elements are marked as overridable.
+    private boolean overridable = false;
+    public boolean isOverridable() {
+        return overridable;
+    }
+    public void setOverridable(boolean overridable) {
+        this.overridable = overridable;
+    }
+
     // web.xml only elements
     // Absolute Ordering
     private Set<String> absoluteOrdering = null;
@@ -305,6 +316,9 @@ public class WebXml {
     private Map<String,ServletDef> servlets = new HashMap<String,ServletDef>();
     public void addServlet(ServletDef servletDef) {
         servlets.put(servletDef.getServletName(), servletDef);
+        if (overridable) {
+            servletDef.setOverridable(overridable);
+        }
     }
     public Map<String,ServletDef> getServlets() { return servlets; }
     
@@ -332,13 +346,25 @@ public class WebXml {
     }
     public Map<String,String> getMimeMappings() { return mimeMappings; }
     
-    // welcome-file-list
-    // When merging web.xml files it may be necessary for any new welcome files
-    // to completely replace the current set
+    // welcome-file-list merge control
     private boolean replaceWelcomeFiles = false;
+    private boolean alwaysAddWelcomeFiles = true;
+    /**
+     * When merging/parsing web.xml files into this web.xml should the current
+     * set be completely replaced?
+     */
     public void setReplaceWelcomeFiles(boolean replaceWelcomeFiles) {
         this.replaceWelcomeFiles = replaceWelcomeFiles;
     }
+    /**
+     * When merging from this web.xml, should the welcome files be added to the
+     * target web.xml even if it already contains welcome file definitions.
+     */
+    public void setAlwaysAddWelcomeFiles(boolean alwaysAddWelcomeFiles) {
+        this.alwaysAddWelcomeFiles = alwaysAddWelcomeFiles;
+    }
+
+    // welcome-file-list
     private Set<String> welcomeFiles = new LinkedHashSet<String>();
     public void addWelcomeFile(String welcomeFile) {
         if (replaceWelcomeFiles) {
@@ -1268,6 +1294,7 @@ public class WebXml {
                 wrapper.setAsyncSupported(
                         servlet.getAsyncSupported().booleanValue());
             }
+            wrapper.setOverridable(servlet.isOverridable());
             context.addChild(wrapper);
         }
         for (Entry<String, String> entry : servletMappings.entrySet()) {
@@ -1307,7 +1334,16 @@ public class WebXml {
         // Context doesn't use version directly
         
         for (String welcomeFile : welcomeFiles) {
-            context.addWelcomeFile(welcomeFile);
+            /*
+             * The following will result in a welcome file of "" so don't add
+             * that to the context 
+             * <welcome-file-list>
+             *   <welcome-file/>
+             * </welcome-file-list>
+             */
+            if (welcomeFile != null && welcomeFile.length() > 0) {
+                context.addWelcomeFile(welcomeFile);
+            }
         }
 
         // Do this last as it depends on servlets
@@ -1414,9 +1450,9 @@ public class WebXml {
         }
         errorPages.putAll(temp.getErrorPages());
 
-        // As per 'clarification' from the Servlet EG, filter mappings in the
+        // As per 'clarification' from the Servlet EG, filter definitions in the
         // main web.xml override those in fragments and those in fragments
-        // override mappings in annotations
+        // override those in annotations
         for (WebXml fragment : fragments) {
             Iterator<FilterMap> iterFilterMaps =
                 fragment.getFilterMappings().iterator();
@@ -1570,19 +1606,25 @@ public class WebXml {
         serviceRefs.putAll(temp.getServiceRefs());
         mergeInjectionFlags.clear();
 
-        // As per 'clarification' from the Servlet EG, servlet mappings in the
-        // main web.xml override those in fragments and those in fragments
-        // override mappings in annotations
+        // As per 'clarification' from the Servlet EG, servlet definitions and
+        // mappings in the main web.xml override those in fragments and those in
+        // fragments override those in annotations
+        // Remove servlet definitions and mappings from fragments that are
+        // defined in web.xml
         for (WebXml fragment : fragments) {
-            Iterator<Map.Entry<String,String>> iterServletMaps =
+            Iterator<Map.Entry<String,String>> iterFragmentServletMaps =
                 fragment.getServletMappings().entrySet().iterator();
-            while (iterServletMaps.hasNext()) {
-                Map.Entry<String,String> servletMap = iterServletMaps.next();
-                if (servletMappingNames.contains(servletMap.getValue())) {
-                    iterServletMaps.remove();
+            while (iterFragmentServletMaps.hasNext()) {
+                Map.Entry<String,String> servletMap =
+                    iterFragmentServletMaps.next();
+                if (servletMappingNames.contains(servletMap.getValue()) ||
+                        servletMappings.containsKey(servletMap.getKey())) {
+                    iterFragmentServletMaps.remove();
                 }
             }
         }
+        
+        // Add fragment mappings
         for (WebXml fragment : fragments) {
             for (Map.Entry<String,String> mapping :
                     fragment.getServletMappings().entrySet()) {
@@ -1827,9 +1869,10 @@ public class WebXml {
         taglibs.putAll(temp.getTaglibs());
 
         for (WebXml fragment : fragments) {
-            for (String welcomeFile : fragment.getWelcomeFiles()) {
-                // Always additive
-                addWelcomeFile(welcomeFile);
+            if (fragment.alwaysAddWelcomeFiles || welcomeFiles.size() == 0) {
+                for (String welcomeFile : fragment.getWelcomeFiles()) {
+                    addWelcomeFile(welcomeFile);
+                }
             }
         }
 

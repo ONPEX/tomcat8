@@ -23,25 +23,21 @@ import java.net.InetAddress;
 import java.security.NoSuchProviderException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.coyote.AbstractProcessor;
 import org.apache.coyote.ActionCode;
-import org.apache.coyote.ActionHook;
 import org.apache.coyote.Adapter;
 import org.apache.coyote.AsyncContextCallback;
 import org.apache.coyote.AsyncStateMachine;
 import org.apache.coyote.InputBuffer;
-import org.apache.coyote.Processor;
 import org.apache.coyote.Request;
-import org.apache.coyote.Response;
 import org.apache.juli.logging.Log;
 import org.apache.tomcat.util.buf.ByteChunk;
 import org.apache.tomcat.util.buf.HexUtils;
 import org.apache.tomcat.util.buf.MessageBytes;
 import org.apache.tomcat.util.http.HttpMessages;
 import org.apache.tomcat.util.http.MimeHeaders;
-import org.apache.tomcat.util.net.AbstractEndpoint;
 import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 import org.apache.tomcat.util.net.SSLSupport;
 import org.apache.tomcat.util.res.StringManager;
@@ -49,7 +45,7 @@ import org.apache.tomcat.util.res.StringManager;
 /**
  * Base class for AJP Processor implementations.
  */
-public abstract class AbstractAjpProcessor implements ActionHook, Processor {
+public abstract class AbstractAjpProcessor extends AbstractProcessor {
 
     protected abstract Log getLog();
 
@@ -66,24 +62,6 @@ public abstract class AbstractAjpProcessor implements ActionHook, Processor {
      * Associated adapter.
      */
     protected Adapter adapter = null;
-
-
-    /**
-     * Associated endpoint.
-     */
-    protected AbstractEndpoint endpoint;
-
-
-    /**
-     * Request object.
-     */
-    protected Request request = null;
-
-
-    /**
-     * Response object.
-     */
-    protected Response response = null;
 
 
     /**
@@ -188,6 +166,16 @@ public abstract class AbstractAjpProcessor implements ActionHook, Processor {
 
 
     /**
+     * The number of milliseconds Tomcat will wait for a subsequent request
+     * before closing the connection. The default is the same as for
+     * Apache HTTP Server (15 000 milliseconds).
+     */
+    protected int keepAliveTimeout = -1;
+    public int getKeepAliveTimeout() { return keepAliveTimeout; }
+    public void setKeepAliveTimeout(int timeout) { keepAliveTimeout = timeout; }
+
+
+    /**
      * Use Tomcat authentication ?
      */
     protected boolean tomcatAuthentication = true;
@@ -222,15 +210,6 @@ public abstract class AbstractAjpProcessor implements ActionHook, Processor {
     // --------------------------------------------------------- Public Methods
 
 
-    /** Get the request associated with this processor.
-    *
-    * @return The request
-    */
-   public Request getRequest() {
-       return request;
-   }
-   
-   
    /**
     * Send an action to the connector.
     *
@@ -395,10 +374,6 @@ public abstract class AbstractAjpProcessor implements ActionHook, Processor {
    protected abstract void flush(boolean tbd) throws IOException;
    protected abstract void finish() throws IOException;
    
-   
-   @Override
-   public abstract Executor getExecutor();
-
    
    public void recycle() {
        asyncStateMachine.recycle();

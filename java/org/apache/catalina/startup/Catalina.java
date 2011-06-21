@@ -68,7 +68,7 @@ import org.xml.sax.SAXParseException;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: Catalina.java 1066320 2011-02-02 03:24:50Z kkolinko $
+ * @version $Id: Catalina.java 1130539 2011-06-02 13:26:16Z markt $
  */
 
 public class Catalina {
@@ -691,6 +691,7 @@ public class Catalina {
                 // Nothing to do. stop() was already called
             } else {
                 s.stop();
+                s.destroy();
             }
         } catch (LifecycleException e) {
             log.error("Catalina.stop", e);

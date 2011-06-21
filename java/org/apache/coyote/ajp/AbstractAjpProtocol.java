@@ -16,16 +16,23 @@
  */
 package org.apache.coyote.ajp;
 
-import org.apache.coyote.AbstractProtocolHandler;
+import org.apache.coyote.AbstractProtocol;
 import org.apache.tomcat.util.res.StringManager;
 
-public abstract class AbstractAjpProtocol extends AbstractProtocolHandler {
+public abstract class AbstractAjpProtocol extends AbstractProtocol {
     
     /**
      * The string manager for this package.
      */
     protected static final StringManager sm =
         StringManager.getManager(Constants.Package);
+
+
+    @Override
+    protected String getProtocolName() {
+        return "Ajp";
+    }
+
 
 
     // ------------------------------------------------- AJP specific properties

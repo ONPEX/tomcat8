@@ -37,7 +37,7 @@ import javax.servlet.http.HttpServletResponseWrapper;
  * keep these two classes in synchronization when making changes!
  *
  * @author Craig R. McClanahan
- * @version $Id: ApplicationHttpResponse.java 1078049 2011-03-04 16:49:14Z markt $
+ * @version $Id: ApplicationHttpResponse.java 1104557 2011-05-17 20:57:46Z kkolinko $
  */
 
 class ApplicationHttpResponse extends HttpServletResponseWrapper {
@@ -339,7 +339,10 @@ class ApplicationHttpResponse extends HttpServletResponseWrapper {
      *
      * @param sc The new status code
      * @param msg The new message
-     * @deprecated
+     * @deprecated As of version 2.1, due to ambiguous meaning of the message
+     *             parameter. To set a status code use
+     *             <code>setStatus(int)</code>, to send an error with a
+     *             description use <code>sendError(int, String)</code>.
      */
     @Deprecated
     @Override

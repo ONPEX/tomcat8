@@ -50,7 +50,7 @@ import org.apache.tomcat.util.http.MimeHeaders;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: FormAuthenticator.java 1044326 2010-12-10 12:28:20Z markt $
+ * @version $Id: FormAuthenticator.java 1129658 2011-05-31 13:06:11Z markt $
  */
 
 public class FormAuthenticator
@@ -365,9 +365,19 @@ public class FormAuthenticator
     protected void forwardToLoginPage(Request request,
             HttpServletResponse response, LoginConfig config)
             throws IOException {
+        
+        String loginPage = config.getLoginPage();
+        if (loginPage == null || loginPage.length() == 0) {
+            String msg = sm.getString("formAuthenticator.noLoginPage",
+                    context.getName());
+            log.warn(msg);
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    msg);
+            return;
+        }
+        
         RequestDispatcher disp =
-            context.getServletContext().getRequestDispatcher
-            (config.getLoginPage());
+            context.getServletContext().getRequestDispatcher(loginPage);
         try {
             if (context.fireRequestInitEvent(request)) {
                 disp.forward(request.getRequest(), response);
@@ -398,6 +408,17 @@ public class FormAuthenticator
     protected void forwardToErrorPage(Request request,
             HttpServletResponse response, LoginConfig config)
             throws IOException {
+        
+        String errorPage = config.getErrorPage();
+        if (errorPage == null || errorPage.length() == 0) {
+            String msg = sm.getString("formAuthenticator.noErrorPage",
+                    context.getName());
+            log.warn(msg);
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    msg);
+            return;
+        }
+
         RequestDispatcher disp =
             context.getServletContext().getRequestDispatcher
             (config.getErrorPage());

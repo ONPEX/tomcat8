@@ -87,7 +87,7 @@ import org.apache.tomcat.util.res.StringManager;
  * requested sessions are migrated.
  * 
  * @author Peter Rossbach
- * @version $Id: JvmRouteBinderValve.java 1094069 2011-04-16 22:25:28Z markt $
+ * @version $Id: JvmRouteBinderValve.java 1133177 2011-06-07 22:14:52Z markt $
  */
 public class JvmRouteBinderValve extends ValveBase implements ClusterValve {
 
@@ -102,7 +102,7 @@ public class JvmRouteBinderValve extends ValveBase implements ClusterValve {
 
     //------------------------------------------------------ Constructor
     public JvmRouteBinderValve() {
-        super(false);
+        super(true);
     }
 
     /*--Instance Variables--------------------------------------*/
@@ -199,9 +199,10 @@ public class JvmRouteBinderValve extends ValveBase implements ClusterValve {
     public void invoke(Request request, Response response) throws IOException,
             ServletException {
 
-         if (getEnabled() 
-             && request.getContext() != null
-             && request.getContext().getDistributable() ) {
+         if (getEnabled() &&
+                 request.getContext() != null &&
+                 request.getContext().getDistributable() &&
+                 !request.isAsyncDispatching()) {
              // valve cluster can access manager - other cluster handle turnover 
              // at host level - hopefully!
              Manager manager = request.getContext().getManager();

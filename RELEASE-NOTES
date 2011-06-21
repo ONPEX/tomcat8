@@ -15,7 +15,7 @@
   limitations under the License.
 ================================================================================
 
-$Id: RELEASE-NOTES 1084951 2011-03-24 13:27:39Z markt $
+$Id: RELEASE-NOTES 1104328 2011-05-17 15:21:38Z markt $
 
 
                      Apache Tomcat Version @VERSION@
@@ -173,7 +173,7 @@ In order to grant security permissions to JARs located inside the
 web application repository, use URLs of of the following format
 in your policy file:
 
-file:${catalina.home}/webapps/examples/WEB-INF/lib/driver.jar
+file:${catalina.base}/webapps/examples/WEB-INF/lib/driver.jar
 
 
 ============================

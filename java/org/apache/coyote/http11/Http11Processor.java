@@ -23,7 +23,6 @@ import java.io.InterruptedIOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Locale;
-import java.util.concurrent.Executor;
 
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.Request;
@@ -37,7 +36,6 @@ import org.apache.tomcat.util.buf.ByteChunk;
 import org.apache.tomcat.util.buf.HexUtils;
 import org.apache.tomcat.util.buf.MessageBytes;
 import org.apache.tomcat.util.http.MimeHeaders;
-import org.apache.tomcat.util.net.AbstractEndpoint;
 import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 import org.apache.tomcat.util.net.JIoEndpoint;
 import org.apache.tomcat.util.net.SSLSupport;
@@ -113,12 +111,6 @@ public class Http11Processor extends AbstractHttp11Processor {
 
 
     /**
-     * Associated endpoint.
-     */
-    protected JIoEndpoint endpoint;
-
-
-    /**
      * The percentage of threads that have to be in use before keep-alive is
      * disabled to aid scalability.
      */
@@ -126,14 +118,6 @@ public class Http11Processor extends AbstractHttp11Processor {
 
     // --------------------------------------------------------- Public Methods
 
-
-    /**
-     * Expose the endpoint.
-     */
-    @Override
-    protected AbstractEndpoint getEndpoint() {
-        return this.endpoint;
-    }
 
     /**
      * Set the SSL information for this HTTP connection.
@@ -322,7 +306,8 @@ public class Http11Processor extends AbstractHttp11Processor {
                     // committed, so we can't try and set headers.
                     if(keepAlive && !error) { // Avoid checking twice.
                         error = response.getErrorException() != null ||
-                                statusDropsConnection(response.getStatus());
+                                (!isAsync() &&
+                                statusDropsConnection(response.getStatus()));
                     }
 
                 } catch (InterruptedIOException e) {
@@ -583,7 +568,8 @@ public class Http11Processor extends AbstractHttp11Processor {
             }
         } else if (actionCode == ActionCode.ASYNC_COMPLETE) {
             if (asyncStateMachine.asyncComplete()) {
-                endpoint.processSocketAsync(this.socket, SocketStatus.OPEN);
+                ((JIoEndpoint) endpoint).processSocketAsync(this.socket,
+                        SocketStatus.OPEN);
             }
         } else if (actionCode == ActionCode.ASYNC_SETTIMEOUT) {
             if (param == null) return;
@@ -592,7 +578,8 @@ public class Http11Processor extends AbstractHttp11Processor {
             socket.setTimeout(timeout);
         } else if (actionCode == ActionCode.ASYNC_DISPATCH) {
             if (asyncStateMachine.asyncDispatch()) {
-                endpoint.processSocketAsync(this.socket, SocketStatus.OPEN);
+                ((JIoEndpoint) endpoint).processSocketAsync(this.socket,
+                        SocketStatus.OPEN);
             }
         }
     }
@@ -800,81 +787,6 @@ public class Http11Processor extends AbstractHttp11Processor {
         return false;
     }
 
-    /**
-     * Parse host.
-     */
-    protected void parseHost(MessageBytes valueMB) {
-
-        if (valueMB == null || valueMB.isNull()) {
-            // HTTP/1.0
-            // Default is what the socket tells us. Overridden if a host is
-            // found/parsed
-            request.setServerPort(socket.getSocket().getLocalPort());
-            InetAddress localAddress = socket.getSocket().getLocalAddress();
-            // Setting the socket-related fields. The adapter doesn't know
-            // about socket.
-            request.serverName().setString(localAddress.getHostName());
-            return;
-        }
-
-        ByteChunk valueBC = valueMB.getByteChunk();
-        byte[] valueB = valueBC.getBytes();
-        int valueL = valueBC.getLength();
-        int valueS = valueBC.getStart();
-        int colonPos = -1;
-        if (hostNameC.length < valueL) {
-            hostNameC = new char[valueL];
-        }
-
-        boolean ipv6 = (valueB[valueS] == '[');
-        boolean bracketClosed = false;
-        for (int i = 0; i < valueL; i++) {
-            char b = (char) valueB[i + valueS];
-            hostNameC[i] = b;
-            if (b == ']') {
-                bracketClosed = true;
-            } else if (b == ':') {
-                if (!ipv6 || bracketClosed) {
-                    colonPos = i;
-                    break;
-                }
-            }
-        }
-
-        if (colonPos < 0) {
-            if (sslSupport == null) {
-                // 80 - Default HTTP port
-                request.setServerPort(80);
-            } else {
-                // 443 - Default HTTPS port
-                request.setServerPort(443);
-            }
-            request.serverName().setChars(hostNameC, 0, valueL);
-        } else {
-
-            request.serverName().setChars(hostNameC, 0, colonPos);
-
-            int port = 0;
-            int mult = 1;
-            for (int i = valueL - 1; i > colonPos; i--) {
-                int charValue = HexUtils.getDec(valueB[i + valueS]);
-                if (charValue == -1) {
-                    // Invalid character
-                    error = true;
-                    // 400 - Bad request
-                    response.setStatus(400);
-                    adapter.log(request, response, 0);
-                    break;
-                }
-                port = port + (charValue * mult);
-                mult = 10 * mult;
-            }
-            request.setServerPort(port);
-
-        }
-
-    }
-
     @Override
     protected AbstractInputBuffer getInputBuffer() {
         return inputBuffer;
@@ -892,10 +804,5 @@ public class Http11Processor extends AbstractHttp11Processor {
     public void setSocketBuffer(int socketBuffer) {
         super.setSocketBuffer(socketBuffer);
         outputBuffer.setSocketBuffer(socketBuffer);
-    }
-
-    @Override
-    public Executor getExecutor() {
-        return endpoint.getExecutor();
     }
 }

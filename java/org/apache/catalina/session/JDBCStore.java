@@ -33,6 +33,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Properties;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
+
 import org.apache.catalina.Container;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.Loader;
@@ -46,7 +51,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * saved are still subject to being expired based on inactivity.
  *
  * @author Bip Thelin
- * @version $Id: JDBCStore.java 1029527 2010-11-01 02:04:53Z markt $
+ * @version $Id: JDBCStore.java 1133288 2011-06-08 08:45:41Z kfujino $
  */
 
 public class JDBCStore extends StoreBase {
@@ -102,6 +107,16 @@ public class JDBCStore extends StoreBase {
      */
     protected String driverName = null;
 
+    /**
+     * name of the JNDI resource
+     */
+    protected String dataSourceName = null;
+
+    /**
+     * DataSource to use
+     */
+    protected DataSource dataSource = null;
+    
     // ------------------------------------------------------------- Table & cols
 
     /**
@@ -436,6 +451,27 @@ public class JDBCStore extends StoreBase {
         return (this.sessionLastAccessedCol);
     }
 
+    /**
+     * Set the JNDI name of a DataSource-factory to use for db access
+     *
+     * @param dataSourceName The JNDI name of the DataSource-factory
+     */
+    public void setDataSourceName(String dataSourceName) {
+        if (dataSourceName == null || "".equals(dataSourceName.trim())) {
+            manager.getContainer().getLogger().warn(
+                    sm.getString(getStoreName() + ".missingDataSourceName"));
+            return;
+        }
+        this.dataSourceName = dataSourceName;
+    }
+
+    /**
+     * Return the name of the JNDI DataSource-factory
+     */
+    public String getDataSourceName() {
+        return this.dataSourceName;
+    }
+
     // --------------------------------------------------------- Public Methods
 
     /**
@@ -675,16 +711,7 @@ public class JDBCStore extends StoreBase {
                 }
 
                 try {
-                    if (preparedRemoveSql == null) {
-                        String removeSql = "DELETE FROM " + sessionTable
-                                + " WHERE " + sessionIdCol + " = ?  AND "
-                                + sessionAppCol + " = ?";
-                        preparedRemoveSql = _conn.prepareStatement(removeSql);
-                    }
-
-                    preparedRemoveSql.setString(1, id);
-                    preparedRemoveSql.setString(2, getName());
-                    preparedRemoveSql.execute();
+                    remove(id, _conn);
                     // Break out after the finally block
                     numberOfTries = 0;
                 } catch (SQLException e) {
@@ -701,6 +728,28 @@ public class JDBCStore extends StoreBase {
         if (manager.getContainer().getLogger().isDebugEnabled()) {
             manager.getContainer().getLogger().debug(sm.getString(getStoreName() + ".removing", id, sessionTable));
         }
+    }
+
+    /**
+     * Remove the Session with the specified session identifier from
+     * this Store, if present.  If no such Session is present, this method
+     * takes no action.
+     * 
+     * @param id Session identifier of the Session to be removed
+     * @param _conn open connection to be used
+     * @throws SQLException if an error occurs while talking to the database
+     */
+    private void remove(String id, Connection _conn) throws SQLException {
+        if (preparedRemoveSql == null) {
+            String removeSql = "DELETE FROM " + sessionTable
+                    + " WHERE " + sessionIdCol + " = ?  AND "
+                    + sessionAppCol + " = ?";
+            preparedRemoveSql = _conn.prepareStatement(removeSql);
+        }
+
+        preparedRemoveSql.setString(1, id);
+        preparedRemoveSql.setString(2, getName());
+        preparedRemoveSql.execute();
     }
 
     /**
@@ -763,12 +812,12 @@ public class JDBCStore extends StoreBase {
                     return;
                 }
 
-                // If sessions already exist in DB, remove and insert again.
-                // TODO:
-                // * Check if ID exists in database and if so use UPDATE.
-                remove(session.getIdInternal());
-
                 try {
+                    // If sessions already exist in DB, remove and insert again.
+                    // TODO:
+                    // * Check if ID exists in database and if so use UPDATE.
+                    remove(session.getIdInternal(), _conn);
+                    
                     bos = new ByteArrayOutputStream();
                     oos = new ObjectOutputStream(new BufferedOutputStream(bos));
 
@@ -838,11 +887,13 @@ public class JDBCStore extends StoreBase {
      * @return <code>Connection</code> if the connection succeeded
      */
     protected Connection getConnection() {
+        Connection conn = null;
         try {
-            if (dbConnection == null || dbConnection.isClosed()) {
+            conn = open();
+            if (conn == null || conn.isClosed()) {
                 manager.getContainer().getLogger().info(sm.getString(getStoreName() + ".checkConnectionDBClosed"));
-                open();
-                if (dbConnection == null || dbConnection.isClosed()) {
+                conn = open();
+                if (conn == null || conn.isClosed()) {
                     manager.getContainer().getLogger().info(sm.getString(getStoreName() + ".checkConnectionDBReOpenFail"));
                 }
             }
@@ -851,7 +902,7 @@ public class JDBCStore extends StoreBase {
                     ex.toString()));
         }
 
-        return dbConnection;
+        return conn;
     }
 
     /**
@@ -865,6 +916,23 @@ public class JDBCStore extends StoreBase {
         // Do nothing if there is a database connection already open
         if (dbConnection != null)
             return (dbConnection);
+
+        if (dataSourceName != null && dataSource == null) {
+            Context initCtx;
+            try {
+                initCtx = new InitialContext();
+                Context envCtx = (Context) initCtx.lookup("java:comp/env");
+                this.dataSource = (DataSource) envCtx.lookup(this.dataSourceName);
+            } catch (NamingException e) {
+                manager.getContainer().getLogger().error(
+                        sm.getString(getStoreName() + ".wrongDataSource",
+                                this.dataSourceName), e);
+           }
+        }
+        
+        if (dataSource != null) {
+            return dataSource.getConnection();
+        }
 
         // Instantiate our database driver if necessary
         if (driver == null) {
@@ -960,13 +1028,15 @@ public class JDBCStore extends StoreBase {
     }
 
     /**
-     * Release the connection, not needed here since the
-     * connection is not associated with a connection pool.
+     * Release the connection, if it
+     * is associated with a connection pool.
      *
      * @param conn The connection to be released
      */
     protected void release(Connection conn) {
-        // NOOP
+        if (dataSource != null) {
+            close(conn); 
+        }
     }
 
     /**
@@ -979,8 +1049,10 @@ public class JDBCStore extends StoreBase {
     @Override
     protected synchronized void startInternal() throws LifecycleException {
 
-        // Open connection to the database
-        this.dbConnection = getConnection();
+        if (dataSourceName == null) {
+            // If not using a connection pool, open a connection to the database
+            this.dbConnection = getConnection();
+        }
         
         super.startInternal();
     }
