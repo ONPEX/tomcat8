@@ -76,7 +76,7 @@ import org.apache.tomcat.util.modeler.Registry;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardWrapper.java 1100832 2011-05-08 22:53:32Z markt $
+ * @version $Id: StandardWrapper.java 1130618 2011-06-02 15:54:26Z markt $
  */
 @SuppressWarnings("deprecation") // SingleThreadModel
 public class StandardWrapper extends ContainerBase
@@ -276,6 +276,8 @@ public class StandardWrapper extends ContainerBase
 
     protected volatile boolean servletSecurityAnnotationScanRequired = false;
 
+    private boolean overridable = false;
+    
     /**
      * Static class array used when the SecurityManager is turned on and 
      * <code>Servlet.init</code> is invoked.
@@ -294,6 +296,15 @@ public class StandardWrapper extends ContainerBase
 
     // ------------------------------------------------------------- Properties
 
+    @Override
+    public boolean isOverridable() {
+        return overridable;
+    }
+
+    @Override
+    public void setOverridable(boolean overridable) {
+        this.overridable = overridable;
+    }
 
     /**
      * Return the available date/time for this servlet, in milliseconds since

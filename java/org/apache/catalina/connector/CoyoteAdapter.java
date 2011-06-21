@@ -26,6 +26,7 @@ import javax.servlet.RequestDispatcher;
 import javax.servlet.SessionTrackingMode;
 
 import org.apache.catalina.Context;
+import org.apache.catalina.Host;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.comet.CometEvent;
 import org.apache.catalina.comet.CometEvent.EventType;
@@ -55,7 +56,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: CoyoteAdapter.java 1094055 2011-04-16 21:22:58Z markt $
+ * @version $Id: CoyoteAdapter.java 1133401 2011-06-08 13:52:50Z markt $
  */
 public class CoyoteAdapter implements Adapter {
     
@@ -277,6 +278,9 @@ public class CoyoteAdapter implements Adapter {
                 if (ctxt != null) {
                     ctxt.fireRequestDestroyEvent(request);
                 }
+                // Lift any suspension (e.g. if sendError() was used by an async
+                // request
+                response.setSuspended(false);
             }
 
             if (status==SocketStatus.TIMEOUT) {
@@ -639,7 +643,11 @@ public class CoyoteAdapter implements Adapter {
                 res.setStatus(404);
                 res.setMessage("Not found");
                 // No context, so use host
-                request.getHost().logAccess(request, response, 0, true);
+                Host host = request.getHost();
+                // Make sure there is a host (might not be during shutdown)
+                if (host != null) {
+                    host.logAccess(request, response, 0, true);
+                }
                 return false;
             }
         

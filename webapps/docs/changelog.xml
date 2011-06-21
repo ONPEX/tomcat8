@@ -42,7 +42,223 @@
   General, Catalina, Coyote, Jasper, Cluster, Web applications, Extras, Tribes,
   Other
 -->
-<section name="Tomcat 7.0.14 (markt)">
+<section name="Tomcat 7.0.16 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        <bug>51249</bug>: Further improve system property replacement code
+        in ClassLoaderLogManager of Tomcat JULI to cover some corner cases.
+        (kkolinko)
+      </fix>
+      <fix>
+        <bug>51264</bug>: Improve the previous fix for this issue by returning
+        the connection to the pool when not in use so it does not appear to be
+        an abandoned connection. Patch provided by Felix Schumacher. (markt)
+      </fix>
+      <fix>
+        <bug>51324</bug>: Improve handling of exceptions when flushing the
+        response buffer to ensure that the doFlush flag does not get stuck in
+        the enabled state. Patch provided by Jeremy Norris. (markt)
+      </fix>
+      <fix>
+        Correct a regression in the fix for <bug>51278</bug> that prevented any
+        web application from being marked as distributable. (kfujino/markt)
+      </fix>
+      <fix>
+        Correct a regression in the fix for <bug>51278</bug> that prevented a
+        web application from overriding the default welcome files. (markt)
+      </fix>
+      <fix>
+        Enable remaining valves for Servlet 3 asynchronous processing support.
+        (markt)
+      </fix>
+      <fix>
+        Avoid possible NPE when logging requests received during embedded Tomcat
+        shutdown. (markt)
+      </fix>
+      <fix>
+        <bug>51340</bug>: Fix thread-safety issue when parsing multiple web.xml
+        files in parallel. Apache Tomcat does not do this but products that
+        embed it may. (markt)
+      </fix>
+      <fix>
+        <bug>51344</bug>: Fix problem with Lifecycle re-factoring for deprecated
+        embedded class that prevented events being triggered. (markt) 
+      </fix>
+      <fix>
+        <bug>51348</bug>: Prevent possible NPE when processing WebDAV locks.
+        (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        When parsing the port in the HTTP host header, treat the port as a base
+        10 integer rather than a hexadecimal one. (rjung/markt/kkolinko) 
+      </fix>
+      <update>
+        Various refactorings to reduce code duplication and unnecessary code in
+        the connectors. (markt)
+      </update>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <update>
+        Change JAR scanning log messages where no TLDs are found to DEBUG level
+        and replace the multiple messages with a single INFO level message that
+        indicates that at least one JAR was scanned needlessly and how to obtain
+        more info. (markt)
+      </update>
+    </changelog>
+  </subsection>
+  <subsection name="Cluster">
+    <changelog>
+      <fix>
+        Enable Servlet 3 asynchronous processing support when using clustering.
+        (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <fix>
+        Correct the log4j configuration settings when defining conversion
+        patterns in the documentation web application. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 7.0.15 (markt)" rtext="not released">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        <bug>27122</bug>: Remove a workaround for a very old and since fixed
+        Mozilla bug and change the default value of the securePagesWithPragma
+        attribute of the Authenticator Valves to false. These changes should
+        reduce the likelihood of issues when downloading files with IE. (markt) 
+      </fix>
+      <fix>
+        <bug>35054</bug>: Check that a file is not specified for a Host&apos;s
+        appBase and log an error if it is. (markt)
+      </fix>
+      <fix>
+        <bug>51197</bug>: Fix possible dropped connection when sendError or
+        sendRedirect are used during async processing. (markt)
+      </fix>
+      <fix>
+        <bug>51221</bug>: Correct Spanish translation of text used in a 302
+        response. Patch provided by Paco Soberón. (markt)
+      </fix>
+      <fix>
+        <bug>51249</bug>: Correct ClassLoaderLogManager system property
+        replacement code so properties of the form "}${...}" can be used
+        without error. (markt) 
+      </fix>
+      <fix>
+        <bug>51264</bug>: Allow the JDBC persistent session store to use a
+        JNDI datasource to define the database in which sessions are persisted.
+        Patch provided by Felix Schumacher. (markt)
+      </fix>
+      <fix>
+        <bug>51274</bug>: Add missing i18n strings in PersistentManagerBase.
+        Patch provided by Eiji Takahashi. (markt)
+      </fix>
+      <fix>
+        <bug>51276</bug>: Provide an abstraction for accessing content in JARs
+        so the most efficient method can be selected depending on the type of
+        URL used to identify the JAR. This improves startup time when JARs are
+        located in $CATALINA_BASE/lib. (markt)
+      </fix>
+      <fix>
+        <bug>51277</bug>: Improve error message if an application is deployed
+        with an incomplete FORM authentication configuration. (markt)
+      </fix>
+      <fix>
+        <bug>51278</bug>: Allow ServletContainerInitializers to override
+        settings in the global default web.xml and the host web.xml. (markt)
+      </fix>
+      <fix>
+        <bug>51310</bug>: When stopping the Server object on shutdown call
+        destroy() after calling stop(). (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <add>
+        <bug>51145</bug>: Add an AJP-NIO connector. (markt/rjung)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <add>
+        <bug>51220</bug>: Add a system property to enable tag pooling with JSPs
+        that use a custom base class. Based on a patch by Dan Mikusa. (markt)
+      </add>
+      <add>
+        Include a comment header in generated java files that indicates when the
+        file was generated and which version of Tomcat generated it. (markt)
+      </add>
+      <fix>
+        <bug>51240</bug>: Ensure that maxConnections limit is enforced when
+        multiple acceptor threads are configured. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Cluster">
+    <changelog>
+      <fix>
+        <bug>51230</bug>: Add missing attributes to JMX for ReplicationValve and
+        JvmRouteBinderValve. Patch provided by Eiji Takahashi. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <add>
+        Add documentation for AJP-NIO connector. (markt/rjung)
+      </add>
+      <fix>
+        <bug>51182</bug>: Document JAAS supported added in <bug>51119</bug>.
+        Patch provided by Neil Laurance. (markt)
+      </fix>
+      <fix>
+        <bug>51225</bug>: Fix broken documentation links for non-English locales
+        in the HTML Manager application. Patch provided by Eiji Takahashi.
+        (markt)
+      </fix>
+      <fix>
+        <bug>51229</bug>: Fix bugs in the Servlet 3.0 asynchronous examples.
+        Patch provided by Eiji Takahashi. (markt)
+      </fix>
+      <fix>
+        <bug>51251</bug>: Add web application version support to the Ant tasks.
+        Based on a patch provided by Eiji Takahashi. (markt) 
+      </fix>
+      <fix>
+        <bug>51294</bug>: Clarify behaviour of unpackWAR attribute of
+        StandardContext components. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <fix>
+        <bug>46451</bug>: Configure svn:bugtraq properties for Tomcat trunk.
+        Based on a patch provided by Marc Guillemot. (markt)
+      </fix>
+      <fix>
+        <bug>51309</bug>: Correct logic in catalina.sh stop when using a PID
+        file to ensure the correct message is shown. Patch provided by Caio
+        Cezar. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 7.0.14 (markt)" rtext="released 2011-05-12">
   <subsection name="Catalina">
     <changelog>
       <update>
@@ -581,7 +797,7 @@
       <fix>
         <bug>28852</bug>: Add URL encoding where missing to parameters in URLs
         presented by Ant tasks to the Manager application. Based on a patch by
-        Stephane Bailliez. (mark) 
+        Stephane Bailliez. (markt) 
       </fix>
       <fix>
         Improve handling of SSL renegotiation by failing earlier when the

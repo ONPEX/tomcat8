@@ -82,7 +82,7 @@
 #                   Example (all one line)
 #                   LOGGING_MANAGER="-Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager"
 #
-# $Id: catalina.sh 1073891 2011-02-23 19:23:59Z markt $
+# $Id: catalina.sh 1130774 2011-06-02 20:09:27Z markt $
 # -----------------------------------------------------------------------------
 
 # OS specific support.  $var _must_ be set to either true or false.
@@ -412,19 +412,19 @@ elif [ "$1" = "stop" ] ; then
   fi
 
   if [ ! -z "$CATALINA_PID" ]; then
-    if [ -s "$CATALINA_PID" ]; then
-      if [ -f "$CATALINA_PID" ]; then
+    if [ -f "$CATALINA_PID" ]; then
+      if [ -s "$CATALINA_PID" ]; then
         kill -0 `cat "$CATALINA_PID"` >/dev/null 2>&1
         if [ $? -gt 0 ]; then
           echo "PID file found but no matching process was found. Stop aborted."
           exit 1
         fi
       else
-        echo "\$CATALINA_PID was set but the specified file does not exist. Is Tomcat running? Stop aborted."
-        exit 1
+        echo "PID file is empty and has been ignored."
       fi
     else
-      echo "PID file is empty and has been ignored."
+      echo "\$CATALINA_PID was set but the specified file does not exist. Is Tomcat running? Stop aborted."
+      exit 1
     fi
   fi
 

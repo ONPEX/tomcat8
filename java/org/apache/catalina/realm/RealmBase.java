@@ -48,11 +48,11 @@ import org.apache.catalina.deploy.LoginConfig;
 import org.apache.catalina.deploy.SecurityCollection;
 import org.apache.catalina.deploy.SecurityConstraint;
 import org.apache.catalina.mbeans.MBeanUtils;
-import org.apache.catalina.util.HexUtils;
 import org.apache.catalina.util.LifecycleMBeanBase;
 import org.apache.catalina.util.MD5Encoder;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
+import org.apache.tomcat.util.buf.HexUtils;
 import org.apache.tomcat.util.res.StringManager;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSCredential;
@@ -65,7 +65,7 @@ import org.ietf.jgss.GSSName;
  * location) are identical to those currently supported by Tomcat 3.X.
  *
  * @author Craig R. McClanahan
- * @version $Id: RealmBase.java 1088430 2011-04-03 22:38:23Z kkolinko $
+ * @version $Id: RealmBase.java 1132702 2011-06-06 16:53:58Z markt $
  */
 
 public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
@@ -1142,7 +1142,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
                 }
                 md.update(bytes);
 
-                return (HexUtils.convert(md.digest()));
+                return (HexUtils.toHexString(md.digest()));
             } catch (Exception e) {
                 log.error(sm.getString("realmBase.digest"), e);
                 return (credentials);
@@ -1290,7 +1290,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
             }
 
             // Digest the credentials and return as hexadecimal
-            return (HexUtils.convert(md.digest()));
+            return (HexUtils.toHexString(md.digest()));
         } catch(Exception ex) {
             log.error(ex);
             return credentials;

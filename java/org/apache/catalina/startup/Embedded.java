@@ -32,7 +32,6 @@ import org.apache.catalina.Globals;
 import org.apache.catalina.Host;
 import org.apache.catalina.Lifecycle;
 import org.apache.catalina.LifecycleException;
-import org.apache.catalina.LifecycleListener;
 import org.apache.catalina.LifecycleState;
 import org.apache.catalina.Loader;
 import org.apache.catalina.Realm;
@@ -44,7 +43,6 @@ import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.core.StandardService;
 import org.apache.catalina.loader.WebappLoader;
 import org.apache.catalina.security.SecurityConfig;
-import org.apache.catalina.util.LifecycleSupport;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.IntrospectionUtils;
@@ -100,7 +98,7 @@ import org.apache.tomcat.util.res.StringManager;
  * of how Tomcat is set up and launched as an Embedded application.
  *
  * @author Craig R. McClanahan
- * @version $Id: Embedded.java 1069770 2011-02-11 12:24:47Z markt $
+ * @version $Id: Embedded.java 1134042 2011-06-09 19:04:37Z markt $
  * 
  * @deprecated Use {@link Tomcat} instead.
  */
@@ -170,12 +168,6 @@ public class Embedded  extends StandardService {
      */
     protected static final String info =
         "org.apache.catalina.startup.Embedded/1.0";
-
-
-    /**
-     * The lifecycle event support for this component.
-     */
-    protected LifecycleSupport lifecycle = new LifecycleSupport(this);
 
 
     /**
@@ -756,44 +748,6 @@ public class Embedded  extends StandardService {
 
 
     // ------------------------------------------------------ Lifecycle Methods
-
-
-    /**
-     * Add a lifecycle event listener to this component.
-     *
-     * @param listener The listener to add
-     */
-    @Override
-    public void addLifecycleListener(LifecycleListener listener) {
-
-        lifecycle.addLifecycleListener(listener);
-
-    }
-
-
-    /**
-     * Get the lifecycle listeners associated with this lifecycle. If this 
-     * Lifecycle has no listeners registered, a zero-length array is returned.
-     */
-    @Override
-    public LifecycleListener[] findLifecycleListeners() {
-
-        return lifecycle.findLifecycleListeners();
-
-    }
-
-
-    /**
-     * Remove a lifecycle event listener from this component.
-     *
-     * @param listener The listener to remove
-     */
-    @Override
-    public void removeLifecycleListener(LifecycleListener listener) {
-
-        lifecycle.removeLifecycleListener(listener);
-
-    }
 
 
     /**

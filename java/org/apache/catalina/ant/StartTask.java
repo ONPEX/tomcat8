@@ -19,9 +19,6 @@
 package org.apache.catalina.ant;
 
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-
 import org.apache.tools.ant.BuildException;
 
 
@@ -30,31 +27,10 @@ import org.apache.tools.ant.BuildException;
  * Tomcat manager application.
  *
  * @author Craig R. McClanahan
- * @version $Id: StartTask.java 939305 2010-04-29 13:43:39Z kkolinko $
+ * @version $Id: StartTask.java 1131267 2011-06-03 22:22:35Z markt $
  * @since 4.1
  */
-public class StartTask extends AbstractCatalinaTask {
-
-
-    // ------------------------------------------------------------- Properties
-
-
-    /**
-     * The context path of the web application we are managing.
-     */
-    protected String path = null;
-
-    public String getPath() {
-        return (this.path);
-    }
-
-    public void setPath(String path) {
-        this.path = path;
-    }
-
-
-    // --------------------------------------------------------- Public Methods
-
+public class StartTask extends AbstractCatalinaCommandTask {
 
     /**
      * Execute the requested operation.
@@ -65,16 +41,7 @@ public class StartTask extends AbstractCatalinaTask {
     public void execute() throws BuildException {
 
         super.execute();
-        if (path == null) {
-            throw new BuildException
-                ("Must specify 'path' attribute");
-        }
-        try {
-            execute("/start?path=" + URLEncoder.encode(this.path, getCharset()));
-        } catch (UnsupportedEncodingException e) {
-            throw new BuildException
-                ("Invalid 'charset' attribute: " + getCharset());
-        }
+        execute(createQueryString("/start").toString());
 
     }
 

@@ -76,7 +76,7 @@ import org.apache.tomcat.util.res.StringManager;
 * @author Bip Thelin
 * @author Malcolm Edgar
 * @author Glenn L. Nielsen
-* @version $Id: HTMLManagerServlet.java 1100145 2011-05-06 09:22:38Z markt $
+* @version $Id: HTMLManagerServlet.java 1131471 2011-06-04 19:19:53Z markt $
 * @see ManagerServlet
 */
 
@@ -759,7 +759,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
     /**
      * Find potential memory leaks caused by web application reload.
      *
-     * @see ManagerServlet#findleaks(PrintWriter, StringManager) 
+     * @see ManagerServlet#findleaks(boolean, PrintWriter, StringManager) 
      * 
      * @param smClient  StringManager for the client's locale
      *
@@ -772,11 +772,16 @@ public final class HTMLManagerServlet extends ManagerServlet {
         StringWriter stringWriter = new StringWriter();
         PrintWriter printWriter = new PrintWriter(stringWriter);
 
-        super.findleaks(printWriter, smClient);
+        super.findleaks(false, printWriter, smClient);
 
-        if (stringWriter.getBuffer().length() > 0) {
-            msg.append(smClient.getString("htmlManagerServlet.findleaksList"));
-            msg.append(stringWriter.toString());
+        String writerText = stringWriter.toString();
+
+        if (writerText.length() > 0) {
+            if (!writerText.startsWith("FAIL -")) {
+                msg.append(smClient.getString(
+                        "htmlManagerServlet.findleaksList"));
+            }
+            msg.append(writerText);
         } else {
             msg.append(smClient.getString("htmlManagerServlet.findleaksNone"));
         }

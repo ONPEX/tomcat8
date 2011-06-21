@@ -25,7 +25,7 @@ package org.apache.catalina.security;
  *
  * @author Glenn L. Nielsen
  * @author Jean-Francois Arcand
- * @version $Id: SecurityClassLoad.java 1084115 2011-03-22 09:42:29Z markt $
+ * @version $Id: SecurityClassLoad.java 1133586 2011-06-08 22:20:22Z markt $
  */
 
 public final class SecurityClassLoad {
@@ -140,6 +140,7 @@ public final class SecurityClassLoad {
             throws Exception {
         final String basePackage = "org.apache.coyote.";
         loader.loadClass(basePackage + "http11.AbstractOutputBuffer$1");
+        loader.loadClass(basePackage + "http11.Constants");
         // Make sure system property is read at this point
         Class<?> clazz = loader.loadClass(basePackage + "Constants");
         clazz.newInstance();
@@ -248,6 +249,12 @@ public final class SecurityClassLoad {
         clazz.newInstance();
         loader.loadClass(basePackage + "util.http.HttpMessages");
         loader.loadClass(basePackage + "util.net.Constants");
+        loader.loadClass(basePackage +
+                "util.net.NioBlockingSelector$BlockPoller$1");
+        loader.loadClass(basePackage +
+                "util.net.NioBlockingSelector$BlockPoller$2");
+        loader.loadClass(basePackage +
+                "util.net.NioBlockingSelector$BlockPoller$3");
         loader.loadClass(basePackage + "util.net.SSLSupport$CipherData");
         loader.loadClass
             (basePackage + "util.net.JIoEndpoint$PrivilegedSetTccl");

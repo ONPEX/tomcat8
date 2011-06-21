@@ -127,7 +127,7 @@ import org.xml.sax.SAXException;
  * http://host:port/context/webdavedit/content
  *
  * @author Remy Maucherat
- * @version $Id: WebdavServlet.java 1055951 2011-01-06 17:29:01Z markt $
+ * @version $Id: WebdavServlet.java 1134048 2011-06-09 19:15:40Z markt $
  */
 
 public class WebdavServlet
@@ -1337,13 +1337,15 @@ public class WebdavServlet
             LockInfo toRenew = resourceLocks.get(path);
             Enumeration<String> tokenList = null;
 
-            // At least one of the tokens of the locks must have been given
-            tokenList = toRenew.tokens.elements();
-            while (tokenList.hasMoreElements()) {
-                String token = tokenList.nextElement();
-                if (ifHeader.indexOf(token) != -1) {
-                    toRenew.expiresAt = lock.expiresAt;
-                    lock = toRenew;
+            if (toRenew != null) {
+                // At least one of the tokens of the locks must have been given
+                tokenList = toRenew.tokens.elements();
+                while (tokenList.hasMoreElements()) {
+                    String token = tokenList.nextElement();
+                    if (ifHeader.indexOf(token) != -1) {
+                        toRenew.expiresAt = lock.expiresAt;
+                        lock = toRenew;
+                    }
                 }
             }
 

@@ -21,7 +21,6 @@ import java.io.InterruptedIOException;
 import java.net.InetAddress;
 import java.nio.channels.SelectionKey;
 import java.util.Locale;
-import java.util.concurrent.Executor;
 
 import javax.net.ssl.SSLEngine;
 
@@ -38,7 +37,6 @@ import org.apache.tomcat.util.buf.ByteChunk;
 import org.apache.tomcat.util.buf.HexUtils;
 import org.apache.tomcat.util.buf.MessageBytes;
 import org.apache.tomcat.util.http.MimeHeaders;
-import org.apache.tomcat.util.net.AbstractEndpoint;
 import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 import org.apache.tomcat.util.net.NioChannel;
 import org.apache.tomcat.util.net.NioEndpoint;
@@ -86,8 +84,6 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
         response.setOutputBuffer(outputBuffer);
         request.setResponse(response);
 
-        ssl = endpoint.isSSLEnabled();
-
         initializeFilters(maxTrailerSize);
 
         // Cause loading of HexUtils
@@ -127,32 +123,9 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
     protected boolean cometClose = false;
     
     /**
-     * SSL enabled ?
-     */
-    protected boolean ssl = false;
-
-
-    /**
      * Socket associated with the current connection.
      */
     protected NioChannel socket = null;
-
-
-    /**
-     * Associated endpoint.
-     */
-    protected NioEndpoint endpoint;
-
-    
-    // ------------------------------------------------------------- Properties
-
-    /**
-     * Expose the endpoint.
-     */
-    @Override
-    protected AbstractEndpoint getEndpoint() {
-        return endpoint;
-    }
 
 
     // --------------------------------------------------------- Public Methods
@@ -288,8 +261,8 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
         this.socket = socket;
         inputBuffer.setSocket(socket);
         outputBuffer.setSocket(socket);
-        inputBuffer.setSelectorPool(endpoint.getSelectorPool());
-        outputBuffer.setSelectorPool(endpoint.getSelectorPool());
+        inputBuffer.setSelectorPool(((NioEndpoint)endpoint).getSelectorPool());
+        outputBuffer.setSelectorPool(((NioEndpoint)endpoint).getSelectorPool());
 
         // Error flag
         error = false;
@@ -401,7 +374,8 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
                     // committed, so we can't try and set headers.
                     if(keepAlive && !error) { // Avoid checking twice.
                         error = response.getErrorException() != null ||
-                                statusDropsConnection(response.getStatus());
+                                (!isAsync() &&
+                                statusDropsConnection(response.getStatus()));
                     }
                     // Comet support
                     SelectionKey key = socket.getIOChannel().keyFor(socket.getPoller().getSelector());
@@ -635,9 +609,9 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
                     engine.setNeedClientAuth(true);
                     try {
                         sslChannel.rehandshake(endpoint.getSoTimeout());
-                        sslSupport =
-                            endpoint.getHandler().getSslImplementation().getSSLSupport(
-                                    engine.getSession());
+                        sslSupport = ((NioEndpoint)endpoint).getHandler()
+                                .getSslImplementation().getSSLSupport(
+                                        engine.getSession());
                     } catch (IOException ioe) {
                         log.warn(sm.getString("http11processor.socket.sslreneg",ioe));
                     }
@@ -681,7 +655,8 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
                 attach.setTimeout(timeout);
         } else if (actionCode == ActionCode.ASYNC_COMPLETE) {
             if (asyncStateMachine.asyncComplete()) {
-                endpoint.processSocket(this.socket, SocketStatus.OPEN, true);
+                ((NioEndpoint)endpoint).processSocket(this.socket,
+                        SocketStatus.OPEN, true);
             }
         } else if (actionCode == ActionCode.ASYNC_SETTIMEOUT) {
             if (param==null) return;
@@ -692,7 +667,8 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
             attach.setTimeout(timeout);
         } else if (actionCode == ActionCode.ASYNC_DISPATCH) {
             if (asyncStateMachine.asyncDispatch()) {
-                endpoint.processSocket(this.socket, SocketStatus.OPEN, true);
+                ((NioEndpoint)endpoint).processSocket(this.socket,
+                        SocketStatus.OPEN, true);
             }
         }
     }
@@ -711,7 +687,7 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
         contentDelimitation = false;
         expectation = false;
         sendfileData = null;
-        if (ssl) {
+        if (endpoint.isSSLEnabled()) {
             request.scheme().setString("https");
         }
         MessageBytes protocolMB = request.protocol();
@@ -885,88 +861,20 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
     }
 
 
-    /**
-     * Parse host.
-     */
-    public void parseHost(MessageBytes valueMB) {
-
-        if (valueMB == null || valueMB.isNull()) {
-            // HTTP/1.0
-            // Default is what the socket tells us. Overridden if a host is
-            // found/parsed
-            request.setServerPort(endpoint.getPort());
-            return;
-        }
-
-        ByteChunk valueBC = valueMB.getByteChunk();
-        byte[] valueB = valueBC.getBytes();
-        int valueL = valueBC.getLength();
-        int valueS = valueBC.getStart();
-        int colonPos = -1;
-        if (hostNameC.length < valueL) {
-            hostNameC = new char[valueL];
-        }
-
-        boolean ipv6 = (valueB[valueS] == '[');
-        boolean bracketClosed = false;
-        for (int i = 0; i < valueL; i++) {
-            char b = (char) valueB[i + valueS];
-            hostNameC[i] = b;
-            if (b == ']') {
-                bracketClosed = true;
-            } else if (b == ':') {
-                if (!ipv6 || bracketClosed) {
-                    colonPos = i;
-                    break;
-                }
-            }
-        }
-
-        if (colonPos < 0) {
-            if (!ssl) {
-                // 80 - Default HTTP port
-                request.setServerPort(80);
-            } else {
-                // 443 - Default HTTPS port
-                request.setServerPort(443);
-            }
-            request.serverName().setChars(hostNameC, 0, valueL);
-        } else {
-
-            request.serverName().setChars(hostNameC, 0, colonPos);
-
-            int port = 0;
-            int mult = 1;
-            for (int i = valueL - 1; i > colonPos; i--) {
-                int charValue = HexUtils.getDec(valueB[i + valueS]);
-                if (charValue == -1) {
-                    // Invalid character
-                    error = true;
-                    // 400 - Bad request
-                    response.setStatus(400);
-                    adapter.log(request, response, 0);
-                    break;
-                }
-                port = port + (charValue * mult);
-                mult = 10 * mult;
-            }
-            request.setServerPort(port);
-
-        }
-
-    }
-
     @Override
     protected boolean prepareSendfile(OutputFilter[] outputFilters) {
-        String fileName = (String) request.getAttribute("org.apache.tomcat.sendfile.filename");
+        String fileName = (String) request.getAttribute(
+                "org.apache.tomcat.sendfile.filename");
         if (fileName != null) {
             // No entity body sent here
             outputBuffer.addActiveFilter(outputFilters[Constants.VOID_FILTER]);
             contentDelimitation = true;
             sendfileData = new NioEndpoint.SendfileData();
             sendfileData.fileName = fileName;
-            sendfileData.pos = ((Long) request.getAttribute("org.apache.tomcat.sendfile.start")).longValue();
-            sendfileData.length = ((Long) request.getAttribute("org.apache.tomcat.sendfile.end")).longValue() - sendfileData.pos;
+            sendfileData.pos = ((Long) request.getAttribute(
+                    "org.apache.tomcat.sendfile.start")).longValue();
+            sendfileData.length = ((Long) request.getAttribute(
+                    "org.apache.tomcat.sendfile.end")).longValue() - sendfileData.pos;
             return true;
         }
         return false;
@@ -1016,10 +924,5 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
      */
     public void setSslSupport(SSLSupport sslSupport) {
         this.sslSupport = sslSupport;
-    }
-
-    @Override
-    public Executor getExecutor() {
-        return endpoint.getExecutor();
     }
 }

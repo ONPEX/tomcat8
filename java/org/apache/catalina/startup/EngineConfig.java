@@ -33,7 +33,7 @@ import org.apache.tomcat.util.res.StringManager;
  * of that Engine, and the associated defined contexts.
  *
  * @author Craig R. McClanahan
- * @version $Id: EngineConfig.java 939305 2010-04-29 13:43:39Z kkolinko $
+ * @version $Id: EngineConfig.java 1125461 2011-05-20 16:52:50Z markt $
  */
 
 public class EngineConfig
@@ -66,6 +66,7 @@ public class EngineConfig
      *
      * @param event The lifecycle event that has occurred
      */
+    @Override
     public void lifecycleEvent(LifecycleEvent event) {
 
         // Identify the engine we are associated with

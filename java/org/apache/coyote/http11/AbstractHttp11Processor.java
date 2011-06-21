@@ -18,18 +18,14 @@ package org.apache.coyote.http11;
 
 import java.io.IOException;
 import java.util.StringTokenizer;
-import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
+import org.apache.coyote.AbstractProcessor;
 import org.apache.coyote.ActionCode;
-import org.apache.coyote.ActionHook;
 import org.apache.coyote.Adapter;
 import org.apache.coyote.AsyncContextCallback;
 import org.apache.coyote.AsyncStateMachine;
-import org.apache.coyote.Processor;
-import org.apache.coyote.Request;
-import org.apache.coyote.Response;
 import org.apache.coyote.http11.filters.BufferedInputFilter;
 import org.apache.coyote.http11.filters.ChunkedInputFilter;
 import org.apache.coyote.http11.filters.ChunkedOutputFilter;
@@ -43,14 +39,14 @@ import org.apache.juli.logging.Log;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.buf.Ascii;
 import org.apache.tomcat.util.buf.ByteChunk;
+import org.apache.tomcat.util.buf.HexUtils;
 import org.apache.tomcat.util.buf.MessageBytes;
 import org.apache.tomcat.util.http.FastHttpDateFormat;
 import org.apache.tomcat.util.http.MimeHeaders;
-import org.apache.tomcat.util.net.AbstractEndpoint;
 import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 import org.apache.tomcat.util.res.StringManager;
 
-public abstract class AbstractHttp11Processor implements ActionHook, Processor {
+public abstract class AbstractHttp11Processor extends AbstractProcessor {
 
     protected abstract Log getLog();
 
@@ -70,18 +66,6 @@ public abstract class AbstractHttp11Processor implements ActionHook, Processor {
      * Associated adapter.
      */
     protected Adapter adapter = null;
-
-
-    /**
-     * Request object.
-     */
-    protected Request request = null;
-
-
-    /**
-     * Response object.
-     */
-    protected Response response = null;
 
 
     /**
@@ -506,15 +490,6 @@ public abstract class AbstractHttp11Processor implements ActionHook, Processor {
      */
     public String getServer() {
         return server;
-    }
-
-
-    /** Get the request associated with this processor.
-     *
-     * @return The request
-     */
-    public Request getRequest() {
-        return request;
     }
 
 
@@ -968,9 +943,78 @@ public abstract class AbstractHttp11Processor implements ActionHook, Processor {
 
     }
 
-    abstract AbstractEndpoint getEndpoint();
     abstract boolean prepareSendfile(OutputFilter[] outputFilters);
     
+    /**
+     * Parse host.
+     */
+    protected void parseHost(MessageBytes valueMB) {
+
+        if (valueMB == null || valueMB.isNull()) {
+            // HTTP/1.0
+            // If no host header, use the port info from the endpoint
+            // The host will be obtained lazily from the socket if required
+            // using ActionCode#REQ_LOCAL_NAME_ATTRIBUTE
+            request.setServerPort(endpoint.getPort());
+            return;
+        }
+
+        ByteChunk valueBC = valueMB.getByteChunk();
+        byte[] valueB = valueBC.getBytes();
+        int valueL = valueBC.getLength();
+        int valueS = valueBC.getStart();
+        int colonPos = -1;
+        if (hostNameC.length < valueL) {
+            hostNameC = new char[valueL];
+        }
+
+        boolean ipv6 = (valueB[valueS] == '[');
+        boolean bracketClosed = false;
+        for (int i = 0; i < valueL; i++) {
+            char b = (char) valueB[i + valueS];
+            hostNameC[i] = b;
+            if (b == ']') {
+                bracketClosed = true;
+            } else if (b == ':') {
+                if (!ipv6 || bracketClosed) {
+                    colonPos = i;
+                    break;
+                }
+            }
+        }
+
+        if (colonPos < 0) {
+            if (!endpoint.isSSLEnabled()) {
+                // 80 - Default HTTP port
+                request.setServerPort(80);
+            } else {
+                // 443 - Default HTTPS port
+                request.setServerPort(443);
+            }
+            request.serverName().setChars(hostNameC, 0, valueL);
+        } else {
+            request.serverName().setChars(hostNameC, 0, colonPos);
+            
+            int port = 0;
+            int mult = 1;
+            for (int i = valueL - 1; i > colonPos; i--) {
+                int charValue = HexUtils.getDec(valueB[i + valueS]);
+                if (charValue == -1 || charValue > 9) {
+                    // Invalid character
+                    error = true;
+                    // 400 - Bad request
+                    response.setStatus(400);
+                    adapter.log(request, response, 0);
+                    break;
+                }
+                port = port + (charValue * mult);
+                mult = 10 * mult;
+            }
+            request.setServerPort(port);
+        }
+
+    }
+
     public void endRequest() {
 
         // Finish the handling of the request
@@ -1007,9 +1051,6 @@ public abstract class AbstractHttp11Processor implements ActionHook, Processor {
     
     protected abstract void recycleInternal();
 
-    @Override
-    public abstract Executor getExecutor();
-    
     protected boolean isAsync() {
         return asyncStateMachine.isAsync();
     }
