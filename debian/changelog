@@ -1,4 +1,4 @@
-tomcat7 (7.0.16-1) UNRELEASED; urgency=low
+tomcat7 (7.0.16-1) unstable; urgency=low
 
   [ Miguel Landaeta ]
   * New upstream release.
