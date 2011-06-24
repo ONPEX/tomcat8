@@ -6,8 +6,9 @@ tomcat7 (7.0.16-1) unstable; urgency=low
 
   [ tony mancill ]
   * Add logrotate file for catalina.out.
+  * Add build-arch target to debian/rules.
 
- -- Miguel Landaeta <miguel@miguel.cc>  Mon, 20 Jun 2011 19:28:42 -0430
+ -- tony mancill <tmancill@debian.org>  Thu, 23 Jun 2011 20:26:29 -0700
 
 tomcat7 (7.0.14-1) unstable; urgency=low
 

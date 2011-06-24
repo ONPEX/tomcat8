@@ -45,7 +45,9 @@ endif
 ANT_INVOKE := $(JAVA_CMD) -classpath "$(DEB_CLASSPATH)" \
 	org.apache.tools.ant.Main $(ANT_ARGS)
 
-build: build-stamp
+build: build-arch build-indep
+build-arch: build-stamp
+build-indep: build-stamp
 build-stamp:
 	dh_testdir
 	$(ANT_INVOKE) deploy
