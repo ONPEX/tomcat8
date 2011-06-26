@@ -1,3 +1,10 @@
+tomcat7 (7.0.16-2) unstable; urgency=low
+
+  * Restore tomcat-juli.jar link in /usr/share/tomcat7/bin.
+    Thank you to Kristof Csillag for the bug report.  (Closes: #631667)
+
+ -- tony mancill <tmancill@debian.org>  Sun, 26 Jun 2011 08:13:33 -0700
+
 tomcat7 (7.0.16-1) unstable; urgency=low
 
   [ Miguel Landaeta ]
