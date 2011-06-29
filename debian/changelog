@@ -1,3 +1,9 @@
+tomcat7 (7.0.16-3) UNRELEASED; urgency=low
+
+  * Correct Suggests: for libtcnative-1 (tomcat-native)
+
+ -- tony mancill <tmancill@debian.org>  Tue, 28 Jun 2011 21:47:42 -0700
+
 tomcat7 (7.0.16-2) unstable; urgency=low
 
   * Restore tomcat-juli.jar link in /usr/share/tomcat7/bin.
