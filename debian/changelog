@@ -1,4 +1,4 @@
-tomcat7 (7.0.16-2) unstable; urgency=low
+tomcat7 (7.0.16-3) unstable; urgency=low
 
   * Team upload.
   * Add patch for CVE-2011-2204 (Closes: #632882)
