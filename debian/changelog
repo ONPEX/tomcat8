@@ -1,9 +1,17 @@
 tomcat7 (7.0.16-3) unstable; urgency=low
 
   * Team upload.
+  * Correct Suggests: for libtcnative-1 (tomcat-native)
   * Add patch for CVE-2011-2204 (Closes: #632882)
 
  -- tony mancill <tmancill@debian.org>  Wed, 06 Jul 2011 21:55:39 -0700
+
+tomcat7 (7.0.16-2) unstable; urgency=low
+
+  * Restore tomcat-juli.jar link in /usr/share/tomcat7/bin.
+    Thank you to Kristof Csillag for the bug report.  (Closes: #631667)
+
+ -- tony mancill <tmancill@debian.org>  Sun, 26 Jun 2011 08:13:33 -0700
 
 tomcat7 (7.0.16-1) unstable; urgency=low
 
