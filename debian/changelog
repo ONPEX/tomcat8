@@ -1,3 +1,10 @@
+tomcat7 (7.0.16-2) unstable; urgency=low
+
+  * Team upload.
+  * Add patch for CVE-2011-2204 (Closes: #632882)
+
+ -- tony mancill <tmancill@debian.org>  Wed, 06 Jul 2011 21:55:39 -0700
+
 tomcat7 (7.0.16-1) unstable; urgency=low
 
   [ Miguel Landaeta ]
