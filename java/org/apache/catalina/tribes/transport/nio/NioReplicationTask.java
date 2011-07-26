@@ -50,7 +50,7 @@ import org.apache.catalina.tribes.util.Logs;
  *
  * @author Filip Hanik
  *
- * @version $Id: NioReplicationTask.java 992409 2010-09-03 18:35:59Z markt $
+ * @version $Id: NioReplicationTask.java 1142666 2011-07-04 13:54:52Z kkolinko $
  */
 public class NioReplicationTask extends AbstractRxTask {
 
@@ -67,6 +67,7 @@ public class NioReplicationTask extends AbstractRxTask {
     }
 
     // loop forever waiting for work to do
+    @Override
     public synchronized void run() {
         if ( buffer == null ) {
             int size = getRxBufSize();
@@ -246,6 +247,7 @@ public class NioReplicationTask extends AbstractRxTask {
         reader.finish();
         //register our OP_READ interest
         Runnable r = new Runnable() {
+            @Override
             public void run() {
                 try {
                     if (key.isValid()) {
@@ -280,6 +282,7 @@ public class NioReplicationTask extends AbstractRxTask {
             reader.finish();
         }
         Runnable cx = new Runnable() {
+            @Override
             public void run() {
                 if ( log.isTraceEnabled() )
                     log.trace("Cancelling key:"+key);

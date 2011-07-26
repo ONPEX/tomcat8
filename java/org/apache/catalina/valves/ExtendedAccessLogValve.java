@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.TimeZone;
 
 import javax.servlet.http.Cookie;
@@ -126,7 +127,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * @author Tim Funk
  * @author Peter Rossbach
  * 
- * @version $Id: ExtendedAccessLogValve.java 1059388 2011-01-15 18:50:45Z markt $
+ * @version $Id: ExtendedAccessLogValve.java 1145238 2011-07-11 16:51:54Z rjung $
  */
 
 public class ExtendedAccessLogValve extends AccessLogValve {
@@ -875,7 +876,7 @@ public class ExtendedAccessLogValve extends AccessLogValve {
         private String currentTimestampString;
         
         ElementTimestampStruct(String format) {
-            currentTimestampFormat = new SimpleDateFormat(format);
+            currentTimestampFormat = new SimpleDateFormat(format, Locale.US);
             currentTimestampFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
         }
     }

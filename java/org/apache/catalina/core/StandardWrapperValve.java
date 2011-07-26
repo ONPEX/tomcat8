@@ -46,7 +46,7 @@ import org.apache.tomcat.util.res.StringManager;
  * <code>StandardWrapper</code> container implementation.
  *
  * @author Craig R. McClanahan
- * @version $Id: StandardWrapperValve.java 1044326 2010-12-10 12:28:20Z markt $
+ * @version $Id: StandardWrapperValve.java 1140750 2011-06-28 17:49:25Z markt $
  */
 
 final class StandardWrapperValve
@@ -171,22 +171,6 @@ final class StandardWrapperValve
             request.setComet(true);
         }
         
-        // Acknowledge the request
-        try {
-            response.sendAcknowledgement();
-        } catch (IOException e) {
-            container.getLogger().warn(sm.getString("standardWrapper.acknowledgeException",
-                             wrapper.getName()), e);
-            throwable = e;
-            exception(request, response, e);
-        } catch (Throwable e) {
-            ExceptionUtils.handleThrowable(e);
-            container.getLogger().error(sm.getString("standardWrapper.acknowledgeException",
-                             wrapper.getName()), e);
-            throwable = e;
-            exception(request, response, e);
-            servlet = null;
-        }
         MessageBytes requestPathMB = request.getRequestPathMB();
         DispatcherType dispatcherType = DispatcherType.REQUEST;
         if (request.getDispatcherType()==DispatcherType.ASYNC) dispatcherType = DispatcherType.ASYNC; 

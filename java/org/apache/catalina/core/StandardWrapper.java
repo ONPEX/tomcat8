@@ -76,7 +76,7 @@ import org.apache.tomcat.util.modeler.Registry;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardWrapper.java 1130618 2011-06-02 15:54:26Z markt $
+ * @version $Id: StandardWrapper.java 1142209 2011-07-02 12:01:30Z markt $
  */
 @SuppressWarnings("deprecation") // SingleThreadModel
 public class StandardWrapper extends ContainerBase
@@ -204,7 +204,7 @@ public class StandardWrapper extends ContainerBase
     /**
      * Does this servlet implement the SingleThreadModel interface?
      */
-    protected boolean singleThreadModel = false;
+    protected volatile boolean singleThreadModel = false;
 
 
     /**
@@ -822,9 +822,10 @@ public class StandardWrapper extends ContainerBase
                                 log.debug("Allocating non-STM instance");
 
                             instance = loadServlet();
-                            // For non-STM, increment here to prevent a race
-                            // condition with unload. Bug 43683, test case #3
                             if (!singleThreadModel) {
+                                // For non-STM, increment here to prevent a race
+                                // condition with unload. Bug 43683, test case
+                                // #3
                                 newInstance = true;
                                 countAllocated.incrementAndGet();
                             }
@@ -843,7 +844,16 @@ public class StandardWrapper extends ContainerBase
                 initServlet(instance);
             }
 
-            if (!singleThreadModel) {
+            if (singleThreadModel) {
+                if (newInstance) {
+                    // Have to do this outside of the sync above to prevent a
+                    // possible deadlock
+                    synchronized (instancePool) {
+                        instancePool.push(instance);
+                        nInstances++;
+                    }
+                }
+            } else {
                 if (log.isTraceEnabled())
                     log.trace("  Returning non-STM instance");
                 // For new instances, count will have been incremented at the
@@ -1020,6 +1030,10 @@ public class StandardWrapper extends ContainerBase
     public synchronized void load() throws ServletException {
         instance = loadServlet();
         
+        if (!instanceInitialized) {
+            initServlet(instance);
+        }
+
         if (isJspServlet) {
             StringBuilder oname =
                 new StringBuilder(MBeanUtils.getDomain(getParent()));
@@ -1111,14 +1125,15 @@ public class StandardWrapper extends ContainerBase
 
             classLoadTime=(int) (System.currentTimeMillis() -t1);
 
+            if (servlet instanceof SingleThreadModel) {
+                if (instancePool == null) {
+                    instancePool = new Stack<Servlet>();
+                }
+                singleThreadModel = true;
+            }
+
             initServlet(servlet);
 
-            // Register our newly initialized instance
-            singleThreadModel = servlet instanceof SingleThreadModel;
-            if (singleThreadModel) {
-                if (instancePool == null)
-                    instancePool = new Stack<Servlet>();
-            }
             fireContainerEvent("load", this);
 
             loadTime=System.currentTimeMillis() -t1;
@@ -1182,7 +1197,7 @@ public class StandardWrapper extends ContainerBase
     private synchronized void initServlet(Servlet servlet)
             throws ServletException {
         
-        if (instanceInitialized) return;
+        if (instanceInitialized && !singleThreadModel) return;
 
         // Call the initialization method of this servlet
         try {
@@ -1371,53 +1386,55 @@ public class StandardWrapper extends ContainerBase
             }
         }
 
-        PrintStream out = System.out;
-        if (swallowOutput) {
-            SystemLogHandler.startCapture();
-        }
-
-        // Call the servlet destroy() method
-        try {
-            instanceSupport.fireInstanceEvent
-              (InstanceEvent.BEFORE_DESTROY_EVENT, instance);
-
-            if( Globals.IS_SECURITY_ENABLED) {
-                SecurityUtil.doAsPrivilege("destroy",
-                                           instance);
-                SecurityUtil.remove(instance);                           
-            } else {
-                instance.destroy();
-            }
-            
-            instanceSupport.fireInstanceEvent
-              (InstanceEvent.AFTER_DESTROY_EVENT, instance);
-
-            // Annotation processing
-            if (!((Context) getParent()).getIgnoreAnnotations()) {
-               ((StandardContext)getParent()).getInstanceManager().destroyInstance(instance);
-            }
-
-        } catch (Throwable t) {
-            ExceptionUtils.handleThrowable(t);
-            instanceSupport.fireInstanceEvent
-              (InstanceEvent.AFTER_DESTROY_EVENT, instance, t);
-            instance = null;
-            instancePool = null;
-            nInstances = 0;
-            fireContainerEvent("unload", this);
-            unloading = false;
-            throw new ServletException
-                (sm.getString("standardWrapper.destroyException", getName()),
-                 t);
-        } finally {
-            // Write captured output
+        if (instanceInitialized) {
+            PrintStream out = System.out;
             if (swallowOutput) {
-                String log = SystemLogHandler.stopCapture();
-                if (log != null && log.length() > 0) {
-                    if (getServletContext() != null) {
-                        getServletContext().log(log);
-                    } else {
-                        out.println(log);
+                SystemLogHandler.startCapture();
+            }
+    
+            // Call the servlet destroy() method
+            try {
+                instanceSupport.fireInstanceEvent
+                  (InstanceEvent.BEFORE_DESTROY_EVENT, instance);
+    
+                if( Globals.IS_SECURITY_ENABLED) {
+                    SecurityUtil.doAsPrivilege("destroy",
+                                               instance);
+                    SecurityUtil.remove(instance);                           
+                } else {
+                    instance.destroy();
+                }
+                
+                instanceSupport.fireInstanceEvent
+                  (InstanceEvent.AFTER_DESTROY_EVENT, instance);
+    
+                // Annotation processing
+                if (!((Context) getParent()).getIgnoreAnnotations()) {
+                   ((StandardContext)getParent()).getInstanceManager().destroyInstance(instance);
+                }
+    
+            } catch (Throwable t) {
+                ExceptionUtils.handleThrowable(t);
+                instanceSupport.fireInstanceEvent
+                  (InstanceEvent.AFTER_DESTROY_EVENT, instance, t);
+                instance = null;
+                instancePool = null;
+                nInstances = 0;
+                fireContainerEvent("unload", this);
+                unloading = false;
+                throw new ServletException
+                    (sm.getString("standardWrapper.destroyException", getName()),
+                     t);
+            } finally {
+                // Write captured output
+                if (swallowOutput) {
+                    String log = SystemLogHandler.stopCapture();
+                    if (log != null && log.length() > 0) {
+                        if (getServletContext() != null) {
+                            getServletContext().log(log);
+                        } else {
+                            out.println(log);
+                        }
                     }
                 }
             }

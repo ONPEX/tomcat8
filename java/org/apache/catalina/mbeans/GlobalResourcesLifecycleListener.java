@@ -45,7 +45,7 @@ import org.apache.tomcat.util.modeler.Registry;
  * management.
  *
  * @author Craig R. McClanahan
- * @version $Id: GlobalResourcesLifecycleListener.java 987920 2010-08-22 15:34:34Z markt $
+ * @version $Id: GlobalResourcesLifecycleListener.java 1142655 2011-07-04 13:28:11Z markt $
  * @since 4.1
  */
 
@@ -76,6 +76,7 @@ public class GlobalResourcesLifecycleListener
      *
      * @param event The event that has occurred
      */
+    @Override
     public void lifecycleEvent(LifecycleEvent event) {
 
         if (Lifecycle.START_EVENT.equals(event.getType())) {

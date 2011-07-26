@@ -30,12 +30,13 @@ import org.apache.catalina.util.Strftime;
  * @author Paul Speed
  * @author Dan Sandberg
  * @author David Becker
- * @version $Id: SSIFlastmod.java 987920 2010-08-22 15:34:34Z markt $
+ * @version $Id: SSIFlastmod.java 1138121 2011-06-21 18:32:41Z markt $
  */
 public final class SSIFlastmod implements SSICommand {
     /**
      * @see SSICommand
      */
+    @Override
     public long process(SSIMediator ssiMediator, String commandName,
             String[] paramNames, String[] paramValues, PrintWriter writer) {
         long lastModified = 0;

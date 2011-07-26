@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -83,6 +84,35 @@ import org.apache.catalina.session.StandardManager;
  * use if you have a webapp with a web.xml file, but it is 
  * optional - you can use your own servlets.
  * 
+ * There are a variety of 'add' methods to configure servlets and webapps. These
+ * methods, by default, create a simple in-memory security realm and apply it.
+ * If you need more complex security processing, you can define a subclass of
+ * this class.
+ * 
+ * This class provides a set of convenience methods for configuring webapp
+ * contexts, all overloads of the method <pre>addWebapp</pre>. These methods
+ * create a webapp context, configure it, and then add it to a {@link Host}.
+ * They do not use a global default web.xml; rather, they add a lifecycle
+ * listener that adds the standard DefaultServlet, JSP processing, and welcome
+ * files.
+ * 
+ * In complex cases, you may prefer to use the ordinary Tomcat API to create
+ * webapp contexts; for example, you might need to install a custom Loader
+ * before the call to {@link Host#addChild(Container)}. To replicate the basic
+ * behavior of the <pre>addWebapp</pre> methods, you may want to call three
+ * methods of this class: {@link #getDefaultRealm()}, 
+ * {@link #noDefaultWebXmlPath()}, and {@link #getDefaultWebXmlListener()}. 
+ * 
+ * {@link #getDefaultRealm()} returns the simple security realm.
+ * 
+ * {@link #getDefaultWebXmlListener()} returns a {@link LifecycleListener} that
+ * adds the standard DefaultServlet, JSP processing, and welcome files. If you
+ * add this listener, you must prevent Tomcat from applying any standard global
+ * web.xml with ...
+ * 
+ * {@link #noDefaultWebXmlPath()} returns a dummy pathname to configure to
+ * prevent {@link ContextConfig} from trying to apply a global web.xml file. 
+ * 
  * This class provides a main() and few simple CLI arguments,
  * see setters for doc. It can be used for simple tests and
  * demo.
@@ -116,9 +146,10 @@ public class Tomcat {
     // the context.
     protected Realm defaultRealm;
     private Map<String, String> userPass = new HashMap<String, String>();
-    private Map<String, List<String>> userRoles = 
-            new HashMap<String, List<String>>();
-    private Map<String, Principal> userPrincipals = new HashMap<String, Principal>();
+    private Map<String, List<String>> userRoles =
+        new HashMap<String, List<String>>();
+    private Map<String, Principal> userPrincipals =
+        new HashMap<String, Principal>();
     
     public Tomcat() {
         // NOOP
@@ -501,8 +532,8 @@ public class Tomcat {
         ctx.addLifecycleListener(ctxCfg);
         
         // prevent it from looking ( if it finds one - it'll have dup error )
-        ctxCfg.setDefaultWebXml("org/apache/catalin/startup/NO_DEFAULT_XML");
-        
+        ctxCfg.setDefaultWebXml(noDefaultWebXmlPath());
+
         if (host == null) {
             getHost().addChild(ctx);
         } else {
@@ -510,6 +541,39 @@ public class Tomcat {
         }
 
         return ctx;
+    }
+    
+    /**
+     * Return a listener that provides the required configuration items for JSP
+     * processing. From the standard Tomcat global web.xml. Pass this to
+     * {@link Context#addLifecycleListener(LifecycleListener)} and then pass the
+     * result of {@link #noDefaultWebXmlPath()} to 
+     * {@link ContextConfig#setDefaultWebXml(String)}. 
+     * @return a listener object that configures default JSP processing.
+     */
+    public LifecycleListener getDefaultWebXmlListener() {
+        return new DefaultWebXmlListener();
+    }
+    
+    /**
+     * @return a pathname to pass to
+     * {@link ContextConfig#setDefaultWebXml(String)} when using
+     * {@link #getDefaultWebXmlListener()}.
+     */
+    public String noDefaultWebXmlPath() {
+        return Constants.NoDefaultWebXml;
+    }
+    
+    /**
+     * For complex configurations, this accessor allows callers of this class
+     * to obtain the simple realm created by default.
+     * @return the simple in-memory realm created by default.
+     */
+    public Realm getDefaultRealm() {
+        if (defaultRealm == null) {
+            initSimpleAuth();
+        }
+        return defaultRealm;
     }
 
 
@@ -549,11 +613,12 @@ public class Tomcat {
     }
     
     protected void initBaseDir() {
+        String catalinaHome = System.getProperty(Globals.CATALINA_HOME_PROP);
         if (basedir == null) {
             basedir = System.getProperty(Globals.CATALINA_BASE_PROP);
         }
         if (basedir == null) {
-            basedir = System.getProperty(Globals.CATALINA_HOME_PROP);
+            basedir = catalinaHome;
         }
         if (basedir == null) {
             // Create a temp dir.
@@ -569,7 +634,9 @@ public class Tomcat {
                 }
             }
         }
-        System.setProperty(Globals.CATALINA_HOME_PROP, basedir);
+        if (catalinaHome == null) {
+            System.setProperty(Globals.CATALINA_HOME_PROP, basedir);
+        }
         System.setProperty(Globals.CATALINA_BASE_PROP, basedir);
     }
 
@@ -749,18 +816,35 @@ public class Tomcat {
     public static class ExistingStandardWrapper extends StandardWrapper {
         private Servlet existing;
         boolean init = false;
-        
+
+        @SuppressWarnings("deprecation")
         public ExistingStandardWrapper( Servlet existing ) {
             this.existing = existing;
+            if (existing instanceof javax.servlet.SingleThreadModel) {
+                singleThreadModel = true;
+                instancePool = new Stack<Servlet>();
+            }
         }
         @Override
         public synchronized Servlet loadServlet() throws ServletException {
-            if (!init) {
-                existing.init(facade);
-                init = true;
+            if (singleThreadModel) {
+                Servlet instance;
+                try {
+                    instance = existing.getClass().newInstance();
+                } catch (InstantiationException e) {
+                    throw new ServletException(e);
+                } catch (IllegalAccessException e) {
+                    throw new ServletException(e);
+                }
+                instance.init(facade);
+                return instance;
+            } else {
+                if (!init) {
+                    existing.init(facade);
+                    init = true;
+                }
+                return existing;
             }
-            return existing;
-
         }
         @Override
         public long getAvailable() {

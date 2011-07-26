@@ -58,6 +58,8 @@ import org.apache.catalina.Lifecycle;
 import org.apache.catalina.LifecycleEvent;
 import org.apache.catalina.LifecycleListener;
 import org.apache.catalina.Pipeline;
+import org.apache.catalina.Server;
+import org.apache.catalina.Service;
 import org.apache.catalina.Valve;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.core.ContainerBase;
@@ -101,7 +103,7 @@ import org.xml.sax.SAXParseException;
  *
  * @author Craig R. McClanahan
  * @author Jean-Francois Arcand
- * @version $Id: ContextConfig.java 1133446 2011-06-08 15:52:26Z markt $
+ * @version $Id: ContextConfig.java 1138839 2011-06-23 11:44:39Z markt $
  */
 
 public class ContextConfig
@@ -112,14 +114,23 @@ public class ContextConfig
     private static final String SCI_LOCATION =
         "META-INF/services/javax.servlet.ServletContainerInitializer";
 
-    // ----------------------------------------------------- Instance Variables
-
 
     /**
-     * Custom mappings of login methods to authenticators
+     * The string resources for this package.
      */
-    protected Map<String,Authenticator> customAuthenticators;
+    protected static final StringManager sm =
+        StringManager.getManager(Constants.Package);
 
+
+    protected static final LoginConfig DUMMY_LOGIN_CONFIG =
+        new LoginConfig("NONE", null, null, null);
+
+    /**
+     * The <code>Digester</code> we will use to process web application
+     * context files.
+     */
+    protected static Digester contextDigester = null;
+    
 
     /**
      * The set of Authenticators that we know how to configure.  The key is
@@ -127,6 +138,45 @@ public class ContextConfig
      * the fully qualified Java class name of the corresponding Valve.
      */
     protected static Properties authenticators = null;
+
+
+    /**
+     * The <code>Digester</code>s available to process web deployment descriptor
+     * files.
+     */
+    protected static Digester[] webDigesters = new Digester[4];
+
+
+    /**
+     * The <code>Digester</code>s available to process web fragment deployment
+     * descriptor files.
+     */
+    protected static Digester[] webFragmentDigesters = new Digester[4];
+
+
+    /**
+     * The <code>Rule</code>s used to parse the web.xml
+     */
+    protected static WebRuleSet webRuleSet = new WebRuleSet(false);
+
+
+    /**
+     * The <code>Rule</code>s used to parse the web-fragment.xml
+     */
+    protected static WebRuleSet webFragmentRuleSet = new WebRuleSet(true);
+
+
+    /**
+     * Deployment count.
+     */
+    protected static long deploymentCount = 0L;
+
+
+    // ----------------------------------------------------- Instance Variables
+    /**
+     * Custom mappings of login methods to authenticators
+     */
+    protected Map<String,Authenticator> customAuthenticators;
 
 
     /**
@@ -173,20 +223,6 @@ public class ContextConfig
         new HashMap<Class<?>, Set<ServletContainerInitializer>>();
 
     /**
-     * The string resources for this package.
-     */
-    protected static final StringManager sm =
-        StringManager.getManager(Constants.Package);
-
-
-    /**
-     * The <code>Digester</code> we will use to process web application
-     * context files.
-     */
-    protected static Digester contextDigester = null;
-    
-    
-    /**
      * The <code>Digester</code> we will use to process web application
      * deployment descriptor files.
      */
@@ -199,37 +235,7 @@ public class ContextConfig
     protected Digester webFragmentDigester = null;
 
     
-    protected static Digester[] webDigesters = new Digester[4];
-
-    /**
-     * The <code>Digester</code>s available to process web fragment
-     * deployment descriptor files.
-     */
-    protected static Digester[] webFragmentDigesters = new Digester[4];
-    
-    /**
-     * The <code>Rule</code>s used to parse the web.xml
-     */
-    protected static WebRuleSet webRuleSet = new WebRuleSet(false);
-
-    /**
-     * The <code>Rule</code>s used to parse the web-fragment.xml
-     */
-    protected static WebRuleSet webFragmentRuleSet = new WebRuleSet(true);
-
-    /**
-     * Deployment count.
-     */
-    protected static long deploymentCount = 0L;
-    
-    
-    protected static final LoginConfig DUMMY_LOGIN_CONFIG =
-                                new LoginConfig("NONE", null, null, null);
-
-
     // ------------------------------------------------------------- Properties
-
-
     /**
      * Return the location of the default deployment descriptor
      */
@@ -482,6 +488,8 @@ public class ContextConfig
                         namespaceAware, webRuleSet);
                 webFragmentDigesters[0] = DigesterFactory.newDigester(validation,
                         namespaceAware, webFragmentRuleSet);
+                webDigesters[0].getParser();
+                webFragmentDigesters[0].getParser();
             }
             webDigester = webDigesters[0];
             webFragmentDigester = webFragmentDigesters[0];
@@ -492,6 +500,8 @@ public class ContextConfig
                         namespaceAware, webRuleSet);
                 webFragmentDigesters[1] = DigesterFactory.newDigester(validation,
                         namespaceAware, webFragmentRuleSet);
+                webDigesters[1].getParser();
+                webFragmentDigesters[1].getParser();
             }
             webDigester = webDigesters[1];
             webFragmentDigester = webFragmentDigesters[1];
@@ -502,6 +512,8 @@ public class ContextConfig
                         namespaceAware, webRuleSet);
                 webFragmentDigesters[2] = DigesterFactory.newDigester(validation,
                         namespaceAware, webFragmentRuleSet);
+                webDigesters[2].getParser();
+                webFragmentDigesters[2].getParser();
             }
             webDigester = webDigesters[2];
             webFragmentDigester = webFragmentDigesters[2];
@@ -512,6 +524,8 @@ public class ContextConfig
                         namespaceAware, webRuleSet);
                 webFragmentDigesters[3] = DigesterFactory.newDigester(validation,
                         namespaceAware, webFragmentRuleSet);
+                webDigesters[3].getParser();
+                webFragmentDigesters[3].getParser();
             }
             webDigester = webDigesters[3];
             webFragmentDigester = webFragmentDigesters[3];
@@ -840,6 +854,9 @@ public class ContextConfig
         
         contextConfig();
         
+        createWebXmlDigester(context.getXmlNamespaceAware(),
+                context.getXmlValidation());
+
         try {
             fixDocBase();
         } catch (IOException e) {
@@ -875,8 +892,6 @@ public class ContextConfig
                     Boolean.valueOf(context.getXmlValidation()),
                     Boolean.valueOf(context.getXmlNamespaceAware())));
         }
-        
-        createWebXmlDigester(context.getXmlNamespaceAware(), context.getXmlValidation());
         
         webConfig();
 
@@ -1090,6 +1105,12 @@ public class ContextConfig
         if (log.isDebugEnabled())
             log.debug(sm.getString("contextConfig.destroy"));
 
+        // Skip clearing the work directory if Tomcat is being shutdown
+        Server s = getServer();
+        if (s != null && !s.getState().isAvailable()) {
+            return;
+        }
+        
         // Changed to getWorkPath per Bugzilla 35819.
         String workDir = ((StandardContext) context).getWorkPath();
         if (workDir != null)
@@ -1097,6 +1118,25 @@ public class ContextConfig
     }
     
     
+    private Server getServer() {
+        Container c = context;
+        while (c != null && !(c instanceof Engine)) {
+            c = c.getParent();
+        }
+        
+        if (c == null) {
+            return null;
+        }
+        
+        Service s = ((Engine)c).getService();
+        
+        if (s == null) {
+            return null;
+        }
+        
+        return s.getServer();
+    }
+
     /**
      * Validate the usage of security role names in the web application
      * deployment descriptor.  If any problems are found, issue warning
@@ -1278,7 +1318,7 @@ public class ContextConfig
                 webXml.merge(defaults);
 
                 // Step 8. Convert explicitly mentioned jsps to servlets
-                if (!false) {
+                if (ok) {
                     convertJsps(webXml);
                 }
                 
@@ -1352,15 +1392,29 @@ public class ContextConfig
     }
 
     private void convertJsps(WebXml webXml) {
+        Map<String,String> jspInitParams;
         ServletDef jspServlet = webXml.getServlets().get("jsp");
+        if (jspServlet == null) {
+            jspInitParams = new HashMap<String,String>();
+            Wrapper w = (Wrapper) context.findChild("jsp");
+            if (w != null) {
+                String[] params = w.findInitParameters();
+                for (String param : params) {
+                    jspInitParams.put(param, w.findInitParameter(param));
+                }
+            }
+        } else {
+            jspInitParams = jspServlet.getParameterMap();
+        }
         for (ServletDef servletDef: webXml.getServlets().values()) {
             if (servletDef.getJspFile() != null) {
-                convertJsp(servletDef, jspServlet);
+                convertJsp(servletDef, jspInitParams);
             }
         }
     }
 
-    private void convertJsp(ServletDef servletDef, ServletDef jspServletDef) {
+    private void convertJsp(ServletDef servletDef,
+            Map<String,String> jspInitParams) {
         servletDef.setServletClass(org.apache.catalina.core.Constants.JSP_SERVLET_CLASS);
         String jspFile = servletDef.getJspFile();
         if ((jspFile != null) && !jspFile.startsWith("/")) {
@@ -1376,7 +1430,7 @@ public class ContextConfig
         }
         servletDef.getParameterMap().put("jspFile", jspFile);
         servletDef.setJspFile(null);
-        for (Map.Entry<String, String> initParam: jspServletDef.getParameterMap().entrySet()) {
+        for (Map.Entry<String, String> initParam: jspInitParams.entrySet()) {
             servletDef.addInitParameter(initParam.getKey(), initParam.getValue());
         }
     }
@@ -1546,6 +1600,10 @@ public class ContextConfig
         // Set the default if we don't have any overrides
         if (defaultWebXml == null) getDefaultWebXml();
 
+        // Is it explicitly suppressed, e.g. in embedded environment?
+        if (Constants.NoDefaultWebXml.equals(defaultWebXml)) {
+            return null;
+        }
         return getWebXmlSource(defaultWebXml, getBaseDir());
     }
     
@@ -1985,6 +2043,7 @@ public class ContextConfig
                 for (ServletContainerInitializer sci : entry.getValue()) {
                     initializerClassMap.get(sci).add(clazz);
                 }
+                match = false;
             }
         }
     }

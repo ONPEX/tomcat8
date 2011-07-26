@@ -14,22 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.catalina.tribes.membership;
 
 import org.apache.catalina.tribes.util.Arrays;
-
 
 /**
  * Manifest constants for the <code>org.apache.catalina.tribes.membership</code>
  * package.
  *
  * @author Peter Rossbach
- * @version $Id: Constants.java 939305 2010-04-29 13:43:39Z kkolinko $
+ * @version $Id: Constants.java 1138022 2011-06-21 14:39:17Z markt $
  * @author Filip Hanik
  */
-
 public class Constants {
 
     public static final String Package = "org.apache.catalina.tribes.membership";

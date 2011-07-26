@@ -20,7 +20,6 @@ package org.apache.catalina.tribes.group.interceptors;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -33,10 +32,7 @@ import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 
 
-
 /**
- *
- *
  * @author Filip Hanik
  * @version 1.0
  */
@@ -81,28 +77,21 @@ public class GzipInterceptor extends ChannelInterceptorBase {
     }
     
     /**
-     * TODO Fix to create an automatically growing buffer.
-     * @param data byte[]
-     * @return byte[]
+     * @param data  Data to decompress
+     * @return      Decompressed data
      * @throws IOException
      */
     public static byte[] decompress(byte[] data) throws IOException {
+        ByteArrayOutputStream bout =
+            new ByteArrayOutputStream(DEFAULT_BUFFER_SIZE);
         ByteArrayInputStream bin = new ByteArrayInputStream(data);
         GZIPInputStream gin = new GZIPInputStream(bin);
         byte[] tmp = new byte[DEFAULT_BUFFER_SIZE];
         int length = gin.read(tmp);
-        byte[] result = new byte[length];
-        System.arraycopy(tmp,0,result,0,length);
-        return result;
+        while (length > -1) {
+            bout.write(tmp, 0, length);
+            length = gin.read(tmp);
+        }
+        return bout.toByteArray();
     }
-    
-    public static void main(String[] arg) throws Exception {
-        byte[] data = new byte[1024];
-        Arrays.fill(data,(byte)1);
-        byte[] compress = compress(data);
-        decompress(compress);
-        System.out.println("Debug test");
-        
-    }
-    
 }

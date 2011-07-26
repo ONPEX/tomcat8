@@ -48,7 +48,7 @@ import org.xml.sax.Attributes;
  * and uses a specified XML file for its persistent storage.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: MemoryUserDatabase.java 1095677 2011-04-21 12:25:31Z markt $
+ * @version $Id: MemoryUserDatabase.java 1140070 2011-06-27 09:27:06Z markt $
  * @since 4.1
  */
 
@@ -585,7 +585,7 @@ public class MemoryUserDatabase implements UserDatabase {
             values = getUsers();
             while (values.hasNext()) {
                 writer.print("  ");
-                writer.println(values.next());
+                writer.println(((MemoryUser) values.next()).toXml());
             }
 
             // Print the file epilog

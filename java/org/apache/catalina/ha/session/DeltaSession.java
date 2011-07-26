@@ -53,7 +53,7 @@ import org.apache.tomcat.util.res.StringManager;
  * track of deltas during a request.
  *
  * @author Filip Hanik
- * @version $Id: DeltaSession.java 1099772 2011-05-05 12:38:44Z markt $
+ * @version $Id: DeltaSession.java 1135069 2011-06-13 09:44:33Z kfujino $
  */
 
 public class DeltaSession extends StandardSession implements Externalizable,ClusterSession,ReplicatedMapEntry {
@@ -429,7 +429,7 @@ public class DeltaSession extends StandardSession implements Externalizable,Clus
             return;
         String expiredId = getIdInternal();
 
-        if(expiredId != null && manager != null &&
+        if(notifyCluster && expiredId != null && manager != null &&
            manager instanceof DeltaManager) {
             DeltaManager dmanager = (DeltaManager)manager;
             CatalinaCluster cluster = dmanager.getCluster();

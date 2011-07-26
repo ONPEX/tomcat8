@@ -62,7 +62,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: Response.java 1088458 2011-04-04 00:57:17Z kkolinko $
+ * @version $Id: Response.java 1142959 2011-07-05 10:08:00Z rjung $
  */
 
 public class Response
@@ -1198,8 +1198,10 @@ public class Response
         String absolute = toAbsolute(url);
         if (isEncodeable(absolute)) {
             // W3c spec clearly said 
-            if (url.equalsIgnoreCase("")){
+            if (url.equalsIgnoreCase("")) {
                 url = absolute;
+            } else if (url.equals(absolute) && !hasPath(url)) {
+                url += '/';
             }
             return (toEncoded(url, request.getSessionInternal().getIdInternal()));
         } else {
@@ -1646,6 +1648,21 @@ public class Response
 
     }
 
+
+    /**
+     * Determine if an absolute URL has a path component
+     */
+    private boolean hasPath(String uri) {
+        int pos = uri.indexOf("://");
+        if (pos < 0) {
+            return false;
+        }
+        pos = uri.indexOf('/', pos + 3);
+        if (pos < 0) {
+            return false;
+        }
+        return true;
+    }
 
     /**
      * Determine if a URI string has a <code>scheme</code> component.

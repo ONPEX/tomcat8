@@ -50,6 +50,8 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
 
     private static final Log log = LogFactory.getLog(ReceiverBase.class);
 
+    private static final Object bindLock = new Object();
+
     private MessageListener listener;
     private String host = "auto";
     private InetAddress bind;
@@ -89,6 +91,7 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
     public ReceiverBase() {
     }
 
+    @Override
     public void start() throws IOException {
         if ( executor == null ) {
             //executor = new ThreadPoolExecutor(minThreads,maxThreads,60,TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>());
@@ -97,6 +100,7 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
         }
     }
 
+    @Override
     public void stop() {
         if ( executor != null ) executor.shutdownNow();//ignore left overs
         executor = null;
@@ -108,6 +112,7 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
      * @return MessageListener
      * TODO Implement this org.apache.catalina.tribes.ChannelReceiver method
      */
+    @Override
     public MessageListener getMessageListener() {
         return listener;
     }
@@ -117,6 +122,7 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
      * @return The port
      * TODO Implement this org.apache.catalina.tribes.ChannelReceiver method
      */
+    @Override
     public int getPort() {
         return port;
     }
@@ -144,6 +150,7 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
      * @param listener MessageListener
      * TODO Implement this org.apache.catalina.tribes.ChannelReceiver method
      */
+    @Override
     public void setMessageListener(MessageListener listener) {
         this.listener = listener;
     }
@@ -204,34 +211,38 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
     }
 
     /**
-     * recursive bind to find the next available port
-     * @param socket ServerSocket
-     * @param portstart int
-     * @param retries int
-     * @return int
+     * Attempts to bind using the provided port and if that fails attempts to
+     * bind to each of the ports from portstart to (portstart + retries -1)
+     * until either there are no more ports or the bind is successful. The
+     * address to bind to is obtained via a call to {link {@link #getBind()}.
+     * @param socket        The socket to bind
+     * @param portstart     Starting port for bind attempts
+     * @param retries       Number of times to attempt to bind (port incremented
+     *                      between attempts)
      * @throws IOException
      */
-    protected int bind(ServerSocket socket, int portstart, int retries) throws IOException {
-        InetSocketAddress addr = null;
-        while ( retries > 0 ) {
-            try {
-                addr = new InetSocketAddress(getBind(), portstart);
-                socket.bind(addr);
-                setPort(portstart);
-                log.info("Receiver Server Socket bound to:"+addr);
-                return 0;
-            }catch ( IOException x) {
-                retries--;
-                if ( retries <= 0 ) {
-                    log.info("Unable to bind server socket to:"+addr+" throwing error.");
-                    throw x;
+    protected void bind(ServerSocket socket, int portstart, int retries) throws IOException {
+        synchronized (bindLock) {
+            InetSocketAddress addr = null;
+            int port = portstart;
+            while (retries > 0) {
+                try {
+                    addr = new InetSocketAddress(getBind(), port);
+                    socket.bind(addr);
+                    setPort(port);
+                    log.info("Receiver Server Socket bound to:"+addr);
+                    retries = 0;
+                } catch ( IOException x) {
+                    retries--;
+                    if ( retries <= 0 ) {
+                        log.info("Unable to bind server socket to:" + addr +
+                                " throwing error.");
+                        throw x;
+                    }
+                    port++;
                 }
-                portstart++;
-                try {Thread.sleep(25);}catch( InterruptedException ti){Thread.interrupted();}
-                retries = bind(socket,portstart,retries);
             }
         }
-        return retries;
     }
 
     /**
@@ -258,7 +269,11 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
                     throw x;
                 }
                 portstart++;
-                try {Thread.sleep(25);}catch( InterruptedException ti){Thread.interrupted();}
+                try {
+                    Thread.sleep(25);
+                } catch (InterruptedException ti) {
+                    Thread.currentThread().interrupt();
+                }
                 retries = bindUdp(socket,portstart,retries);
             }
         }
@@ -266,6 +281,7 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
     }
 
 
+    @Override
     public void messageDataReceived(ChannelMessage data) {
         if ( this.listener != null ) {
             if ( listener.accept(data) ) listener.messageReceived(data);
@@ -312,6 +328,7 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
         return this.host;
     }
 
+    @Override
     public String getHost() {
         return getAddress();
     }
@@ -398,6 +415,7 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
         return useBufferPool;
     }
 
+    @Override
     public int getSecurePort() {
         return securePort;
     }
@@ -521,10 +539,12 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
         this.executor = executor;
     }
 
+    @Override
     public void heartbeat() {
         //empty operation
     }
 
+    @Override
     public int getUdpPort() {
         return udpPort;
     }
@@ -561,6 +581,7 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
             this.namePrefix = namePrefix;
         }
 
+        @Override
         public Thread newThread(Runnable r) {
             Thread t = new Thread(group, r, namePrefix + threadNumber.getAndIncrement());
             t.setDaemon(daemon);

@@ -42,7 +42,7 @@ import org.apache.juli.logging.LogFactory;
 
 /**
  * @author Filip Hanik
- * @version $Id: NioReceiver.java 1044730 2010-12-11 22:20:10Z markt $
+ * @version $Id: NioReceiver.java 1142666 2011-07-04 13:54:52Z kkolinko $
  */
 public class NioReceiver extends ReceiverBase implements Runnable {
 
@@ -115,6 +115,7 @@ public class NioReceiver extends ReceiverBase implements Runnable {
         }
     }
 
+    @Override
     public AbstractRxTask createRxTask() {
         NioReplicationTask thread = new NioReplicationTask(this,this);
         thread.setUseBufferPool(this.getUseBufferPool());
@@ -402,6 +403,7 @@ public class NioReceiver extends ReceiverBase implements Runnable {
     /**
      * Start thread and listen
      */
+    @Override
     public void run() {
         try {
             listen();

@@ -17,6 +17,7 @@
 package org.apache.coyote.ajp;
 
 import org.apache.coyote.AbstractProtocol;
+import org.apache.tomcat.util.net.SocketWrapper;
 import org.apache.tomcat.util.res.StringManager;
 
 public abstract class AbstractAjpProtocol extends AbstractProtocol {
@@ -68,6 +69,22 @@ public abstract class AbstractAjpProtocol extends AbstractProtocol {
             this.packetSize = Constants.MAX_PACKET_SIZE;
         } else {
             this.packetSize = packetSize;
+        }
+    }
+    
+    protected abstract static class AbstractAjpConnectionHandler<S,P extends AbstractAjpProcessor<S>>
+            extends AbstractConnectionHandler<S, P> {
+
+        @Override
+        protected void initSsl(SocketWrapper<S> socket, P processor) {
+            // NOOP for AJP
+        }
+
+        @Override
+        protected void longPoll(SocketWrapper<S> socket, P processor) {
+            // Same requirements for all AJP connectors
+            connections.put(socket.getSocket(), processor);
+            socket.setAsync(true);
         }
     }
 }

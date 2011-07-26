@@ -36,7 +36,7 @@ import org.apache.catalina.connector.Response;
  * user - appears as a single request.</p>
  *
  * @author Remy Maucherat
- * @version $Id: SemaphoreValve.java 1133199 2011-06-07 23:43:31Z markt $
+ * @version $Id: SemaphoreValve.java 1138132 2011-06-21 18:44:58Z markt $
  */
 
 public class SemaphoreValve extends ValveBase {
@@ -191,6 +191,8 @@ public class SemaphoreValve extends ValveBase {
     
     /**
      * Subclass friendly method to add conditions.
+     * @param request 
+     * @param response 
      */
     public boolean controlConcurrency(Request request, Response response) {
         return true;
@@ -200,6 +202,8 @@ public class SemaphoreValve extends ValveBase {
     /**
      * Subclass friendly method to add error handling when a permit isn't
      * granted.
+     * @param request 
+     * @param response 
      * @throws IOException
      * @throws ServletException
      */

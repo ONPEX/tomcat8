@@ -48,13 +48,6 @@ public class SchemaResolver implements EntityResolver {
 
 
     /**
-     * The public identifier of the DTD we are currently parsing under
-     * (if any).
-     */
-    protected String publicId = null;
-
-
-    /**
      * Extension to make the difference between DTD and Schema.
      */
     protected String schemaExtension = "xsd";
@@ -99,11 +92,11 @@ public class SchemaResolver implements EntityResolver {
      * @exception SAXException if a parsing exception occurs
      *
      */
+    @Override
     public InputSource resolveEntity(String publicId, String systemId)
         throws SAXException {
 
         if (publicId != null) {
-            this.publicId = publicId;
             digester.setPublicId(publicId);
         }
 

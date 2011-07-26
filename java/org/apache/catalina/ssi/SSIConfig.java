@@ -25,12 +25,13 @@ import java.io.PrintWriter;
  * @author Paul Speed
  * @author Dan Sandberg
  * @author David Becker
- * @version $Id: SSIConfig.java 939305 2010-04-29 13:43:39Z kkolinko $
+ * @version $Id: SSIConfig.java 1138121 2011-06-21 18:32:41Z markt $
  */
 public final class SSIConfig implements SSICommand {
     /**
      * @see SSICommand
      */
+    @Override
     public long process(SSIMediator ssiMediator, String commandName,
             String[] paramNames, String[] paramValues, PrintWriter writer) {
         for (int i = 0; i < paramNames.length; i++) {

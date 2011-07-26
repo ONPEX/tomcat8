@@ -100,7 +100,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: Request.java 1100944 2011-05-09 10:29:06Z markt $
+ * @version $Id: Request.java 1146005 2011-07-13 13:28:24Z markt $
  */
 
 public class Request
@@ -1525,6 +1525,26 @@ public class Request
             return;
         }
 
+        // Do the security check before any updates are made
+        if (Globals.IS_SECURITY_ENABLED &&
+                name.equals("org.apache.tomcat.sendfile.filename")) {
+            // Use the canonical file name to avoid any possible symlink and
+            // relative path issues
+            String canonicalPath;
+            try {
+                canonicalPath = new File(value.toString()).getCanonicalPath();
+            } catch (IOException e) {
+                throw new SecurityException(sm.getString(
+                        "coyoteRequest.sendfileNotCanonical", value), e);
+            }
+            // Sendfile is performed in Tomcat's security context so need to
+            // check if the web app is permitted to access the file while still
+            // in the web app's security context
+            System.getSecurityManager().checkRead(canonicalPath);
+            // Update the value so the canonical path is used
+            value = canonicalPath;
+        }
+
         oldValue = attributes.put(name, value);
         if (oldValue != null) {
             replaced = true;
@@ -1592,12 +1612,12 @@ public class Request
         // Ensure that the specified encoding is valid
         byte buffer[] = new byte[1];
         buffer[0] = (byte) 'a';
-        @SuppressWarnings("unused")
-        String s = new String(buffer, enc);
 
+        // Confirm that the encoding name is valid
+        B2CConverter.getCharset(enc);
+        
         // Save the validated encoding
         coyoteRequest.setCharacterEncoding(enc);
-
     }
 
 

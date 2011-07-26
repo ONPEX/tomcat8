@@ -36,13 +36,14 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.util.RequestUtil;
 import org.apache.coyote.Constants;
+import org.apache.tomcat.util.buf.B2CConverter;
 
 /**
  * An implementation of SSIExternalResolver that is used with servlets.
  * 
  * @author Dan Sandberg
  * @author David Becker
- * @version $Id: SSIServletExternalResolver.java 1060586 2011-01-18 21:33:14Z markt $
+ * @version $Id: SSIServletExternalResolver.java 1140463 2011-06-28 07:22:28Z markt $
  */
 public class SSIServletExternalResolver implements SSIExternalResolver {
     protected final String VARIABLE_NAMES[] = {"AUTH_TYPE", "CONTENT_LENGTH",
@@ -542,7 +543,8 @@ public class SSIServletExternalResolver implements SSIExternalResolver {
             if (inputEncoding == null) {
                 retVal = new String( bytes );
             } else {
-                retVal = new String (bytes, inputEncoding);
+                retVal = new String (bytes,
+                        B2CConverter.getCharset(inputEncoding));
             }
 
             //make an assumption that an empty response is a failure. This is

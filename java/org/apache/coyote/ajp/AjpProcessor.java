@@ -14,7 +14,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package org.apache.coyote.ajp;
 
 import java.io.IOException;
@@ -25,15 +24,12 @@ import java.net.Socket;
 
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.OutputBuffer;
-import org.apache.coyote.Request;
 import org.apache.coyote.RequestInfo;
 import org.apache.coyote.Response;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.buf.ByteChunk;
-import org.apache.tomcat.util.buf.HexUtils;
-import org.apache.tomcat.util.http.HttpMessages;
 import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 import org.apache.tomcat.util.net.JIoEndpoint;
 import org.apache.tomcat.util.net.SocketStatus;
@@ -51,7 +47,7 @@ import org.apache.tomcat.util.net.SocketWrapper;
  * @author Costin Manolache
  * @author Bill Barker
  */
-public class AjpProcessor extends AbstractAjpProcessor {
+public class AjpProcessor extends AbstractAjpProcessor<Socket> {
 
 
     /**
@@ -68,38 +64,9 @@ public class AjpProcessor extends AbstractAjpProcessor {
 
     public AjpProcessor(int packetSize, JIoEndpoint endpoint) {
 
-        this.endpoint = endpoint;
+        super(packetSize, endpoint);
 
-        request = new Request();
-        request.setInputBuffer(new SocketInputBuffer());
-
-        response = new Response();
-        response.setHook(this);
         response.setOutputBuffer(new SocketOutputBuffer());
-        request.setResponse(response);
-
-        this.packetSize = packetSize;
-        requestHeaderMessage = new AjpMessage(packetSize);
-        responseHeaderMessage = new AjpMessage(packetSize);
-        bodyMessage = new AjpMessage(packetSize);
-
-        // Set the get body message buffer
-        AjpMessage getBodyMessage = new AjpMessage(16);
-        getBodyMessage.reset();
-        getBodyMessage.appendByte(Constants.JK_AJP13_GET_BODY_CHUNK);
-        // Adjust allowed size if packetSize != default (Constants.MAX_PACKET_SIZE)
-        getBodyMessage.appendInt(Constants.MAX_READ_SIZE + packetSize - Constants.MAX_PACKET_SIZE);
-        getBodyMessage.end();
-        getBodyMessageArray = new byte[getBodyMessage.getLen()];
-        System.arraycopy(getBodyMessage.getBuffer(), 0, getBodyMessageArray, 
-                         0, getBodyMessage.getLen());
-
-        // Cause loading of HexUtils
-        HexUtils.load();
-
-        // Cause loading of HttpMessages
-        HttpMessages.getMessage(200);
-
     }
 
 
@@ -124,70 +91,6 @@ public class AjpProcessor extends AbstractAjpProcessor {
     protected OutputStream output;
     
 
-    /**
-     * Direct buffer used for sending right away a get body message.
-     */
-    protected final byte[] getBodyMessageArray;
-
-
-    /**
-     * Direct buffer used for sending right away a pong message.
-     */
-    protected static final byte[] pongMessageArray;
-
-
-    /**
-     * End message array.
-     */
-    protected static final byte[] endMessageArray;
-
-
-    /**
-     * Flush message array.
-     */
-    protected static final byte[] flushMessageArray;
-    
-    // ----------------------------------------------------- Static Initializer
-
-
-    static {
-
-        // Set the read body message buffer
-        AjpMessage pongMessage = new AjpMessage(16);
-        pongMessage.reset();
-        pongMessage.appendByte(Constants.JK_AJP13_CPONG_REPLY);
-        pongMessage.end();
-        pongMessageArray = new byte[pongMessage.getLen()];
-        System.arraycopy(pongMessage.getBuffer(), 0, pongMessageArray, 
-                0, pongMessage.getLen());
-
-        // Allocate the end message array
-        AjpMessage endMessage = new AjpMessage(16);
-        endMessage.reset();
-        endMessage.appendByte(Constants.JK_AJP13_END_RESPONSE);
-        endMessage.appendByte(1);
-        endMessage.end();
-        endMessageArray = new byte[endMessage.getLen()];
-        System.arraycopy(endMessage.getBuffer(), 0, endMessageArray, 0,
-                endMessage.getLen());
-
-        // Allocate the flush message array
-        AjpMessage flushMessage = new AjpMessage(16);
-        flushMessage.reset();
-        flushMessage.appendByte(Constants.JK_AJP13_SEND_BODY_CHUNK);
-        flushMessage.appendInt(0);
-        flushMessage.appendByte(0);
-        flushMessage.end();
-        flushMessageArray = new byte[flushMessage.getLen()];
-        System.arraycopy(flushMessage.getBuffer(), 0, flushMessageArray, 0,
-                flushMessage.getLen());
-
-    }
-
-
-    // ------------------------------------------------------------- Properties
-
-
     // --------------------------------------------------------- Public Methods
 
 
@@ -197,6 +100,7 @@ public class AjpProcessor extends AbstractAjpProcessor {
      *
      * @throws IOException error during an I/O operation
      */
+    @Override
     public SocketState process(SocketWrapper<Socket> socket)
         throws IOException {
         RequestInfo rp = request.getRequestProcessor();
@@ -324,7 +228,7 @@ public class AjpProcessor extends AbstractAjpProcessor {
             request.updateCounters();
 
             rp.setStage(org.apache.coyote.Constants.STAGE_KEEPALIVE);
-            recycle();
+            recycle(false);
         }
         
         rp.setStage(org.apache.coyote.Constants.STAGE_ENDED);
@@ -339,49 +243,15 @@ public class AjpProcessor extends AbstractAjpProcessor {
         
     }
 
-    public SocketState asyncDispatch(SocketStatus status) {
-
-        RequestInfo rp = request.getRequestProcessor();
-        try {
-            rp.setStage(org.apache.coyote.Constants.STAGE_SERVICE);
-            error = !adapter.asyncDispatch(request, response, status);
-        } catch (InterruptedIOException e) {
-            error = true;
-        } catch (Throwable t) {
-            ExceptionUtils.handleThrowable(t);
-            log.error(sm.getString("http11processor.request.process"), t);
-            // 500 - Internal Server Error
-            response.setStatus(500);
-            adapter.log(request, response, 0);
-            error = true;
-        }
-
-        rp.setStage(org.apache.coyote.Constants.STAGE_ENDED);
-
-        if (isAsync()) {
-            if (error) {
-                response.setStatus(500);
-                request.updateCounters();
-                input = null;
-                output = null;
-                return SocketState.CLOSED;
-            } else {
-                return SocketState.LONG;
-            }
-        } else {
-            if (error) {
-                response.setStatus(500);
-            }
-            request.updateCounters();
+    @Override
+    public void recycle(boolean socketClosing) {
+        super.recycle(socketClosing);
+        if (socketClosing) {
             input = null;
             output = null;
-            return SocketState.CLOSED;
         }
-
-
     }
 
-    
     // ----------------------------------------------------- ActionHook Methods
 
 

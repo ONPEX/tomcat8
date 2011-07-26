@@ -14,25 +14,23 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package org.apache.coyote.http11;
 
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.coyote.AbstractProtocol;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
-import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.net.AbstractEndpoint;
 import org.apache.tomcat.util.net.NioChannel;
 import org.apache.tomcat.util.net.NioEndpoint;
 import org.apache.tomcat.util.net.NioEndpoint.Handler;
+import org.apache.tomcat.util.net.NioEndpoint.KeyAttachment;
 import org.apache.tomcat.util.net.SSLImplementation;
 import org.apache.tomcat.util.net.SecureNioChannel;
-import org.apache.tomcat.util.net.SocketStatus;
+import org.apache.tomcat.util.net.SocketWrapper;
 
 
 /**
@@ -150,15 +148,10 @@ public class Http11NioProtocol extends AbstractHttp11JsseProtocol {
     // --------------------  Connection handler --------------------
 
     protected static class Http11ConnectionHandler
-            extends AbstractConnectionHandler implements Handler {
+            extends AbstractConnectionHandler<NioChannel,Http11NioProcessor>
+            implements Handler {
 
         protected Http11NioProtocol proto;
-
-        protected ConcurrentHashMap<NioChannel, Http11NioProcessor> connections =
-            new ConcurrentHashMap<NioChannel, Http11NioProcessor>();
-
-        protected RecycledProcessors<Http11NioProcessor> recycledProcessors =
-            new RecycledProcessors<Http11NioProcessor>(this);
 
         Http11ConnectionHandler(Http11NioProtocol proto) {
             this.proto = proto;
@@ -180,11 +173,10 @@ public class Http11NioProtocol extends AbstractHttp11JsseProtocol {
             return proto.sslImplementation;
         }
 
-        @Override
-        public void recycle() {
-            recycledProcessors.clear();
-        }
-        
+        /**
+         * Expected to be used by the Poller to release resources on socket
+         * close, errors etc.
+         */
         @Override
         public void release(SocketChannel socket) {
             if (log.isDebugEnabled()) 
@@ -207,11 +199,11 @@ public class Http11NioProtocol extends AbstractHttp11JsseProtocol {
         }
         
         /**
-         * Use this only if the processor is not available, otherwise use
-         * {@link #release(NioChannel, Http11NioProcessor)}.
+         * Expected to be used by the Poller to release resources on socket
+         * close, errors etc.
          */
         @Override
-        public void release(NioChannel socket) {
+        public void release(SocketWrapper<NioChannel> socket) {
             Http11NioProcessor processor = connections.remove(socket);
             if (processor != null) {
                 processor.recycle();
@@ -220,161 +212,64 @@ public class Http11NioProtocol extends AbstractHttp11JsseProtocol {
         }
 
 
-        public void release(NioChannel socket, Http11NioProcessor processor) {
-            connections.remove(socket);
+        /**
+         * Expected to be used by the handler once the processor is no longer
+         * required.
+         * 
+         * @param socket
+         * @param processor
+         * @param isSocketClosing   Not used in HTTP
+         * @param addToPoller
+         */
+        @Override
+        public void release(SocketWrapper<NioChannel> socket,
+                Http11NioProcessor processor, boolean isSocketClosing,
+                boolean addToPoller) {
             processor.recycle();
             recycledProcessors.offer(processor);
+            if (addToPoller) {
+                socket.getSocket().getPoller().add(socket.getSocket());
+            }
         }
 
 
         @Override
-        public SocketState event(NioChannel socket, SocketStatus status) {
-            Http11NioProcessor processor = connections.get(socket);
-            NioEndpoint.KeyAttachment att = (NioEndpoint.KeyAttachment)socket.getAttachment(false);
-            att.setAsync(false); //no longer check for timeout
-            SocketState state = SocketState.CLOSED; 
-            if (processor != null) {
-                if (log.isDebugEnabled()) log.debug("Http11NioProcessor.error="+processor.error);
-                // Call the appropriate event
-                try {
-                    if (processor.comet) {
-                        state = processor.event(status);
-                    } else {
-                        state = processor.asyncDispatch(status);
-                    }
-                } catch (java.net.SocketException e) {
-                    // SocketExceptions are normal
-                    Http11NioProtocol.log.debug
-                        (sm.getString
-                            ("http11protocol.proto.socketexception.debug"), e);
-                } catch (java.io.IOException e) {
-                    // IOExceptions are normal
-                    Http11NioProtocol.log.debug
-                        (sm.getString
-                            ("http11protocol.proto.ioexception.debug"), e);
-                }
-                // Future developers: if you discover any other
-                // rare-but-nonfatal exceptions, catch them here, and log as
-                // above.
-                catch (Throwable e) {
-                    ExceptionUtils.handleThrowable(e);
-                    // any other exception or error is odd. Here we log it
-                    // with "ERROR" level, so it will show up even on
-                    // less-than-verbose logs.
-                    Http11NioProtocol.log.error
-                        (sm.getString("http11protocol.proto.error"), e);
-                } finally {
-                    if (processor.isAsync()) {
-                        state = processor.asyncPostProcess();
-                    }
-                    if (state == SocketState.OPEN || state == SocketState.CLOSED) {
-                        release(socket, processor);
-                        if (state == SocketState.OPEN) {
-                            socket.getPoller().add(socket);
-                        }
-                    } else if (state == SocketState.LONG) {
-                        if (processor.isAsync()) {
-                            att.setAsync(true); // Re-enable timeouts
-                        } else {
-                            // Comet
-                            if (log.isDebugEnabled()) log.debug("Keeping processor["+processor);
-                            // May receive more data from client
-                            SelectionKey key = socket.getIOChannel().keyFor(socket.getPoller().getSelector());
-                            key.interestOps(SelectionKey.OP_READ);
-                            att.interestOps(SelectionKey.OP_READ);
-                        }
-                    } else {
-                        // state == SocketState.ASYNC_END
-                        // No further work required
-                    }
-                }
+        protected void initSsl(SocketWrapper<NioChannel> socket,
+                Http11NioProcessor processor) {
+            if (proto.isSSLEnabled() &&
+                    (proto.sslImplementation != null)
+                    && (socket.getSocket() instanceof SecureNioChannel)) {
+                SecureNioChannel ch = (SecureNioChannel)socket.getSocket();
+                processor.setSslSupport(
+                        proto.sslImplementation.getSSLSupport(
+                                ch.getSslEngine().getSession()));
+            } else {
+                processor.setSslSupport(null);
             }
-            return state;
+
         }
 
         @Override
-        public SocketState process(NioChannel socket) {
-            Http11NioProcessor processor = connections.remove(socket);
-            try {
-                if (processor == null) {
-                    processor = recycledProcessors.poll();
-                }
-                if (processor == null) {
-                    processor = createProcessor();
-                }
-
-                if (proto.isSSLEnabled() &&
-                        (proto.sslImplementation != null)
-                        && (socket instanceof SecureNioChannel)) {
-                    SecureNioChannel ch = (SecureNioChannel)socket;
-                    processor.setSslSupport(
-                            proto.sslImplementation.getSSLSupport(
-                                    ch.getSslEngine().getSession()));
-                } else {
-                    processor.setSslSupport(null);
-                }
-
-                SocketState state = processor.process(socket);
-                if (state == SocketState.LONG) {
-                    // In the middle of processing a request/response. Keep the
-                    // socket associated with the processor.
-                    connections.put(socket, processor);
-                    
-                    if (processor.isAsync()) {
-                        NioEndpoint.KeyAttachment att = (NioEndpoint.KeyAttachment)socket.getAttachment(false);
-                        att.setAsync(true);
-                        // longPoll may change socket state (e.g. to trigger a
-                        // complete or dispatch)
-                        state = processor.asyncPostProcess();
-                    } else {
-                        // Either:
-                        //  - this is comet request
-                        //  - the request line/headers have not been completely
-                        //    read
-                        SelectionKey key = socket.getIOChannel().keyFor(
-                                socket.getPoller().getSelector());
-                        NioEndpoint.KeyAttachment att =
-                            (NioEndpoint.KeyAttachment)socket.getAttachment(false);
-                        key.interestOps(SelectionKey.OP_READ);
-                        att.interestOps(SelectionKey.OP_READ);
-                    }
-                }
-                if (state == SocketState.LONG || state == SocketState.ASYNC_END) {
-                    // Already done all we need to do.
-                } else if (state == SocketState.OPEN){
-                    // In keep-alive but between requests. OK to recycle
-                    // processor. Continue to poll for the next request.
-                    release(socket, processor);
-                    socket.getPoller().add(socket);
-                } else {
-                    // Connection closed. OK to recycle the processor.
-                    release(socket, processor);
-                }
-                return state;
-
-            } catch (java.net.SocketException e) {
-                // SocketExceptions are normal
-                log.debug(sm.getString(
-                        "http11protocol.proto.socketexception.debug"), e);
-            } catch (java.io.IOException e) {
-                // IOExceptions are normal
-                log.debug(sm.getString(
-                        "http11protocol.proto.ioexception.debug"), e);
+        protected void longPoll(SocketWrapper<NioChannel> socket,
+                Http11NioProcessor processor) {
+            connections.put(socket.getSocket(), processor);
+            
+            if (processor.isAsync()) {
+                socket.setAsync(true);
+            } else {
+                // Either:
+                //  - this is comet request
+                //  - the request line/headers have not been completely
+                //    read
+                SelectionKey key = socket.getSocket().getIOChannel().keyFor(
+                        socket.getSocket().getPoller().getSelector());
+                key.interestOps(SelectionKey.OP_READ);
+                ((KeyAttachment) socket).interestOps(
+                        SelectionKey.OP_READ);
             }
-            // Future developers: if you discover any other
-            // rare-but-nonfatal exceptions, catch them here, and log as
-            // above.
-            catch (Throwable e) {
-                ExceptionUtils.handleThrowable(e);
-                // any other exception or error is odd. Here we log it
-                // with "ERROR" level, so it will show up even on
-                // less-than-verbose logs.
-                log.error(sm.getString("http11protocol.proto.error"), e);
-            }
-            release(socket, processor);
-            return SocketState.CLOSED;
         }
 
+        @Override
         public Http11NioProcessor createProcessor() {
             Http11NioProcessor processor = new Http11NioProcessor(
                     proto.getMaxHttpHeaderSize(), (NioEndpoint)proto.endpoint,

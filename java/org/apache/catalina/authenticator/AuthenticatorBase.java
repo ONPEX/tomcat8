@@ -69,7 +69,7 @@ import org.apache.tomcat.util.res.StringManager;
  * requests.  Requests of any other type will simply be passed through.
  *
  * @author Craig R. McClanahan
- * @version $Id: AuthenticatorBase.java 1126273 2011-05-22 22:54:15Z markt $
+ * @version $Id: AuthenticatorBase.java 1141578 2011-06-30 15:41:27Z markt $
  */
 
 
@@ -516,13 +516,13 @@ public abstract class AuthenticatorBase extends ValveBase
             }
         }
 
-        if (!authRequired) {
+        if (!authRequired && context.getPreemptiveAuthentication()) {
             authRequired =
                 request.getCoyoteRequest().getMimeHeaders().getValue(
                         "authorization") != null;
         }
 
-        if (!authRequired) {
+        if (!authRequired && context.getPreemptiveAuthentication()) {
             X509Certificate[] certs = (X509Certificate[]) request.getAttribute(
                     Globals.CERTIFICATES_ATTR);
             authRequired = certs != null && certs.length > 0;

@@ -52,6 +52,8 @@ public abstract class AbstractEndpoint {
          * Different types of socket states to react upon.
          */
         public enum SocketState {
+            // TODO Add a new state to the AsyncStateMachine and remove
+            //      ASYNC_END (if possible)
             OPEN, CLOSED, LONG, ASYNC_END
         }
         
@@ -556,7 +558,10 @@ public abstract class AbstractEndpoint {
     }
 
     protected abstract Log getLog();
+    // Flags to indicate optional feature support
     public abstract boolean getUseSendfile();
+    public abstract boolean getUseComet();
+    public abstract boolean getUseCometTimeout();
     
     protected LimitLatch initializeConnectionLatch() {
         if (connectionLimitLatch==null) {

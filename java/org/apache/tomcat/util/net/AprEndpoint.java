@@ -40,6 +40,7 @@ import org.apache.tomcat.jni.SSLSocket;
 import org.apache.tomcat.jni.Socket;
 import org.apache.tomcat.jni.Status;
 import org.apache.tomcat.util.ExceptionUtils;
+import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 
 
 /**
@@ -64,9 +65,6 @@ public class AprEndpoint extends AbstractEndpoint {
 
 
     private static final Log log = LogFactory.getLog(AprEndpoint.class);
-
-    private static final boolean IS_SECURITY_ENABLED =
-        (System.getSecurityManager() != null);
 
     // ----------------------------------------------------------------- Fields
     /**
@@ -158,7 +156,10 @@ public class AprEndpoint extends AbstractEndpoint {
      */
     protected boolean useComet = true;
     public void setUseComet(boolean useComet) { this.useComet = useComet; }
+    @Override
     public boolean getUseComet() { return useComet; }
+    @Override
+    public boolean getUseCometTimeout() { return false; } // Not supported
 
 
     /**
@@ -470,24 +471,55 @@ public class AprEndpoint extends AbstractEndpoint {
             }
 
             // SSL protocol
-            int value = SSL.SSL_PROTOCOL_ALL;
-            if ("SSLv2".equalsIgnoreCase(SSLProtocol)) {
-                value = SSL.SSL_PROTOCOL_SSLV2;
-            } else if ("SSLv3".equalsIgnoreCase(SSLProtocol)) {
-                value = SSL.SSL_PROTOCOL_SSLV3;
-            } else if ("TLSv1".equalsIgnoreCase(SSLProtocol)) {
-                value = SSL.SSL_PROTOCOL_TLSV1;
-            } else if ("SSLv2+SSLv3".equalsIgnoreCase(SSLProtocol)) {
-                value = SSL.SSL_PROTOCOL_SSLV2 | SSL.SSL_PROTOCOL_SSLV3;
-            } else if ("all".equalsIgnoreCase(SSLProtocol) ||
-                    SSLProtocol == null || SSLProtocol.length() == 0) {
-                // NOOP, use the default defined above
+            int value;
+            // This branch can be removed, once the required version is at least 1.1.21.
+            int tcnFullVersion = Library.TCN_MAJOR_VERSION * 1000
+                    + Library.TCN_MINOR_VERSION * 100
+                    + Library.TCN_PATCH_VERSION;
+            if (tcnFullVersion <= 1120) {
+                value = SSL.SSL_PROTOCOL_ALL;
+                if ("SSLv2".equalsIgnoreCase(SSLProtocol)) {
+                    value = SSL.SSL_PROTOCOL_SSLV2;
+                } else if ("SSLv3".equalsIgnoreCase(SSLProtocol)) {
+                    value = SSL.SSL_PROTOCOL_SSLV3;
+                } else if ("TLSv1".equalsIgnoreCase(SSLProtocol)) {
+                    value = SSL.SSL_PROTOCOL_TLSV1;
+                } else if ("SSLv2+SSLv3".equalsIgnoreCase(SSLProtocol)) {
+                    value = SSL.SSL_PROTOCOL_SSLV2 | SSL.SSL_PROTOCOL_SSLV3;
+                } else if ("all".equalsIgnoreCase(SSLProtocol) ||
+                        SSLProtocol == null || SSLProtocol.length() == 0) {
+                    // NOOP, use the default defined above
+                } else {
+                    // Protocol not recognized, fail to start as it is safer than
+                    // continuing with the default which might enable more than the
+                    // is required
+                    throw new Exception(sm.getString(
+                            "endpoint.apr.invalidSslProtocol", SSLProtocol));
+                }
             } else {
-                // Protocol not recognized, fail to start as it is safer than
-                // continuing with the default which might enable more than the
-                // is required
-                throw new Exception(sm.getString(
-                        "endpoint.apr.invalidSslProtocol", SSLProtocol));
+                value = SSL.SSL_PROTOCOL_NONE;
+                if (SSLProtocol == null || SSLProtocol.length() == 0) {
+                    value = SSL.SSL_PROTOCOL_ALL;
+                } else {
+                        for (String protocol : SSLProtocol.split("\\+")) {
+                        protocol = protocol.trim();
+                        if ("SSLv2".equalsIgnoreCase(protocol)) {
+                            value |= SSL.SSL_PROTOCOL_SSLV2;
+                        } else if ("SSLv3".equalsIgnoreCase(protocol)) {
+                            value |= SSL.SSL_PROTOCOL_SSLV3;
+                        } else if ("TLSv1".equalsIgnoreCase(protocol)) {
+                            value |= SSL.SSL_PROTOCOL_TLSV1;
+                        } else if ("all".equalsIgnoreCase(protocol)) {
+                            value |= SSL.SSL_PROTOCOL_ALL;
+                        } else {
+                            // Protocol not recognized, fail to start as it is safer than
+                            // continuing with the default which might enable more than the
+                            // is required
+                            throw new Exception(sm.getString(
+                                    "endpoint.apr.invalidSslProtocol", SSLProtocol));
+                        }
+                    }
+                }
             }
 
             // Create SSL Context
@@ -827,7 +859,7 @@ public class AprEndpoint extends AbstractEndpoint {
                     new SocketEventProcessor(wrapper, status);
                 ClassLoader loader = Thread.currentThread().getContextClassLoader();
                 try {
-                    if (IS_SECURITY_ENABLED) {
+                    if (Constants.IS_SECURITY_ENABLED) {
                         PrivilegedAction<Void> pa = new PrivilegedSetTccl(
                                 getClass().getClassLoader());
                         AccessController.doPrivileged(pa);
@@ -837,7 +869,7 @@ public class AprEndpoint extends AbstractEndpoint {
                     }
                     getExecutor().execute(proc);
                 } finally {
-                    if (IS_SECURITY_ENABLED) {
+                    if (Constants.IS_SECURITY_ENABLED) {
                         PrivilegedAction<Void> pa = new PrivilegedSetTccl(loader);
                         AccessController.doPrivileged(pa);
                     } else {
@@ -865,7 +897,8 @@ public class AprEndpoint extends AbstractEndpoint {
                     SocketProcessor proc = new SocketProcessor(socket, status);
                     ClassLoader loader = Thread.currentThread().getContextClassLoader();
                     try {
-                        if (IS_SECURITY_ENABLED) {
+                        //threads should not be created by the webapp classloader
+                        if (Constants.IS_SECURITY_ENABLED) {
                             PrivilegedAction<Void> pa = new PrivilegedSetTccl(
                                     getClass().getClassLoader());
                             AccessController.doPrivileged(pa);
@@ -873,9 +906,13 @@ public class AprEndpoint extends AbstractEndpoint {
                             Thread.currentThread().setContextClassLoader(
                                     getClass().getClassLoader());
                         }
+                        // During shutdown, executor may be null - avoid NPE
+                        if (!running) {
+                            return false;
+                        }
                         getExecutor().execute(proc);
                     } finally {
-                        if (IS_SECURITY_ENABLED) {
+                        if (Constants.IS_SECURITY_ENABLED) {
                             PrivilegedAction<Void> pa = new PrivilegedSetTccl(loader);
                             AccessController.doPrivileged(pa);
                         } else {
@@ -885,7 +922,7 @@ public class AprEndpoint extends AbstractEndpoint {
                 }
             }
         } catch (RejectedExecutionException x) {
-            log.warn("Socket processing request was rejected for:"+socket,x);
+            log.warn("Socket processing request was rejected for: "+socket, x);
             return false;
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
@@ -1423,7 +1460,9 @@ public class AprEndpoint extends AbstractEndpoint {
                                                data.pos, data.end - data.pos, 0);
                     if (nw < 0) {
                         if (!(-nw == Status.EAGAIN)) {
-                            destroySocket(data.socket);
+                            Pool.destroy(data.fdpool);
+                            // No need to close socket, this will be done by
+                            // calling code since data.socket == 0
                             data.socket = 0;
                             return false;
                         } else {
@@ -1638,15 +1677,12 @@ public class AprEndpoint extends AbstractEndpoint {
      * thread local fields.
      */
     public interface Handler extends AbstractEndpoint.Handler {
-        public SocketState process(SocketWrapper<Long> socket);
-        public SocketState event(SocketWrapper<Long> socket,
-                SocketStatus status);
-        public SocketState asyncDispatch(SocketWrapper<Long> socket,
+        public SocketState process(SocketWrapper<Long> socket,
                 SocketStatus status);
     }
 
 
-    // ---------------------------------------------- SocketProcessor Inner Class
+    // --------------------------------- SocketWithOptionsProcessor Inner Class
 
     /**
      * This class is the equivalent of the Worker, but will simply use in an
@@ -1683,7 +1719,8 @@ public class AprEndpoint extends AbstractEndpoint {
                         return;
                     }
                     // Process the request from this socket
-                    Handler.SocketState state = handler.process(socket);
+                    Handler.SocketState state = handler.process(socket,
+                            SocketStatus.OPEN);
                     if (state == Handler.SocketState.CLOSED) {
                         // Close socket and pool
                         destroySocket(socket.getSocket().longValue());
@@ -1693,11 +1730,6 @@ public class AprEndpoint extends AbstractEndpoint {
                         if (socket.async) {
                             waitingRequests.add(socket);
                         }
-                    } else if (state == Handler.SocketState.ASYNC_END) {
-                        socket.access();
-                        SocketProcessor proc =
-                            new SocketProcessor(socket, SocketStatus.OPEN);
-                        getExecutor().execute(proc);
                     }
                 }
             }
@@ -1705,7 +1737,7 @@ public class AprEndpoint extends AbstractEndpoint {
     }
 
 
-    // ---------------------------------------------- SocketProcessor Inner Class
+    // -------------------------------------------- SocketProcessor Inner Class
 
 
     /**
@@ -1727,7 +1759,12 @@ public class AprEndpoint extends AbstractEndpoint {
         public void run() {
             synchronized (socket) {
                 // Process the request from this socket
-                Handler.SocketState state = (status==null)?handler.process(socket):handler.asyncDispatch(socket, status);
+                SocketState state = SocketState.OPEN;
+                if (status == null) {
+                    state = handler.process(socket,SocketStatus.OPEN);
+                } else {
+                    state = handler.process(socket, status);
+                }
                 if (state == Handler.SocketState.CLOSED) {
                     // Close socket and pool
                     destroySocket(socket.getSocket().longValue());
@@ -1769,7 +1806,7 @@ public class AprEndpoint extends AbstractEndpoint {
         public void run() {
             synchronized (socket) {
                 // Process the request from this socket
-                Handler.SocketState state = handler.event(socket, status);
+                Handler.SocketState state = handler.process(socket, status);
                 if (state == Handler.SocketState.CLOSED) {
                     // Close socket and pool
                     destroySocket(socket.getSocket().longValue());

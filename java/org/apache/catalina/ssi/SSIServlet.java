@@ -42,7 +42,7 @@ import org.apache.catalina.Globals;
  * @author Amy Roh
  * @author Dan Sandberg
  * @author David Becker
- * @version $Id: SSIServlet.java 1038846 2010-11-24 22:08:38Z markt $
+ * @version $Id: SSIServlet.java 1138121 2011-06-21 18:32:41Z markt $
  */
 public class SSIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -220,6 +220,7 @@ public class SSIServlet extends HttpServlet {
         }
         if (buffered) {
             printWriter.flush();
+            @SuppressWarnings("null")
             String text = stringWriter.toString();
             res.getWriter().write(text);
         }

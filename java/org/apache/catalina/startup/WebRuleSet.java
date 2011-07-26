@@ -43,7 +43,7 @@ import org.xml.sax.Attributes;
  * deployment descriptor (<code>/WEB-INF/web.xml</code>) resource.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: WebRuleSet.java 1059655 2011-01-16 20:33:40Z markt $
+ * @version $Id: WebRuleSet.java 1142323 2011-07-02 21:57:12Z markt $
  */
 
 public class WebRuleSet extends RuleSetBase {
@@ -77,19 +77,19 @@ public class WebRuleSet extends RuleSetBase {
     /**
      * The <code>SetSessionConfig</code> rule used to parse the web.xml
      */
-    protected SetSessionConfig sessionConfig;
+    protected SetSessionConfig sessionConfig = new SetSessionConfig();
     
     
     /**
      * The <code>SetLoginConfig</code> rule used to parse the web.xml
      */
-    protected SetLoginConfig loginConfig;
+    protected SetLoginConfig loginConfig = new SetLoginConfig();
 
     
     /**
      * The <code>SetJspConfig</code> rule used to parse the web.xml
      */    
-    protected SetJspConfig jspConfig;
+    protected SetJspConfig jspConfig = new SetJspConfig();
 
 
     // ------------------------------------------------------------ Constructor
@@ -153,10 +153,6 @@ public class WebRuleSet extends RuleSetBase {
      */
     @Override
     public void addRuleInstances(Digester digester) {
-        sessionConfig = new SetSessionConfig();
-        jspConfig = new SetJspConfig();
-        loginConfig = new SetLoginConfig();
-        
         digester.addRule(fullPrefix,
                          new SetPublicIdRule("setPublicId"));
         digester.addRule(fullPrefix,
@@ -867,6 +863,7 @@ final class CallParamMultiRule extends CallParamRule {
         if (bodyTextStack != null && !bodyTextStack.empty()) {
             // what we do now is push one parameter onto the top set of parameters
             Object parameters[] = (Object[]) digester.peekParams();
+            @SuppressWarnings("unchecked")
             ArrayList<String> params = (ArrayList<String>) parameters[paramIndex];
             if (params == null) {
                 params = new ArrayList<String>();

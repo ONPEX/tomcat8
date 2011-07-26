@@ -90,24 +90,28 @@ public final class TldConfig  implements LifecycleListener {
             if (tldDigesters[0] == null) {
                 tldDigesters[0] = DigesterFactory.newDigester(validation,
                         namespaceAware, new TldRuleSet());
+                tldDigesters[0].getParser();
             }
             digester = tldDigesters[0];
         } else if (!namespaceAware && validation) {
             if (tldDigesters[1] == null) {
                 tldDigesters[1] = DigesterFactory.newDigester(validation,
                         namespaceAware, new TldRuleSet());
+                tldDigesters[1].getParser();
             }
             digester = tldDigesters[1];
         } else if (namespaceAware && !validation) {
             if (tldDigesters[2] == null) {
                 tldDigesters[2] = DigesterFactory.newDigester(validation,
                         namespaceAware, new TldRuleSet());
+                tldDigesters[2].getParser();
             }
             digester = tldDigesters[2];
         } else {
             if (tldDigesters[3] == null) {
                 tldDigesters[3] = DigesterFactory.newDigester(validation,
                         namespaceAware, new TldRuleSet());
+                tldDigesters[3].getParser();
             }
             digester = tldDigesters[3];
         }
@@ -129,19 +133,6 @@ public final class TldConfig  implements LifecycleListener {
      */
     private Digester tldDigester = null;
 
-
-    /**
-     * Attribute value used to turn on/off TLD validation
-     */
-    private boolean tldValidation = false;
-
-
-    /**
-     * Attribute value used to turn on/off TLD  namespace awareness.
-     */
-    private boolean tldNamespaceAware = false;
-
-    private boolean rescan=true;
 
     /**
      * Set of URIs discovered for the associated context. Used to enforce the
@@ -197,52 +188,6 @@ public final class TldConfig  implements LifecycleListener {
                 noTldJars.add(tokenizer.nextToken());
             }
         }
-    }
-
-    /**
-     * Set the validation feature of the XML parser used when
-     * parsing xml instances.
-     * @param tldValidation true to enable xml instance validation
-     */
-    public void setTldValidation(boolean tldValidation){
-        this.tldValidation = tldValidation;
-    }
-
-    /**
-     * Get the server.xml &lt;host&gt; attribute's xmlValidation.
-     * @return true if validation is enabled.
-     *
-     */
-    public boolean getTldValidation(){
-        return this.tldValidation;
-    }
-
-    /**
-     * Get the server.xml &lt;host&gt; attribute's xmlNamespaceAware.
-     * @return true if namespace awareness is enabled.
-     *
-     */
-    public boolean getTldNamespaceAware(){
-        return this.tldNamespaceAware;
-    }
-
-
-    /**
-     * Set the namespace aware feature of the XML parser used when
-     * parsing xml instances.
-     * @param tldNamespaceAware true to enable namespace awareness
-     */
-    public void setTldNamespaceAware(boolean tldNamespaceAware){
-        this.tldNamespaceAware = tldNamespaceAware;
-    }    
-
-
-    public boolean isRescan() {
-        return rescan;
-    }
-
-    public void setRescan(boolean rescan) {
-        this.rescan = rescan;
     }
 
     public Context getContext() {
@@ -606,9 +551,8 @@ public final class TldConfig  implements LifecycleListener {
     
     private void init() {
         if (tldDigester == null){
-            setTldValidation(context.getTldValidation());
-            setTldNamespaceAware(context.getTldNamespaceAware());
-            tldDigester = createTldDigester(tldNamespaceAware, tldValidation);
+            tldDigester = createTldDigester(context.getTldNamespaceAware(),
+                    context.getTldValidation());
         }
     }
 

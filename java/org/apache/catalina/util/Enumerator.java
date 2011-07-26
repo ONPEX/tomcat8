@@ -35,7 +35,7 @@ import java.util.NoSuchElementException;
  * Constructors are provided to easily create such wrappers.
  *
  * @author Craig R. McClanahan
- * @version $Id: Enumerator.java 987920 2010-08-22 15:34:34Z markt $
+ * @version $Id: Enumerator.java 1142665 2011-07-04 13:51:26Z kkolinko $
  */
 
 public final class Enumerator<T> implements Enumeration<T> {
@@ -151,6 +151,7 @@ public final class Enumerator<T> implements Enumeration<T> {
      *  contains at least one more element to provide, <code>false</code>
      *  otherwise
      */
+    @Override
     public boolean hasMoreElements() {
 
         return (iterator.hasNext());
@@ -166,6 +167,7 @@ public final class Enumerator<T> implements Enumeration<T> {
      *
      * @exception NoSuchElementException if no more elements exist
      */
+    @Override
     public T nextElement() throws NoSuchElementException {
 
         return (iterator.next());

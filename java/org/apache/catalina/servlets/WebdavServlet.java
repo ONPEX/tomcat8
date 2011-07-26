@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
@@ -127,7 +128,7 @@ import org.xml.sax.SAXException;
  * http://host:port/context/webdavedit/content
  *
  * @author Remy Maucherat
- * @version $Id: WebdavServlet.java 1134048 2011-06-09 19:15:40Z markt $
+ * @version $Id: WebdavServlet.java 1145296 2011-07-11 19:06:15Z rjung $
  */
 
 public class WebdavServlet
@@ -199,7 +200,7 @@ public class WebdavServlet
      * Simple date format for the creation date ISO representation (partial).
      */
     protected static final SimpleDateFormat creationDateFormat =
-        new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
 
 
      /**
@@ -1151,8 +1152,8 @@ public class WebdavServlet
                 + lock.depth + "-" + lock.owner + "-" + lock.tokens + "-"
                 + lock.expiresAt + "-" + System.currentTimeMillis() + "-"
                 + secret;
-            String lockToken =
-                md5Encoder.encode(md5Helper.digest(lockTokenStr.getBytes()));
+            String lockToken = md5Encoder.encode(md5Helper.digest(
+                    lockTokenStr.getBytes(Charset.defaultCharset())));
 
             if ( (exists) && (object instanceof DirContext) &&
                  (lock.depth == maxDepth) ) {

@@ -27,7 +27,7 @@ import java.text.DecimalFormat;
  * @author Paul Speed
  * @author Dan Sandberg
  * @author David Becker
- * @version $Id: SSIFsize.java 1043105 2010-12-07 15:42:32Z markt $
+ * @version $Id: SSIFsize.java 1138121 2011-06-21 18:32:41Z markt $
  */
 public final class SSIFsize implements SSICommand {
     protected static final int ONE_KILOBYTE = 1024;
@@ -37,6 +37,7 @@ public final class SSIFsize implements SSICommand {
     /**
      * @see SSICommand
      */
+    @Override
     public long process(SSIMediator ssiMediator, String commandName,
             String[] paramNames, String[] paramValues, PrintWriter writer) {
         long lastModified = 0;

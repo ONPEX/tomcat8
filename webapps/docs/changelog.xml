@@ -39,10 +39,487 @@
 
 <body>
 <!--
+  Subsection ordering:
   General, Catalina, Coyote, Jasper, Cluster, Web applications, Extras, Tribes,
   Other
+
+  Item Ordering:
+
+  Fixes having an issue number are sorted by their number, ascending.
+
+  There is no ordering by add/update/fix.
+
+  Other fixed issues are added to the end of the list, chronologically.
+  They eventually become mixed with the numbered issues. (I.e., numbered
+  issues to not "pop up" wrt. others).
 -->
-<section name="Tomcat 7.0.16 (markt)">
+<section name="Tomcat 7.0.19 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <add>
+        Add option to activate access log for unit tests. (rjung)
+      </add>
+      <fix>
+        Fix regression in year number formatting for AccessLogValve. (rjung)
+      </fix>
+      <add>
+        <bug>46252</bug>: Allow to specify character set to be used to write
+        the access log in AccessLogValve. (kkolinko)
+      </add>
+      <fix>
+        <bug>51494</bug>: Prevent an NPE when a long running request completes
+        if the associated web application was destroyed while the request was
+        processing. (markt)
+      </fix>
+      <update>
+        Allow choosing a locale for timestamp formatting in AccessLogValve.
+        (rjung)
+      </update>
+      <fix>
+        When generating access logs for errors, log at the Context/Host level if
+        a Context or Host can be identified for the failed request. (markt)
+      </fix>
+      <update>
+        In JULI FileHandler and in AccessLogValve create a directory
+        automatically when it is specified as a part of the file name, e.g. in
+        the <code>prefix</code> attribute. Earlier this happened only if it was
+        specified with the <code>directory</code> attribute. (kkolinko)
+      </update>
+      <fix>
+        Log a failure if access log file cannot be opened. (kkolinko)
+      </fix>
+      <fix>
+        Use en_US as locale for timestamps in ExtendedAccessLogValve.
+        (rjung)
+      </fix>
+      <fix>
+        Use en_US as locale for creationdate in WebdavServlet. (rjung)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <update>
+        <bug>51477</bug>: Support all SSL protocol combinations in the
+        APR/native connector. This only works when using the native library
+        version 1.1.21 or later, which is not yet released. (rjung)
+      </update>
+      <update>
+        Various refactorings to reduce code duplication and unnecessary code in
+        the connectors. (markt)
+      </update>
+      <fix>
+        Correct regression introduced in 7.0.17 that triggered 400 entries in
+        the AccessLog when using the AJP/BIO connector. (markt)
+      </fix>
+      <fix>
+        Fix regression producing invalid MBean names when using IPV6
+        addresses for connectors. (rjung)
+      </fix>
+      <fix>
+        Add missing thread name in RequestProcessor when Servlet 3 Async
+        is used. Fixes null thread name in access log and JMX MBean. (rjung)
+      </fix>
+      <fix>
+        Fix CVE-2011-2526. Protect against infinite loops (HTTP NIO) and crashes
+        (HTTP APR) if sendfile is configured to send more data than is available
+        in the file. (markt)
+      </fix>
+      <fix>
+        Prevent NPEs when a socket is closed in non-error conditions after
+        sendfile processing when using the HTTP NIO connector. (markt) 
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Cluster">
+    <changelog>
+      <update>
+        Remove unnecessary server.xml parsing code for old cluster
+        implementation that does not ship as part of Tomcat 7. (markt)
+      </update>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <add>
+        Add additional information to the documentation web application on the
+        benefits and remaining risks when running under a security manager.
+        (markt)
+      </add>
+      <fix>
+        <bug>51490</bug>: Correct broken HTML in JSP tag plugin examples and
+        improve the &lt;c:if&gt; example to make failures more obvious. Based on
+        suggestions by Charles. (markt)
+      </fix>
+      <add>
+        Document ExtendedAccessLogValve. (rjung)
+      </add>
+      <fix>
+        Correct default value of <code>enableLookups</code> for connectors
+        and mention, that <code>resolveHosts</code> for the AccessLogValve
+        is replaced by <code>enableLookups</code>. (rjung)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <update>
+        Update to Commons Daemon 1.0.6. (markt)
+      </update>
+      <update>
+        Update to Eclipse JDT Compiler 3.7. (markt)
+      </update>
+      <add>
+        Include jdbc-pool into tomcat release. (fhanik)
+      </add>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 7.0.18 (markt)" rtext="not released">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        Correct regression introduced in 7.0.17 that triggered an NPE if a
+        CrawlerSessionManagerValve was used without setting crawlerUserAgents.
+        (markt)
+      </fix>
+      <fix>
+        <bug>51466</bug>: Correct comment typos in HostManagerServlet. Patch
+        provided by Felix Schumacher. (markt)
+      </fix>
+      <fix>
+        <bug>51467</bug>: Invoke Thread.start() rather than Thread.run() so that
+        listeners and filters are stopped in a separate thread rather than the
+        current thread. Patch provided by Felix Schumacher. (markt)  
+      </fix>
+      <fix>
+        <bug>51473</bug>: Fix concatenation of values in
+        <code>SecurityConfig.setSecurityProperty()</code>. (kkolinko)
+      </fix>
+      <fix>
+        Fix response.encodeURL() for the special case of an absolute URL
+        with no path segment (http://name). (rjung)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        Correct regression caused by connector re-factoring that made AJP
+        APR/native connector very unstable on Windows platforms. (markt)
+      </fix>
+      <fix>
+        Correct regression caused by connector re-factoring that meant that
+        sendfile data was not reset between pipe-lined HTTP requests. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Tribes">
+    <changelog>
+      <update>
+        Re-factor tests to align packages for tests with the classes under test.
+        Start to convert non-JUnit tests to JUnit. Remove unnecessary code.
+        (markt) 
+      </update>
+      <fix>
+        Add synchronization to receiver socket binding to prevent test failures
+        on Linux. (markt) 
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <fix>
+        More code clean-up to remove unused code and reduce IDE warnings.
+        (markt/kkolinko)
+      </fix>
+      <update>
+        Further improvements to the Windows installer. (markt/kkolinko)
+      </update>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 7.0.17 (markt)" rtext="not released">
+  <subsection name="Catalina">
+    <changelog>
+      <add>
+        <bug>48956</bug>: Add regular expression support for SSI. (markt)
+      </add>
+      <add>
+        <bug>49165</bug>: Allow any time stamp formats supported by
+        SimpleDateFormat in AccessLogValve. Support logging begin and/or end of
+        request. (rjung)
+      </add>
+      <add>
+        <bug>50677</bug>: Allow system property variables to be used in the
+        values of "common.loader" and other "*.loader" properties in the
+        <code>catalina.properties</code> file. (kkolinko)
+      </add>
+      <fix>
+        <bug>51376</bug>: When adding a Servlet via
+        ServletContext#addServlet(String, Servlet), the Servlet was not
+        initialized when the web application started and a load on startup value
+        was set. (markt)
+      </fix>
+      <fix>
+        <bug>51386</bug>: Correct code for processing @HandlesTypes annotations
+        so only types of interest are reported to a ServletContainerInitializer.
+        (markt)
+      </fix>
+      <update>
+        Add the Tomcat extras, ant-junit and Java Help Jars to the list of JARs
+        to skip when scanning for TLDs and web fragments. (rjung)
+      </update>
+      <fix>
+        The fix for bug <bug>51310</bug> caused a regression that re-introduced
+        bug <bug>49957</bug> and deleted the contents of the work directory
+        when Tomcat was shutdown. This fix ensures that that work directory for
+        an application is not deleted when Tomcat is shutdown. (markt)
+      </fix>
+      <fix>
+        Correct issues with JULI&apos;s OneLineFormatter including: correctly
+        re-using formatted timestamps when possible; thread-safety issues in
+        timestamp formatting; correcting the output of any milliseconds to
+        include leading zeros and formatting any parameters present.
+        (kkolinko/markt/rjung)
+      </fix>
+      <fix>
+        <bug>51395</bug>: Fix memory leak triggered when an application that
+        includes a SAXParserFactory is the first web application to be loaded.
+        (markt)
+      </fix>
+      <fix>
+        <bug>51396</bug>: Correctly handle jsp-file entries in web.xml when the
+        JSP servlet has been configured via code when embedding Tomcat. (markt)
+      </fix>
+      <fix>
+        <bug>51400</bug>: Avoid known bottleneck in JVM when converting between
+        Strings and bytes by always providing a Charset rather than an encoding
+        name. Based on a patch by Dave Engberg. (markt)
+      </fix>
+      <fix>
+        <bug>51401</bug>: Correctly initialise shared WebRuleSet instance used
+        by the digesters that parse web.xml and prevent incorrect warnings about
+        multiple occurrences of elements that are only allowed to appear once in
+        web.xml and web-fragment.xml. (kfujino)
+      </fix>
+      <add>
+        <bug>51403</bug>: Avoid NPE in JULI FileHandler if formatter is
+        misconfigured. (kkolinko)
+      </add>
+      <fix>
+        Previous improvements in JAR scanning performance introduced a start-up
+        performance penalty for some use cases. This fix addresses those
+        performance penalties while retaining the original improvements. (markt) 
+      </fix>
+      <add>
+        <bug>51418</bug>: Provide more control over Context creation when
+        embedding Tomcat. Based on a patch by Benson Margulies. (markt/kkolinko)
+      </add>
+      <fix>
+        Remove redundant copy of catalina.properties from o.a.c.startup.
+        Generate this copy for inclusion in bin and src jars during the
+        ant "compile" task. (rjung)
+      </fix>
+      <fix>
+        Use system properties loaded from catalina.properties via the class
+        path in unit tests. (rjung)
+      </fix>
+      <update>
+        Improve JMX unit test. (rjung)
+      </update>
+      <fix>
+        Fix IllegalStateException for JavaScript files when switching from
+        Writer to OutputStream. The special handling of this case in the
+        DefaultServlet was broken due to a MIME type change for JavaScript.
+        (funkman)
+      </fix>
+      <fix>
+        Fix CVE-2011-2204. Prevent user passwords appearing in log files if a
+        runtime exception (e.g. OOME) occurs while creating a new user for a
+        MemoryUserDatabase via JMX. (markt)
+      </fix>
+      <fix>
+        Fix an issue with the CrawlerSessionManagerValve that meant sessions
+        were not always correctly tracked. (markt)
+      </fix>
+      <fix>
+        <bug>51436</bug>: Send 100 (Continue) response earlier to enable
+        ServletRequestListener implementations to read the request body. Based
+        on a patch by Simon Olofsson. (markt)
+      </fix>
+      <fix>
+        Ensure an access log entry is made if an error occurs during
+        asynchronous request processing and the socket is immediately closed.
+        (markt)
+      </fix>
+      <fix>
+        Ensure that if asyncDispatch() is called during an onTimeout event and
+        the target Servlet does not call startAsync() or complete() that Tomcat
+        calls complete() once the target Servlet exits. (markt)
+      </fix>
+      <fix>
+        Improve the handling for Servlets that implement the deprecated
+        SingleThreadModel when embedding Tomcat. (markt)
+      </fix>
+      <fix>
+        <bug>51445</bug>: Correctly initialise all instances of Servlets that
+        implement SingleThreadModel. Based on a patch by Felix Schumacher.
+        (markt)
+      </fix>
+      <fix>
+        <bug>51453</bug>: Fix a regression in the preemptive authentication
+        support (enhancement <bug>12428</bug>) that could trigger authentication
+        even if preemptive authentication was disabled. (markt) 
+      </fix>
+      <fix>
+        Prevent possible NPE when serving Servlets that implement the
+        SingleThreadModel interface. (markt)
+      </fix>
+      <fix>
+        In launcher for embedded Tomcat: do not change <code>catalina.home</code>
+        system property if it had a value. (kkolinko)
+      </fix>
+      <fix>
+        When using Servlets that implement the SingleThreadModel interface, add
+        the single instance created to the pool when it is determined that a
+        pool of servlets is required rather than throwing it away. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        Fix unit test for bindOnInit which was failing for APR on some
+        platforms. (rjung)
+      </fix>
+      <fix>
+        Remove superfluous quotes from thread names for connection pools.
+        (rjung)
+      </fix>
+      <fix>
+        Fix crash observed during pausing the connector when using APR.
+        Only add socket to poller if we are sure we don't close it later.
+        (rjung)
+      </fix>
+      <update>
+        Various refactorings to reduce code duplication and unnecessary code in
+        the connectors. (markt)
+      </update>
+      <fix>
+        Correct a regression introduced in Apache Tomcat 7.0.11 that broke
+        certificate revocation list handling. (markt) 
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <update>
+        Improve the message printed by TldLocationsCache and add configuration
+        example to the <code>logging.properties</code> file. (kkolinko)
+      </update>
+      <fix>
+        <bug>33453</bug>: Recompile JSPs if last modified time of the source or
+        any of its dependencies changes either forwards or backwards. Note that
+        this introduces an incompatible change to the code generated for JSPs.
+        Tomcat will automatically re-compile any JSPs and tag files found in the
+        work directory when upgrading from 7.0.16 or earlier to 7.0.17 or later.
+        If you later downgrade from 7.0.17 or later to 7.0.16 or earlier, you
+        must empty the work directory as part of the downgrade process. (markt)
+      </fix>
+      <fix>
+        <bug>36362</bug>: Handle the case where tag file attributes (which can
+        use any valid XML name) have a name which is not a Java identifier.
+        (markt/kkolinko)
+      </fix>
+      <add>
+        Broaden the exception handling in the EL Parser so that more failures to
+        parse an expression include the failed expression in the exception
+        message. Hopefully, this will help track down the cause of
+        <bug>51088</bug>. (markt)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Cluster">
+    <changelog>
+      <fix>
+        <bug>51306</bug>: Avoid NPE when handleSESSION_EXPIRED is processed 
+        while handleSESSION_CREATED is being processed. (kfujino)
+      </fix>
+      <fix>
+        Notifications of changes in session ID to other nodes in the cluster
+        should be controlled by notifySessionListenersOnReplication rather than
+        notifyListenersOnReplication. (markt)
+      </fix>
+      <fix>
+        The change in session ID is notified to the container event listener on 
+        the backup node in cluster. 
+        This notification is controlled by 
+        notifyContainerListenersOnReplication.(kfujino)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <fix>
+        Update Maven repository information in the documentation to reflect
+        current usage. (markt)
+      </fix>
+      <add>
+        <bug>43538</bug>: Add host name and IP address to the HTML Manager
+        application. Patch by Dennis Lundberg. (markt)
+      </add>
+      <fix>
+        Add <code>session="false"</code> directive to the index page of the
+        ROOT web application. (kkolinko)
+      </fix>
+      <fix>
+        <bug>51443</bug>: Document the notifySessionListenersOnReplication
+        attribute for the DeltaManager. (markt)
+      </fix>
+      <fix>
+        <bug>51447</bug>: Viewing a back up session in the HTML Manager web
+        application no longer changes the session to a primary session. Based on
+        a patch provided by Eiji Takahashi. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <fix>
+        <bug>33262</bug>: Install monitor to auto-start for current user only
+        rather than all users to be consistent with menu item creation. (markt)
+      </fix>
+      <add>
+        <bug>40510</bug>: Provide an option to install shortcuts for the current
+        user or all users. Also ensure registry is correctly cleaned on
+        uninstall for 64-bit platforms. (markt)
+      </add>
+      <add>
+        <bug>50949</bug>: Provide the ability to specify the AJP port and
+        service name when installing Tomcat using the Windows installer. This
+        permits multiple instances of the same Tomcat version to be installed
+        side-by-side. (markt)
+      </add>
+      <update>
+        Clean up shell and batch scripts (improve consistency,
+        clarify comments, add <code>configtest</code> command support for
+        Windows). (rjung)
+      </update>
+      <fix>
+        <bug>51206</bug>: Make CATALINA_BASE visible for setenv.sh. (rjung)
+      </fix>
+      <update>
+        Remove unnecessary variable BASEDIR from scripts. (rjung)
+      </update>
+      <fix>
+        <bug>51425</bug>, <bug>51450</bug>: Update Spanish translations. Based
+        on patches provided by Jesus Marin. (markt) 
+      </fix>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 7.0.16 (markt)" rtext="released 2011-06-17">
   <subsection name="Catalina">
     <changelog>
       <fix>
@@ -94,8 +571,9 @@
   <subsection name="Coyote">
     <changelog>
       <fix>
-        When parsing the port in the HTTP host header, treat the port as a base
-        10 integer rather than a hexadecimal one. (rjung/markt/kkolinko) 
+        When parsing the port in the HTTP host header, restrict the value to be
+        base 10 integer digits rather than hexadecimal ones.
+        (rjung/markt/kkolinko) 
       </fix>
       <update>
         Various refactorings to reduce code duplication and unnecessary code in

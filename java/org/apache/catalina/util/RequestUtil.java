@@ -19,12 +19,12 @@
 package org.apache.catalina.util;
 
 import java.io.UnsupportedEncodingException;
-import java.text.SimpleDateFormat;
+import java.nio.charset.Charset;
 import java.util.Map;
-import java.util.TimeZone;
 
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
+import org.apache.tomcat.util.buf.B2CConverter;
 import org.apache.tomcat.util.res.StringManager;
 
 
@@ -33,7 +33,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Tim Tye
- * @version $Id: RequestUtil.java 1069170 2011-02-09 23:41:32Z markt $
+ * @version $Id: RequestUtil.java 1145355 2011-07-11 21:10:08Z markt $
  */
 
 public final class RequestUtil {
@@ -46,16 +46,6 @@ public final class RequestUtil {
      */
     private static final StringManager sm =
         StringManager.getManager("org.apache.catalina.util");
-    
-    /**
-     * The DateFormat to use for generating readable dates in cookies.
-     */
-    private static SimpleDateFormat format =
-        new SimpleDateFormat(" EEEE, dd-MMM-yy kk:mm:ss zz");
-
-    static {
-        format.setTimeZone(TimeZone.getTimeZone("GMT"));
-    }
 
 
     /**
@@ -199,14 +189,16 @@ public final class RequestUtil {
             byte[] bytes = null;
             try {
                 if (encoding == null) {
-                    bytes = data.getBytes();
+                    bytes = data.getBytes(Charset.defaultCharset());
                 } else {
-                    bytes = data.getBytes(encoding);
+                    bytes = data.getBytes(B2CConverter.getCharset(encoding));
                 }
                 parseParameters(map, bytes, encoding);
             } catch (UnsupportedEncodingException uee) {
-                log.debug(sm.getString("requestUtil.parseParameters.uee",
-                        encoding), uee);
+                if (log.isDebugEnabled()) {
+                    log.debug(sm.getString("requestUtil.parseParameters.uee",
+                            encoding), uee);
+                }
             }
 
         }
@@ -264,12 +256,14 @@ public final class RequestUtil {
         byte[] bytes = null;
         try {
             if (enc == null) {
-                bytes = str.getBytes();
+                bytes = str.getBytes(Charset.defaultCharset());
             } else {
-                bytes = str.getBytes(enc);
+                bytes = str.getBytes(B2CConverter.getCharset(enc));
             }
         } catch (UnsupportedEncodingException uee) {
-            log.debug(sm.getString("requestUtil.urlDecode.uee", enc), uee);
+            if (log.isDebugEnabled()) {
+                log.debug(sm.getString("requestUtil.urlDecode.uee", enc), uee);
+            }
         }
 
         return URLDecode(bytes, enc, isQuery);
@@ -337,9 +331,11 @@ public final class RequestUtil {
         }
         if (enc != null) {
             try {
-                return new String(bytes, 0, ox, enc);
+                return new String(bytes, 0, ox, B2CConverter.getCharset(enc));
             } catch (UnsupportedEncodingException uee) {
-                log.debug(sm.getString("requestUtil.urlDecode.uee", enc), uee);
+                if (log.isDebugEnabled()) {
+                    log.debug(sm.getString("requestUtil.urlDecode.uee", enc), uee);
+                }
                 return null;
             }
         }
@@ -411,6 +407,8 @@ public final class RequestUtil {
     public static void parseParameters(Map<String,String[]> map, byte[] data,
             String encoding) throws UnsupportedEncodingException {
 
+        Charset charset = B2CConverter.getCharset(encoding);
+        
         if (data != null && data.length > 0) {
             int    ix = 0;
             int    ox = 0;
@@ -420,7 +418,7 @@ public final class RequestUtil {
                 byte c = data[ix++];
                 switch ((char) c) {
                 case '&':
-                    value = new String(data, 0, ox, encoding);
+                    value = new String(data, 0, ox, charset);
                     if (key != null) {
                         putMapEntry(map, key, value);
                         key = null;
@@ -429,7 +427,7 @@ public final class RequestUtil {
                     break;
                 case '=':
                     if (key == null) {
-                        key = new String(data, 0, ox, encoding);
+                        key = new String(data, 0, ox, charset);
                         ox = 0;
                     } else {
                         data[ox++] = c;
@@ -448,13 +446,10 @@ public final class RequestUtil {
             }
             //The last value does not end in '&'.  So save it now.
             if (key != null) {
-                value = new String(data, 0, ox, encoding);
+                value = new String(data, 0, ox, charset);
                 putMapEntry(map, key, value);
             }
         }
 
     }
-
-
-
 }
