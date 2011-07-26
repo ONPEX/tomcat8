@@ -52,7 +52,7 @@ import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.res.StringManager;
 
 /**
- * @version $Id: DefaultInstanceManager.java 1005271 2010-10-06 21:58:37Z markt $
+ * @version $Id: DefaultInstanceManager.java 1145981 2011-07-13 12:45:57Z markt $
  */
 public class DefaultInstanceManager implements InstanceManager {
 
@@ -429,7 +429,7 @@ public class DefaultInstanceManager implements InstanceManager {
     private void checkAccess(Class<?> clazz, Properties restricted) {
         while (clazz != null) {
             if ("restricted".equals(restricted.getProperty(clazz.getName()))) {
-                throw new SecurityException("Restricted class" + clazz);
+                throw new SecurityException("Restricted " + clazz);
             }
             clazz = clazz.getSuperclass();
         }

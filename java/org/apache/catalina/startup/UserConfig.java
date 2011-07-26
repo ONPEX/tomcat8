@@ -38,7 +38,7 @@ import org.apache.tomcat.util.res.StringManager;
  * xxxxx is the username of the owning user for that web application
  *
  * @author Craig R. McClanahan
- * @version $Id: UserConfig.java 939305 2010-04-29 13:43:39Z kkolinko $
+ * @version $Id: UserConfig.java 1142323 2011-07-02 21:57:12Z markt $
  */
 
 public final class UserConfig
@@ -215,6 +215,7 @@ public final class UserConfig
      *
      * @param event The lifecycle event that has occurred
      */
+    @Override
     public void lifecycleEvent(LifecycleEvent event) {
 
         // Identify the host we are associated with

@@ -76,7 +76,7 @@ import java.util.logging.SimpleFormatter;
  *    <code>java.util.logging.SimpleFormatter</code></li>
  * </ul>
  *
- * @version $Id: FileHandler.java 1087247 2011-03-31 10:43:22Z kkolinko $
+ * @version $Id: FileHandler.java 1145237 2011-07-11 16:46:28Z kkolinko $
  */
 
 public class FileHandler
@@ -327,7 +327,8 @@ public class FileHandler
             try {
                 setFormatter((Formatter) cl.loadClass(formatterName).newInstance());
             } catch (Exception e) {
-                // Ignore
+                // Ignore and fallback to defaults
+                setFormatter(new SimpleFormatter());
             }
         } else {
             setFormatter(new SimpleFormatter());
@@ -366,8 +367,12 @@ public class FileHandler
         // Open the current log file
         writerLock.writeLock().lock();
         try {
-            String pathname = dir.getAbsolutePath() + File.separator +
-                prefix + (rotatable ? date : "") + suffix;
+            File pathname = new File(dir.getAbsoluteFile(), prefix
+                    + (rotatable ? date : "") + suffix);
+            File parent = pathname.getParentFile();
+            if (!parent.exists()) {
+                parent.mkdirs();
+            }
             String encoding = getEncoding();
             FileOutputStream fos = new FileOutputStream(pathname, true);
             OutputStream os = bufferSize>0?new BufferedOutputStream(fos,bufferSize):fos;

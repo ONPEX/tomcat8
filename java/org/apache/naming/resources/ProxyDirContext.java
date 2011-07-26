@@ -21,6 +21,7 @@ package org.apache.naming.resources;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.Hashtable;
 
 import javax.naming.Binding;
@@ -43,7 +44,7 @@ import org.apache.naming.StringManager;
  * Proxy Directory Context implementation.
  *
  * @author Remy Maucherat
- * @version $Id: ProxyDirContext.java 1078798 2011-03-07 14:55:22Z markt $
+ * @version $Id: ProxyDirContext.java 1138019 2011-06-21 14:29:49Z markt $
  */
 
 public class ProxyDirContext implements DirContext {
@@ -309,7 +310,7 @@ public class ProxyDirContext implements DirContext {
             return object;
         } else {
             return new Resource(new ByteArrayInputStream
-                (object.toString().getBytes()));
+                (object.toString().getBytes(Charset.defaultCharset())));
         }
     }
 
@@ -1466,7 +1467,7 @@ public class ProxyDirContext implements DirContext {
                     entry.resource = (Resource) object;
                 } else {
                     entry.resource = new Resource(new ByteArrayInputStream
-                        (object.toString().getBytes()));
+                        (object.toString().getBytes(Charset.defaultCharset())));
                 }
                 Attributes attributes = dirContext.getAttributes(parseName(name));
                 if (!(attributes instanceof ResourceAttributes)) {
@@ -1629,7 +1630,7 @@ public class ProxyDirContext implements DirContext {
                     entry.resource = (Resource) object;
                 } else {
                     entry.resource = new Resource(new ByteArrayInputStream
-                        (object.toString().getBytes()));
+                        (object.toString().getBytes(Charset.defaultCharset())));
                 }
             } catch (NamingException e) {
                 exists = false;

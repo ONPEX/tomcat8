@@ -14,7 +14,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package org.apache.coyote.ajp;
 
 import java.io.IOException;
@@ -23,7 +22,6 @@ import java.nio.ByteBuffer;
 
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.OutputBuffer;
-import org.apache.coyote.Request;
 import org.apache.coyote.RequestInfo;
 import org.apache.coyote.Response;
 import org.apache.juli.logging.Log;
@@ -32,8 +30,6 @@ import org.apache.tomcat.jni.Socket;
 import org.apache.tomcat.jni.Status;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.buf.ByteChunk;
-import org.apache.tomcat.util.buf.HexUtils;
-import org.apache.tomcat.util.http.HttpMessages;
 import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 import org.apache.tomcat.util.net.AprEndpoint;
 import org.apache.tomcat.util.net.SocketStatus;
@@ -51,7 +47,7 @@ import org.apache.tomcat.util.net.SocketWrapper;
  * @author Costin Manolache
  * @author Bill Barker
  */
-public class AjpAprProcessor extends AbstractAjpProcessor {
+public class AjpAprProcessor extends AbstractAjpProcessor<Long> {
 
 
     /**
@@ -69,44 +65,14 @@ public class AjpAprProcessor extends AbstractAjpProcessor {
 
     public AjpAprProcessor(int packetSize, AprEndpoint endpoint) {
 
-        this.endpoint = endpoint;
+        super(packetSize, endpoint);
 
-        request = new Request();
-        request.setInputBuffer(new SocketInputBuffer());
-
-        response = new Response();
-        response.setHook(this);
         response.setOutputBuffer(new SocketOutputBuffer());
-        request.setResponse(response);
-
-        this.packetSize = packetSize;
-        requestHeaderMessage = new AjpMessage(packetSize);
-        responseHeaderMessage = new AjpMessage(packetSize);
-        bodyMessage = new AjpMessage(packetSize);
-
-        // Set the get body message buffer
-        AjpMessage getBodyMessage = new AjpMessage(16);
-        getBodyMessage.reset();
-        getBodyMessage.appendByte(Constants.JK_AJP13_GET_BODY_CHUNK);
-        // Adjust allowed size if packetSize != default (Constants.MAX_PACKET_SIZE)
-        getBodyMessage.appendInt(Constants.MAX_READ_SIZE + packetSize - Constants.MAX_PACKET_SIZE);
-        getBodyMessage.end();
-        getBodyMessageBuffer =
-            ByteBuffer.allocateDirect(getBodyMessage.getLen());
-        getBodyMessageBuffer.put(getBodyMessage.getBuffer(), 0,
-                                 getBodyMessage.getLen());
 
         // Allocate input and output buffers
         inputBuffer = ByteBuffer.allocateDirect(packetSize * 2);
         inputBuffer.limit(0);
         outputBuffer = ByteBuffer.allocateDirect(packetSize * 2);
-
-        // Cause loading of HexUtils
-        HexUtils.load();
-
-        // Cause loading of HttpMessages
-        HttpMessages.getMessage(200);
-
     }
 
 
@@ -131,69 +97,6 @@ public class AjpAprProcessor extends AbstractAjpProcessor {
     protected ByteBuffer outputBuffer = null;
 
 
-    /**
-     * Direct buffer used for sending right away a get body message.
-     */
-    protected final ByteBuffer getBodyMessageBuffer;
-
-
-    /**
-     * Direct buffer used for sending right away a pong message.
-     */
-    protected static final ByteBuffer pongMessageBuffer;
-
-
-    /**
-     * End message array.
-     */
-    protected static final byte[] endMessageArray;
-
-
-    /**
-     * Direct buffer used for sending explicit flush message.
-     */
-    protected static final ByteBuffer flushMessageBuffer;
-
-
-    // ----------------------------------------------------- Static Initializer
-
-
-    static {
-
-        // Set the read body message buffer
-        AjpMessage pongMessage = new AjpMessage(16);
-        pongMessage.reset();
-        pongMessage.appendByte(Constants.JK_AJP13_CPONG_REPLY);
-        pongMessage.end();
-        pongMessageBuffer = ByteBuffer.allocateDirect(pongMessage.getLen());
-        pongMessageBuffer.put(pongMessage.getBuffer(), 0,
-                pongMessage.getLen());
-
-        // Allocate the end message array
-        AjpMessage endMessage = new AjpMessage(16);
-        endMessage.reset();
-        endMessage.appendByte(Constants.JK_AJP13_END_RESPONSE);
-        endMessage.appendByte(1);
-        endMessage.end();
-        endMessageArray = new byte[endMessage.getLen()];
-        System.arraycopy(endMessage.getBuffer(), 0, endMessageArray, 0,
-                endMessage.getLen());
-
-        // Set the flush message buffer
-        AjpMessage flushMessage = new AjpMessage(16);
-        flushMessage.reset();
-        flushMessage.appendByte(Constants.JK_AJP13_SEND_BODY_CHUNK);
-        flushMessage.appendInt(0);
-        flushMessage.appendByte(0);
-        flushMessage.end();
-        flushMessageBuffer =
-            ByteBuffer.allocateDirect(flushMessage.getLen());
-        flushMessageBuffer.put(flushMessage.getBuffer(), 0,
-                flushMessage.getLen());
-
-    }
-
-
     // --------------------------------------------------------- Public Methods
 
 
@@ -203,6 +106,7 @@ public class AjpAprProcessor extends AbstractAjpProcessor {
      *
      * @throws IOException error during an I/O operation
      */
+    @Override
     public SocketState process(SocketWrapper<Long> socket)
         throws IOException {
         RequestInfo rp = request.getRequestProcessor();
@@ -235,8 +139,8 @@ public class AjpAprProcessor extends AbstractAjpProcessor {
                 // not regular request processing
                 int type = requestHeaderMessage.getByte();
                 if (type == Constants.JK_AJP13_CPING_REQUEST) {
-                    if (Socket.sendb(socketRef, pongMessageBuffer, 0,
-                            pongMessageBuffer.position()) < 0) {
+                    if (Socket.send(socketRef, pongMessageArray, 0,
+                            pongMessageArray.length) < 0) {
                         error = true;
                     }
                     continue;
@@ -316,14 +220,7 @@ public class AjpAprProcessor extends AbstractAjpProcessor {
             request.updateCounters();
 
             rp.setStage(org.apache.coyote.Constants.STAGE_KEEPALIVE);
-            recycle();
-        }
-
-        // Add the socket to the poller
-        if (!error && !endpoint.isPaused()) {
-            if (!isAsync()) {
-                ((AprEndpoint)endpoint).getPoller().add(socketRef);
-            }
+            recycle(false);
         }
 
         rp.setStage(org.apache.coyote.Constants.STAGE_ENDED);
@@ -338,51 +235,6 @@ public class AjpAprProcessor extends AbstractAjpProcessor {
     }
 
 
-    public SocketState asyncDispatch(SocketWrapper<Long> socket,
-            SocketStatus status) {
-
-        // Setting up the socket
-        this.socket = socket;
-
-        RequestInfo rp = request.getRequestProcessor();
-        try {
-            rp.setStage(org.apache.coyote.Constants.STAGE_SERVICE);
-            error = !adapter.asyncDispatch(request, response, status);
-        } catch (InterruptedIOException e) {
-            error = true;
-        } catch (Throwable t) {
-            ExceptionUtils.handleThrowable(t);
-            log.error(sm.getString("http11processor.request.process"), t);
-            // 500 - Internal Server Error
-            response.setStatus(500);
-            adapter.log(request, response, 0);
-            error = true;
-        }
-
-        rp.setStage(org.apache.coyote.Constants.STAGE_ENDED);
-
-        if (error) {
-            response.setStatus(500);
-        }
-        if (isAsync()) {
-            if (error) {
-                request.updateCounters();
-                return SocketState.CLOSED;
-            } else {
-                return SocketState.LONG;
-            }
-        } else {
-            request.updateCounters();
-            if (error) {
-                return SocketState.CLOSED;
-            } else {
-                return SocketState.OPEN;
-            }
-        }
-        
-    }
-
-    
     // ----------------------------------------------------- ActionHook Methods
 
 
@@ -571,8 +423,8 @@ public class AjpAprProcessor extends AbstractAjpProcessor {
         }
 
         // Request more data immediately
-        Socket.sendb(socket.getSocket().longValue(), getBodyMessageBuffer, 0,
-                getBodyMessageBuffer.position());
+        Socket.send(socket.getSocket().longValue(), getBodyMessageArray, 0,
+                getBodyMessageArray.length);
 
         boolean moreData = receive();
         if( !moreData ) {
@@ -636,8 +488,8 @@ public class AjpAprProcessor extends AbstractAjpProcessor {
      * Recycle the processor.
      */
     @Override
-    public void recycle() {
-        super.recycle();
+    public void recycle(boolean socketClosing) {
+        super.recycle(socketClosing);
 
         inputBuffer.clear();
         inputBuffer.limit(0);
@@ -662,8 +514,8 @@ public class AjpAprProcessor extends AbstractAjpProcessor {
         }
         // Send explicit flush message
         if (explicit && !finished) {
-            if (Socket.sendb(socketRef, flushMessageBuffer, 0,
-                    flushMessageBuffer.position()) < 0) {
+            if (Socket.send(socketRef, flushMessageArray, 0,
+                    flushMessageArray.length) < 0) {
                 throw new IOException(sm.getString("ajpprocessor.failedflush"));
             }
         }

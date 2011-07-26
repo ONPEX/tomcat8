@@ -38,7 +38,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Filip Hanik
- * @version $Id: AprLifecycleListener.java 1031335 2010-11-04 23:03:26Z markt $
+ * @version $Id: AprLifecycleListener.java 1140788 2011-06-28 18:55:57Z schultz $
  * @since 4.1
  */
 
@@ -137,6 +137,7 @@ public class AprLifecycleListener
         aprAvailable = false;
         aprInitialized = false;
         sslInitialized = false; // Well we cleaned the pool in terminate.
+        sslAvailable = false; // Well we cleaned the pool in terminate.
     }
 
     private static void init()

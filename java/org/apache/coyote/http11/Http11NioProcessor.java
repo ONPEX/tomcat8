@@ -14,29 +14,21 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package org.apache.coyote.http11;
+
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.InetAddress;
 import java.nio.channels.SelectionKey;
-import java.util.Locale;
 
 import javax.net.ssl.SSLEngine;
 
 import org.apache.coyote.ActionCode;
-import org.apache.coyote.Request;
 import org.apache.coyote.RequestInfo;
-import org.apache.coyote.Response;
 import org.apache.coyote.http11.filters.BufferedInputFilter;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
-import org.apache.tomcat.util.buf.Ascii;
-import org.apache.tomcat.util.buf.ByteChunk;
-import org.apache.tomcat.util.buf.HexUtils;
-import org.apache.tomcat.util.buf.MessageBytes;
-import org.apache.tomcat.util.http.MimeHeaders;
 import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 import org.apache.tomcat.util.net.NioChannel;
 import org.apache.tomcat.util.net.NioEndpoint;
@@ -44,6 +36,7 @@ import org.apache.tomcat.util.net.NioEndpoint.KeyAttachment;
 import org.apache.tomcat.util.net.SSLSupport;
 import org.apache.tomcat.util.net.SecureNioChannel;
 import org.apache.tomcat.util.net.SocketStatus;
+import org.apache.tomcat.util.net.SocketWrapper;
 
 
 /**
@@ -52,7 +45,7 @@ import org.apache.tomcat.util.net.SocketStatus;
  * @author Remy Maucherat
  * @author Filip Hanik
  */
-public class Http11NioProcessor extends AbstractHttp11Processor {
+public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
 
     private static final Log log = LogFactory.getLog(Http11NioProcessor.class);
     @Override
@@ -72,22 +65,15 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
     public Http11NioProcessor(int maxHttpHeaderSize, NioEndpoint endpoint,
             int maxTrailerSize) {
 
-        this.endpoint = endpoint;
+        super(endpoint);
 
-        request = new Request();
         inputBuffer = new InternalNioInputBuffer(request, maxHttpHeaderSize);
         request.setInputBuffer(inputBuffer);
 
-        response = new Response();
-        response.setHook(this);
         outputBuffer = new InternalNioOutputBuffer(response, maxHttpHeaderSize);
         response.setOutputBuffer(outputBuffer);
-        request.setResponse(response);
 
         initializeFilters(maxTrailerSize);
-
-        // Cause loading of HexUtils
-        HexUtils.load();
     }
 
 
@@ -109,11 +95,6 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
      */
     protected NioEndpoint.SendfileData sendfileData = null;
 
-    /**
-     * Comet used.
-     */
-    protected boolean comet = false;
-    
     /**
      * Closed flag, a Comet async thread can 
      * signal for this Nio processor to be closed and recycled instead
@@ -137,6 +118,7 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
      *
      * @throws IOException error during an I/O operation
      */
+    @Override
     public SocketState event(SocketStatus status)
         throws IOException {
 
@@ -187,80 +169,41 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
         }
     }
     
-    
-    /**
-     * Process pipelined HTTP requests using the specified input and output
-     * streams.
-     *
-     * @throws IOException error during an I/O operation
-     */
-    public SocketState asyncDispatch(SocketStatus status)
-        throws IOException {
 
-        long soTimeout = endpoint.getSoTimeout();
-        int keepAliveTimeout = endpoint.getKeepAliveTimeout();
-
-        RequestInfo rp = request.getRequestProcessor();
+    @Override
+    protected void resetTimeouts() {
         final NioEndpoint.KeyAttachment attach = (NioEndpoint.KeyAttachment)socket.getAttachment(false);
-        try {
-            rp.setStage(org.apache.coyote.Constants.STAGE_SERVICE);
-            error = !adapter.asyncDispatch(request, response, status);
-            if ( !error ) {
-                if (attach != null) {
-                    attach.setComet(comet);
-                    if (comet) {
-                        Integer comettimeout = (Integer) request.getAttribute("org.apache.tomcat.comet.timeout");
-                        if (comettimeout != null) attach.setTimeout(comettimeout.longValue());
-                    } else {
-                        if (asyncStateMachine.isAsyncDispatching()) {
-                            //reset the timeout
-                            if (keepAlive && keepAliveTimeout>0) {
-                                attach.setTimeout(keepAliveTimeout);
-                            } else {
-                                attach.setTimeout(soTimeout);
-                            }
-                        }
-                    }
+        if (!error && attach != null &&
+                asyncStateMachine.isAsyncDispatching()) {
+            long soTimeout = endpoint.getSoTimeout();
+            int keepAliveTimeout = endpoint.getKeepAliveTimeout();
 
-                }
+            //reset the timeout
+            if (keepAlive && keepAliveTimeout>0) {
+                attach.setTimeout(keepAliveTimeout);
+            } else {
+                attach.setTimeout(soTimeout);
             }
-        } catch (InterruptedIOException e) {
-            error = true;
-        } catch (Throwable t) {
-            ExceptionUtils.handleThrowable(t);
-            log.error(sm.getString("http11processor.request.process"), t);
-            // 500 - Internal Server Error
-            response.setStatus(500);
-            adapter.log(request, response, 0);
-            error = true;
-        }
-
-        rp.setStage(org.apache.coyote.Constants.STAGE_ENDED);
-
-        if (error) {
-            return SocketState.CLOSED;
-        } else if (!comet && !isAsync()) {
-            return (keepAlive)?SocketState.OPEN:SocketState.CLOSED;
-        } else {
-            return SocketState.LONG;
         }
     }
 
+
     /**
      * Process pipelined HTTP requests using the specified input and output
      * streams.
      *
      * @throws IOException error during an I/O operation
      */
-    public SocketState process(NioChannel socket)
+    @Override
+    public SocketState process(SocketWrapper<NioChannel> socket)
         throws IOException {
         RequestInfo rp = request.getRequestProcessor();
         rp.setStage(org.apache.coyote.Constants.STAGE_PARSE);
 
         // Setting up the socket
-        this.socket = socket;
-        inputBuffer.setSocket(socket);
-        outputBuffer.setSocket(socket);
+        this.socket = socket.getSocket();
+        inputBuffer.setSocket(this.socket);
+        outputBuffer.setSocket(this.socket);
         inputBuffer.setSelectorPool(((NioEndpoint)endpoint).getSelectorPool());
         outputBuffer.setSelectorPool(((NioEndpoint)endpoint).getSelectorPool());
 
@@ -275,15 +218,14 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
         boolean keptAlive = false;
         boolean openSocket = false;
         boolean readComplete = true;
-        final KeyAttachment ka = (KeyAttachment)socket.getAttachment(false);
         
         while (!error && keepAlive && !comet && !isAsync() && !endpoint.isPaused()) {
             //always default to our soTimeout
-            ka.setTimeout(soTimeout);
+            socket.setTimeout(soTimeout);
             // Parsing the request header
             try {
                 if( !disableUploadTimeout && keptAlive && soTimeout > 0 ) {
-                    socket.getIOChannel().socket().setSoTimeout((int)soTimeout);
+                    socket.getSocket().getIOChannel().socket().setSoTimeout((int)soTimeout);
                 }
                 if (!inputBuffer.parseRequestLine(keptAlive)) {
                     // Haven't finished reading the request so keep the socket
@@ -293,7 +235,9 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
                     if (inputBuffer.getParsingRequestLinePhase()<2) {
                         // No data read, OK to recycle the processor
                         // Continue to use keep alive timeout
-                        if (keepAliveTimeout>0) ka.setTimeout(keepAliveTimeout);
+                        if (keepAliveTimeout>0) {
+                            socket.setTimeout(keepAliveTimeout);
+                        }
                     } else {
                         // Started to read request line. Need to keep processor
                         // associated with socket
@@ -319,7 +263,7 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
                     }
                     request.setStartTime(System.currentTimeMillis());
                     if (!disableUploadTimeout) { //only for body, not for request headers
-                        socket.getIOChannel().socket().setSoTimeout(
+                        socket.getSocket().getIOChannel().socket().setSoTimeout(
                                 connectionUploadTimeout);
                     }
                 }
@@ -359,7 +303,7 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
             
             if (maxKeepAliveRequests == 1 )
                 keepAlive = false;
-            if (maxKeepAliveRequests > 0 && ka.decrementKeepAlive() <= 0)
+            if (maxKeepAliveRequests > 0 && socket.decrementKeepAlive() <= 0)
                 keepAlive = false;
 
             // Process the request in the adapter
@@ -378,7 +322,8 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
                                 statusDropsConnection(response.getStatus()));
                     }
                     // Comet support
-                    SelectionKey key = socket.getIOChannel().keyFor(socket.getPoller().getSelector());
+                    SelectionKey key = socket.getSocket().getIOChannel().keyFor(
+                            socket.getSocket().getPoller().getSelector());
                     if (key != null) {
                         NioEndpoint.KeyAttachment attach = (NioEndpoint.KeyAttachment) key.attachment();
                         if (attach != null)  {
@@ -426,11 +371,13 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
             
             // Do sendfile as needed: add socket to sendfile and end
             if (sendfileData != null && !error) {
-                ka.setSendfileData(sendfileData);
+                ((KeyAttachment) socket).setSendfileData(sendfileData);
                 sendfileData.keepAlive = keepAlive;
-                SelectionKey key = socket.getIOChannel().keyFor(socket.getPoller().getSelector());
+                SelectionKey key = socket.getSocket().getIOChannel().keyFor(
+                        socket.getSocket().getPoller().getSelector());
                 //do the first write on this thread, might as well
-                openSocket = socket.getPoller().processSendfile(key,ka,true,true);
+                openSocket = socket.getSocket().getPoller().processSendfile(key,
+                        (KeyAttachment) socket, true, true);
                 break;
             }
 
@@ -453,15 +400,10 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
 
     @Override
     public void recycleInternal() {
-        this.socket = null;
-        this.cometClose = false;
-        this.comet = false;
-        remoteAddr = null;
-        remoteHost = null;
-        localAddr = null;
-        localName = null;
-        remotePort = -1;
-        localPort = -1;
+        socket = null;
+        cometClose = false;
+        comet = false;
+        sendfileData = null;
     }
 
 
@@ -677,189 +619,10 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
     // ------------------------------------------------------ Protected Methods
 
 
-    /**
-     * After reading the request headers, we have to setup the request filters.
-     */
-    protected void prepareRequest() {
-
-        http11 = true;
-        http09 = false;
-        contentDelimitation = false;
-        expectation = false;
+    @Override
+    protected void prepareRequestInternal() {
         sendfileData = null;
-        if (endpoint.isSSLEnabled()) {
-            request.scheme().setString("https");
-        }
-        MessageBytes protocolMB = request.protocol();
-        if (protocolMB.equals(Constants.HTTP_11)) {
-            http11 = true;
-            protocolMB.setString(Constants.HTTP_11);
-        } else if (protocolMB.equals(Constants.HTTP_10)) {
-            http11 = false;
-            keepAlive = false;
-            protocolMB.setString(Constants.HTTP_10);
-        } else if (protocolMB.equals("")) {
-            // HTTP/0.9
-            http09 = true;
-            http11 = false;
-            keepAlive = false;
-        } else {
-            // Unsupported protocol
-            http11 = false;
-            error = true;
-            // Send 505; Unsupported HTTP version
-            response.setStatus(505);
-            adapter.log(request, response, 0);
-        }
-
-        MessageBytes methodMB = request.method();
-        if (methodMB.equals(Constants.GET)) {
-            methodMB.setString(Constants.GET);
-        } else if (methodMB.equals(Constants.POST)) {
-            methodMB.setString(Constants.POST);
-        }
-
-        MimeHeaders headers = request.getMimeHeaders();
-
-        // Check connection header
-        MessageBytes connectionValueMB = headers.getValue("connection");
-        if (connectionValueMB != null) {
-            ByteChunk connectionValueBC = connectionValueMB.getByteChunk();
-            if (findBytes(connectionValueBC, Constants.CLOSE_BYTES) != -1) {
-                keepAlive = false;
-            } else if (findBytes(connectionValueBC,
-                                 Constants.KEEPALIVE_BYTES) != -1) {
-                keepAlive = true;
-            }
-        }
-
-        MessageBytes expectMB = null;
-        if (http11)
-            expectMB = headers.getValue("expect");
-        if ((expectMB != null)
-            && (expectMB.indexOfIgnoreCase("100-continue", 0) != -1)) {
-            inputBuffer.setSwallowInput(false);
-            expectation = true;
-        }
-
-        // Check user-agent header
-        if ((restrictedUserAgents != null) && ((http11) || (keepAlive))) {
-            MessageBytes userAgentValueMB = headers.getValue("user-agent");
-            // Check in the restricted list, and adjust the http11
-            // and keepAlive flags accordingly
-            if(userAgentValueMB != null) {
-                String userAgentValue = userAgentValueMB.toString();
-                if (restrictedUserAgents != null &&
-                        restrictedUserAgents.matcher(userAgentValue).matches()) {
-                    http11 = false;
-                    keepAlive = false;
-                }
-            }
-        }
-
-        // Check for a full URI (including protocol://host:port/)
-        ByteChunk uriBC = request.requestURI().getByteChunk();
-        if (uriBC.startsWithIgnoreCase("http", 0)) {
-
-            int pos = uriBC.indexOf("://", 0, 3, 4);
-            int uriBCStart = uriBC.getStart();
-            int slashPos = -1;
-            if (pos != -1) {
-                byte[] uriB = uriBC.getBytes();
-                slashPos = uriBC.indexOf('/', pos + 3);
-                if (slashPos == -1) {
-                    slashPos = uriBC.getLength();
-                    // Set URI as "/"
-                    request.requestURI().setBytes
-                        (uriB, uriBCStart + pos + 1, 1);
-                } else {
-                    request.requestURI().setBytes
-                        (uriB, uriBCStart + slashPos,
-                         uriBC.getLength() - slashPos);
-                }
-                MessageBytes hostMB = headers.setValue("host");
-                hostMB.setBytes(uriB, uriBCStart + pos + 3,
-                                slashPos - pos - 3);
-            }
-
-        }
-
-        // Input filter setup
-        InputFilter[] inputFilters = inputBuffer.getFilters();
-
-        // Parse transfer-encoding header
-        MessageBytes transferEncodingValueMB = null;
-        if (http11)
-            transferEncodingValueMB = headers.getValue("transfer-encoding");
-        if (transferEncodingValueMB != null) {
-            String transferEncodingValue = transferEncodingValueMB.toString();
-            // Parse the comma separated list. "identity" codings are ignored
-            int startPos = 0;
-            int commaPos = transferEncodingValue.indexOf(',');
-            String encodingName = null;
-            while (commaPos != -1) {
-                encodingName = transferEncodingValue.substring
-                    (startPos, commaPos).toLowerCase(Locale.ENGLISH).trim();
-                if (!addInputFilter(inputFilters, encodingName)) {
-                    // Unsupported transfer encoding
-                    error = true;
-                    // 501 - Unimplemented
-                    response.setStatus(501);
-                    adapter.log(request, response, 0);
-                }
-                startPos = commaPos + 1;
-                commaPos = transferEncodingValue.indexOf(',', startPos);
-            }
-            encodingName = transferEncodingValue.substring(startPos)
-                .toLowerCase(Locale.ENGLISH).trim();
-            if (!addInputFilter(inputFilters, encodingName)) {
-                // Unsupported transfer encoding
-                error = true;
-                // 501 - Unimplemented
-                response.setStatus(501);
-                adapter.log(request, response, 0);
-            }
-        }
-
-        // Parse content-length header
-        long contentLength = request.getContentLengthLong();
-        if (contentLength >= 0 && !contentDelimitation) {
-            inputBuffer.addActiveFilter
-                (inputFilters[Constants.IDENTITY_FILTER]);
-            contentDelimitation = true;
-        }
-
-        MessageBytes valueMB = headers.getValue("host");
-
-        // Check host header
-        if (http11 && (valueMB == null)) {
-            error = true;
-            // 400 - Bad request
-            response.setStatus(400);
-            adapter.log(request, response, 0);
-        }
-
-        parseHost(valueMB);
-
-        if (!contentDelimitation) {
-            // If there's no content length 
-            // (broken HTTP/1.0 or HTTP/1.1), assume
-            // the client is not broken and didn't send a body
-            inputBuffer.addActiveFilter
-                    (inputFilters[Constants.VOID_FILTER]);
-            contentDelimitation = true;
-        }
-
-        // Advertise sendfile support through a request attribute
-        if (endpoint.getUseSendfile()) 
-            request.setAttribute("org.apache.tomcat.sendfile.support", Boolean.TRUE);
-        // Advertise comet support through a request attribute
-        request.setAttribute("org.apache.tomcat.comet.support", Boolean.TRUE);
-        // Advertise comet timeout support
-        request.setAttribute("org.apache.tomcat.comet.timeout.support", Boolean.TRUE);
-
     }
-
 
     @Override
     protected boolean prepareSendfile(OutputFilter[] outputFilters) {
@@ -878,35 +641,6 @@ public class Http11NioProcessor extends AbstractHttp11Processor {
             return true;
         }
         return false;
-    }
-
-    /**
-     * Specialized utility method: find a sequence of lower case bytes inside
-     * a ByteChunk.
-     */
-    @Override
-    protected int findBytes(ByteChunk bc, byte[] b) {
-
-        byte first = b[0];
-        byte[] buff = bc.getBuffer();
-        int start = bc.getStart();
-        int end = bc.getEnd();
-
-        // Look for first char
-        int srcEnd = b.length;
-    
-        for (int i = start; i <= (end - srcEnd); i++) {
-            if (Ascii.toLower(buff[i]) != first) continue;
-            // found first char, now look for a match
-                int myPos = i+1;
-            for (int srcPos = 1; srcPos < srcEnd;) {
-                    if (Ascii.toLower(buff[myPos++]) != b[srcPos++])
-                break;
-                    if (srcPos == srcEnd) return i - start; // found it
-            }
-        }
-        return -1;
-
     }
 
     @Override

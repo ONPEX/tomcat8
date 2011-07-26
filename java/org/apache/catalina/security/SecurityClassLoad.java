@@ -25,7 +25,7 @@ package org.apache.catalina.security;
  *
  * @author Glenn L. Nielsen
  * @author Jean-Francois Arcand
- * @version $Id: SecurityClassLoad.java 1133586 2011-06-08 22:20:22Z markt $
+ * @version $Id: SecurityClassLoad.java 1144031 2011-07-07 20:53:51Z markt $
  */
 
 public final class SecurityClassLoad {
@@ -239,6 +239,7 @@ public final class SecurityClassLoad {
     private static final void loadTomcatPackage(ClassLoader loader)
         throws Exception {
         final String basePackage = "org.apache.tomcat.";
+        loader.loadClass(basePackage + "util.buf.HexUtils");
         loader.loadClass(basePackage + "util.buf.StringCache");
         loader.loadClass(basePackage + "util.buf.StringCache$ByteEntry");
         loader.loadClass(basePackage + "util.buf.StringCache$CharEntry");

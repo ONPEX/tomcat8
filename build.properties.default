@@ -21,13 +21,13 @@
 # modules that Tomcat depends on.  Copy this file to "build.properties"
 # in the top-level source directory, and customize it as needed.
 #
-# $Id: build.properties.default 1134562 2011-06-11 10:30:54Z markt $
+# $Id: build.properties.default 1146504 2011-07-13 22:29:07Z markt $
 # -----------------------------------------------------------------------------
 
 # ----- Version Control Flags -----
 version.major=7
 version.minor=0
-version.build=16
+version.build=19
 version.patch=0
 version.suffix=
 
@@ -38,7 +38,10 @@ execute.test.bio=true
 execute.test.nio=true
 # Still requires APR/native library to be present
 execute.test.apr=true
+# Stop testing if a failure occurs
 test.haltonfailure=false
+# Activate AccessLog during testing
+test.accesslog=false
 
 # Workaround against http://bugs.sun.com/view_bug.do?bug_id=6202721
 test.jvmarg.egd=-Djava.security.egd=file:/dev/./urandom
@@ -117,8 +120,8 @@ wsdl4j-lib.loc=${base-maven.loc}/wsdl4j/wsdl4j/${wsdl4j-lib.version}/wsdl4j-${ws
 wsdl4j-lib.jar=${wsdl4j-lib.home}/wsdl4j-${wsdl4j-lib.version}.jar
 
 # ----- Eclipse JDT, version 3.2 or later -----
-jdt.version=3.6.2
-jdt.release=R-3.6.2-201102101200
+jdt.version=3.7
+jdt.release=R-3.7-201106131736
 jdt.home=${base.path}/ecj-${jdt.version}
 jdt.jar=${jdt.home}/ecj-${jdt.version}.jar
 # The download will be moved to the archive area eventually. We are taking care of that in advance.
@@ -158,19 +161,19 @@ nsis.nsisdl.dll=${nsis.home}/Plugins/NSISdl.dll
 nsis.loc=${base-sf.loc}/nsis/nsis-2.46.zip
 
 # ----- Commons Daemon, version 1.0-Alpha or later -----
-commons-daemon.version=1.0.5
+commons-daemon.version=1.0.6
 commons-daemon.home=${base.path}/commons-daemon-${commons-daemon.version}
 commons-daemon.jar=${commons-daemon.home}/commons-daemon-${commons-daemon.version}.jar
 commons-daemon.native.win.home=${commons-daemon.home}/windows
 commons-daemon.native.win.mgr.exe=${commons-daemon.native.win.home}/prunmgr.exe
 commons-daemon.native.src.tgz=${commons-daemon.home}/commons-daemon-${commons-daemon.version}-native-src.tar.gz
 commons-daemon.native.win.zip=${commons-daemon.home}/commons-daemon-${commons-daemon.version}-bin-windows.zip
-commons-daemon.bin.loc.1=${base-commons.loc.1}/daemon/binaries/${commons-daemon.version}/commons-daemon-${commons-daemon.version}-bin.tar.gz
-commons-daemon.bin.loc.2=${base-commons.loc.2}/daemon/binaries/${commons-daemon.version}/commons-daemon-${commons-daemon.version}-bin.tar.gz
+commons-daemon.bin.loc.1=${base-commons.loc.1}/daemon/binaries/commons-daemon-${commons-daemon.version}-bin.tar.gz
+commons-daemon.bin.loc.2=${base-commons.loc.2}/daemon/binaries/commons-daemon-${commons-daemon.version}-bin.tar.gz
 commons-daemon.native.src.loc.1=${base-commons.loc.1}/daemon/source/commons-daemon-${commons-daemon.version}-native-src.tar.gz
 commons-daemon.native.src.loc.2=${base-commons.loc.2}/daemon/source/commons-daemon-${commons-daemon.version}-native-src.tar.gz
-commons-daemon.native.win.loc.1=${base-commons.loc.1}/daemon/binaries/${commons-daemon.version}/windows/commons-daemon-${commons-daemon.version}-bin-windows.zip
-commons-daemon.native.win.loc.2=${base-commons.loc.2}/daemon/binaries/${commons-daemon.version}/windows/commons-daemon-${commons-daemon.version}-bin-windows.zip
+commons-daemon.native.win.loc.1=${base-commons.loc.1}/daemon/binaries/windows/commons-daemon-${commons-daemon.version}-bin-windows.zip
+commons-daemon.native.win.loc.2=${base-commons.loc.2}/daemon/binaries/windows/commons-daemon-${commons-daemon.version}-bin-windows.zip
 
 # ----- JUnit Unit Test Suite, version 3.7 or later -----
 junit.home=${base.path}/junit3.8.2

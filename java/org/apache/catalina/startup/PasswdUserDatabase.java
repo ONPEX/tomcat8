@@ -31,7 +31,7 @@ import java.util.Hashtable;
  * that processes the <code>/etc/passwd</code> file on a Unix system.
  *
  * @author Craig R. McClanahan
- * @version $Id: PasswdUserDatabase.java 987920 2010-08-22 15:34:34Z markt $
+ * @version $Id: PasswdUserDatabase.java 1142323 2011-07-02 21:57:12Z markt $
  */
 
 public final class PasswdUserDatabase
@@ -78,6 +78,7 @@ public final class PasswdUserDatabase
     /**
      * Return the UserConfig listener with which we are associated.
      */
+    @Override
     public UserConfig getUserConfig() {
 
         return (this.userConfig);
@@ -90,6 +91,7 @@ public final class PasswdUserDatabase
      *
      * @param userConfig The new UserConfig listener
      */
+    @Override
     public void setUserConfig(UserConfig userConfig) {
 
         this.userConfig = userConfig;
@@ -106,6 +108,7 @@ public final class PasswdUserDatabase
      *
      * @param user User for which a home directory should be retrieved
      */
+    @Override
     public String getHome(String user) {
 
         return homes.get(user);
@@ -116,6 +119,7 @@ public final class PasswdUserDatabase
     /**
      * Return an enumeration of the usernames defined on this server.
      */
+    @Override
     public Enumeration<String> getUsers() {
 
         return (homes.keys());

@@ -25,7 +25,7 @@
   <properties>
     <author email="craigmcc@apache.org">Craig McClanahan</author>
     <title>Administrative Apps - Administered Objects</title>
-    <revision>$Id: fs-admin-objects.xml 918482 2010-03-03 14:21:09Z kkolinko $</revision>
+    <revision>$Id: fs-admin-objects.xml 1145387 2011-07-11 22:30:45Z rjung $</revision>
   </properties>
 
 <body>
@@ -118,7 +118,7 @@ Operations</a> that can be performed when the administrative application is
   <li><code>debug</code> - Debugging detail level.  [0]</li>
   <li><code>enableLookups</code> - Should we perform DNS lookups on remote
       IP addresses when <code>request.getRemoteHost()</code> is called?
-      [true]</li>
+      [false]</li>
   <li><code>maxProcessors</code> - The maximum number of processor threads
       supported by this connector.  [20]</li>
   <li><code>minProcessors</code> - The minimum number of processor threads

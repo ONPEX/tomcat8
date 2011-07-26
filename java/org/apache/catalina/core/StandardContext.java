@@ -127,7 +127,7 @@ import org.apache.tomcat.util.threads.DedicatedThreadExecutor;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardContext.java 1101069 2011-05-09 15:39:34Z markt $
+ * @version $Id: StandardContext.java 1142643 2011-07-04 12:50:24Z markt $
  */
 
 public class StandardContext extends ContainerBase
@@ -5478,7 +5478,7 @@ public class StandardContext extends ContainerBase
             
             Thread t = new Thread(stop);
             t.setName("stop children - " + getObjectName().toString());
-            t.run();
+            t.start();
             try {
                 t.join();
             } catch (InterruptedException e) {

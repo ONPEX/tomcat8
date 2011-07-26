@@ -43,7 +43,7 @@ import org.apache.catalina.Globals;
  * from within web.xml.
  * 
  * @author David Becker
- * @version $Id: SSIFilter.java 978840 2010-07-24 10:17:45Z markt $
+ * @version $Id: SSIFilter.java 1138121 2011-06-21 18:32:41Z markt $
  * @see org.apache.catalina.ssi.SSIServlet
  */
 public class SSIFilter implements Filter {
@@ -70,6 +70,7 @@ public class SSIFilter implements Filter {
      * @exception ServletException
      *                if an error occurs
      */
+    @Override
     public void init(FilterConfig config) throws ServletException {
         this.config = config;
         
@@ -96,6 +97,7 @@ public class SSIFilter implements Filter {
                     "SSIFilter.init() SSI invoker started with 'debug'=" + debug);
     }
 
+    @Override
     public void doFilter(ServletRequest request, ServletResponse response,
             FilterChain chain) throws IOException, ServletException {
         // cast once
@@ -180,6 +182,7 @@ public class SSIFilter implements Filter {
         }
     }
 
+    @Override
     public void destroy() {
         // NOOP
     }

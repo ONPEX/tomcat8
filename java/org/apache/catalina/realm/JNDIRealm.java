@@ -20,6 +20,7 @@ package org.apache.catalina.realm;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.security.Principal;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -171,7 +172,7 @@ import org.ietf.jgss.GSSCredential;
  *
  * @author John Holman
  * @author Craig R. McClanahan
- * @version $Id: JNDIRealm.java 1087524 2011-04-01 00:34:45Z markt $
+ * @version $Id: JNDIRealm.java 1138019 2011-06-21 14:29:49Z markt $
  */
 
 public class JNDIRealm extends RealmBase {
@@ -1531,7 +1532,7 @@ public class JNDIRealm extends RealmBase {
                 synchronized (this) {
                     password = password.substring(5);
                     md.reset();
-                    md.update(credentials.getBytes());
+                    md.update(credentials.getBytes(Charset.defaultCharset()));
                     String digestedPassword = Base64.encode(md.digest());
                     validated = password.equals(digestedPassword);
                 }
@@ -1542,12 +1543,13 @@ public class JNDIRealm extends RealmBase {
                     password = password.substring(6);
 
                     md.reset();
-                    md.update(credentials.getBytes());
+                    md.update(credentials.getBytes(Charset.defaultCharset()));
 
                     // Decode stored password.
                     ByteChunk pwbc = new ByteChunk(password.length());
                     try {
-                        pwbc.append(password.getBytes(), 0, password.length());
+                        pwbc.append(password.getBytes(Charset.defaultCharset()),
+                                0, password.length());
                     } catch (IOException e) {
                         // Should never happen
                         containerLog.error("Could not append password bytes to chunk: ", e);

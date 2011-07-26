@@ -14,7 +14,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package org.apache.coyote.http11;
 
 import java.io.EOFException;
@@ -22,20 +21,13 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.Locale;
 
 import org.apache.coyote.ActionCode;
-import org.apache.coyote.Request;
 import org.apache.coyote.RequestInfo;
-import org.apache.coyote.Response;
 import org.apache.coyote.http11.filters.BufferedInputFilter;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
-import org.apache.tomcat.util.buf.ByteChunk;
-import org.apache.tomcat.util.buf.HexUtils;
-import org.apache.tomcat.util.buf.MessageBytes;
-import org.apache.tomcat.util.http.MimeHeaders;
 import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 import org.apache.tomcat.util.net.JIoEndpoint;
 import org.apache.tomcat.util.net.SSLSupport;
@@ -49,7 +41,7 @@ import org.apache.tomcat.util.net.SocketWrapper;
  * @author Remy Maucherat
  * @author fhanik
  */
-public class Http11Processor extends AbstractHttp11Processor {
+public class Http11Processor extends AbstractHttp11Processor<Socket> {
 
     private static final Log log = LogFactory.getLog(Http11Processor.class);
     @Override
@@ -63,23 +55,15 @@ public class Http11Processor extends AbstractHttp11Processor {
     public Http11Processor(int headerBufferSize, JIoEndpoint endpoint,
             int maxTrailerSize) {
 
-        this.endpoint = endpoint;
+        super(endpoint);
         
-        request = new Request();
         inputBuffer = new InternalInputBuffer(request, headerBufferSize);
         request.setInputBuffer(inputBuffer);
 
-        response = new Response();
-        response.setHook(this);
         outputBuffer = new InternalOutputBuffer(response, headerBufferSize);
         response.setOutputBuffer(outputBuffer);
-        request.setResponse(response);
 
         initializeFilters(maxTrailerSize);
-
-        // Cause loading of HexUtils
-        HexUtils.load();
-
     }
 
 
@@ -145,18 +129,11 @@ public class Http11Processor extends AbstractHttp11Processor {
      *  
      * @throws IOException error during an I/O operation
      */
+    @Override
     public SocketState process(SocketWrapper<Socket> socketWrapper)
         throws IOException {
         RequestInfo rp = request.getRequestProcessor();
         rp.setStage(org.apache.coyote.Constants.STAGE_PARSE);
-
-        // Set the remote address
-        remoteAddr = null;
-        remoteHost = null;
-        localAddr = null;
-        localName = null;
-        remotePort = -1;
-        localPort = -1;
 
         // Setting up the I/O
         this.socket = socketWrapper;
@@ -380,12 +357,10 @@ public class Http11Processor extends AbstractHttp11Processor {
 
         rp.setStage(org.apache.coyote.Constants.STAGE_ENDED);
         if (error || endpoint.isPaused()) {
-            recycle();
             return SocketState.CLOSED;
         } else if (isAsync()) {
             return SocketState.LONG;
         } else {
-            recycle();
             if (!keepAlive) {
                 return SocketState.CLOSED;
             } else {
@@ -395,39 +370,12 @@ public class Http11Processor extends AbstractHttp11Processor {
     }
     
     
-    public SocketState asyncDispatch(SocketStatus status) {
-
-        RequestInfo rp = request.getRequestProcessor();
-        try {
-            rp.setStage(org.apache.coyote.Constants.STAGE_SERVICE);
-            error = !adapter.asyncDispatch(request, response, status);
-        } catch (InterruptedIOException e) {
-            error = true;
-        } catch (Throwable t) {
-            ExceptionUtils.handleThrowable(t);
-            log.error(sm.getString("http11processor.request.process"), t);
-            // 500 - Internal Server Error
-            response.setStatus(500);
-            adapter.log(request, response, 0);
-            error = true;
-        }
-
-        rp.setStage(org.apache.coyote.Constants.STAGE_ENDED);
-
-        if (error) {
-            return SocketState.CLOSED;
-        } else if (isAsync()) {
-            return SocketState.LONG;
-        } else {
-            if (!keepAlive) {
-                return SocketState.CLOSED;
-            } else {
-                return SocketState.OPEN;
-            }
-        }
+    @Override
+    protected void resetTimeouts() {
+        // NOOP for APR
     }
 
-    
+
     @Override
     protected void recycleInternal() {
         // Recycle
@@ -436,6 +384,13 @@ public class Http11Processor extends AbstractHttp11Processor {
         sslSupport = null;
     }
 
+
+    @Override
+    public SocketState event(SocketStatus status) throws IOException {
+        // Should never reach this code but in case we do...
+        throw new IOException(
+                sm.getString("http11processor.comet.notsupported"));
+    }
 
     // ----------------------------------------------------- ActionHook Methods
 
@@ -585,199 +540,13 @@ public class Http11Processor extends AbstractHttp11Processor {
     }
 
 
-    // ------------------------------------------------------ Connector Methods
-
-
-
     // ------------------------------------------------------ Protected Methods
 
 
-    /**
-     * After reading the request headers, we have to setup the request filters.
-     */
-    protected void prepareRequest() {
-
-        http11 = true;
-        http09 = false;
-        contentDelimitation = false;
-        expectation = false;
-        if (sslSupport != null) {
-            request.scheme().setString("https");
-        }
-        MessageBytes protocolMB = request.protocol();
-        if (protocolMB.equals(Constants.HTTP_11)) {
-            http11 = true;
-            protocolMB.setString(Constants.HTTP_11);
-        } else if (protocolMB.equals(Constants.HTTP_10)) {
-            http11 = false;
-            keepAlive = false;
-            protocolMB.setString(Constants.HTTP_10);
-        } else if (protocolMB.equals("")) {
-            // HTTP/0.9
-            http09 = true;
-            http11 = false;
-            keepAlive = false;
-        } else {
-            // Unsupported protocol
-            http11 = false;
-            error = true;
-            // Send 505; Unsupported HTTP version
-            if (log.isDebugEnabled()) {
-                log.debug(sm.getString("http11processor.request.prepare")+
-                          " Unsupported HTTP version \""+protocolMB+"\"");
-            }
-            response.setStatus(505);
-            adapter.log(request, response, 0);
-        }
-
-        MessageBytes methodMB = request.method();
-        if (methodMB.equals(Constants.GET)) {
-            methodMB.setString(Constants.GET);
-        } else if (methodMB.equals(Constants.POST)) {
-            methodMB.setString(Constants.POST);
-        }
-
-        MimeHeaders headers = request.getMimeHeaders();
-
-        // Check connection header
-        MessageBytes connectionValueMB = headers.getValue("connection");
-        if (connectionValueMB != null) {
-            ByteChunk connectionValueBC = connectionValueMB.getByteChunk();
-            if (findBytes(connectionValueBC, Constants.CLOSE_BYTES) != -1) {
-                keepAlive = false;
-            } else if (findBytes(connectionValueBC,
-                                 Constants.KEEPALIVE_BYTES) != -1) {
-                keepAlive = true;
-            }
-        }
-
-        MessageBytes expectMB = null;
-        if (http11)
-            expectMB = headers.getValue("expect");
-        if ((expectMB != null)
-            && (expectMB.indexOfIgnoreCase("100-continue", 0) != -1)) {
-            inputBuffer.setSwallowInput(false);
-            expectation = true;
-        }
-
-        // Check user-agent header
-        if ((restrictedUserAgents != null) && ((http11) || (keepAlive))) {
-            MessageBytes userAgentValueMB = headers.getValue("user-agent");
-            // Check in the restricted list, and adjust the http11
-            // and keepAlive flags accordingly
-            if(userAgentValueMB != null) {
-                String userAgentValue = userAgentValueMB.toString();
-                if (restrictedUserAgents != null &&
-                        restrictedUserAgents.matcher(userAgentValue).matches()) {
-                    http11 = false;
-                    keepAlive = false;
-                }
-            }
-        }
-
-        // Check for a full URI (including protocol://host:port/)
-        ByteChunk uriBC = request.requestURI().getByteChunk();
-        if (uriBC.startsWithIgnoreCase("http", 0)) {
-
-            int pos = uriBC.indexOf("://", 0, 3, 4);
-            int uriBCStart = uriBC.getStart();
-            int slashPos = -1;
-            if (pos != -1) {
-                byte[] uriB = uriBC.getBytes();
-                slashPos = uriBC.indexOf('/', pos + 3);
-                if (slashPos == -1) {
-                    slashPos = uriBC.getLength();
-                    // Set URI as "/"
-                    request.requestURI().setBytes
-                        (uriB, uriBCStart + pos + 1, 1);
-                } else {
-                    request.requestURI().setBytes
-                        (uriB, uriBCStart + slashPos,
-                         uriBC.getLength() - slashPos);
-                }
-                MessageBytes hostMB = headers.setValue("host");
-                hostMB.setBytes(uriB, uriBCStart + pos + 3,
-                                slashPos - pos - 3);
-            }
-
-        }
-
-        // Input filter setup
-        InputFilter[] inputFilters = inputBuffer.getFilters();
-
-        // Parse transfer-encoding header
-        MessageBytes transferEncodingValueMB = null;
-        if (http11)
-            transferEncodingValueMB = headers.getValue("transfer-encoding");
-        if (transferEncodingValueMB != null) {
-            String transferEncodingValue = transferEncodingValueMB.toString();
-            // Parse the comma separated list. "identity" codings are ignored
-            int startPos = 0;
-            int commaPos = transferEncodingValue.indexOf(',');
-            String encodingName = null;
-            while (commaPos != -1) {
-                encodingName = transferEncodingValue.substring
-                    (startPos, commaPos).toLowerCase(Locale.ENGLISH).trim();
-                if (!addInputFilter(inputFilters, encodingName)) {
-                    // Unsupported transfer encoding
-                    error = true;
-                    // 501 - Unimplemented
-                    response.setStatus(501);
-                    adapter.log(request, response, 0);
-                }
-                startPos = commaPos + 1;
-                commaPos = transferEncodingValue.indexOf(',', startPos);
-            }
-            encodingName = transferEncodingValue.substring(startPos)
-                .toLowerCase(Locale.ENGLISH).trim();
-            if (!addInputFilter(inputFilters, encodingName)) {
-                // Unsupported transfer encoding
-                error = true;
-                // 501 - Unimplemented
-                if (log.isDebugEnabled()) {
-                    log.debug(sm.getString("http11processor.request.prepare")+
-                              " Unsupported transfer encoding \""+encodingName+"\"");
-                }
-                response.setStatus(501);
-                adapter.log(request, response, 0);
-            }
-        }
-
-        // Parse content-length header
-        long contentLength = request.getContentLengthLong();
-        if (contentLength >= 0 && !contentDelimitation) {
-            inputBuffer.addActiveFilter
-                (inputFilters[Constants.IDENTITY_FILTER]);
-            contentDelimitation = true;
-        }
-
-        MessageBytes valueMB = headers.getValue("host");
-
-        // Check host header
-        if (http11 && (valueMB == null)) {
-            error = true;
-            // 400 - Bad request
-            if (log.isDebugEnabled()) {
-                log.debug(sm.getString("http11processor.request.prepare")+
-                          " host header missing");
-            }
-            response.setStatus(400);
-            adapter.log(request, response, 0);
-        }
-
-        parseHost(valueMB);
-
-        if (!contentDelimitation) {
-            // If there's no content length 
-            // (broken HTTP/1.0 or HTTP/1.1), assume
-            // the client is not broken and didn't send a body
-            inputBuffer.addActiveFilter
-                    (inputFilters[Constants.VOID_FILTER]);
-            contentDelimitation = true;
-        }
-
+    @Override
+    protected void prepareRequestInternal() {
+        // NOOP for BIO
     }
-
 
     @Override
     protected boolean prepareSendfile(OutputFilter[] outputFilters) {

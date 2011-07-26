@@ -114,7 +114,7 @@ import org.apache.tomcat.util.res.StringManager;
  * </p>
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: DefaultServlet.java 1086995 2011-03-30 15:50:28Z markt $
+ * @version $Id: DefaultServlet.java 1145380 2011-07-11 22:08:06Z markt $
  */
 
 public class DefaultServlet
@@ -877,7 +877,8 @@ public class DefaultServlet
                 // trying to serve a text file
                 if ( (contentType == null)
                         || (contentType.startsWith("text"))
-                        || (contentType.endsWith("xml")) ) {
+                        || (contentType.endsWith("xml"))
+                        || (contentType.contains("/javascript")) ) {
                     writer = response.getWriter();
                     // Cannot reliably serve partial content with a Writer
                     ranges = FULL;
@@ -1658,7 +1659,6 @@ public class DefaultServlet
                 request.setAttribute("org.apache.tomcat.sendfile.start", Long.valueOf(range.start));
                 request.setAttribute("org.apache.tomcat.sendfile.end", Long.valueOf(range.end + 1));
             }
-            request.setAttribute("org.apache.tomcat.sendfile.token", this);
             return true;
         }
         return false;

@@ -14,20 +14,16 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package org.apache.coyote.http11;
 
 import java.net.Socket;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.coyote.AbstractProtocol;
 import org.apache.juli.logging.Log;
-import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.net.AbstractEndpoint;
 import org.apache.tomcat.util.net.JIoEndpoint;
 import org.apache.tomcat.util.net.JIoEndpoint.Handler;
 import org.apache.tomcat.util.net.SSLImplementation;
-import org.apache.tomcat.util.net.SocketStatus;
 import org.apache.tomcat.util.net.SocketWrapper;
 
 
@@ -101,16 +97,10 @@ public class Http11Protocol extends AbstractHttp11JsseProtocol {
     // -----------------------------------  Http11ConnectionHandler Inner Class
 
     protected static class Http11ConnectionHandler
-            extends AbstractConnectionHandler implements Handler {
+            extends AbstractConnectionHandler<Socket, Http11Processor> implements Handler {
 
         protected Http11Protocol proto;
             
-        protected ConcurrentHashMap<SocketWrapper<Socket>, Http11Processor> connections =
-            new ConcurrentHashMap<SocketWrapper<Socket>, Http11Processor>();
-
-        protected RecycledProcessors<Http11Processor> recycledProcessors =
-            new RecycledProcessors<Http11Processor>(this);
-
         Http11ConnectionHandler(Http11Protocol proto) {
             this.proto = proto;
         }
@@ -130,72 +120,43 @@ public class Http11Protocol extends AbstractHttp11JsseProtocol {
             return proto.sslImplementation;
         }
 
+        /**
+         * Expected to be used by the handler once the processor is no longer
+         * required.
+         * 
+         * @param socket            Not used in BIO
+         * @param processor
+         * @param isSocketClosing   Not used in HTTP
+         * @param addToPoller       Not used in BIO
+         */
         @Override
-        public void recycle() {
-            recycledProcessors.clear();
-        }
-
-        @Override
-        public SocketState process(SocketWrapper<Socket> socket) {
-            return process(socket,SocketStatus.OPEN);
-        }
-
-        @Override
-        public SocketState process(SocketWrapper<Socket> socket, SocketStatus status) {
-            Http11Processor processor = connections.remove(socket);
-            try {
-                if (processor == null) {
-                    processor = recycledProcessors.poll();
-                }
-                if (processor == null) {
-                    processor = createProcessor();
-                }
-
-                if (proto.isSSLEnabled() && (proto.sslImplementation != null)) {
-                    processor.setSSLSupport(
-                            proto.sslImplementation.getSSLSupport(
-                                    socket.getSocket()));
-                } else {
-                    processor.setSSLSupport(null);
-                }
-                
-                SocketState state = socket.isAsync()?processor.asyncDispatch(status):processor.process(socket);
-                if (state == SocketState.LONG) {
-                    connections.put(socket, processor);
-                    socket.setAsync(true);
-                    // longPoll may change socket state (e.g. to trigger a
-                    // complete or dispatch)
-                    return processor.asyncPostProcess();
-                } else {
-                    socket.setAsync(false);
-                    processor.recycle();
-                    recycledProcessors.offer(processor);
-                }
-                return state;
-            } catch(java.net.SocketException e) {
-                // SocketExceptions are normal
-                log.debug(sm.getString(
-                        "http11protocol.proto.socketexception.debug"), e);
-            } catch (java.io.IOException e) {
-                // IOExceptions are normal
-                log.debug(sm.getString(
-                        "http11protocol.proto.ioexception.debug"), e);
-            }
-            // Future developers: if you discover any other
-            // rare-but-nonfatal exceptions, catch them here, and log as
-            // above.
-            catch (Throwable e) {
-                ExceptionUtils.handleThrowable(e);
-                // any other exception or error is odd. Here we log it
-                // with "ERROR" level, so it will show up even on
-                // less-than-verbose logs.
-                log.error(sm.getString("http11protocol.proto.error"), e);
-            }
+        public void release(SocketWrapper<Socket> socket,
+                Http11Processor processor, boolean isSocketClosing,
+                boolean addToPoller) {
             processor.recycle();
             recycledProcessors.offer(processor);
-            return SocketState.CLOSED;
         }
-        
+
+        @Override
+        protected void initSsl(SocketWrapper<Socket> socket,
+                Http11Processor processor) {
+            if (proto.isSSLEnabled() && (proto.sslImplementation != null)) {
+                processor.setSSLSupport(
+                        proto.sslImplementation.getSSLSupport(
+                                socket.getSocket()));
+            } else {
+                processor.setSSLSupport(null);
+            }
+
+        }
+
+        @Override
+        protected void longPoll(SocketWrapper<Socket> socket,
+                Http11Processor processor) {
+            connections.put(socket.getSocket(), processor);
+        }
+
+        @Override
         protected Http11Processor createProcessor() {
             Http11Processor processor = new Http11Processor(
                     proto.getMaxHttpHeaderSize(), (JIoEndpoint)proto.endpoint,

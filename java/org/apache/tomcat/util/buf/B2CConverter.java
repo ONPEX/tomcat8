@@ -22,6 +22,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+
+import org.apache.tomcat.util.res.StringManager;
 
 /** Efficient conversion of bytes  to character .
  *  
@@ -39,6 +45,39 @@ public class B2CConverter {
     
     private static final org.apache.juli.logging.Log log=
         org.apache.juli.logging.LogFactory.getLog( B2CConverter.class );
+    
+    private static final StringManager sm =
+        StringManager.getManager(Constants.Package);
+
+    private static final Map<String, Charset> encodingToCharsetCache =
+        new HashMap<String, Charset>();
+
+    static {
+        for (Charset charset: Charset.availableCharsets().values()) {
+            encodingToCharsetCache.put(
+                    charset.name().toLowerCase(Locale.US), charset);
+            for (String alias : charset.aliases()) {
+                encodingToCharsetCache.put(
+                        alias.toLowerCase(Locale.US), charset);
+            }
+        }
+    }
+
+    public static Charset getCharset(String enc)
+            throws UnsupportedEncodingException{
+
+        // Encoding names should all be ASCII
+        String lowerCaseEnc = enc.toLowerCase(Locale.US);
+
+        Charset charset = encodingToCharsetCache.get(lowerCaseEnc);
+        
+        if (charset == null) {
+            // Pre-population of the cache means this must be invalid
+            throw new UnsupportedEncodingException(
+                    sm.getString("b2cConvertor.unknownEncoding", enc));
+        }
+        return charset;
+    }
     
     private IntermediateInputStream iis;
     private ReadConvertor conv;
@@ -104,7 +143,7 @@ public class B2CConverter {
     {
         // destroy the reader/iis
         iis=new IntermediateInputStream();
-        conv=new ReadConvertor( iis, encoding );
+        conv = new ReadConvertor(iis, getCharset(encoding));
     }
 
 }
@@ -120,10 +159,8 @@ final class  ReadConvertor extends InputStreamReader {
     
     /** Create a converter.
      */
-    public ReadConvertor( IntermediateInputStream in, String enc )
-        throws UnsupportedEncodingException
-    {
-        super( in, enc );
+    public ReadConvertor(IntermediateInputStream in, Charset charset) {
+        super(in, charset);
     }
     
     /** Overridden - will do nothing but reset internal state.

@@ -23,14 +23,13 @@ import java.util.Enumeration;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpSessionContext;
 
 
 /**
  * Facade for the StandardSession object.
  *
  * @author Remy Maucherat
- * @version $Id: StandardSessionFacade.java 1104557 2011-05-17 20:57:46Z kkolinko $
+ * @version $Id: StandardSessionFacade.java 1142655 2011-07-04 13:28:11Z markt $
  */
 
 public class StandardSessionFacade
@@ -113,7 +112,7 @@ public class StandardSessionFacade
      */
     @Override
     @Deprecated
-    public HttpSessionContext getSessionContext() {
+    public javax.servlet.http.HttpSessionContext getSessionContext() {
         return session.getSessionContext();
     }
 

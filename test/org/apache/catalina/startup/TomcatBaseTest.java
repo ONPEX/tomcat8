@@ -38,6 +38,7 @@ import org.apache.catalina.LifecycleState;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.AprLifecycleListener;
 import org.apache.catalina.core.StandardServer;
+import org.apache.catalina.valves.AccessLogValve;
 import org.apache.tomcat.util.buf.ByteChunk;
 
 /**
@@ -47,6 +48,7 @@ import org.apache.tomcat.util.buf.ByteChunk;
 public abstract class TomcatBaseTest extends TestCase {
     private Tomcat tomcat;
     private File tempDir;
+    private boolean accessLogEnabled = false;
     private static int port = 8000;
 
     public static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
@@ -92,6 +94,13 @@ public abstract class TomcatBaseTest extends TestCase {
                 "output/build"));
     }
 
+    /**
+     * Sub-classes may want to check, whether an AccessLogValve is active
+     */
+    public boolean isAccessLogEnabled() {
+        return accessLogEnabled;
+    }
+
     @Override
     public void setUp() throws Exception {
         // Need to use JULI so log messages from the tests are visible
@@ -106,32 +115,8 @@ public abstract class TomcatBaseTest extends TestCase {
         }
         
         System.setProperty("catalina.base", tempDir.getAbsolutePath());
-        System.setProperty("tomcat.util.scan.DefaultJarScanner.jarsToSkip",
-                "bootstrap.jar,commons-daemon.jar,tomcat-juli.jar," +
-                "annotations-api.jar,el-api.jar,jsp-api.jar,servlet-api.jar," +
-                "catalina.jar,catalina-ant.jar,catalina-ha.jar," +
-                "catalina-tribes.jar," +
-                "jasper.jar,jasper-el.jar,ecj-*.jar," +
-                "tomcat-api.jar,tomcat-util.jar,tomcat-coyote.jar," +
-                "tomcat-dbcp.jar," +
-                "tomcat-i18n-en.jar,tomcat-i18n-es.jar,tomcat-i18n-fr.jar," +
-                "tomcat-i18n-ja.jar," +
-                "commons-beanutils*.jar,commons-collections*.jar," +
-                "commons-dbcp*.jar,commons-digester*.jar," +
-                "commons-fileupload*.jar,commons-io*.jar," +
-                "commons-logging*.jar,commons-math*.jar,commons-pool*.jar," +
-                "jstl.jar," +
-                "geronimo-spec-jaxrpc*.jar,wsdl4j*.jar," +
-                "ant.jar,jmx.jar,hibernate*.jar,jmx-tools.jar,jta*.jar," +
-                "log4j*.jar,slf4j*.jar" +
-                "xercesImpl.jar,xmlParserAPIs.jar,xml-apis.jar," +
-                "dnsns.jar,ldapsec.jar,localedata.jar,sunjce_provider.jar," +
-                "sunpkcs11.jar,tools.jar," +
-                "apple_provider.jar,AppleScriptEngine.jar,CoreAudio.jar," +
-                "dns_sd.jar,j3daudio.jar,j3dcore.jar,j3dutils.jar," +
-                "jai_core.jar,jai_codec.jar," +
-                "mlibwrapper_jai.jar,MRJToolkit.jar,vecmath.jar," +
-                "junit.jar,ant-launcher.jar,ant-junit.jar");
+        // Trigger loading of catalina.properties
+        CatalinaProperties.getProperty("foo");
         
         File appBase = new File(tempDir, "webapps");
         if (!appBase.exists() && !appBase.mkdir()) {
@@ -140,17 +125,10 @@ public abstract class TomcatBaseTest extends TestCase {
         
         tomcat = new Tomcat();
 
-        // Has a protocol been specified
-        String protocol = System.getProperty("tomcat.test.protocol");
-        
-        // Use BIO by default
-        if (protocol == null) {
-            protocol = "org.apache.coyote.http11.Http11Protocol";
-        }
-
+        String protocol = getProtocol();
         Connector connector = new Connector(protocol);
         // If each test is running on same port - they
-        // may interfere with each other (on unix at least)
+        // may interfere with each other
         connector.setPort(getNextPort());
         // Mainly set to reduce timeouts during async tests
         connector.setAttribute("connectionTimeout", "3000");
@@ -168,8 +146,29 @@ public abstract class TomcatBaseTest extends TestCase {
         
         tomcat.setBaseDir(tempDir.getAbsolutePath());
         tomcat.getHost().setAppBase(appBase.getAbsolutePath());
+
+        accessLogEnabled = Boolean.parseBoolean(
+            System.getProperty("tomcat.test.accesslog", "false"));
+        if (accessLogEnabled) {
+            AccessLogValve alv = new AccessLogValve();
+            alv.setDirectory(getBuildDirectory() + "/logs");
+            alv.setPattern("%h %l %u %t \"%r\" %s %b %I %D");
+            tomcat.getHost().getPipeline().addValve(alv);
+        }
     }
     
+    protected String getProtocol() {
+        // Has a protocol been specified
+        String protocol = System.getProperty("tomcat.test.protocol");
+        
+        // Use BIO by default
+        if (protocol == null) {
+            protocol = "org.apache.coyote.http11.Http11Protocol";
+        }
+
+        return protocol;
+    }
+
     @Override
     public void tearDown() throws Exception {
         // Some tests may call tomcat.destroy(), some tests may just call
@@ -192,11 +191,14 @@ public abstract class TomcatBaseTest extends TestCase {
 
         private static final long serialVersionUID = 1L;
 
+        public static final String RESPONSE_TEXT =
+            "<html><body><p>Hello World</p></body></html>";
+
         @Override
         protected void doGet(HttpServletRequest req, HttpServletResponse resp)
                 throws ServletException, IOException {
             PrintWriter out = resp.getWriter();
-            out.print("<html><body><p>Hello World</p></body></html>");
+            out.print(RESPONSE_TEXT);
         }
     }
     

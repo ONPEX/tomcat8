@@ -43,7 +43,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <li><b>END_DATA</b>  - 7 bytes - <i>TLF2003</i></lI>
  * </ul>
  * @author Filip Hanik
- * @version $Id: XByteBuffer.java 992409 2010-09-03 18:35:59Z markt $
+ * @version $Id: XByteBuffer.java 1143022 2011-07-05 12:25:38Z markt $
  */
 public class XByteBuffer
 {
@@ -561,7 +561,7 @@ public class XByteBuffer
         invokecount.addAndGet(1);
         Object message = null;
         if ( cls == null ) cls = new ClassLoader[0];
-        if (data != null) {
+        if (data != null && length > 0) {
             InputStream  instream = new ByteArrayInputStream(data,offset,length);
             ObjectInputStream stream = null;
             stream = (cls.length>0)? new ReplicationStream(instream,cls):new ObjectInputStream(instream);

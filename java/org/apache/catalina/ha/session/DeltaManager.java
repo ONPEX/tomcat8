@@ -62,7 +62,7 @@ import org.apache.tomcat.util.res.StringManager;
  * @author Craig R. McClanahan
  * @author Jean-Francois Arcand
  * @author Peter Rossbach
- * @version $Id: DeltaManager.java 1094069 2011-04-16 22:25:28Z markt $
+ * @version $Id: DeltaManager.java 1141441 2011-06-30 08:39:53Z kfujino $
  */
 
 public class DeltaManager extends ClusterManagerBase{
@@ -97,6 +97,7 @@ public class DeltaManager extends ClusterManagerBase{
     private boolean expireSessionsOnShutdown = false;
     private boolean notifyListenersOnReplication = true;
     private boolean notifySessionListenersOnReplication = true;
+    private boolean notifyContainerListenersOnReplication  = true;
     private volatile boolean stateTransfered = false ;
     private int stateTransferTimeout = 60;
     private boolean sendAllSessions = true;
@@ -420,9 +421,17 @@ public class DeltaManager extends ClusterManagerBase{
         this.notifyListenersOnReplication = notifyListenersOnReplication;
     }
 
+    public boolean isNotifyContainerListenersOnReplication() {
+        return notifyContainerListenersOnReplication;
+    }
+
+    public void setNotifyContainerListenersOnReplication(
+            boolean notifyContainerListenersOnReplication) {
+        this.notifyContainerListenersOnReplication = notifyContainerListenersOnReplication;
+    }
     
-   @Override
-public CatalinaCluster getCluster() {
+    @Override
+    public CatalinaCluster getCluster() {
         return cluster;
     }
 
@@ -1385,7 +1394,7 @@ public CatalinaCluster getCluster() {
         session.setPrimarySession(false);
         session.setCreationTime(msg.getTimestamp());
         // use container maxInactiveInterval so that session will expire correctly in case of primary transfer
-        session.setMaxInactiveInterval(getMaxInactiveInterval());
+        session.setMaxInactiveInterval(getMaxInactiveInterval(), false);
         session.access();
         session.setId(msg.getSessionID(), notifySessionListenersOnReplication);
         session.resetDeltaRequest();
@@ -1463,7 +1472,11 @@ public CatalinaCluster getCluster() {
         if (session != null) {
             String newSessionID = deserializeSessionId(msg.getSession());
             session.setPrimarySession(false);
-            session.setId(newSessionID, notifyListenersOnReplication);
+            session.setId(newSessionID, false);
+            if (notifyContainerListenersOnReplication) {
+                getContainer().fireContainerEvent(Context.CHANGE_SESSION_ID_EVENT,
+                        new String[] {msg.getSessionID(), newSessionID});
+            }
         }
     }
 
@@ -1494,6 +1507,7 @@ public CatalinaCluster getCluster() {
         result.expireSessionsOnShutdown = expireSessionsOnShutdown;
         result.notifyListenersOnReplication = notifyListenersOnReplication;
         result.notifySessionListenersOnReplication = notifySessionListenersOnReplication;
+        result.notifyContainerListenersOnReplication = notifyContainerListenersOnReplication;
         result.stateTransferTimeout = stateTransferTimeout;
         result.sendAllSessions = sendAllSessions;
         result.sendAllSessionsSize = sendAllSessionsSize;

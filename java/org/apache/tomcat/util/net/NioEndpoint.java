@@ -328,7 +328,10 @@ public class NioEndpoint extends AbstractEndpoint {
      */
     protected boolean useComet = true;
     public void setUseComet(boolean useComet) { this.useComet = useComet; }
+    @Override
     public boolean getUseComet() { return useComet; }
+    @Override
+    public boolean getUseCometTimeout() { return getUseComet(); }
 
 
     /**
@@ -1016,7 +1019,7 @@ public class NioEndpoint extends AbstractEndpoint {
                     }                    
                 }
                 key.attach(null);
-                if (ka!=null) handler.release(ka.getChannel());
+                if (ka!=null) handler.release(ka);
                 else handler.release((SocketChannel)key.channel());
                 if (key.isValid()) key.cancel();
                 if (key.channel().isOpen()) {
@@ -1237,6 +1240,13 @@ public class NioEndpoint extends AbstractEndpoint {
                         sd.pos += written;
                         sd.length -= written;
                         attachment.access();
+                    } else {
+                        // Unusual not to be able to transfer any bytes
+                        // Check the length was set correctly
+                        if (sd.fchannel.size() <= sd.pos) {
+                            throw new IOException("Sendfile configured to " +
+                                    "send more data than was available");
+                        }
                     }
                 }
                 if ( sd.length <= 0 && sc.getOutboundRemaining()<=0) {
@@ -1261,6 +1271,7 @@ public class NioEndpoint extends AbstractEndpoint {
                             log.debug("Send file connection is being closed");
                         }
                         cancelledKey(sk,SocketStatus.STOP,false);
+                        return false;
                     }
                 } else if ( attachment.interestOps() == 0 && reg ) {
                     if (log.isDebugEnabled()) {
@@ -1482,9 +1493,9 @@ public class NioEndpoint extends AbstractEndpoint {
      * thread local fields.
      */
     public interface Handler extends AbstractEndpoint.Handler {
-        public SocketState process(NioChannel socket);
-        public SocketState event(NioChannel socket, SocketStatus status);
-        public void release(NioChannel socket);
+        public SocketState process(SocketWrapper<NioChannel> socket,
+                SocketStatus status);
+        public void release(SocketWrapper<NioChannel> socket);
         public void release(SocketChannel socket);
         public SSLImplementation getSslImplementation();
     }
@@ -1529,7 +1540,15 @@ public class NioEndpoint extends AbstractEndpoint {
                     if ( handshake == 0 ) {
                         SocketState state = SocketState.OPEN;
                         // Process the request from this socket
-                        state = (status==null)?handler.process(socket):handler.event(socket,status);
+                        if (status == null) {
+                            state = handler.process(
+                                    (KeyAttachment) key.attachment(),
+                                    SocketStatus.OPEN);
+                        } else {
+                            state = handler.process(
+                                    (KeyAttachment) key.attachment(),
+                                    status);
+                        }
     
                         if (state == SocketState.CLOSED) {
                             // Close socket and pool
@@ -1547,8 +1566,6 @@ public class NioEndpoint extends AbstractEndpoint {
                             }catch ( Exception x ) {
                                 log.error("",x);
                             }
-                        } else if (state == SocketState.ASYNC_END) {
-                            launch = true;
                         }
                     } else if (handshake == -1 ) {
                         KeyAttachment ka = null;

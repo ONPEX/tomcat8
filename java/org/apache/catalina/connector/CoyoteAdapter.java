@@ -20,6 +20,7 @@ package org.apache.catalina.connector;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.EnumSet;
 
 import javax.servlet.RequestDispatcher;
@@ -56,7 +57,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: CoyoteAdapter.java 1133401 2011-06-08 13:52:50Z markt $
+ * @version $Id: CoyoteAdapter.java 1145224 2011-07-11 16:08:23Z markt $
  */
 public class CoyoteAdapter implements Adapter {
     
@@ -268,6 +269,7 @@ public class CoyoteAdapter implements Adapter {
         boolean comet = false;
         boolean success = true;
         AsyncContextImpl asyncConImpl = (AsyncContextImpl)request.getAsyncContext();
+        req.getRequestProcessor().setWorkerThreadName(Thread.currentThread().getName());
         try {
             if (!request.isAsync() && !comet) {
                 // Error or timeout - need to tell listeners the request is over
@@ -491,8 +493,24 @@ public class CoyoteAdapter implements Adapter {
         }
         
         try {
-            connector.getService().getContainer().logAccess(
-                    request, response, time, true);
+            // Log at the lowest level available. logAccess() will be
+            // automatically called on parent containers.
+            boolean logged = false;
+            if (request.mappingData != null) {
+                if (request.mappingData.context != null) {
+                    logged = true;
+                    ((Context) request.mappingData.context).logAccess(
+                            request, response, time, true);
+                } else if (request.mappingData.host != null) {
+                    logged = true;
+                    ((Context) request.mappingData.context).logAccess(
+                            request, response, time, true);
+                }
+            }
+            if (!logged) {
+                connector.getService().getContainer().logAccess(
+                        request, response, time, true);
+            }
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
             log.warn(sm.getString("coyoteAdapter.accesslogFail"), t);
@@ -784,6 +802,13 @@ public class CoyoteAdapter implements Adapter {
         if (enc == null) {
             enc = "ISO-8859-1";
         }
+        Charset charset = null;
+        try {
+            charset = B2CConverter.getCharset(enc);
+        } catch (UnsupportedEncodingException e1) {
+            log.warn(sm.getString("coyoteAdapter.parsePathParam",
+                    enc));
+        }
 
         if (log.isDebugEnabled()) {
             log.debug(sm.getString("coyoteAdapter.debug", "uriBC",
@@ -792,8 +817,6 @@ public class CoyoteAdapter implements Adapter {
                     String.valueOf(semicolon)));
             log.debug(sm.getString("coyoteAdapter.debug", "enc", enc));
         }
-
-        boolean warnedEncoding = false;
 
         while (semicolon > -1) {
             // Parse path param, and extract it from the decoded request URI
@@ -808,15 +831,9 @@ public class CoyoteAdapter implements Adapter {
             String pv = null;
 
             if (pathParamEnd >= 0) {
-                try {
-                    pv = (new String(uriBC.getBuffer(), start + pathParamStart,
-                                pathParamEnd - pathParamStart, enc));
-                } catch (UnsupportedEncodingException e) {
-                    if (!warnedEncoding) {
-                        log.warn(sm.getString("coyoteAdapter.parsePathParam",
-                                enc));
-                        warnedEncoding = true;
-                    }
+                if (charset != null) {
+                    pv = new String(uriBC.getBuffer(), start + pathParamStart,
+                                pathParamEnd - pathParamStart, charset);
                 }
                 // Extract path param from decoded request URI
                 byte[] buf = uriBC.getBuffer();
@@ -827,15 +844,9 @@ public class CoyoteAdapter implements Adapter {
                 uriBC.setBytes(buf, start,
                         end - start - pathParamEnd + semicolon);
             } else {
-                try {
-                    pv = (new String(uriBC.getBuffer(), start + pathParamStart, 
-                                (end - start) - pathParamStart, enc));
-                } catch (UnsupportedEncodingException e) {
-                    if (!warnedEncoding) {
-                        log.warn(sm.getString("coyoteAdapter.parsePathParam",
-                                enc));
-                        warnedEncoding = true;
-                    }
+                if (charset != null) {
+                    pv = new String(uriBC.getBuffer(), start + pathParamStart, 
+                                (end - start) - pathParamStart, charset);
                 }
                 uriBC.setEnd(start + semicolon);
             }

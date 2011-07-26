@@ -21,16 +21,21 @@ package org.apache.catalina.valves;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
+import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.TimeZone;
 
 import javax.servlet.ServletException;
@@ -47,6 +52,7 @@ import org.apache.coyote.RequestInfo;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
+import org.apache.tomcat.util.buf.B2CConverter;
 
 
 /**
@@ -76,6 +82,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * <li><b>%s</b> - HTTP status code of the response
  * <li><b>%S</b> - User session ID
  * <li><b>%t</b> - Date and time, in Common Log Format format
+ * <li><b>%t{format}</b> - Date and time, in any format supported by SimpleDateFormat
  * <li><b>%u</b> - Remote user that was authenticated
  * <li><b>%U</b> - Requested URL path
  * <li><b>%v</b> - Local server name
@@ -117,7 +124,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * @author Takayuki Kaneko
  * @author Peter Rossbach
  * 
- * @version $Id: AccessLogValve.java 1099553 2011-05-04 18:19:10Z markt $
+ * @version $Id: AccessLogValve.java 1145237 2011-07-11 16:46:28Z kkolinko $
  */
 
 public class AccessLogValve extends ValveBase implements AccessLog {
@@ -149,15 +156,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      * The descriptive information about this implementation.
      */
     protected static final String info =
-        "org.apache.catalina.valves.AccessLogValve/2.1";
-
-
-    /**
-     * The set of month abbreviations for log messages.
-     */
-    protected static final String months[] =
-    { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+        "org.apache.catalina.valves.AccessLogValve/2.2";
 
 
     /**
@@ -211,55 +210,276 @@ public class AccessLogValve extends ValveBase implements AccessLog {
     /**
      * The system timezone.
      */
-    private volatile TimeZone timezone = null;
+    private static final TimeZone timezone;
 
     
     /**
      * The time zone offset relative to GMT in text form when daylight saving
      * is not in operation.
      */
-    private volatile String timeZoneNoDST = null;
+    private static final String timeZoneNoDST;
 
 
     /**
      * The time zone offset relative to GMT in text form when daylight saving
      * is in operation.
      */
-    private volatile String timeZoneDST = null;
+    private static final String timeZoneDST;
     
+    /**
+     * The size of our global date format cache
+     */
+    private static final int globalCacheSize = 300;
+
+    /**
+     * The size of our thread local date format cache
+     */
+    private static final int localCacheSize = 60;
+
     
     /**
      * The current log file we are writing to. Helpful when checkExists
      * is true.
      */
     protected File currentLogFile = null;
-    private static class AccessDateStruct {
-        private Date currentDate = new Date();
-        private String currentDateString = null;
-        private SimpleDateFormat dayFormatter = new SimpleDateFormat("dd");
-        private SimpleDateFormat monthFormatter = new SimpleDateFormat("MM");
-        private SimpleDateFormat yearFormatter = new SimpleDateFormat("yyyy");
-        private SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm:ss");
-        public AccessDateStruct() {
-            TimeZone tz = TimeZone.getDefault();
-            dayFormatter.setTimeZone(tz);
-            monthFormatter.setTimeZone(tz);
-            yearFormatter.setTimeZone(tz);
-            timeFormatter.setTimeZone(tz);
+
+    /**
+     * <p>Cache structure for formatted timestamps based on seconds.</p>
+     *
+     * <p>The cache consists of entries for a consecutive range of
+     * seconds. The length of the range is configurable. It is
+     * implemented based on a cyclic buffer. New entries shift the range.</p>
+     *
+     * <p>There is one cache for the CLF format (the access log standard
+     * format) and a HashMap of caches for additional formats used by
+     * SimpleDateFormat.</p>
+     *
+     * <p>Although the cache supports specifying a locale when retrieving a
+     * formatted timestamp, each format will always use the locale given
+     * when the format was first used. New locales can only be used for new formats.
+     * The CLF format will always be formatted using the locale
+     * <code>en_US</code>.</p>
+     *
+     * <p>The cache is not threadsafe. It can be used without synchronization
+     * via thread local instances, or with synchronization as a global cache.</p>
+     *
+     * <p>The cache can be created with a parent cache to build a cache hierarchy.
+     * Access to the parent cache is threadsafe.</p>
+     *
+     * <p>This class uses a small thread local first level cache and a bigger
+     * synchronized global second level cache.</p>
+     */
+    private static class DateFormatCache {
+
+        private class Cache {
+
+            /* CLF log format */
+            private static final String cLFFormat = "dd/MMM/yyyy:HH:mm:ss";
+
+            /* Second used to retrieve CLF format in most recent invocation */
+            private long previousSeconds = 0L;
+            /* Value of CLF format retrieved in most recent invocation */
+            private String previousFormat = "";
+
+            /* First second contained in cache */
+            private long first = 0L;
+            /* Last second contained in cache */
+            private long last = 0L;
+            /* Index of "first" in the cyclic cache */
+            private int offset = 0;
+            /* Helper object to be able to call SimpleDateFormat.format(). */
+            private final Date currentDate = new Date();
+
+            private String cache[];
+            private SimpleDateFormat formatter;
+            private boolean isCLF = false;
+
+            private Cache parent = null;
+
+            private Cache(Cache parent) {
+                this(null, parent);
+            }
+
+            private Cache(String format, Cache parent) {
+                this(format, null, parent);
+            }
+
+            private Cache(String format, Locale loc, Cache parent) {
+                cache = new String[cacheSize];
+                for (int i = 0; i < cacheSize; i++) {
+                    cache[i] = null;
+                }
+                if (loc == null) {
+                    loc = cacheDefaultLocale;
+                }
+                if (format == null) {
+                    isCLF = true;
+                    format = cLFFormat;
+                    formatter = new SimpleDateFormat(format, Locale.US);
+                } else {
+                    formatter = new SimpleDateFormat(format, loc);
+                }
+                formatter.setTimeZone(TimeZone.getDefault());
+                this.parent = parent;
+            }
+
+            private String getFormatInternal(long time) {
+
+                long seconds = time / 1000;
+
+                /* First step: if we have seen this timestamp
+                   during the previous call, and we need CLF, return the previous value. */
+                if (seconds == previousSeconds) {
+                    return previousFormat;
+                }
+
+                /* Second step: Try to locate in cache */
+                previousSeconds = seconds;
+                int index = (offset + (int)(seconds - first)) % cacheSize;
+                if (index < 0) {
+                    index += cacheSize;
+                }
+                if (seconds >= first && seconds <= last) {
+                    if (cache[index] != null) {
+                        /* Found, so remember for next call and return.*/
+                        previousFormat = cache[index];
+                        return previousFormat;
+                    }
+
+                /* Third step: not found in cache, adjust cache and add item */
+                } else if (seconds >= last + cacheSize || seconds <= first - cacheSize) {
+                    first = seconds;
+                    last = first + cacheSize - 1;
+                    index = 0;
+                    offset = 0;
+                    for (int i = 1; i < cacheSize; i++) {
+                        cache[i] = null;
+                    }
+                } else if (seconds > last) {
+                    for (int i = 1; i < seconds - last; i++) {
+                        cache[(index + cacheSize - i) % cacheSize] = null;
+                    }
+                    first = seconds - cacheSize;
+                    last = seconds;
+                } else if (seconds < first) {
+                    for (int i = 1; i < first - seconds; i++) {
+                        cache[(index + i) % cacheSize] = null;
+                    }
+                    first = seconds;
+                    last = seconds + cacheSize;
+                }
+
+                /* Last step: format new timestamp either using
+                 * parent cache or locally. */
+                if (parent != null) {
+                    synchronized(parent) {
+                        previousFormat = parent.getFormatInternal(time);
+                    }
+                } else {
+                    currentDate.setTime(time);
+                    previousFormat = formatter.format(currentDate);
+                    if (isCLF) {
+                        StringBuilder current = new StringBuilder(32);
+                        current.append('[');
+                        current.append(previousFormat);
+                        current.append(' ');
+                        current.append(getTimeZone(currentDate));
+                        current.append(']');
+                        previousFormat = current.toString();
+                    }
+                }
+                cache[index] = previousFormat;
+                return previousFormat;
+            }
+        }
+
+        /* Number of cached entries */
+        private int cacheSize = 0;
+
+        private Locale cacheDefaultLocale;
+        private DateFormatCache parent;
+        private Cache cLFCache;
+        private HashMap<String, Cache> formatCache = new HashMap<String, Cache>();
+
+        private DateFormatCache(int size, Locale loc, DateFormatCache parent) {
+            cacheSize = size;
+            cacheDefaultLocale = loc;
+            this.parent = parent;
+            Cache parentCache = null;
+            if (parent != null) {
+                synchronized(parent) {
+                    parentCache = parent.getCache(null, null);
+                }
+            }
+            cLFCache = new Cache(parentCache);
+        }
+
+        private Cache getCache(String format, Locale loc) {
+            Cache cache;
+            if (format == null) {
+                cache = cLFCache;
+            } else {
+                cache = formatCache.get(format);
+                if (cache == null) {
+                    Cache parentCache = null;
+                    if (parent != null) {
+                        synchronized(parent) {
+                            parentCache = parent.getCache(format, loc);
+                        }
+                    }
+                    cache = new Cache(format, loc, parentCache);
+                    formatCache.put(format, cache);
+                }
+            }
+            return cache;
+        }
+
+        public String getFormat(long time) {
+            return cLFCache.getFormatInternal(time);
+        }
+
+        public String getFormat(String format, Locale loc, long time) {
+            return getCache(format, loc).getFormatInternal(time);
         }
     }
-    
+
+    /**
+     * Global date format cache.
+     */
+    private static final DateFormatCache globalDateCache =
+            new DateFormatCache(globalCacheSize, Locale.getDefault(), null);
+
+    /**
+     * Thread local date format cache.
+     */
+    private static final ThreadLocal<DateFormatCache> localDateCache =
+            new ThreadLocal<DateFormatCache>() {
+        @Override
+        protected DateFormatCache initialValue() {
+            return new DateFormatCache(localCacheSize, Locale.getDefault(), globalDateCache);
+        }
+    };
+
+
     /**
      * The system time when we last updated the Date that this valve
      * uses for log lines.
      */
-    private static final ThreadLocal<AccessDateStruct> currentDateStruct =
-            new ThreadLocal<AccessDateStruct>() {
+    private static final ThreadLocal<Date> localDate =
+            new ThreadLocal<Date>() {
         @Override
-        protected AccessDateStruct initialValue() {
-            return new AccessDateStruct();
+        protected Date initialValue() {
+            return new Date();
         }
     };
+
+    /**
+     * The list of our format types.
+     */
+    private static enum formatType {
+        CLF, SEC, MSEC, MSEC_FRAC, SDF
+    }
+
     /**
      * Resolve hosts.
      */
@@ -288,7 +508,28 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      * Date format to place in log file name. Use at your own risk!
      */
     protected String fileDateFormat = null;
-    
+
+
+    /**
+     * Name of locale used to format timestamps in log entries and in
+     * log file name suffix.
+     */
+    protected String localeName = Locale.getDefault().toString();
+
+
+    /**
+     * Locale used to format timestamps in log entries and in
+     * log file name suffix.
+     */
+    protected Locale locale = Locale.getDefault();
+
+    /**
+     * Character set used by the log file. If it is <code>null</code>, the
+     * system default character set will be used. An empty string will be
+     * treated as <code>null</code> when this property is assigned.
+     */
+    protected String encoding = null;
+
     /**
      * Array of AccessLogElement, they will be used to make log message.
      */
@@ -517,6 +758,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         this.condition = condition;
     }
 
+
     /**
      *  Return the date format date based log rotation.
      */
@@ -530,6 +772,52 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      */
     public void setFileDateFormat(String fileDateFormat) {
         this.fileDateFormat =  fileDateFormat;
+    }
+
+
+    /**
+     * Return the locale used to format timestamps in log entries and in
+     * log file name suffix.
+     */
+    public String getLocale() {
+        return localeName;
+    }
+
+
+    /**
+     * Set the locale used to format timestamps in log entries and in
+     * log file name suffix. Changing the locale is only supported
+     * as long as the AccessLogValve has not logged anything. Changing
+     * the locale later can lead to inconsistent formatting.
+     *
+     * @param localeName The locale to use.
+     */
+    public void setLocale(String localeName) {
+        this.localeName = localeName;
+        locale = findLocale(localeName, locale);
+    }
+
+    /**
+     * Return the character set name that is used to write the log file.
+     *
+     * @return Character set name, or <code>null</code> if the system default
+     *  character set is used.
+     */
+    public String getEncoding() {
+        return encoding;
+    }
+
+    /**
+     * Set the character set that is used to write the log file.
+     * 
+     * @param encoding The name of the character set.
+     */
+    public void setEncoding(String encoding) {
+        if (encoding != null && encoding.length() > 0) {
+            this.encoding = encoding;
+        } else {
+            this.encoding = null;
+        }
     }
 
     // --------------------------------------------------------- Public Methods
@@ -572,7 +860,15 @@ public class AccessLogValve extends ValveBase implements AccessLog {
             return;
         }
 
-        Date date = getDate();
+        /**
+         * XXX This is a bit silly, but we want to have start and stop time and
+         * duration consistent. It would be better to keep start and stop
+         * simply in the request and/or response object and remove time
+         * (duration) from the interface.
+         */
+        long start = request.getCoyoteRequest().getStartTime();
+        Date date = getDate(start + time);
+
         StringBuilder result = new StringBuilder(128);
 
         for (int i = 0; i < logElements.length; i++) {
@@ -698,24 +994,6 @@ public class AccessLogValve extends ValveBase implements AccessLog {
 
 
     /**
-     * Return the month abbreviation for the specified month, which must
-     * be a two-digit String.
-     *
-     * @param month Month number ("01" .. "12").
-     */
-    private String lookup(String month) {
-        int index;
-        try {
-            index = Integer.parseInt(month) - 1;
-        } catch (Throwable t) {
-            ExceptionUtils.handleThrowable(t);
-            index = 0;  // Can not happen, in theory
-        }
-        return (months[index]);
-    }
-
-
-    /**
      * Open the new log file for the date specified by <code>dateStamp</code>.
      */
     protected synchronized void open() {
@@ -730,23 +1008,44 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         }
 
         // Open the current log file
-        try {
-            String pathname;
-            // If no rotate - no need for dateStamp in fileName
-            if (rotatable) {
-                pathname = dir.getAbsolutePath() + File.separator + prefix
-                        + dateStamp + suffix;
-            } else {
-                pathname = dir.getAbsolutePath() + File.separator + prefix
-                        + suffix;
+        File pathname;
+        // If no rotate - no need for dateStamp in fileName
+        if (rotatable) {
+            pathname = new File(dir.getAbsoluteFile(), prefix + dateStamp
+                    + suffix);
+        } else {
+            pathname = new File(dir.getAbsoluteFile(), prefix + suffix);
+        }
+        File parent = pathname.getParentFile();
+        if (!parent.exists()) {
+            if (!parent.mkdirs()) {
+                log.error(sm.getString("accessLogValve.openDirFail", parent));
             }
-            writer = new PrintWriter(new BufferedWriter(new FileWriter(
-                    pathname, true), 128000), false);
-            
-            currentLogFile = new File(pathname);
+        }
+
+        Charset charset = null;
+        if (encoding != null) {
+            try {
+                charset = B2CConverter.getCharset(encoding);
+            } catch (UnsupportedEncodingException ex) {
+                log.error(sm.getString(
+                        "accessLogValve.unsupportedEncoding", encoding), ex);
+            }
+        }
+        if (charset == null) {
+            charset = Charset.defaultCharset();
+        }
+
+        try {
+            writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
+                    new FileOutputStream(pathname, true), charset), 128000),
+                    false);
+
+            currentLogFile = pathname;
         } catch (IOException e) {
             writer = null;
             currentLogFile = null;
+            log.error(sm.getString("accessLogValve.openFail", pathname), e);
         }
     }
  
@@ -759,19 +1058,14 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      * 
      * @return Date
      */
-    private Date getDate() {
-        // Only create a new Date once per second, max.
-        long systime = System.currentTimeMillis();
-        AccessDateStruct struct = currentDateStruct.get(); 
-        if ((systime - struct.currentDate.getTime()) > 1000) {
-            struct.currentDate.setTime(systime);
-            struct.currentDateString = null;
-        }
-        return struct.currentDate;
+    private static Date getDate(long systime) {
+        Date date = localDate.get();
+        date.setTime(systime);
+        return date;
     }
 
 
-    private String getTimeZone(Date date) {
+    private static String getTimeZone(Date date) {
         if (timezone.inDaylightTime(date)) {
             return timeZoneDST;
         } else {
@@ -780,7 +1074,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
     }
     
     
-    private String calculateTimeZoneOffset(long offset) {
+    private static String calculateTimeZoneOffset(long offset) {
         StringBuilder tz = new StringBuilder();
         if ((offset < 0)) {
             tz.append("-");
@@ -803,6 +1097,31 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         return tz.toString();
     }
 
+    /**
+     * Find a locale by name
+     */
+    protected static Locale findLocale(String name, Locale fallback) {
+        if (name == null || name.isEmpty()) {
+            return Locale.getDefault();
+        } else {
+            for (Locale l: Locale.getAvailableLocales()) {
+                if (name.equals(l.toString())) {
+                    return(l);
+                }
+            }
+        }
+        log.error(sm.getString("accessLogValve.invalidLocale", name));
+        return fallback;
+    }
+
+    static {
+        // Initialize the timeZone
+        timezone = TimeZone.getDefault();
+        timeZoneNoDST = calculateTimeZoneOffset(timezone.getRawOffset());
+        int offset = timezone.getDSTSavings();
+        timeZoneDST = calculateTimeZoneOffset(timezone.getRawOffset() + offset);
+    }
+
 
     /**
      * Start this component and implement the requirements
@@ -814,21 +1133,15 @@ public class AccessLogValve extends ValveBase implements AccessLog {
     @Override
     protected synchronized void startInternal() throws LifecycleException {
 
-        // Initialize the timeZone, Date formatters, and currentDate
-        TimeZone tz = TimeZone.getDefault();
-        timezone = tz;
-        timeZoneNoDST = calculateTimeZoneOffset(tz.getRawOffset());
-        int offset = tz.getDSTSavings();
-        timeZoneDST = calculateTimeZoneOffset(tz.getRawOffset() + offset);
-
+        // Initialize the Date formatters
         String format = getFileDateFormat();
         if (format == null || format.length() == 0) {
             format = "yyyy-MM-dd";
             setFileDateFormat(format);
         }
-        fileDateFormatter = new SimpleDateFormat(format);
-        fileDateFormatter.setTimeZone(tz);
-        dateStamp = fileDateFormatter.format(currentDateStruct.get().currentDate);
+        fileDateFormatter = new SimpleDateFormat(format, Locale.US);
+        fileDateFormatter.setTimeZone(timezone);
+        dateStamp = fileDateFormatter.format(new Date(System.currentTimeMillis()));
         open();
         
         setState(LifecycleState.STARTING);
@@ -995,31 +1308,168 @@ public class AccessLogValve extends ValveBase implements AccessLog {
     }
 
     /**
-     * write date and time, in Common Log Format - %t
+     * write date and time, in configurable format (default CLF) - %t or %t{format}
      */
     protected class DateAndTimeElement implements AccessLogElement {
 
+        /**
+         * Format prefix specifying request start time
+         */
+        private static final String requestStartPrefix = "begin";
+
+        /**
+         * Format prefix specifying response end time
+         */
+        private static final String responseEndPrefix = "end";
+
+        /**
+         * Separator between optional prefix and rest of format
+         */
+        private static final String prefixSeparator = ":";
+
+        /**
+         * Special format for seconds since epoch
+         */
+        private static final String secFormat = "sec";
+
+        /**
+         * Special format for milliseconds since epoch
+         */
+        private static final String msecFormat = "msec";
+
+        /**
+         * Special format for millisecond part of timestamp
+         */
+        private static final String msecFractionFormat = "msec_frac";
+
+        /**
+         * The patterns we use to replace "S" and "SSS" millisecond
+         * formatting of SimpleDateFormat by our own handling
+         */
+        private static final String msecPattern = "{#}";
+        private static final String trippleMsecPattern =
+            msecPattern + msecPattern + msecPattern;
+
+        /* Our format description string, null if CLF */
+        private String format = null;
+        /* Whether to use begin of request or end of response as the timestamp */
+        private boolean usesBegin = false;
+        /* The format type */
+        private formatType type = formatType.CLF;
+        /* Whether we need to postprocess by adding milliseconds */
+        private boolean usesMsecs = false;
+
+        protected DateAndTimeElement() {
+            this(null);
+        }
+
+        /**
+         * Replace the millisecond formatting character 'S' by
+         * some dummy characters in order to make the resulting
+         * formatted time stamps cacheable. We replace the dummy
+         * chars later with the actual milliseconds because that's
+         * relatively cheap.
+         */
+        private void tidyFormat() {
+            boolean escape = false;
+            StringBuilder result = new StringBuilder();
+            int len = format.length();
+            char x;
+            for (int i = 0; i < len; i++) {
+                x = format.charAt(i);
+                if (escape || x != 'S') {
+                    result.append(x);
+                } else {
+                    result.append(msecPattern);
+                    usesMsecs = true;
+                }
+                if (x == '\'') {
+                    escape = !escape;
+                }
+            }
+        }
+
+        protected DateAndTimeElement(String header) {
+            format = header;
+            if (format != null) {
+                if (format.equals(requestStartPrefix)) {
+                    usesBegin = true;
+                    format = "";
+                } else if (format.startsWith(requestStartPrefix + prefixSeparator)) {
+                    usesBegin = true;
+                    format = format.substring(6);
+                } else if (format.equals(responseEndPrefix)) {
+                    usesBegin = false;
+                    format = "";
+                } else if (format.startsWith(responseEndPrefix + prefixSeparator)) {
+                    usesBegin = false;
+                    format = format.substring(4);
+                }
+                if (format.length() == 0) {
+                    type = formatType.CLF;
+                } else if (format.equals(secFormat)) {
+                    type = formatType.SEC;
+                } else if (format.equals(msecFormat)) {
+                    type = formatType.MSEC;
+                } else if (format.equals(msecFractionFormat)) {
+                    type = formatType.MSEC_FRAC;
+                } else {
+                    type = formatType.SDF;
+                    tidyFormat();
+                }
+            }
+        }
 
         @Override
         public void addElement(StringBuilder buf, Date date, Request request,
                 Response response, long time) {
-            AccessDateStruct struct = currentDateStruct.get();
-            if (struct.currentDateString == null) {
-                StringBuilder current = new StringBuilder(32);
-                current.append('[');
-                current.append(struct.dayFormatter.format(date));
-                current.append('/');
-                current.append(lookup(struct.monthFormatter.format(date)));
-                current.append('/');
-                current.append(struct.yearFormatter.format(date));
-                current.append(':');
-                current.append(struct.timeFormatter.format(date));
-                current.append(' ');
-                current.append(getTimeZone(date));
-                current.append(']');
-                struct.currentDateString = current.toString();
+            long timestamp = date.getTime();
+            long frac;
+            if (usesBegin) {
+                timestamp -= time;
             }
-            buf.append(struct.currentDateString);
+            switch (type) {
+            case CLF:
+                buf.append(localDateCache.get().getFormat(timestamp));
+                break;
+            case SEC:
+                buf.append(timestamp / 1000);
+                break;
+            case MSEC:
+                buf.append(timestamp);
+                break;
+            case MSEC_FRAC:
+                frac = timestamp % 1000;
+                if (frac < 100) {
+                    if (frac < 10) {
+                        buf.append('0');
+                        buf.append('0');
+                    } else {
+                        buf.append('0');
+                    }
+                }
+                buf.append(frac);
+                break;
+            case SDF:
+                String temp = localDateCache.get().getFormat(format, locale, timestamp);
+                if (usesMsecs) {
+                    frac = timestamp % 1000;
+                    StringBuilder trippleMsec = new StringBuilder(4);
+                    if (frac < 100) {
+                        if (frac < 10) {
+                            trippleMsec.append('0');
+                            trippleMsec.append('0');
+                        } else {
+                            trippleMsec.append('0');
+                        }
+                    }
+                    trippleMsec.append(frac);
+                    temp = temp.replace(trippleMsecPattern, trippleMsec);
+                    temp = temp.replace(msecPattern, Long.toString(frac));
+                }
+                buf.append(temp);
+                break;
+            }
         }
     }
 
@@ -1447,6 +1897,8 @@ public class AccessLogValve extends ValveBase implements AccessLog {
             return new RequestAttributeElement(header);
         case 's':
             return new SessionAttributeElement(header);            
+        case 't':
+            return new DateAndTimeElement(header);
         default:
             return new StringElement("???");
         }

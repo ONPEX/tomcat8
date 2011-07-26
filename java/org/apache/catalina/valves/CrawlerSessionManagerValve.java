@@ -18,14 +18,14 @@ package org.apache.catalina.valves;
 
 import java.io.IOException;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpSessionBindingEvent;
+import javax.servlet.http.HttpSessionBindingListener;
 
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.connector.Request;
@@ -40,13 +40,16 @@ import org.apache.juli.logging.LogFactory;
  * users - regardless of whether or not they provide a session token with their
  * requests.
  */
-public class CrawlerSessionManagerValve extends ValveBase {
+public class CrawlerSessionManagerValve extends ValveBase
+        implements HttpSessionBindingListener {
 
     private static final Log log =
         LogFactory.getLog(CrawlerSessionManagerValve.class);
 
-    private Map<String,SessionInfo> uaIpSessionInfo =
-        new ConcurrentHashMap<String, SessionInfo>();
+    private Map<String,String> clientIpSessionId =
+        new ConcurrentHashMap<String, String>();
+    private Map<String,String> sessionIdClientIp =
+        new ConcurrentHashMap<String, String>();
 
     private String crawlerUserAgents =
         ".*[bB]ot.*|.*Yahoo! Slurp.*|.*Feedfetcher-Google.*";
@@ -106,6 +109,11 @@ public class CrawlerSessionManagerValve extends ValveBase {
     }
 
 
+    public Map<String,String> getClientIpSessionId() {
+        return clientIpSessionId;
+    }
+
+
     @Override
     protected void initInternal() throws LifecycleException {
         super.initInternal();
@@ -119,7 +127,7 @@ public class CrawlerSessionManagerValve extends ValveBase {
             ServletException {
 
         boolean isBot = false;
-        SessionInfo sessionInfo = null;
+        String sessionId = null;
         String clientIp = null;
 
         if (log.isDebugEnabled()) {
@@ -158,12 +166,12 @@ public class CrawlerSessionManagerValve extends ValveBase {
             // If this is a bot, is the session ID known?
             if (isBot) {
                 clientIp = request.getRemoteAddr();
-                sessionInfo = uaIpSessionInfo.get(clientIp);
-                if (sessionInfo != null) {
-                    request.setRequestedSessionId(sessionInfo.getSessionId());
+                sessionId = clientIpSessionId.get(clientIp);
+                if (sessionId != null) {
+                    request.setRequestedSessionId(sessionId);
                     if (log.isDebugEnabled()) {
-                        log.debug(request.hashCode() +
-                                ": SessionID=" + sessionInfo.getSessionId());
+                        log.debug(request.hashCode() + ": SessionID=" +
+                                sessionId);
                     }
                 }
             }
@@ -172,11 +180,14 @@ public class CrawlerSessionManagerValve extends ValveBase {
         getNext().invoke(request, response);
         
         if (isBot) {
-            if (sessionInfo == null) {
+            if (sessionId == null) {
                 // Has bot just created a session, if so make a note of it
                 HttpSession s = request.getSession(false);
                 if (s != null) {
-                    uaIpSessionInfo.put(clientIp, new SessionInfo(s.getId()));
+                    clientIpSessionId.put(clientIp, s.getId());
+                    sessionIdClientIp.put(s.getId(), clientIp);
+                    // #valueUnbound() will be called on session expiration
+                    s.setAttribute(this.getClass().getName(), this);
                     s.setMaxInactiveInterval(sessionInactiveInterval);
 
                     if (log.isDebugEnabled()) {
@@ -185,12 +196,9 @@ public class CrawlerSessionManagerValve extends ValveBase {
                     }
                 }
             } else {
-                sessionInfo.access();
-
                 if (log.isDebugEnabled()) {
                     log.debug(request.hashCode() +
-                            ": Bot session accessed. SessionID=" +
-                            sessionInfo.getSessionId());
+                            ": Bot session accessed. SessionID=" + sessionId);
                 }
             }
         }
@@ -198,44 +206,16 @@ public class CrawlerSessionManagerValve extends ValveBase {
 
 
     @Override
-    public void backgroundProcess() {
-        super.backgroundProcess();
-        
-        long expireTime = System.currentTimeMillis() -
-                (sessionInactiveInterval + 60) * 1000;
-
-        Iterator<Entry<String,SessionInfo>> iter =
-            uaIpSessionInfo.entrySet().iterator();
-
-        // Remove any sessions in the cache that have expired. 
-        while (iter.hasNext()) {
-            Entry<String,SessionInfo> entry = iter.next();
-            if (entry.getValue().getLastAccessed() < expireTime) {
-                iter.remove();
-            }
-        }
+    public void valueBound(HttpSessionBindingEvent event) {
+        // NOOP
     }
 
 
-    private static final class SessionInfo {
-        private final String sessionId;
-        private volatile long lastAccessed;
-        
-        public SessionInfo(String sessionId) {
-            this.sessionId = sessionId;
-            this.lastAccessed = System.currentTimeMillis();
-        }
-
-        public String getSessionId() {
-            return sessionId;
-        }
-
-        public long getLastAccessed() {
-            return lastAccessed;
-        }
-
-        public void access() {
-            lastAccessed = System.currentTimeMillis();
+    @Override
+    public void valueUnbound(HttpSessionBindingEvent event) {
+        String clientIp = sessionIdClientIp.remove(event.getSession().getId());
+        if (clientIp != null) {
+            clientIpSessionId.remove(clientIp);
         }
     }
 }
