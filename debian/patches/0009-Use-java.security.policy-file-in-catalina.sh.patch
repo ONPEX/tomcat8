@@ -14,7 +14,7 @@ Forwarded: not-needed
 
 --- a/bin/catalina.sh
 +++ b/bin/catalina.sh
-@@ -279,7 +279,7 @@
+@@ -287,7 +287,7 @@
          -Djava.endorsed.dirs="$JAVA_ENDORSED_DIRS" -classpath "$CLASSPATH" \
          -sourcepath "$CATALINA_HOME"/../../java \
          -Djava.security.manager \
@@ -23,8 +23,8 @@ Forwarded: not-needed
          -Dcatalina.base="$CATALINA_BASE" \
          -Dcatalina.home="$CATALINA_HOME" \
          -Djava.io.tmpdir="$CATALINA_TMPDIR" \
-@@ -306,7 +306,7 @@
-     eval \"$_RUNJAVA\" \"$LOGGING_CONFIG\" $JAVA_OPTS $CATALINA_OPTS \
+@@ -314,7 +314,7 @@
+     eval exec \"$_RUNJAVA\" \"$LOGGING_CONFIG\" $JAVA_OPTS $CATALINA_OPTS \
        -Djava.endorsed.dirs=\"$JAVA_ENDORSED_DIRS\" -classpath \"$CLASSPATH\" \
        -Djava.security.manager \
 -      -Djava.security.policy==\"$CATALINA_BASE/conf/catalina.policy\" \
@@ -32,7 +32,7 @@ Forwarded: not-needed
        -Dcatalina.base=\"$CATALINA_BASE\" \
        -Dcatalina.home=\"$CATALINA_HOME\" \
        -Djava.io.tmpdir=\"$CATALINA_TMPDIR\" \
-@@ -370,7 +370,7 @@
+@@ -378,7 +378,7 @@
      eval \"$_RUNJAVA\" \"$LOGGING_CONFIG\" $JAVA_OPTS $CATALINA_OPTS \
        -Djava.endorsed.dirs=\"$JAVA_ENDORSED_DIRS\" -classpath \"$CLASSPATH\" \
        -Djava.security.manager \
