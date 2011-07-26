@@ -1,3 +1,12 @@
+tomcat7 (7.0.19-1) UNRELEASED; urgency=low
+
+  * Team upload.
+  * New upstream release.
+    - Includes fix for CVE-2011-2526 (Closes: #634992)
+  * Remove patch for CVE-2011-2204 (included upstream).
+
+ -- tony mancill <tmancill@debian.org>  Mon, 25 Jul 2011 19:48:54 -0700
+
 tomcat7 (7.0.16-3) unstable; urgency=low
 
   * Team upload.
