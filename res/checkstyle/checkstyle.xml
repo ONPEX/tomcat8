@@ -51,10 +51,11 @@
     <module name="AvoidStaticImport">
         <property name="excludes"
                   value="org.apache.catalina.startup.SimpleHttpClient.CRLF"/>
+        <property name="excludes" value="org.junit.Assert.*"/>
     </module>
     <module name="IllegalImport"/>
     <module name="ImportOrder">
-        <property name="groups" value="java,javax,async,jsp2,junit,org,util"/>
+        <property name="groups" value="java,javax,async,jsp2,junit,org.junit,org,util"/>
         <property name="ordered" value="true"/>
         <property name="separated" value="true"/>
         <property name="option" value="above"/>

@@ -43,7 +43,7 @@ import org.xml.sax.Attributes;
  * deployment descriptor (<code>/WEB-INF/web.xml</code>) resource.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: WebRuleSet.java 1142323 2011-07-02 21:57:12Z markt $
+ * @version $Id: WebRuleSet.java 1148277 2011-07-19 11:41:08Z markt $
  */
 
 public class WebRuleSet extends RuleSetBase {
@@ -180,7 +180,7 @@ public class WebRuleSet extends RuleSetBase {
                     new RelativeOrderingRule());
             digester.addCallMethod(fullPrefix + "/absolute-ordering/name",
                                    "addAbsoluteOrdering", 0);
-            digester.addCallMethod(fullPrefix + "/absolute-ordering/name/others",
+            digester.addCallMethod(fullPrefix + "/absolute-ordering/others",
                                    "addAbsoluteOrderingOthers");
         }
 

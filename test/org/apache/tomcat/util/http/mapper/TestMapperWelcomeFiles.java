@@ -26,6 +26,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
+
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
@@ -33,6 +38,7 @@ import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestMapperWelcomeFiles extends TomcatBaseTest {
 
+    @Test
     public void testWelcomeFileNotStrict() throws Exception {
 
         Tomcat tomcat = getTomcatInstance();
@@ -59,7 +65,8 @@ public class TestMapperWelcomeFiles extends TomcatBaseTest {
         assertEquals(HttpServletResponse.SC_OK, rc);
         assertTrue(bc.toString().contains("Servlet"));
     }
-    
+
+    @Test
     public void testWelcomeFileStrict() throws Exception {
 
         Tomcat tomcat = getTomcatInstance();

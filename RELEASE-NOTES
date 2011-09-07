@@ -15,7 +15,7 @@
   limitations under the License.
 ================================================================================
 
-$Id: RELEASE-NOTES 1104328 2011-05-17 15:21:38Z markt $
+$Id: RELEASE-NOTES 1157872 2011-08-15 15:03:57Z markt $
 
 
                      Apache Tomcat Version @VERSION@
@@ -65,6 +65,7 @@ The public interfaces for the following classes may be added to in order to
 resolve bugs and/or add new features. No existing interface will be removed or
 changed although it may be deprecated.
 - org/apache/catalina/*
+- org/apache/catalina/comet/*
 
 Note: As Tomcat 7 matures, the above list will be added to. The list is not
       considered complete at this time.

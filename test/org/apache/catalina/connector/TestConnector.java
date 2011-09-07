@@ -18,6 +18,10 @@ package org.apache.catalina.connector;
 
 import java.net.SocketTimeoutException;
 
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+
 import org.apache.catalina.Context;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.startup.TesterServlet;
@@ -30,6 +34,7 @@ import org.apache.tomcat.util.buf.ByteChunk;
  */
 public class TestConnector extends TomcatBaseTest {
 
+    @Test
     public void testStop() throws Exception {
         Tomcat tomcat = getTomcatInstance();
         

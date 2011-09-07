@@ -33,7 +33,7 @@ import org.apache.tomcat.util.res.StringManager;
  * support most of the functionality required by a Store.
  *
  * @author Bip Thelin
- * @version $Id: StoreBase.java 1033024 2010-11-09 15:31:19Z markt $
+ * @version $Id: StoreBase.java 1153854 2011-08-04 11:45:53Z kfujino $
  */
 
 public abstract class StoreBase extends LifecycleBase implements Store {
@@ -168,12 +168,16 @@ public abstract class StoreBase extends LifecycleBase implements Store {
                     manager.getContainer().getLogger().debug(getStoreName()+ ": processExpires expire store session " + keys[i] );
                 }
                 boolean isLoaded = false;
-                try {
-                    if (manager.findSession(keys[i]) != null) {
-                        isLoaded = true;
+                if (manager instanceof PersistentManagerBase) {
+                    isLoaded = ((PersistentManagerBase) manager).isLoaded(keys[i]);
+                } else {
+                    try {
+                        if (manager.findSession(keys[i]) != null) {
+                            isLoaded = true;
+                        }
+                    } catch (IOException ioe) {
+                        // Ignore - session will be expired
                     }
-                } catch (IOException ioe) {
-                    // Ignore - session will be expired
                 }
                 if (isLoaded) {
                     // recycle old backup session

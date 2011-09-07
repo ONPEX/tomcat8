@@ -17,7 +17,7 @@
 package javax.servlet;
 
 /**
- * $Id: AsyncContext.java 981822 2010-08-03 11:14:02Z markt $
+ * $Id: AsyncContext.java 1147915 2011-07-18 15:01:41Z markt $
  * TODO SERVLET3 - Add comments
  * @since Servlet 3.0
  */
@@ -72,7 +72,13 @@ public interface AsyncContext {
     <T extends AsyncListener> T createListener(Class<T> clazz)
     throws ServletException;
     
+    /**
+     * Get timeout in milliseconds. 0 or less indicates no timeout.
+     */
     long getTimeout();
     
+    /**
+     * Set timeout in milliseconds. 0 or less indicates no timeout.
+     */
     void setTimeout(long timeout);
 }

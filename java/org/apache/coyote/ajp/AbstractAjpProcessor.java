@@ -29,8 +29,10 @@ import org.apache.coyote.AbstractProcessor;
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.AsyncContextCallback;
 import org.apache.coyote.InputBuffer;
+import org.apache.coyote.OutputBuffer;
 import org.apache.coyote.Request;
 import org.apache.coyote.RequestInfo;
+import org.apache.coyote.Response;
 import org.apache.juli.logging.Log;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.buf.ByteChunk;
@@ -63,6 +65,7 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
      * End message array.
      */
     protected static final byte[] endMessageArray;
+    protected static final byte[] endAndCloseMessageArray;
 
 
     /**
@@ -87,6 +90,16 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
         endMessageArray = new byte[endMessage.getLen()];
         System.arraycopy(endMessage.getBuffer(), 0, endMessageArray, 0,
                 endMessage.getLen());
+
+        // Allocate the end and close message array
+        AjpMessage endAndCloseMessage = new AjpMessage(16);
+        endAndCloseMessage.reset();
+        endAndCloseMessage.appendByte(Constants.JK_AJP13_END_RESPONSE);
+        endAndCloseMessage.appendByte(0);
+        endAndCloseMessage.end();
+        endAndCloseMessageArray = new byte[endAndCloseMessage.getLen()];
+        System.arraycopy(endAndCloseMessage.getBuffer(), 0, endAndCloseMessageArray, 0,
+                endAndCloseMessage.getLen());
 
         // Allocate the flush message array
         AjpMessage flushMessage = new AjpMessage(16);
@@ -135,9 +148,9 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
 
 
     /**
-     * Message used for response header composition.
+     * Message used for response composition.
      */
-    protected AjpMessage responseHeaderMessage = null;
+    protected AjpMessage responseMessage = null;
 
 
     /**
@@ -207,9 +220,9 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
 
 
     /**
-     * Bytes written to client for the current request
+     * Bytes written to client for the current request.
      */
-    protected long byteCount = 0;
+    protected long bytesWritten = 0;
 
 
     // ------------------------------------------------------------ Constructor
@@ -223,7 +236,7 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
         request.setInputBuffer(new SocketInputBuffer());
 
         requestHeaderMessage = new AjpMessage(packetSize);
-        responseHeaderMessage = new AjpMessage(packetSize);
+        responseMessage = new AjpMessage(packetSize);
         bodyMessage = new AjpMessage(packetSize);
 
         // Set the getBody message buffer
@@ -447,11 +460,6 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
         }
     }
 
-    // Methods called by action()
-    protected abstract void actionInternal(ActionCode actionCode, Object param);
-    protected abstract void flush(boolean tbd) throws IOException;
-    protected abstract void finish() throws IOException;
-
 
     @Override
     public SocketState asyncDispatch(SocketStatus status) {
@@ -495,12 +503,6 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
 
 
     @Override
-    protected final boolean isComet() {
-        // AJP does not support Comet
-        return false;
-    }
-
-    @Override
     public SocketState event(SocketStatus status) throws IOException {
         // Should never reach this code but in case we do...
         throw new IOException(
@@ -527,10 +529,56 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
         request.recycle();
         response.recycle();
         certificates.recycle();
-        byteCount = 0;
+        bytesWritten = 0;
     }
 
+
     // ------------------------------------------------------ Protected Methods
+
+    // Methods called by action()
+    protected abstract void actionInternal(ActionCode actionCode, Object param);
+
+    // Methods called by prepareResponse()
+    protected abstract void output(byte[] src, int offset, int length)
+            throws IOException;
+
+    // Methods used by SocketInputBuffer
+    protected abstract boolean receive() throws IOException;
+
+
+    @Override
+    protected final boolean isComet() {
+        // AJP does not support Comet
+        return false;
+    }
+
+
+    /**
+     * Get more request body data from the web server and store it in the
+     * internal buffer.
+     *
+     * @return true if there is more data, false if not.
+     */
+    protected boolean refillReadBuffer() throws IOException {
+        // If the server returns an empty packet, assume that that end of
+        // the stream has been reached (yuck -- fix protocol??).
+        // FORM support
+        if (replay) {
+            endOfStream = true; // we've read everything there is
+        }
+        if (endOfStream) {
+            return false;
+        }
+
+        // Request more data immediately
+        output(getBodyMessageArray, 0, getBodyMessageArray.length);
+
+        boolean moreData = receive();
+        if( !moreData ) {
+            endOfStream = true;
+        }
+        return moreData;
+    }
 
 
     /**
@@ -844,16 +892,15 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
      * When committing the response, we have to validate the set of headers, as
      * well as setup the response filters.
      */
-    protected void prepareResponse()
-    throws IOException {
+    protected void prepareResponse() throws IOException {
 
         response.setCommitted(true);
 
-        responseHeaderMessage.reset();
-        responseHeaderMessage.appendByte(Constants.JK_AJP13_SEND_HEADERS);
+        responseMessage.reset();
+        responseMessage.appendByte(Constants.JK_AJP13_SEND_HEADERS);
 
         // HTTP header contents
-        responseHeaderMessage.appendInt(response.getStatus());
+        responseMessage.appendInt(response.getStatus());
         String message = null;
         if (org.apache.coyote.Constants.USE_CUSTOM_STATUS_MSG_IN_HEADER &&
                 HttpMessages.isSafeInHttpHeader(response.getMessage())) {
@@ -867,7 +914,7 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
             message = Integer.toString(response.getStatus());
         }
         tmpMB.setString(message);
-        responseHeaderMessage.appendBytes(tmpMB);
+        responseMessage.appendBytes(tmpMB);
 
         // Special headers
         MimeHeaders headers = response.getMimeHeaders();
@@ -886,29 +933,70 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
 
         // Other headers
         int numHeaders = headers.size();
-        responseHeaderMessage.appendInt(numHeaders);
+        responseMessage.appendInt(numHeaders);
         for (int i = 0; i < numHeaders; i++) {
             MessageBytes hN = headers.getName(i);
             int hC = Constants.getResponseAjpIndex(hN.toString());
             if (hC > 0) {
-                responseHeaderMessage.appendInt(hC);
+                responseMessage.appendInt(hC);
             }
             else {
-                responseHeaderMessage.appendBytes(hN);
+                responseMessage.appendBytes(hN);
             }
             MessageBytes hV=headers.getValue(i);
-            responseHeaderMessage.appendBytes(hV);
+            responseMessage.appendBytes(hV);
         }
 
         // Write to buffer
-        responseHeaderMessage.end();
-        output(responseHeaderMessage.getBuffer(), 0,
-                responseHeaderMessage.getLen());
+        responseMessage.end();
+        output(responseMessage.getBuffer(), 0,
+                responseMessage.getLen());
     }
 
-    // Methods called by prepareResponse()
-    protected abstract void output(byte[] src, int offset, int length)
-    throws IOException;
+
+    /**
+     * Callback to write data from the buffer.
+     */
+    protected void flush(boolean explicit) throws IOException {
+        if (explicit && !finished) {
+            // Send the flush message
+            output(flushMessageArray, 0, flushMessageArray.length);
+        }
+    }
+
+    
+    /**
+     * Finish AJP response.
+     */
+    protected void finish() throws IOException {
+
+        if (!response.isCommitted()) {
+            // Validate and write response headers
+            try {
+                prepareResponse();
+            } catch (IOException e) {
+                // Set error flag
+                error = true;
+            }
+        }
+
+        if (finished)
+            return;
+
+        finished = true;
+
+        // Swallow the unread body packet if present
+        if (first && request.getContentLengthLong() > 0) {
+            receive();
+        }
+
+        // Add the end message
+        if (error) {
+            output(endAndCloseMessageArray, 0, endAndCloseMessageArray.length);
+        } else {
+            output(endMessageArray, 0, endMessageArray.length);
+        }
+    }
 
 
     // ------------------------------------- InputStreamInputBuffer Inner Class
@@ -918,15 +1006,14 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
      * This class is an input buffer which will read its data from an input
      * stream.
      */
-    protected class SocketInputBuffer
-    implements InputBuffer {
+    protected class SocketInputBuffer implements InputBuffer {
 
 
         /**
          * Read bytes into the specified chunk.
          */
         @Override
-        public int doRead(ByteChunk chunk, Request req )
+        public int doRead(ByteChunk chunk, Request req)
         throws IOException {
 
             if (endOfStream) {
@@ -951,7 +1038,59 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
 
     }
 
-    // Methods used by SocketInputBuffer
-    protected abstract boolean receive() throws IOException;
-    protected abstract boolean refillReadBuffer() throws IOException;
+
+    // ----------------------------------- OutputStreamOutputBuffer Inner Class
+
+    /**
+     * This class is an output buffer which will write data to an output
+     * stream.
+     */
+    protected class SocketOutputBuffer implements OutputBuffer {
+
+        /**
+         * Write chunk.
+         */
+        @Override
+        public int doWrite(ByteChunk chunk, Response res)
+            throws IOException {
+
+            if (!response.isCommitted()) {
+                // Validate and write response headers
+                try {
+                    prepareResponse();
+                } catch (IOException e) {
+                    // Set error flag
+                    error = true;
+                }
+            }
+
+            int len = chunk.getLength();
+            // 4 - hardcoded, byte[] marshaling overhead
+            // Adjust allowed size if packetSize != default (Constants.MAX_PACKET_SIZE)
+            int chunkSize = Constants.MAX_SEND_SIZE + packetSize - Constants.MAX_PACKET_SIZE;
+            int off = 0;
+            while (len > 0) {
+                int thisTime = len;
+                if (thisTime > chunkSize) {
+                    thisTime = chunkSize;
+                }
+                len -= thisTime;
+                responseMessage.reset();
+                responseMessage.appendByte(Constants.JK_AJP13_SEND_BODY_CHUNK);
+                responseMessage.appendBytes(chunk.getBytes(), chunk.getOffset() + off, thisTime);
+                responseMessage.end();
+                output(responseMessage.getBuffer(), 0, responseMessage.getLen());
+
+                off += thisTime;
+            }
+
+            bytesWritten += chunk.getLength();
+            return chunk.getLength();
+        }
+
+        @Override
+        public long getBytesWritten() {
+            return bytesWritten;
+        }
+    }
 }

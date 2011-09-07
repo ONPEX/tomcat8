@@ -49,7 +49,8 @@ import org.apache.tomcat.util.ExceptionUtils;
  *
  * The following fields are supported:
  * <ul>
- * <li><code>c-dns</code>:  Client hostname</li>
+ * <li><code>c-dns</code>:  Client hostname (or ip address if
+ * <code>enableLookups</code> for the connector is false)</li>
  * <li><code>c-ip</code>:  Client ip address</li>
  * <li><code>bytes</code>:  bytes served</li>
  * <li><code>cs-method</code>:  request method</li>
@@ -64,6 +65,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * <li><code>sc-status</code>:  The status code</li>
  * <li><code>time</code>:  Time the request was served</li>
  * <li><code>time-taken</code>:  Time (in seconds) taken to serve the request</li>
+ * <li><code>x-threadname</code>: Current request thread name (can compare later with stacktraces)</li>
  * <li><code>x-A(XXX)</code>: Pull XXX attribute from the servlet context </li>
  * <li><code>x-C(XXX)</code>: Pull the first cookie of the name XXX </li>
  * <li><code>x-O(XXX)</code>: Pull the all response header values XXX </li>
@@ -74,14 +76,14 @@ import org.apache.tomcat.util.ExceptionUtils;
  *                             certain POST parameters.
  * </li>
  * <li>For any of the x-H(...) the following method will be called from the
- *                HttpServletRequestObject </li>
+ *                HttpServletRequest object </li>
  * <li><code>x-H(authType)</code>: getAuthType </li>
  * <li><code>x-H(characterEncoding)</code>: getCharacterEncoding </li>
  * <li><code>x-H(contentLength)</code>: getContentLength </li>
  * <li><code>x-H(locale)</code>:  getLocale</li>
  * <li><code>x-H(protocol)</code>: getProtocol </li>
  * <li><code>x-H(remoteUser)</code>:  getRemoteUser</li>
- * <li><code>x-H(requestedSessionId)</code>: getGequestedSessionId</li>
+ * <li><code>x-H(requestedSessionId)</code>: getRequestedSessionId</li>
  * <li><code>x-H(requestedSessionIdFromCookie)</code>:
  *                  isRequestedSessionIdFromCookie </li>
  * <li><code>x-H(requestedSessionIdValid)</code>:
@@ -98,7 +100,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * </p>
  *
  * <p>
- * For UvNIX users, another field called <code>checkExists</code>is also
+ * For UvNIX users, another field called <code>checkExists</code> is also
  * available. If set to true, the log file's existence will be checked before
  * each logging. This way an external log rotator can move the file
  * somewhere and tomcat will start with a new file.
@@ -107,14 +109,14 @@ import org.apache.tomcat.util.ExceptionUtils;
  * <p>
  * For JMX junkies, a public method called </code>rotate</code> has
  * been made available to allow you to tell this instance to move
- * the existing log file to somewhere else start writing a new log file.
+ * the existing log file to somewhere else and start writing a new log file.
  * </p>
  *
  * <p>
  * Conditional logging is also supported. This can be done with the
  * <code>condition</code> property.
  * If the value returned from ServletRequest.getAttribute(condition)
- * yields a non-null value. The logging will be skipped.
+ * yields a non-null value, the logging will be skipped.
  * </p>
  *
  * <p>
@@ -127,7 +129,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * @author Tim Funk
  * @author Peter Rossbach
  * 
- * @version $Id: ExtendedAccessLogValve.java 1145238 2011-07-11 16:51:54Z rjung $
+ * @version $Id: ExtendedAccessLogValve.java 1152716 2011-08-01 09:41:53Z kkolinko $
  */
 
 public class ExtendedAccessLogValve extends AccessLogValve {
@@ -745,6 +747,10 @@ public class ExtendedAccessLogValve extends AccessLogValve {
             return null;
         }
         String token = tokenizer.getToken();
+        if ("threadname".equals(token)) {
+            return new ThreadNameElement();
+        }
+
         if (!tokenizer.hasParameter()) {
             log.error("x param in wrong format. Needs to be 'x-#(...)' read the docs!");
             return null;

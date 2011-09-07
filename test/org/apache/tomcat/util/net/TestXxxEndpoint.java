@@ -20,13 +20,17 @@ package org.apache.tomcat.util.net;
 import java.io.File;
 import java.net.ServerSocket;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
+
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
-
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
-
 import org.apache.tomcat.jni.Address;
 import org.apache.tomcat.jni.Error;
 import org.apache.tomcat.jni.Library;
@@ -108,6 +112,7 @@ public class TestXxxEndpoint extends TomcatBaseTest {
         }
     }
 
+    @Test
     public void testStartStopBindOnInit() throws Exception {
         Tomcat tomcat = getTomcatInstance();
         File appDir = new File(getBuildDirectory(), "webapps/examples");
@@ -151,6 +156,7 @@ public class TestXxxEndpoint extends TomcatBaseTest {
         tomcat.getConnector().start();
     }
 
+    @Test
     public void testStartStopBindOnStart() throws Exception {
         Tomcat tomcat = getTomcatInstance();
         Connector c = tomcat.getConnector();

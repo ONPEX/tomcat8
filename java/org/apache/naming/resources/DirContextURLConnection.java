@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.security.Permission;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,7 +53,7 @@ import org.apache.tomcat.util.http.FastHttpDateFormat;
  * content is directly returned.
  * 
  * @author <a href="mailto:remm@apache.org">Remy Maucherat</a>
- * @version $Revision: 1076212 $
+ * @version $Revision: 1156280 $
  */
 public class DirContextURLConnection 
     extends URLConnection {
@@ -153,6 +155,7 @@ public class DirContextURLConnection
                         path = path.substring(contextPath.length());
                     }
                 }
+                path = URLDecoder.decode(path, "UTF-8");
                 object = context.lookup(path);
                 attributes = context.getAttributes(path);
                 if (object instanceof Resource)
@@ -385,7 +388,8 @@ public class DirContextURLConnection
 
         // Reopen resource
         try {
-            resource = (Resource) context.lookup(getURL().getFile());
+            resource = (Resource) context.lookup(
+                    URLDecoder.decode(getURL().getFile(), "UTF-8"));
         } catch (NamingException e) {
             // Ignore
         }
@@ -432,20 +436,27 @@ public class DirContextURLConnection
                 // This will be of the form /<hostname>/<contextpath>/file name
                 // if <contextpath> is not empty otherwise this will be of the
                 // form /<hostname>/file name
-                // Strip off the hostname and the contextpath
+                // Strip off the hostname and the contextpath (note that context
+                // path may contain '/'
                 int start;
-                if(context instanceof ProxyDirContext &&
-                        "".equals(((ProxyDirContext)context).getContextPath())){
-                    start = file.indexOf('/',1);
-                }
-                else
+                if (context instanceof ProxyDirContext) {
+                    String cp = ((ProxyDirContext)context).getContextPath();
+                    String h = ((ProxyDirContext)context).getHostName();
+                    if ("".equals(cp)) {
+                        start = h.length() + 2;
+                    } else {
+                        start = h.length() + cp.length() + 2;
+                    }
+                } else {
                     start = file.indexOf('/', file.indexOf('/', 1) + 1);
+                }
                 
                 NamingEnumeration<NameClassPair> enumeration =
                     context.list(file.substring(start));
                 while (enumeration.hasMoreElements()) {
                     NameClassPair ncp = enumeration.nextElement();
-                    result.addElement(ncp.getName());
+                    result.addElement(
+                            URLEncoder.encode(ncp.getName(), "UTF-8"));
                 }
             } catch (NamingException e) {
                 // Unexpected exception

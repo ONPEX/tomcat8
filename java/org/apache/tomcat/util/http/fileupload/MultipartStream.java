@@ -83,7 +83,7 @@ import org.apache.tomcat.util.http.fileupload.util.Streams;
  * @author <a href="mailto:martinc@apache.org">Martin Cooper</a>
  * @author Sean C. Sullivan
  *
- * @version $Id: MultipartStream.java 981202 2010-08-01 11:09:10Z markt $
+ * @version $Id: MultipartStream.java 1154575 2011-08-06 20:19:29Z markt $
  */
 public class MultipartStream {
     /**
@@ -960,6 +960,7 @@ public class MultipartStream {
          * Returns, whether the stream is closed.
          * @return True, if the stream is closed, otherwise false.
          */
+        @Override
         public boolean isClosed() {
             return closed;
         }

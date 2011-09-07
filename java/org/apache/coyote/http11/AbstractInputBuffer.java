@@ -17,30 +17,18 @@
 package org.apache.coyote.http11;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 import org.apache.coyote.InputBuffer;
 import org.apache.coyote.Request;
 import org.apache.tomcat.util.buf.ByteChunk;
 import org.apache.tomcat.util.http.MimeHeaders;
+import org.apache.tomcat.util.net.AbstractEndpoint;
+import org.apache.tomcat.util.net.SocketWrapper;
 import org.apache.tomcat.util.res.StringManager;
 
-public abstract class AbstractInputBuffer implements InputBuffer{
+public abstract class AbstractInputBuffer<S> implements InputBuffer{
 
-    public abstract boolean parseRequestLine(boolean useAvailableDataOnly) throws IOException;
-    
-    public abstract boolean parseHeaders() throws IOException;
-    
-    protected abstract boolean fill(boolean block) throws IOException; 
-
-    // -------------------------------------------------------------- Constants
-
-
-    // ----------------------------------------------------------- Constructors
-
-
-    // -------------------------------------------------------------- Variables
-
+    protected static final boolean[] HTTP_TOKEN_CHAR = new boolean[128];
 
     /**
      * The string manager for this package.
@@ -49,7 +37,55 @@ public abstract class AbstractInputBuffer implements InputBuffer{
         StringManager.getManager(Constants.Package);
 
 
-    // ----------------------------------------------------- Instance Variables
+    static {
+        for (int i = 0; i < 128; i++) {
+            if (i < 32) {
+                HTTP_TOKEN_CHAR[i] = false;
+            } else if (i == 127) {
+                HTTP_TOKEN_CHAR[i] = false;
+            } else if (i == '(') {
+                HTTP_TOKEN_CHAR[i] = false;
+            } else if (i == ')') {
+                HTTP_TOKEN_CHAR[i] = false;
+            } else if (i == '<') {
+                HTTP_TOKEN_CHAR[i] = false;
+            } else if (i == '>') {
+                HTTP_TOKEN_CHAR[i] = false;
+            } else if (i == '@') {
+                HTTP_TOKEN_CHAR[i] = false;
+            } else if (i == ',') {
+                HTTP_TOKEN_CHAR[i] = false;
+            } else if (i == ';') {
+                HTTP_TOKEN_CHAR[i] = false;
+            } else if (i == ':') {
+                HTTP_TOKEN_CHAR[i] = false;
+            } else if (i == '\\') {
+                HTTP_TOKEN_CHAR[i] = false;
+            } else if (i == '\"') {
+                HTTP_TOKEN_CHAR[i] = false;
+            } else if (i == '/') {
+                HTTP_TOKEN_CHAR[i] = false;
+            } else if (i == '[') {
+                HTTP_TOKEN_CHAR[i] = false;
+            } else if (i == ']') {
+                HTTP_TOKEN_CHAR[i] = false;
+            } else if (i == '?') {
+                HTTP_TOKEN_CHAR[i] = false;
+            } else if (i == '=') {
+                HTTP_TOKEN_CHAR[i] = false;
+            } else if (i == '{') {
+                HTTP_TOKEN_CHAR[i] = false;
+            } else if (i == '}') {
+                HTTP_TOKEN_CHAR[i] = false;
+            } else if (i == ' ') {
+                HTTP_TOKEN_CHAR[i] = false;
+            } else if (i == '\t') {
+                HTTP_TOKEN_CHAR[i] = false;
+            } else {
+                HTTP_TOKEN_CHAR[i] = true;
+            }
+        }
+    }
 
 
     /**
@@ -102,12 +138,6 @@ public abstract class AbstractInputBuffer implements InputBuffer{
 
 
     /**
-     * Underlying input stream.
-     */
-    protected InputStream inputStream;
-
-
-    /**
      * Underlying input buffer.
      */
     protected InputBuffer inputStreamInputBuffer;
@@ -133,28 +163,6 @@ public abstract class AbstractInputBuffer implements InputBuffer{
 
 
     // ------------------------------------------------------------- Properties
-
-
-    /**
-     * Set the underlying socket input stream.
-     */
-    public void setInputStream(InputStream inputStream) {
-
-        // FIXME: Check for null ?
-
-        this.inputStream = inputStream;
-
-    }
-
-
-    /**
-     * Get the underlying socket input stream.
-     */
-    public InputStream getInputStream() {
-
-        return inputStream;
-
-    }
 
 
     /**
@@ -217,6 +225,17 @@ public abstract class AbstractInputBuffer implements InputBuffer{
     }
 
 
+    public abstract boolean parseRequestLine(boolean useAvailableDataOnly)
+        throws IOException;
+    
+    public abstract boolean parseHeaders() throws IOException;
+    
+    protected abstract boolean fill(boolean block) throws IOException; 
+
+    protected abstract void init(SocketWrapper<S> socketWrapper,
+            AbstractEndpoint endpoint) throws IOException;
+
+
     // --------------------------------------------------------- Public Methods
 
 
@@ -229,7 +248,6 @@ public abstract class AbstractInputBuffer implements InputBuffer{
         // Recycle Request object
         request.recycle();
 
-        inputStream = null;
         lastValid = 0;
         pos = 0;
         lastActiveFilter = -1;
@@ -308,6 +326,4 @@ public abstract class AbstractInputBuffer implements InputBuffer{
             return activeFilters[lastActiveFilter].doRead(chunk,req);
 
     }
-
-    
 }

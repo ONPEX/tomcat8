@@ -14,7 +14,7 @@
 ; limitations under the License.
 
 ; Tomcat script for Nullsoft Installer
-; $Id: tomcat.nsi 1142923 2011-07-05 08:31:52Z kkolinko $
+; $Id: tomcat.nsi 1161311 2011-08-24 22:48:01Z kkolinko $
 
   ;Compression options
   CRCCheck on
@@ -348,7 +348,9 @@ Section -post
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Apache Tomcat @VERSION_MAJOR_MINOR@ $TomcatServiceName" \
                    "DisplayName" "Apache Tomcat @VERSION_MAJOR_MINOR@ $TomcatServiceName (remove only)"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Apache Tomcat @VERSION_MAJOR_MINOR@ $TomcatServiceName" \
-                   "UninstallString" "$\"$INSTDIR\Uninstall.exe$\" -ServiceName=$TomcatServiceName"
+                   "DisplayIcon" "$\"$INSTDIR\tomcat.ico$\""
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Apache Tomcat @VERSION_MAJOR_MINOR@ $TomcatServiceName" \
+                   "UninstallString" "$\"$INSTDIR\Uninstall.exe$\" -ServiceName=$\"$TomcatServiceName$\""
 
 SectionEnd
 
@@ -547,6 +549,24 @@ Function pageConfigurationLeave
     ${NSD_GetText} $CtlTomcatAdminUsername $TomcatAdminUsername
     ${NSD_GetText} $CtlTomcatAdminPassword $TomcatAdminPassword
     ${NSD_GetText} $CtlTomcatAdminRoles $TomcatAdminRoles
+  ${EndIf}
+
+  ${If} $TomcatPortShutdown == ""
+    MessageBox MB_ICONEXCLAMATION|MB_OK 'The shutdown port may not be empty'
+    Abort "Config not right"
+    Goto exit
+  ${EndIf}
+
+  ${If} $TomcatPortHttp == ""
+    MessageBox MB_ICONEXCLAMATION|MB_OK 'The HTTP port may not be empty'
+    Abort "Config not right"
+    Goto exit
+  ${EndIf}
+
+  ${If} $TomcatPortAjp == ""
+    MessageBox MB_ICONEXCLAMATION|MB_OK 'The AJP port may not be empty'
+    Abort "Config not right"
+    Goto exit
   ${EndIf}
 
   ${If} $TomcatServiceName == ""
@@ -1031,7 +1051,7 @@ Function createShortcuts
   ${EndIf}
 
   CreateShortCut "$SMPROGRAMS\Apache Tomcat @VERSION_MAJOR_MINOR@ $TomcatServiceName\Uninstall Tomcat @VERSION_MAJOR_MINOR@.lnk" \
-                 "$INSTDIR\Uninstall.exe" "-ServiceName=$TomcatServiceName"
+                 "$INSTDIR\Uninstall.exe" '-ServiceName="$TomcatServiceName"'
 
   CreateShortCut "$SMPROGRAMS\Apache Tomcat @VERSION_MAJOR_MINOR@ $TomcatServiceName\Tomcat @VERSION_MAJOR_MINOR@ Program Directory.lnk" \
                  "$INSTDIR"
@@ -1067,6 +1087,14 @@ FunctionEnd
 
 Section Uninstall
 
+  ${If} $TomcatServiceName == ""
+    MessageBox MB_ICONSTOP|MB_OK \
+        "No service name specified to uninstall. This will be provided automatically if you uninstall via \
+         Add/Remove Programs or the shortcut on the Start menu. Alternatively, call the installer from \
+         the command line with -ServiceName=$\"<name of service>$\"."
+    Quit
+  ${EndIf}
+  
   Delete "$INSTDIR\Uninstall.exe"
 
   ; Stop Tomcat service monitor if running
@@ -1138,7 +1166,7 @@ SectionEnd
 ; =================
 Function un.onInit
   ${GetParameters} $R0
-  ${GetOPtions} $R0 "-ServiceName=" $R1
+  ${GetOptions} $R0 "-ServiceName=" $R1
   StrCpy $TomcatServiceName $R1
   StrCpy $TomcatServiceFileName $R1.exe
   StrCpy $TomcatServiceManagerFileName $R1w.exe

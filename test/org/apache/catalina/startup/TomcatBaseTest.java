@@ -32,7 +32,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.fail;
+
+import org.junit.After;
+import org.junit.Before;
 
 import org.apache.catalina.LifecycleState;
 import org.apache.catalina.connector.Connector;
@@ -45,7 +48,7 @@ import org.apache.tomcat.util.buf.ByteChunk;
  * Base test case that provides a Tomcat instance for each test - mainly so we
  * don't have to keep writing the cleanup code.
  */
-public abstract class TomcatBaseTest extends TestCase {
+public abstract class TomcatBaseTest {
     private Tomcat tomcat;
     private File tempDir;
     private boolean accessLogEnabled = false;
@@ -101,7 +104,7 @@ public abstract class TomcatBaseTest extends TestCase {
         return accessLogEnabled;
     }
 
-    @Override
+    @Before
     public void setUp() throws Exception {
         // Need to use JULI so log messages from the tests are visible
         System.setProperty("java.util.logging.manager",
@@ -110,7 +113,7 @@ public abstract class TomcatBaseTest extends TestCase {
                 getBuildDirectory(), "conf/logging.properties").toString());
 
         tempDir = new File(System.getProperty("tomcat.test.temp", "output/tmp"));
-        if (!tempDir.exists() && !tempDir.mkdirs()) {
+        if (!tempDir.mkdirs() && !tempDir.isDirectory()) {
             fail("Unable to create temporary directory for test");
         }
         
@@ -169,7 +172,7 @@ public abstract class TomcatBaseTest extends TestCase {
         return protocol;
     }
 
-    @Override
+    @After
     public void tearDown() throws Exception {
         // Some tests may call tomcat.destroy(), some tests may just call
         // tomcat.stop(), some not call either method. Make sure that stop() &

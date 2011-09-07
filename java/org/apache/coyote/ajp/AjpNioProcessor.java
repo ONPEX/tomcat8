@@ -23,13 +23,10 @@ import java.nio.ByteBuffer;
 import java.nio.channels.Selector;
 
 import org.apache.coyote.ActionCode;
-import org.apache.coyote.OutputBuffer;
 import org.apache.coyote.RequestInfo;
-import org.apache.coyote.Response;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
-import org.apache.tomcat.util.buf.ByteChunk;
 import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 import org.apache.tomcat.util.net.NioChannel;
 import org.apache.tomcat.util.net.NioEndpoint;
@@ -101,7 +98,6 @@ public class AjpNioProcessor extends AbstractAjpProcessor<NioChannel> {
         this.socket = socket.getSocket();
         
         long soTimeout = endpoint.getSoTimeout();
-        int keepAliveTimeout = endpoint.getKeepAliveTimeout();
 
         // Error flag
         error = false;
@@ -112,7 +108,6 @@ public class AjpNioProcessor extends AbstractAjpProcessor<NioChannel> {
                 // Get first message of the request
                 int bytesRead = readMessage(requestHeaderMessage, false);
                 if (bytesRead == 0) {
-                    rp.setStage(org.apache.coyote.Constants.STAGE_ENDED);
                     break;
                 }
                 // Set back timeout if keep alive timeout is enabled
@@ -128,15 +123,17 @@ public class AjpNioProcessor extends AbstractAjpProcessor<NioChannel> {
                     } catch (IOException e) {
                         error = true;
                     }
-                    recycle(true);
-                    continue;
-                } else if(type != Constants.JK_AJP13_FORWARD_REQUEST) {
-                    // Usually the servlet didn't read the previous request body
-                    if(log.isDebugEnabled()) {
-                        log.debug("Unexpected message: "+type);
-                    }
                     recycle(false);
                     continue;
+                } else if(type != Constants.JK_AJP13_FORWARD_REQUEST) {
+                    // Unexpected packet type. Unread body packets should have
+                    // been swallowed in finish().
+                    if (log.isDebugEnabled()) {
+                        log.debug("Unexpected message: " + type);
+                    }
+                    error = true;
+                    recycle(true);
+                    break;
                 }
                 request.setStartTime(System.currentTimeMillis());
             } catch (IOException e) {
@@ -217,7 +214,7 @@ public class AjpNioProcessor extends AbstractAjpProcessor<NioChannel> {
                 socket.setTimeout(keepAliveTimeout);
             }
 
-            recycle(true);
+            recycle(false);
         }
         
         rp.setStage(org.apache.coyote.Constants.STAGE_ENDED);
@@ -295,31 +292,6 @@ public class AjpNioProcessor extends AbstractAjpProcessor<NioChannel> {
             if ( selector != null ) pool.put(selector);
         }
         writeBuffer.clear();
-    }
-
-    /**
-     * Finish AJP response.
-     */
-    @Override
-    protected void finish() throws IOException {
-
-        if (!response.isCommitted()) {
-            // Validate and write response headers
-            try {
-                prepareResponse();
-            } catch (IOException e) {
-                // Set error flag
-                error = true;
-            }
-        }
-
-        if (finished)
-            return;
-
-        finished = true;
-
-        // Add the end message
-        output(endMessageArray, 0, endMessageArray.length);
     }
 
 
@@ -408,37 +380,9 @@ public class AjpNioProcessor extends AbstractAjpProcessor<NioChannel> {
             return false;
         }
 
-        bodyMessage.getBytes(bodyBytes);
+        bodyMessage.getBodyBytes(bodyBytes);
         empty = false;
         return true;
-    }
-
-    /**
-     * Get more request body data from the web server and store it in the
-     * internal buffer.
-     *
-     * @return true if there is more data, false if not.
-     */
-    @Override
-    protected boolean refillReadBuffer() throws IOException {
-        // If the server returns an empty packet, assume that that end of
-        // the stream has been reached (yuck -- fix protocol??).
-        // FORM support
-        if (replay) {
-            endOfStream = true; // we've read everything there is
-        }
-        if (endOfStream) {
-            return false;
-        }
-
-        // Request more data immediately
-        output(getBodyMessageArray, 0, getBodyMessageArray.length);
-
-        boolean moreData = receive();
-        if( !moreData ) {
-            endOfStream = true;
-        }
-        return moreData;
     }
 
 
@@ -460,7 +404,7 @@ public class AjpNioProcessor extends AbstractAjpProcessor<NioChannel> {
             return 0;
         }
         
-        int messageLength = message.processHeader();
+        int messageLength = message.processHeader(true);
         if (messageLength < 0) {
             // Invalid AJP header signature
             throw new IOException(sm.getString("ajpmessage.invalidLength",
@@ -485,71 +429,4 @@ public class AjpNioProcessor extends AbstractAjpProcessor<NioChannel> {
     }
 
 
-    /**
-     * Callback to write data from the buffer.
-     */
-    @Override
-    protected void flush(boolean explicit) throws IOException {
-        if (explicit && !finished) {
-            // Send the flush message
-            output(flushMessageArray, 0, flushMessageArray.length);
-        }
-    }
-
-
-    // ----------------------------------- OutputStreamOutputBuffer Inner Class
-
-
-    /**
-     * This class is an output buffer which will write data to an output
-     * stream.
-     */
-    protected class SocketOutputBuffer implements OutputBuffer {
-
-        /**
-         * Write chunk.
-         */
-        @Override
-        public int doWrite(ByteChunk chunk, Response res)
-            throws IOException {
-
-            if (!response.isCommitted()) {
-                // Validate and write response headers
-                try {
-                    prepareResponse();
-                } catch (IOException e) {
-                    // Set error flag
-                    error = true;
-                }
-            }
-
-            int len = chunk.getLength();
-            // 4 - hardcoded, byte[] marshaling overhead
-            // Adjust allowed size if packetSize != default (Constants.MAX_PACKET_SIZE)
-            int chunkSize = Constants.MAX_SEND_SIZE + packetSize - Constants.MAX_PACKET_SIZE;
-            int off = 0;
-            while (len > 0) {
-                int thisTime = len;
-                if (thisTime > chunkSize) {
-                    thisTime = chunkSize;
-                }
-                len -= thisTime;
-                responseHeaderMessage.reset();
-                responseHeaderMessage.appendByte(Constants.JK_AJP13_SEND_BODY_CHUNK);
-                responseHeaderMessage.appendBytes(chunk.getBytes(), chunk.getOffset() + off, thisTime);
-                responseHeaderMessage.end();
-                output(responseHeaderMessage.getBuffer(), 0, responseHeaderMessage.getLen());
-
-                off += thisTime;
-            }
-
-            byteCount += chunk.getLength();
-            return chunk.getLength();
-        }
-
-        @Override
-        public long getBytesWritten() {
-            return byteCount;
-        }
-    }
 }

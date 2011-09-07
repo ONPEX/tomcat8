@@ -25,6 +25,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import static org.junit.Assert.fail;
+
+import org.junit.Test;
+
 import org.apache.catalina.Context;
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.startup.Tomcat;
@@ -32,6 +36,7 @@ import org.apache.catalina.startup.TomcatBaseTest;
 
 public class TestWebappClassLoaderMemoryLeak extends TomcatBaseTest {
 
+    @Test
     public void testTimerThreadLeak() throws Exception {
         Tomcat tomcat = getTomcatInstance();
         

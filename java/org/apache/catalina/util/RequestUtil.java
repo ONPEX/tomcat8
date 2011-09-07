@@ -33,7 +33,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Tim Tye
- * @version $Id: RequestUtil.java 1145355 2011-07-11 21:10:08Z markt $
+ * @version $Id: RequestUtil.java 1157019 2011-08-12 09:11:35Z markt $
  */
 
 public final class RequestUtil {
@@ -174,8 +174,8 @@ public final class RequestUtil {
      *
      * @param map Map that accumulates the resulting parameters
      * @param data Input string containing request parameters
-     * @param encoding The encoding to use; if null, the default encoding is
-     * used. If an unsupported encoding is specified the parameters will not be
+     * @param encoding The encoding to use; encoding must not be null.
+     * If an unsupported encoding is specified the parameters will not be
      * parsed and the map will not be modified
      */
     public static void parseParameters(Map<String,String[]> map, String data,
@@ -184,15 +184,10 @@ public final class RequestUtil {
         if ((data != null) && (data.length() > 0)) {
 
             // use the specified encoding to extract bytes out of the
-            // given string so that the encoding is not lost. If an
-            // encoding is not specified, let it use platform default
+            // given string so that the encoding is not lost.
             byte[] bytes = null;
             try {
-                if (encoding == null) {
-                    bytes = data.getBytes(Charset.defaultCharset());
-                } else {
-                    bytes = data.getBytes(B2CConverter.getCharset(encoding));
-                }
+                bytes = data.getBytes(B2CConverter.getCharset(encoding));
                 parseParameters(map, bytes, encoding);
             } catch (UnsupportedEncodingException uee) {
                 if (log.isDebugEnabled()) {

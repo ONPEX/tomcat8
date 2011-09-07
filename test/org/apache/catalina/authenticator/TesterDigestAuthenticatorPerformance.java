@@ -23,6 +23,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+
 import org.apache.catalina.Context;
 import org.apache.catalina.deploy.LoginConfig;
 import org.apache.catalina.deploy.SecurityCollection;
@@ -45,7 +49,7 @@ public class TesterDigestAuthenticatorPerformance extends TomcatBaseTest {
     private static String REALM = "TestRealm";
     private static String QOP = "auth";
 
-    
+    @Test
     public void testSimple() throws Exception {
         doTest(100, 1000);
     }

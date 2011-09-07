@@ -19,7 +19,13 @@ package org.apache.tomcat.util.net;
 import java.io.File;
 import java.net.SocketException;
 
-import javax.net.ssl.SSLHandshakeException;
+import javax.net.ssl.SSLException;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import org.junit.Test;
 
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.startup.Tomcat;
@@ -36,6 +42,7 @@ import org.apache.tomcat.util.net.jsse.TesterBug50640SslImpl;
  */
 public class TestCustomSsl extends TomcatBaseTest {
 
+    @Test
     public void testCustomSslImplementation() throws Exception {
 
         TesterSupport.configureClientSsl();
@@ -71,10 +78,12 @@ public class TestCustomSsl extends TomcatBaseTest {
         assertTrue(res.toString().indexOf("<h1>Hello World!</h1>") > 0);
     }
 
+    @Test
     public void testCustomTrustManager1() throws Exception {
         doTestCustomTrustManager(false);
     }
-    
+
+    @Test
     public void testCustomTrustManager2() throws Exception {
         doTestCustomTrustManager(true);
     }
@@ -130,7 +139,7 @@ public class TestCustomSsl extends TomcatBaseTest {
                 fail(se.getMessage());
                 se.printStackTrace();
             }
-        } catch (SSLHandshakeException he) {
+        } catch (SSLException he) {
             if (serverTrustAll) {
                 fail(he.getMessage());
                 he.printStackTrace();

@@ -44,7 +44,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: Connector.java 1075176 2011-02-27 23:08:45Z markt $
+ * @version $Id: Connector.java 1161340 2011-08-25 00:28:41Z kkolinko $
  */
 
 
@@ -74,9 +74,8 @@ public class Connector extends LifecycleMBeanBase  {
             Class<?> clazz = Class.forName(protocolHandlerClassName);
             this.protocolHandler = (ProtocolHandler) clazz.newInstance();
         } catch (Exception e) {
-            log.error
-                (sm.getString
-                 ("coyoteConnector.protocolHandlerInstantiationFailed", e));
+            log.error(sm.getString(
+                    "coyoteConnector.protocolHandlerInstantiationFailed"), e);
         }
     }
 
@@ -926,6 +925,12 @@ public class Connector extends LifecycleMBeanBase  {
      */
     @Override
     protected void startInternal() throws LifecycleException {
+
+        // Validate settings before starting
+        if (getPort() < 1) {
+            throw new LifecycleException(sm.getString(
+                    "coyoteConnector.invalidPort", Integer.valueOf(getPort())));
+        }
 
         setState(LifecycleState.STARTING);
 

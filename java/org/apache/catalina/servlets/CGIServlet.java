@@ -233,7 +233,7 @@ import org.apache.catalina.util.IOTools;
  *
  * @author Martin T Dengler [root@martindengler.com]
  * @author Amy Roh
- * @version $Id: CGIServlet.java 1096243 2011-04-23 21:53:00Z markt $
+ * @version $Id: CGIServlet.java 1162172 2011-08-26 17:12:33Z markt $
  * @since Tomcat 4.0
  *
  */
@@ -646,7 +646,7 @@ public final class CGIServlet extends HttpServlet {
      * <p>
      * </p>
      *
-     * @version  $Id: CGIServlet.java 1096243 2011-04-23 21:53:00Z markt $
+     * @version  $Id: CGIServlet.java 1162172 2011-08-26 17:12:33Z markt $
      * @since    Tomcat 4.0
      *
      */
@@ -1149,9 +1149,11 @@ public final class CGIServlet extends HttpServlet {
             String dirPath = destPath.toString().substring(
                     0,destPath.toString().lastIndexOf("/"));
             File dir = new File(dirPath);
-            if (!dir.mkdirs() && debug >= 2) {
-                log("expandCGIScript: failed to create directories for '" +
-                        dir.getAbsolutePath() + "'");
+            if (!dir.mkdirs() && !dir.isDirectory()) {
+                if (debug >= 2) {
+                    log("expandCGIScript: failed to create directories for '" +
+                            dir.getAbsolutePath() + "'");
+                }
                 return;
             }
 
@@ -1376,7 +1378,7 @@ public final class CGIServlet extends HttpServlet {
      * and <code>setResponse</code> methods, respectively.
      * </p>
      *
-     * @version $Id: CGIServlet.java 1096243 2011-04-23 21:53:00Z markt $
+     * @version $Id: CGIServlet.java 1162172 2011-08-26 17:12:33Z markt $
      */
 
     protected class CGIRunner {

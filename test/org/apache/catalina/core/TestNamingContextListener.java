@@ -22,6 +22,10 @@ import javax.naming.NamingException;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+
 import org.apache.catalina.LifecycleState;
 import org.apache.catalina.deploy.ContextEnvironment;
 import org.apache.catalina.startup.Tomcat;
@@ -35,6 +39,7 @@ public class TestNamingContextListener extends TomcatBaseTest {
     /** 
      * Test JNDI is available to ServletContextListeners.
      */
+    @Test
     public void testBug49132() throws Exception {
         Tomcat tomcat = getTomcatInstance();
         

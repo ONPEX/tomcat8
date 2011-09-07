@@ -21,6 +21,11 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
+
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
 import org.apache.tomcat.util.buf.ByteChunk;
@@ -39,6 +44,7 @@ public class TestParserNoStrictWhitespace extends TomcatBaseTest {
         super.setUp();
     }
 
+    @Test
     public void testBug48627() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
@@ -59,6 +65,7 @@ public class TestParserNoStrictWhitespace extends TomcatBaseTest {
         assertEcho(result, "01-\\");
     }
 
+    @Test
     public void testBug48668a() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
@@ -104,6 +111,7 @@ public class TestParserNoStrictWhitespace extends TomcatBaseTest {
         assertEcho(result, "53-Hello #{'foo}");
     }
 
+    @Test
     public void testBug48668b() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
@@ -120,6 +128,7 @@ public class TestParserNoStrictWhitespace extends TomcatBaseTest {
         assertEcho(result, "01-Hello world</p>#{foo2");
     }
 
+    @Test
     public void testBug49297NoSpaceNotStrict() throws Exception {
 
         Tomcat tomcat = getTomcatInstance();
@@ -140,6 +149,7 @@ public class TestParserNoStrictWhitespace extends TomcatBaseTest {
         assertEcho(res.toString(), "Hello World");
     }
 
+    @Test
     public void testBug49297DuplicateAttr() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 

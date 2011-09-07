@@ -60,7 +60,7 @@ import org.apache.tomcat.util.http.fileupload.FileItemFactory;
  *
  * @since FileUpload 1.1
  *
- * @version $Id: DiskFileItemFactory.java 981816 2010-08-03 10:44:58Z markt $
+ * @version $Id: DiskFileItemFactory.java 1154575 2011-08-06 20:19:29Z markt $
  */
 public class DiskFileItemFactory implements FileItemFactory {
 
@@ -195,6 +195,7 @@ public class DiskFileItemFactory implements FileItemFactory {
      *
      * @return The newly created file item.
      */
+    @Override
     public FileItem createItem(String fieldName, String contentType,
             boolean isFormField, String fileName) {
         DiskFileItem result = new DiskFileItem(fieldName, contentType,

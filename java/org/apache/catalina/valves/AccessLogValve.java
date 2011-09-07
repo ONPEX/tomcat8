@@ -59,7 +59,8 @@ import org.apache.tomcat.util.buf.B2CConverter;
  * <p>Implementation of the <b>Valve</b> interface that generates a web server
  * access log with the detailed line contents matching a configurable pattern.
  * The syntax of the available patterns is similar to that supported by the
- * Apache <code>mod_log_config</code> module.  As an additional feature,
+ * <a href="http://httpd.apache.org/">Apache HTTP Server</a>
+ * <code>mod_log_config</code> module.  As an additional feature,
  * automatic rollover of log files when the date changes is also supported.</p>
  *
  * <p>Patterns for the logged message may include constant text or any of the
@@ -71,7 +72,8 @@ import org.apache.tomcat.util.buf.B2CConverter;
  * <li><b>%b</b> - Bytes sent, excluding HTTP headers, or '-' if no bytes
  *     were sent
  * <li><b>%B</b> - Bytes sent, excluding HTTP headers
- * <li><b>%h</b> - Remote host name
+ * <li><b>%h</b> - Remote host name (or IP address if
+ * <code>enableLookups</code> for the connector is false)
  * <li><b>%H</b> - Request protocol
  * <li><b>%l</b> - Remote logical username from identd (always returns '-')
  * <li><b>%m</b> - Request method
@@ -101,7 +103,9 @@ import org.apache.tomcat.util.buf.B2CConverter;
  * <p>
  * There is also support to write information from the cookie, incoming
  * header, the Session or something else in the ServletRequest.<br>
- * It is modeled after the apache syntax:
+ * It is modeled after the
+ * <a href="http://httpd.apache.org/">Apache HTTP Server</a> log configuration
+ * syntax:
  * <ul>
  * <li><code>%{xxx}i</code> for incoming headers
  * <li><code>%{xxx}o</code> for outgoing response headers
@@ -112,10 +116,38 @@ import org.apache.tomcat.util.buf.B2CConverter;
  * </p>
  *
  * <p>
+ * Log rotation can be on or off. This is dictated by the rotatable
+ * property.
+ * </p>
+ *
+ * <p>
+ * For UvNIX users, another field called <code>checkExists</code> is also
+ * available. If set to true, the log file's existence will be checked before
+ * each logging. This way an external log rotator can move the file
+ * somewhere and tomcat will start with a new file.
+ * </p>
+ *
+ * <p>
+ * For JMX junkies, a public method called </code>rotate</code> has
+ * been made available to allow you to tell this instance to move
+ * the existing log file to somewhere else and start writing a new log file.
+ * </p>
+ * 
+ * <p>
  * Conditional logging is also supported. This can be done with the
- * <code>condition</code> property.
- * If the value returned from ServletRequest.getAttribute(condition)
- * yields a non-null value. The logging will be skipped.
+ * <code>conditionUnless</code> and <code>conditionIf</code> properties.
+ * If the value returned from ServletRequest.getAttribute(conditionUnless)
+ * yields a non-null value, the logging will be skipped.
+ * If the value returned from ServletRequest.getAttribute(conditionIf)
+ * yields the null value, the logging will be skipped.
+ * The <code>condition</code> attribute is synonym for
+ * <code>conditionUnless</code> and is provided for backwards compatibility.
+ * </p>
+ * 
+ * <p>
+ * For extended attributes coming from a getAttribute() call,
+ * it is you responsibility to ensure there are no newline or
+ * control characters.
  * </p>
  *
  * @author Craig R. McClanahan
@@ -124,7 +156,7 @@ import org.apache.tomcat.util.buf.B2CConverter;
  * @author Takayuki Kaneko
  * @author Peter Rossbach
  * 
- * @version $Id: AccessLogValve.java 1145237 2011-07-11 16:46:28Z kkolinko $
+ * @version $Id: AccessLogValve.java 1162172 2011-08-26 17:12:33Z markt $
  */
 
 public class AccessLogValve extends ValveBase implements AccessLog {
@@ -496,13 +528,19 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      * agent renames the log file so we can automagically recreate it.
      */
     private boolean checkExists = false;
-    
-    
+
+
     /**
-     * Are we doing conditional logging. default false.
+     * Are we doing conditional logging. default null.
+     * It is the value of <code>conditionUnless</code> property.
      */
     protected String condition = null;
 
+    /**
+     * Are we doing conditional logging. default null.
+     * It is the value of <code>conditionIf</code> property.
+     */
+    protected String conditionIf = null;
 
     /**
      * Date format to place in log file name. Use at your own risk!
@@ -760,6 +798,46 @@ public class AccessLogValve extends ValveBase implements AccessLog {
 
 
     /**
+     * Return whether the attribute name to look for when
+     * performing conditional logging. If null, every
+     * request is logged.
+     */
+    public String getConditionUnless() {
+        return getCondition();
+    }
+
+
+    /**
+     * Set the ServletRequest.attribute to look for to perform
+     * conditional logging. Set to null to log everything.
+     *
+     * @param condition Set to null to log everything
+     */
+    public void setConditionUnless(String condition) {
+        setCondition(condition);
+    }
+
+    /**
+     * Return whether the attribute name to look for when
+     * performing conditional logging. If null, every
+     * request is logged.
+     */
+    public String getConditionIf() {
+        return conditionIf;
+    }
+
+
+    /**
+     * Set the ServletRequest.attribute to look for to perform
+     * conditional logging. Set to null to log everything.
+     *
+     * @param condition Set to null to log everything
+     */
+    public void setConditionIf(String condition) {
+        this.conditionIf = condition;
+    }
+
+    /**
      *  Return the date format date based log rotation.
      */
     public String getFileDateFormat() {
@@ -854,9 +932,11 @@ public class AccessLogValve extends ValveBase implements AccessLog {
     
     @Override
     public void log(Request request, Response response, long time) {
-        if (!getState().isAvailable() || !getEnabled() ||
-                logElements == null || condition != null
-                && null != request.getRequest().getAttribute(condition)) {
+        if (!getState().isAvailable() || !getEnabled() || logElements == null
+                || condition != null
+                && null != request.getRequest().getAttribute(condition)
+                || conditionIf != null
+                && null == request.getRequest().getAttribute(conditionIf)) {
             return;
         }
 
@@ -1001,10 +1081,8 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         File dir = new File(directory);
         if (!dir.isAbsolute())
             dir = new File(System.getProperty(Globals.CATALINA_BASE_PROP), directory);
-        if (!dir.exists()) {
-            if (!dir.mkdirs()) {
-                log.error(sm.getString("accessLogValve.openDirFail", dir));
-            }
+        if (!dir.mkdirs() && !dir.isDirectory()) {
+            log.error(sm.getString("accessLogValve.openDirFail", dir));
         }
 
         // Open the current log file
@@ -1017,10 +1095,8 @@ public class AccessLogValve extends ValveBase implements AccessLog {
             pathname = new File(dir.getAbsoluteFile(), prefix + suffix);
         }
         File parent = pathname.getParentFile();
-        if (!parent.exists()) {
-            if (!parent.mkdirs()) {
-                log.error(sm.getString("accessLogValve.openDirFail", parent));
-            }
+        if (!parent.mkdirs() && !parent.isDirectory()) {
+            log.error(sm.getString("accessLogValve.openDirFail", parent));
         }
 
         Charset charset = null;
@@ -1885,7 +1961,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
     /**
      * create an AccessLogElement implementation which needs header string
      */
-    private AccessLogElement createAccessLogElement(String header, char pattern) {
+    protected AccessLogElement createAccessLogElement(String header, char pattern) {
         switch (pattern) {
         case 'i':
             return new HeaderElement(header);
@@ -1907,7 +1983,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
     /**
      * create an AccessLogElement implementation
      */
-    private AccessLogElement createAccessLogElement(char pattern) {
+    protected AccessLogElement createAccessLogElement(char pattern) {
         switch (pattern) {
         case 'a':
             return new RemoteAddrElement();

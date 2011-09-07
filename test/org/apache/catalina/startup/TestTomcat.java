@@ -35,6 +35,13 @@ import javax.naming.NamingException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
 
 import org.apache.catalina.deploy.ContextEnvironment;
 import org.apache.catalina.deploy.ContextResourceLink;
@@ -45,7 +52,7 @@ import org.apache.tomcat.util.buf.ByteChunk;
 public class TestTomcat extends TomcatBaseTest {
 
     /**
-     * Simple servlet to test in-line registration 
+     * Simple servlet to test in-line registration.
      */
     public static class HelloWorld extends HttpServlet {
 
@@ -54,6 +61,22 @@ public class TestTomcat extends TomcatBaseTest {
         @Override
         public void doGet(HttpServletRequest req, HttpServletResponse res) 
                 throws IOException {
+            res.getWriter().write("Hello world");
+        }
+    }
+
+    /**
+     * Simple servlet to test the default session manager.
+     */
+    public static class HelloWorldSession extends HttpServlet {
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public void doGet(HttpServletRequest req, HttpServletResponse res) 
+                throws IOException {
+            HttpSession s = req.getSession(true);
+            s.getId();
             res.getWriter().write("Hello world");
         }
     }
@@ -182,6 +205,7 @@ public class TestTomcat extends TomcatBaseTest {
      * 
      * @throws Exception 
      */
+    @Test
     public void testProgrammatic() throws Exception {
         Tomcat tomcat = getTomcatInstance();
         
@@ -200,6 +224,7 @@ public class TestTomcat extends TomcatBaseTest {
         assertEquals("Hello world", res.toString());
     }
 
+    @Test
     public void testSingleWebapp() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
@@ -213,7 +238,8 @@ public class TestTomcat extends TomcatBaseTest {
                 "/examples/servlets/servlet/HelloWorldExample");
         assertTrue(res.toString().indexOf("<h1>Hello World!</h1>") > 0);
     }
-    
+
+    @Test
     public void testJsps() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
@@ -227,7 +253,27 @@ public class TestTomcat extends TomcatBaseTest {
                 "/examples/jsp/jsp2/el/basic-arithmetic.jsp");
         assertTrue(res.toString().indexOf("<td>${(1==2) ? 3 : 4}</td>") > 0);
     }
-    
+
+    @Test
+    public void testSession() throws Exception {
+        Tomcat tomcat = getTomcatInstance();
+        
+        // Must have a real docBase - just use temp
+        org.apache.catalina.Context ctx = 
+            tomcat.addContext("", System.getProperty("java.io.tmpdir"));
+        // You can customize the context by calling 
+        // its API
+        
+        Tomcat.addServlet(ctx, "myServlet", new HelloWorldSession());
+        ctx.addServletMapping("/", "myServlet");
+        
+        tomcat.start();
+        
+        ByteChunk res = getUrl("http://localhost:" + getPort() + "/");
+        assertEquals("Hello world", res.toString());
+    }
+
+    @Test
     public void testLaunchTime() throws Exception {
         Tomcat tomcat = getTomcatInstance();
         long t0 = System.currentTimeMillis();
@@ -241,6 +287,7 @@ public class TestTomcat extends TomcatBaseTest {
     /** 
      * Test for enabling JNDI.
      */
+    @Test
     public void testEnableNaming() throws Exception {
         Tomcat tomcat = getTomcatInstance();
         
@@ -271,6 +318,7 @@ public class TestTomcat extends TomcatBaseTest {
     /** 
      * Test for enabling JNDI and using global resources.
      */
+    @Test
     public void testEnableNamingGlobal() throws Exception {
         Tomcat tomcat = getTomcatInstance();
         
@@ -307,6 +355,7 @@ public class TestTomcat extends TomcatBaseTest {
     /**
      * Test for https://issues.apache.org/bugzilla/show_bug.cgi?id=47866
      */
+    @Test
     public void testGetResource() throws Exception {
         Tomcat tomcat = getTomcatInstance();
         
@@ -330,6 +379,7 @@ public class TestTomcat extends TomcatBaseTest {
         assertTrue(res.toString().contains("<?xml version=\"1.0\" "));
     }
 
+    @Test
     public void testBug50826() throws Exception {
         Tomcat tomcat = getTomcatInstance();
         String contextPath = "/examples";

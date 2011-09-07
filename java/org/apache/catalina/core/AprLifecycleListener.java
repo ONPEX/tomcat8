@@ -38,7 +38,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Filip Hanik
- * @version $Id: AprLifecycleListener.java 1140788 2011-06-28 18:55:57Z schultz $
+ * @version $Id: AprLifecycleListener.java 1154911 2011-08-08 10:42:49Z markt $
  * @since 4.1
  */
 
@@ -61,7 +61,7 @@ public class AprLifecycleListener
     protected static final int TCN_REQUIRED_MINOR = 1;
     protected static final int TCN_REQUIRED_PATCH = 17;
     protected static final int TCN_RECOMMENDED_MINOR = 1;
-    protected static final int TCN_RECOMMENDED_PV = 20;
+    protected static final int TCN_RECOMMENDED_PV = 22;
 
 
     // ---------------------------------------------- Properties

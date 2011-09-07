@@ -89,7 +89,7 @@ public abstract class CookiesBaseTest extends TomcatBaseTest {
         ctx.addServletMapping("/switch", "switch");
 
     }
-    
+
     public abstract void testCookiesInstance() throws Exception;
     
 }

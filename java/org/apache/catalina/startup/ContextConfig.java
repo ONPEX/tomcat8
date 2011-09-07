@@ -103,7 +103,7 @@ import org.xml.sax.SAXParseException;
  *
  * @author Craig R. McClanahan
  * @author Jean-Francois Arcand
- * @version $Id: ContextConfig.java 1138839 2011-06-23 11:44:39Z markt $
+ * @version $Id: ContextConfig.java 1152595 2011-07-31 17:08:43Z markt $
  */
 
 public class ContextConfig
@@ -2015,6 +2015,11 @@ public class ContextConfig
         } catch (ClassFormatError e) {
             log.warn(sm.getString("contextConfig.invalidSciHandlesTypes",
                     className), e);
+            return;
+        } catch (Throwable t) {
+            ExceptionUtils.handleThrowable(t);
+            log.warn(sm.getString("contextConfig.invalidSciHandlesTypes",
+                    className), t);
             return;
         }
 

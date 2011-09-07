@@ -77,7 +77,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: WebappLoader.java 1078601 2011-03-06 22:12:10Z markt $
+ * @version $Id: WebappLoader.java 1162172 2011-08-26 17:12:33Z markt $
  */
 
 public class WebappLoader extends LifecycleMBeanBase
@@ -883,10 +883,10 @@ public class WebappLoader extends LifecycleMBeanBase
             } else {
 
                 classRepository = new File(workDir, classesPath);
-                if (!classRepository.isDirectory()) {
-                    if (!classRepository.mkdirs())
-                        throw new IOException(
-                                sm.getString("webappLoader.mkdirFailure"));
+                if (!classRepository.mkdirs() &&
+                        !classRepository.isDirectory()) {
+                    throw new IOException(
+                            sm.getString("webappLoader.mkdirFailure"));
                 }
                 if (!copyDir(classes, classRepository)) {
                     throw new IOException(
@@ -935,10 +935,9 @@ public class WebappLoader extends LifecycleMBeanBase
             } else {
                 copyJars = true;
                 destDir = new File(workDir, libPath);
-                if (!destDir.isDirectory()) {
-                    if (!destDir.mkdirs())
-                        throw new IOException(
-                                sm.getString("webappLoader.mkdirFailure"));
+                if (!destDir.mkdirs() && !destDir.isDirectory()) {
+                    throw new IOException(
+                            sm.getString("webappLoader.mkdirFailure"));
                 }
             }
 

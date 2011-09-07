@@ -45,7 +45,7 @@ import org.apache.catalina.util.CustomObjectInputStream;
  * saved are still subject to being expired based on inactivity.
  *
  * @author Craig R. McClanahan
- * @version $Id: FileStore.java 1026782 2010-10-24 13:01:28Z markt $
+ * @version $Id: FileStore.java 1162172 2011-08-26 17:12:33Z markt $
  */
 
 public final class FileStore extends StoreBase {
@@ -395,7 +395,7 @@ public final class FileStore extends StoreBase {
      * session persistence directory, if any.  The directory will be
      * created if it does not already exist.
      */
-    private File directory() {
+    private File directory() throws IOException {
 
         if (this.directory == null) {
             return (null);
@@ -419,8 +419,14 @@ public final class FileStore extends StoreBase {
             }
         }
         if (!file.exists() || !file.isDirectory()) {
-            file.delete();
-            file.mkdirs();
+            if (!file.delete() && file.exists()) {
+                throw new IOException(
+                        sm.getString("fileStore.deleteFailed", file));
+            }
+            if (!file.mkdirs() && !file.isDirectory()) {
+                throw new IOException(
+                        sm.getString("fileStore.createFailed", file));
+            }
         }
         this.directoryFile = file;
         return (file);
@@ -435,7 +441,7 @@ public final class FileStore extends StoreBase {
      * @param id The ID of the Session to be retrieved. This is
      *    used in the file naming.
      */
-    private File file(String id) {
+    private File file(String id) throws IOException {
 
         if (this.directory == null) {
             return (null);

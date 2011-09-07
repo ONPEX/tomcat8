@@ -76,7 +76,7 @@ import java.util.logging.SimpleFormatter;
  *    <code>java.util.logging.SimpleFormatter</code></li>
  * </ul>
  *
- * @version $Id: FileHandler.java 1145237 2011-07-11 16:46:28Z kkolinko $
+ * @version $Id: FileHandler.java 1162172 2011-08-26 17:12:33Z markt $
  */
 
 public class FileHandler
@@ -172,28 +172,29 @@ public class FileHandler
         String tsString = ts.toString().substring(0, 19);
         String tsDate = tsString.substring(0, 10);
 
-        writerLock.readLock().lock();
-        // If the date has changed, switch log files
-        if (rotatable && !date.equals(tsDate)) {
-            // Update to writeLock before we switch
-            writerLock.readLock().unlock();
-            writerLock.writeLock().lock();
-            try {
-                // Make sure another thread hasn't already done this
-                if (!date.equals(tsDate)) {
-                    closeWriter();
-                    date = tsDate;
-                    openWriter();
-                }
-                // Down grade to read-lock. This ensures the writer remains valid
-                // until the log message is written
-                writerLock.readLock().lock();
-            } finally {
-                writerLock.writeLock().unlock();
-            }
-        }
-
         try {
+            writerLock.readLock().lock();
+            // If the date has changed, switch log files
+            if (rotatable && !date.equals(tsDate)) {
+                try {
+                    // Update to writeLock before we switch
+                    writerLock.readLock().unlock();
+                    writerLock.writeLock().lock();
+    
+                    // Make sure another thread hasn't already done this
+                    if (!date.equals(tsDate)) {
+                        closeWriter();
+                        date = tsDate;
+                        openWriter();
+                    }
+                } finally {
+                    writerLock.writeLock().unlock();
+                    // Down grade to read-lock. This ensures the writer remains valid
+                    // until the log message is written
+                    writerLock.readLock().lock();
+                }
+            }
+
             String result = null;
             try {
                 result = getFormatter().format(record);
@@ -362,7 +363,12 @@ public class FileHandler
 
         // Create the directory if necessary
         File dir = new File(directory);
-        dir.mkdirs();
+        if (!dir.mkdirs() && !dir.isDirectory()) {
+            reportError("Unable to create [" + dir + "]", null,
+                    ErrorManager.OPEN_FAILURE);
+            writer = null;
+            return;
+        }
 
         // Open the current log file
         writerLock.writeLock().lock();
@@ -370,8 +376,11 @@ public class FileHandler
             File pathname = new File(dir.getAbsoluteFile(), prefix
                     + (rotatable ? date : "") + suffix);
             File parent = pathname.getParentFile();
-            if (!parent.exists()) {
-                parent.mkdirs();
+            if (!parent.mkdirs() && !parent.isDirectory()) {
+                reportError("Unable to create [" + parent + "]", null,
+                        ErrorManager.OPEN_FAILURE);
+                writer = null;
+                return;
             }
             String encoding = getEncoding();
             FileOutputStream fos = new FileOutputStream(pathname, true);
