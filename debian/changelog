@@ -1,3 +1,11 @@
+tomcat7 (7.0.21-1) unstable; urgency=low
+
+  * New upstream release.
+    - Includes fix for CVE-2011-3190.
+  * Updated my email address.
+
+ -- James Page <james.page@ubuntu.com>  Wed, 07 Sep 2011 09:45:29 +0100
+
 tomcat7 (7.0.19-1) unstable; urgency=high (security)
 
   * Team upload.
