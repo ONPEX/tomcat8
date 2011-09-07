@@ -307,9 +307,15 @@
         If you specify a context path of an empty string (""), you are
         defining the <em>default</em> web application for this Host, which
         will process all requests not assigned to other Contexts.</p>
-        <p>The value of this field must not be set except when statically
-        defining a Context in server.xml, as it will be inferred from the
-        filenames used for either the .xml context file or the docBase.</p>
+        <p>This attribute must only be used when statically defining a Context
+        in server.xml. In all other circumstances, the path will be inferred
+        from the filenames used for either the .xml context file or the docBase.
+        </p>
+        <p>Even when statically defining a Context in server.xml, this attribute
+        must not be set unless either the docBase is not located under the
+        <a href="host.html">Host</a>&apos;s <code>appBase</code> or both
+        <code>deployOnStartup</code> and <code>autoDeploy</code> are false. If
+        this rule is not followed, double deployment is likely to result.</p>
       </attribute>
 
       <attribute name="preemptiveAuthentication" required="false">
@@ -761,7 +767,7 @@
     by nesting a <a href="valve.html">Valve</a> element like this:</p>
 
 <source>
-&lt;Context path="/examples" ...&gt;
+&lt;Context&gt;
   ...
   &lt;Valve className="org.apache.catalina.valves.AccessLogValve"
          prefix="localhost_access_log." suffix=".txt"
@@ -815,7 +821,7 @@
     <code>&lt;Parameter&gt;</code> elements inside this element.  For
     example, you can create an initialization parameter like this:</p>
 <source>
-&lt;Context ...&gt;
+&lt;Context&gt;
   ...
   &lt;Parameter name="companyName" value="My Company, Incorporated"
          override="false"/&gt;
@@ -874,7 +880,7 @@
     <code>&lt;Environment&gt;</code> entries inside this element.  For
     example, you can create an environment entry like this:</p>
 <source>
-&lt;Context ...&gt;
+&lt;Context&gt;
   ...
   &lt;Environment name="maxExemptions" value="10"
          type="java.lang.Integer" override="false"/&gt;
@@ -951,7 +957,7 @@
     lifecycle events.  Configuration of such a listener looks like this:</p>
 
 <source>
-&lt;Context path="/examples" ...&gt;
+&lt;Context&gt;
   ...
   &lt;Listener className="com.mycompany.mypackage.MyListener" ... &gt;
   ...
@@ -979,7 +985,7 @@
     Example filter declarations:</p>
 
 <source>
-&lt;Context path="/examples" ...&gt;
+&lt;Context&gt;
   ...
   &lt;Valve className="org.apache.catalina.valves.RemoteHostValve"
          allow=".*\.mycompany\.com|www\.yourcompany\.com"/&gt;
@@ -1008,7 +1014,7 @@
 
     <p>For example, you can create a resource definition like this:</p>
 <source>
-&lt;Context ...&gt;
+&lt;Context&gt;
   ...
   &lt;Resource name="jdbc/EmployeeDB" auth="Container"
             type="javax.sql.DataSource"
@@ -1105,7 +1111,7 @@
 
     <p>For example, you can create a resource link like this:</p>
 <source>
-&lt;Context ...&gt;
+&lt;Context&gt;
   ...
   &lt;ResourceLink name="linkToGlobalResource"
             global="simpleValue"
@@ -1166,7 +1172,7 @@
     </attributes>
     <p>Shared Data Source Example</p>
 <source>
-&lt;GlobalNamingResources ...&gt;
+&lt;GlobalNamingResources&gt;
   ...
   &lt;Resource name=&quot;sharedDataSource&quot;
             global=&quot;sharedDataSource&quot;

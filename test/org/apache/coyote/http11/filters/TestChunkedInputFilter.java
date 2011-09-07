@@ -26,6 +26,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
+
 import org.apache.catalina.Context;
 import org.apache.catalina.startup.SimpleHttpClient;
 import org.apache.catalina.startup.Tomcat;
@@ -33,6 +38,7 @@ import org.apache.catalina.startup.TomcatBaseTest;
 
 public class TestChunkedInputFilter extends TomcatBaseTest {
 
+    @Test
     public void testTrailingHeaders() throws Exception {
         // Setup Tomcat instance
         Tomcat tomcat = getTomcatInstance();
@@ -71,6 +77,7 @@ public class TestChunkedInputFilter extends TomcatBaseTest {
         assertEquals("null7TestTestTest0123456789abcdefghijABCDEFGHIJopqrstuvwxyz", client.getResponseBody());
     }
 
+    @Test
     public void testTrailingHeadersSizeLimit() throws Exception {
         // Setup Tomcat instance
         Tomcat tomcat = getTomcatInstance();
@@ -113,6 +120,7 @@ public class TestChunkedInputFilter extends TomcatBaseTest {
         assertTrue(client.isResponse500());
     }
 
+    @Test
     public void testNoTrailingHeaders() throws Exception {
         // Setup Tomcat instance
         Tomcat tomcat = getTomcatInstance();

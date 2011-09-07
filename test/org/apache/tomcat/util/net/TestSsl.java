@@ -30,6 +30,11 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import org.junit.Test;
+
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
 import org.apache.tomcat.util.buf.ByteChunk;
@@ -41,6 +46,7 @@ import org.apache.tomcat.util.buf.ByteChunk;
  */
 public class TestSsl extends TomcatBaseTest {
 
+    @Test
     public void testSimpleSsl() throws Exception {
         TesterSupport.configureClientSsl();
         
@@ -57,6 +63,7 @@ public class TestSsl extends TomcatBaseTest {
         assertTrue(res.toString().indexOf("<h1>Hello World!</h1>") > 0);
     }
 
+    @Test
     public void testKeyPass() throws Exception {
         TesterSupport.configureClientSsl();
         
@@ -76,7 +83,8 @@ public class TestSsl extends TomcatBaseTest {
 
 
     boolean handshakeDone = false;
-    
+
+    @Test
     public void testRenegotiateFail() throws Exception {
         
         // If RFC5746 is supported, renegotiation will always work (and will
@@ -143,7 +151,8 @@ public class TestSsl extends TomcatBaseTest {
         
         fail("Re-negotiation worked");
     }
-    
+
+    @Test
     public void testRenegotiateWorks() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 

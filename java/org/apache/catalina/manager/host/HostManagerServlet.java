@@ -91,7 +91,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: HostManagerServlet.java 1142642 2011-07-04 12:43:19Z markt $
+ * @version $Id: HostManagerServlet.java 1162172 2011-08-26 17:12:33Z markt $
  */
 
 public class HostManagerServlet
@@ -381,13 +381,11 @@ public class HostManagerServlet
         } catch (IOException e) {
             appBaseFile = file;
         }
-        if (!appBaseFile.exists()) {
-            if (!appBaseFile.mkdirs()) {
-                writer.println(smClient.getString(
-                        "hostManagerServlet.appBaseCreateFail",
-                        appBaseFile.toString(), name));
-                return;
-            }
+        if (!appBaseFile.mkdirs() && !appBaseFile.isDirectory()) {
+            writer.println(smClient.getString(
+                    "hostManagerServlet.appBaseCreateFail",
+                    appBaseFile.toString(), name));
+            return;
         }
         
         // Create base for config files
@@ -704,10 +702,8 @@ public class HostManagerServlet
         if (installedHost != null) {
             configBase = new File(configBase, hostName);
         }
-        if (!configBase.exists()) {
-            if (!configBase.mkdirs()) {
-                return null;
-            }
+        if (!configBase.mkdirs() && !configBase.isDirectory()) {
+            return null;
         }
         return configBase;
     }

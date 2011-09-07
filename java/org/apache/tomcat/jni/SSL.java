@@ -20,7 +20,7 @@ package org.apache.tomcat.jni;
 /** SSL
  *
  * @author Mladen Turk
- * @version $Id: SSL.java 939309 2010-04-29 13:54:26Z kkolinko $
+ * @version $Id: SSL.java 1149092 2011-07-21 09:40:03Z jfclere $
  */
 
 public final class SSL {
@@ -73,7 +73,7 @@ public final class SSL {
     public static final int SSL_PROTOCOL_SSLV2 = (1<<0);
     public static final int SSL_PROTOCOL_SSLV3 = (1<<1);
     public static final int SSL_PROTOCOL_TLSV1 = (1<<2);
-    public static final int SSL_PROTOCOL_ALL   = (SSL_PROTOCOL_SSLV2|SSL_PROTOCOL_SSLV3|SSL_PROTOCOL_TLSV1);
+    public static final int SSL_PROTOCOL_ALL   = (SSL_PROTOCOL_SSLV3|SSL_PROTOCOL_TLSV1);
 
     /*
      * Define the SSL verify levels

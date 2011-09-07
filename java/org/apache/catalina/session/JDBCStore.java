@@ -51,7 +51,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * saved are still subject to being expired based on inactivity.
  *
  * @author Bip Thelin
- * @version $Id: JDBCStore.java 1133288 2011-06-08 08:45:41Z kfujino $
+ * @version $Id: JDBCStore.java 1153099 2011-08-02 11:51:20Z kfujino $
  */
 
 public class JDBCStore extends StoreBase {
@@ -1015,6 +1015,15 @@ public class JDBCStore extends StoreBase {
             ExceptionUtils.handleThrowable(f);
         }
         this.preparedLoadSql = null;
+        
+        // Commit if autoCommit is false
+        try {
+            if (!dbConnection.getAutoCommit()) {
+                dbConnection.commit();
+            }            
+        } catch (SQLException e) {
+            manager.getContainer().getLogger().error(sm.getString(getStoreName() + ".commitSQLException"), e);
+        }
 
         // Close this database connection, and log any errors
         try {

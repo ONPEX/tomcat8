@@ -40,7 +40,7 @@ import java.util.TimeZone;
  * <p>The cache can be created with a parent cache to build a cache hierarchy.
  * Access to the parent cache is threadsafe.</p>
  *
- * @version $Id: DateFormatCache.java 1139157 2011-06-24 05:33:35Z rjung $
+ * @version $Id: DateFormatCache.java 1154574 2011-08-06 20:00:39Z markt $
  */
 
 public class DateFormatCache {
@@ -53,7 +53,6 @@ public class DateFormatCache {
     /* Number of cached entries */
     private int cacheSize = 0;
 
-    private DateFormatCache parent;
     private Cache cache;
 
     /**
@@ -85,7 +84,6 @@ public class DateFormatCache {
     public DateFormatCache(int size, String format, DateFormatCache parent) {
         cacheSize = size;
         this.format = tidyFormat(format);
-        this.parent = parent;
         Cache parentCache = null;
         if (parent != null) {
             synchronized(parent) {

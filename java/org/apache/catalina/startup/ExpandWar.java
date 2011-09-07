@@ -44,7 +44,7 @@ import org.apache.tomcat.util.res.StringManager;
  * @author Craig R. McClanahan
  * @author Remy Maucherat
  * @author Glenn L. Nielsen
- * @version $Revision: 1069835 $
+ * @version $Revision: 1162172 $
  */
 
 public class ExpandWar {
@@ -127,7 +127,10 @@ public class ExpandWar {
                 if (last >= 0) {
                     File parent = new File(docBase,
                                            name.substring(0, last));
-                    parent.mkdirs();
+                    if (!parent.mkdirs() && !parent.isDirectory()) {
+                        throw new IOException(
+                                sm.getString("expandWar.createFailed", parent));
+                    }
                 }
                 if (name.endsWith("/")) {
                     continue;

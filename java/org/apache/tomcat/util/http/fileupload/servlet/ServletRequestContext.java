@@ -32,7 +32,7 @@ import org.apache.tomcat.util.http.fileupload.RequestContext;
  *
  * @since FileUpload 1.1
  *
- * @version $Id: ServletRequestContext.java 987920 2010-08-22 15:34:34Z markt $
+ * @version $Id: ServletRequestContext.java 1154575 2011-08-06 20:19:29Z markt $
  */
 public class ServletRequestContext implements RequestContext {
 
@@ -63,6 +63,7 @@ public class ServletRequestContext implements RequestContext {
      *
      * @return The character encoding for the request.
      */
+    @Override
     public String getCharacterEncoding() {
         return request.getCharacterEncoding();
     }
@@ -72,6 +73,7 @@ public class ServletRequestContext implements RequestContext {
      *
      * @return The content type of the request.
      */
+    @Override
     public String getContentType() {
         return request.getContentType();
     }
@@ -81,6 +83,7 @@ public class ServletRequestContext implements RequestContext {
      *
      * @return The content length of the request.
      */
+    @Override
     public int getContentLength() {
         return request.getContentLength();
     }
@@ -92,6 +95,7 @@ public class ServletRequestContext implements RequestContext {
      *
      * @throws IOException if a problem occurs.
      */
+    @Override
     public InputStream getInputStream() throws IOException {
         return request.getInputStream();
     }

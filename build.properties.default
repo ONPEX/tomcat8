@@ -21,13 +21,13 @@
 # modules that Tomcat depends on.  Copy this file to "build.properties"
 # in the top-level source directory, and customize it as needed.
 #
-# $Id: build.properties.default 1146504 2011-07-13 22:29:07Z markt $
+# $Id: build.properties.default 1162976 2011-08-29 20:14:36Z markt $
 # -----------------------------------------------------------------------------
 
 # ----- Version Control Flags -----
 version.major=7
 version.minor=0
-version.build=19
+version.build=21
 version.patch=0
 version.suffix=
 
@@ -129,7 +129,7 @@ jdt.loc.1=http://archive.eclipse.org/eclipse/downloads/drops/${jdt.release}/ecj-
 jdt.loc.2=http://download.eclipse.org/eclipse/downloads/drops/${jdt.release}/ecj-${jdt.version}.jar
 
 # ----- Tomcat native library -----
-tomcat-native.version=1.1.20
+tomcat-native.version=1.1.22
 tomcat-native.home=${base.path}/tomcat-native-${tomcat-native.version}
 tomcat-native.tar.gz=${tomcat-native.home}/tomcat-native.tar.gz
 tomcat-native.loc.1=${base-tomcat.loc.1}/tomcat-connectors/native/${tomcat-native.version}/source/tomcat-native-${tomcat-native.version}-src.tar.gz
@@ -161,7 +161,7 @@ nsis.nsisdl.dll=${nsis.home}/Plugins/NSISdl.dll
 nsis.loc=${base-sf.loc}/nsis/nsis-2.46.zip
 
 # ----- Commons Daemon, version 1.0-Alpha or later -----
-commons-daemon.version=1.0.6
+commons-daemon.version=1.0.7
 commons-daemon.home=${base.path}/commons-daemon-${commons-daemon.version}
 commons-daemon.jar=${commons-daemon.home}/commons-daemon-${commons-daemon.version}.jar
 commons-daemon.native.win.home=${commons-daemon.home}/windows
@@ -176,13 +176,13 @@ commons-daemon.native.win.loc.1=${base-commons.loc.1}/daemon/binaries/windows/co
 commons-daemon.native.win.loc.2=${base-commons.loc.2}/daemon/binaries/windows/commons-daemon-${commons-daemon.version}-bin-windows.zip
 
 # ----- JUnit Unit Test Suite, version 3.7 or later -----
-junit.home=${base.path}/junit3.8.2
+junit.home=${base.path}/junit4.8.2
 junit.lib=${junit.home}
-junit.jar=${junit.lib}/junit.jar
-junit.loc=${base-sf.loc}/junit/junit3.8.2.zip
+junit.jar=${junit.lib}/junit-4.8.2.jar
+junit.loc=http://cloud.github.com/downloads/KentBeck/junit/junit4.8.2.zip
 
 # ----- Checkstyle, version 5.1 or later -----
-checkstyle.version=5.3
+checkstyle.version=5.4
 checkstyle.home=${base.path}/checkstyle-${checkstyle.version}
 checkstyle.loc=${base-sf.loc}/checkstyle/checkstyle-${checkstyle.version}-bin.zip
 checkstyle.jar=${checkstyle.home}/checkstyle-${checkstyle.version}-all.jar

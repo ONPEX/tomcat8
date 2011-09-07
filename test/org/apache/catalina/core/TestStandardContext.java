@@ -41,6 +41,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import org.junit.Test;
+
 import org.apache.catalina.Context;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.authenticator.BasicAuthenticator;
@@ -61,13 +69,14 @@ public class TestStandardContext extends TomcatBaseTest {
         "Connection: close\r\n" +
         "\r\n";
 
+    @Test
     public void testBug46243() throws Exception {
         
         // Set up a container
         Tomcat tomcat = getTomcatInstance();
         
         File docBase = new File(tomcat.getHost().getAppBase(), "ROOT");
-        if (!docBase.exists() && !docBase.mkdirs()) {
+        if (!docBase.mkdirs() && !docBase.isDirectory()) {
             fail("Unable to create docBase");
         }
         
@@ -129,7 +138,7 @@ public class TestStandardContext extends TomcatBaseTest {
         
     }
 
-
+    @Test
     public void testBug49922() throws Exception {
         
         // Set up a container
@@ -251,7 +260,8 @@ public class TestStandardContext extends TomcatBaseTest {
         }
         
     }
-    
+
+    @Test
     public void testBug50015() throws Exception {
         // Set up a container
         Tomcat tomcat = getTomcatInstance();
@@ -321,10 +331,12 @@ public class TestStandardContext extends TomcatBaseTest {
         
     }
 
+    @Test
     public void testBug51376a() throws Exception {
         doTestBug51376(false);
     }
 
+    @Test
     public void testBug51376b() throws Exception {
         doTestBug51376(true);
     }
@@ -427,6 +439,7 @@ public class TestStandardContext extends TomcatBaseTest {
      * Test case for bug 49711: HttpServletRequest.getParts does not work
      * in a filter.
      */
+    @Test
     public void testBug49711() {
         Bug49711Client client = new Bug49711Client();
         client.setPort(getPort());

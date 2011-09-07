@@ -14,21 +14,24 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
-
 package org.apache.coyote.http11;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 
 import org.apache.coyote.InputBuffer;
 import org.apache.coyote.Request;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.jni.Socket;
 import org.apache.tomcat.jni.Status;
 import org.apache.tomcat.util.buf.ByteChunk;
 import org.apache.tomcat.util.buf.MessageBytes;
+import org.apache.tomcat.util.net.AbstractEndpoint;
+import org.apache.tomcat.util.net.SocketWrapper;
 
 /**
  * Implementation of InputBuffer which provides HTTP request header parsing as
@@ -36,11 +39,10 @@ import org.apache.tomcat.util.buf.MessageBytes;
  *
  * @author <a href="mailto:remm@apache.org">Remy Maucherat</a>
  */
-public class InternalAprInputBuffer extends AbstractInputBuffer {
+public class InternalAprInputBuffer extends AbstractInputBuffer<Long> {
 
-
-    // -------------------------------------------------------------- Constants
-
+    private static final Log log =
+        LogFactory.getLog(InternalAprInputBuffer.class);
 
     // ----------------------------------------------------------- Constructors
 
@@ -78,37 +80,16 @@ public class InternalAprInputBuffer extends AbstractInputBuffer {
     /**
      * Direct byte buffer used to perform actual reading.
      */
-    protected ByteBuffer bbuf;
+    private ByteBuffer bbuf;
 
 
     /**
      * Underlying socket.
      */
-    protected long socket;
-
-
-    // ------------------------------------------------------------- Properties
-
-
-    /**
-     * Set the underlying socket.
-     */
-    public void setSocket(long socket) {
-        this.socket = socket;
-        Socket.setrbb(this.socket, bbuf);
-    }
-
-
-    /**
-     * Get the underlying socket input stream.
-     */
-    public long getSocket() {
-        return socket;
-    }
+    private long socket;
 
 
     // --------------------------------------------------------- Public Methods
-
 
     /**
      * Recycle the input buffer. This should be called when closing the 
@@ -341,7 +322,7 @@ public class InternalAprInputBuffer extends AbstractInputBuffer {
      * HTTP header parsing is done
      */
     @SuppressWarnings("null") // headerValue cannot be null
-    public boolean parseHeader()
+    private boolean parseHeader()
         throws IOException {
 
         //
@@ -394,6 +375,11 @@ public class InternalAprInputBuffer extends AbstractInputBuffer {
             if (buf[pos] == Constants.COLON) {
                 colon = true;
                 headerValue = headers.addValue(buf, start, pos - start);
+            } else if (!HTTP_TOKEN_CHAR[buf[pos]]) {
+                // If a non-token header is detected, skip the line and
+                // ignore the header
+                skipLine(start);
+                return true;
             }
             chr = buf[pos];
             if ((chr >= Constants.A) && (chr <= Constants.Z)) {
@@ -496,6 +482,38 @@ public class InternalAprInputBuffer extends AbstractInputBuffer {
     }
 
     
+    private void skipLine(int start) throws IOException {
+        boolean eol = false;
+        int lastRealByte = start;
+        if (pos - 1 > start) {
+            lastRealByte = pos - 1;
+        }
+        
+        while (!eol) {
+
+            // Read new bytes if needed
+            if (pos >= lastValid) {
+                if (!fill())
+                    throw new EOFException(sm.getString("iib.eof.error"));
+            }
+
+            if (buf[pos] == Constants.CR) {
+                // Skip
+            } else if (buf[pos] == Constants.LF) {
+                eol = true;
+            } else {
+                lastRealByte = pos;
+            }
+            pos++;
+        }
+
+        if (log.isDebugEnabled()) {
+            log.debug(sm.getString("iib.invalidheader", new String(buf, start,
+                    lastRealByte - start + 1, Charset.forName("ISO-8859-1"))));
+        }
+    }
+    
+    
     /**
      * Available bytes (note that due to encoding, this may not correspond )
      */
@@ -529,6 +547,14 @@ public class InternalAprInputBuffer extends AbstractInputBuffer {
 
 
     // ------------------------------------------------------ Protected Methods
+
+    @Override
+    protected void init(SocketWrapper<Long> socketWrapper,
+            AbstractEndpoint endpoint) throws IOException {
+
+        socket = socketWrapper.getSocket().longValue();
+        Socket.setrbb(this.socket, bbuf);
+    }
 
 
     @Override
@@ -589,6 +615,9 @@ public class InternalAprInputBuffer extends AbstractInputBuffer {
             } else {
                 if ((-nRead) == Status.ETIMEDOUT || (-nRead) == Status.TIMEUP) {
                     throw new SocketTimeoutException(sm.getString("iib.failedread"));
+                } else if (nRead == 0) {
+                    // APR_STATUS_IS_EOF, since native 1.1.22
+                    return false;
                 } else {
                     throw new IOException(sm.getString("iib.failedread"));
                 }
@@ -629,11 +658,6 @@ public class InternalAprInputBuffer extends AbstractInputBuffer {
             pos = lastValid;
 
             return (length);
-
         }
-
-
     }
-
-
 }

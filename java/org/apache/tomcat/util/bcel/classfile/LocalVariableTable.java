@@ -27,7 +27,7 @@ import org.apache.tomcat.util.bcel.Constants;
  * This class represents colection of local variables in a
  * method. This attribute is contained in the <em>Code</em> attribute.
  *
- * @version $Id: LocalVariableTable.java 1057670 2011-01-11 14:52:05Z markt $
+ * @version $Id: LocalVariableTable.java 1154575 2011-08-06 20:19:29Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Code
  * @see LocalVariable
@@ -96,6 +96,7 @@ public class LocalVariableTable extends Attribute {
      * @deprecated since 5.2 because multiple variables can share the
      *             same slot, use getLocalVariable(int index, int pc) instead.
      */
+    @java.lang.Deprecated
     public final LocalVariable getLocalVariable( int index ) {
         for (int i = 0; i < local_variable_table_length; i++) {
             if (local_variable_table[i].getIndex() == index) {

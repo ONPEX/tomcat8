@@ -57,7 +57,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: CoyoteAdapter.java 1145224 2011-07-11 16:08:23Z markt $
+ * @version $Id: CoyoteAdapter.java 1158158 2011-08-16 08:58:35Z markt $
  */
 public class CoyoteAdapter implements Adapter {
     
@@ -443,9 +443,6 @@ public class CoyoteAdapter implements Adapter {
 
         } catch (IOException e) {
             // Ignore
-        } catch (Throwable t) {
-            ExceptionUtils.handleThrowable(t);
-            log.error(sm.getString("coyoteAdapter.service"), t);
         } finally {
             req.getRequestProcessor().setWorkerThreadName(null);
             // Recycle the wrapper request and response
@@ -503,7 +500,7 @@ public class CoyoteAdapter implements Adapter {
                             request, response, time, true);
                 } else if (request.mappingData.host != null) {
                     logged = true;
-                    ((Context) request.mappingData.context).logAccess(
+                    ((Host) request.mappingData.host).logAccess(
                             request, response, time, true);
                 }
             }

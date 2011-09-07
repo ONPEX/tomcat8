@@ -116,7 +116,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: WebappClassLoader.java 1138019 2011-06-21 14:29:49Z markt $
+ * @version $Id: WebappClassLoader.java 1162172 2011-08-26 17:12:33Z markt $
  */
 public class WebappClassLoader
     extends URLClassLoader
@@ -3011,8 +3011,11 @@ public class WebappClassLoader
                                             throw new IllegalArgumentException(
                                                     sm.getString("webappClassLoader.validationErrorJarPath",
                                                             jarEntry2.getName()), ioe);
-                                        }                                 
-                                        resourceFile.getParentFile().mkdirs();
+                                        }
+                                        File parentFile = resourceFile.getParentFile();
+                                        if (!parentFile.mkdirs() && !parentFile.exists()) {
+                                            // Ignore the error (like the IOExceptions below)
+                                        }
                                         FileOutputStream os = null;
                                         InputStream is = null;
                                         try {

@@ -127,7 +127,7 @@ import org.apache.tomcat.util.threads.DedicatedThreadExecutor;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardContext.java 1142643 2011-07-04 12:50:24Z markt $
+ * @version $Id: StandardContext.java 1162172 2011-08-26 17:12:33Z markt $
  */
 
 public class StandardContext extends ContainerBase
@@ -5459,7 +5459,8 @@ public class StandardContext extends ContainerBase
                         // Stop ContainerBackgroundProcessor thread
                         threadStop();
             
-                        if (manager != null && manager instanceof Lifecycle) {
+                        if (manager != null && manager instanceof Lifecycle &&
+                                ((Lifecycle) manager).getState().isAvailable()) {
                             try {
                                 ((Lifecycle) manager).stop();
                             } catch (LifecycleException e) {
@@ -5507,7 +5508,8 @@ public class StandardContext extends ContainerBase
             fireLifecycleEvent(Lifecycle.CONFIGURE_STOP_EVENT, null);
 
             // Stop the Valves in our pipeline (including the basic), if any
-            if (pipeline instanceof Lifecycle) {
+            if (pipeline instanceof Lifecycle &&
+                    ((Lifecycle) pipeline).getState().isAvailable()) {
                 ((Lifecycle) pipeline).stop();
             }
 
@@ -6076,7 +6078,7 @@ public class StandardContext extends ContainerBase
                         workDir, catalinaHomePath, getName()), e);
             }
         }
-        if (!dir.exists() && !dir.mkdirs()) {
+        if (!dir.mkdirs() && !dir.isDirectory()) {
             log.warn(sm.getString("standardContext.workCreateFail", dir,
                     getName()));
         }

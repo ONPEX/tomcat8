@@ -69,7 +69,7 @@ import org.apache.tomcat.util.res.StringManager;
  * requests.  Requests of any other type will simply be passed through.
  *
  * @author Craig R. McClanahan
- * @version $Id: AuthenticatorBase.java 1141578 2011-06-30 15:41:27Z markt $
+ * @version $Id: AuthenticatorBase.java 1162838 2011-08-29 14:42:49Z markt $
  */
 
 
@@ -202,6 +202,16 @@ public abstract class AuthenticatorBase extends ValveBase
 
 
     // ------------------------------------------------------------- Properties
+
+
+    public boolean getAlwaysUseSession() {
+        return alwaysUseSession;
+    }
+
+
+    public void setAlwaysUseSession(boolean alwaysUseSession) {
+        this.alwaysUseSession = alwaysUseSession;
+    }
 
 
     /**
@@ -466,7 +476,6 @@ public abstract class AuthenticatorBase extends ValveBase
         // Make sure that constrained resources are not cached by web proxies
         // or browsers as caching can provide a security hole
         if (constraints != null && disableProxyCaching && 
-            !request.isSecure() &&
             !"POST".equalsIgnoreCase(request.getMethod())) {
             if (securePagesWithPragma) {
                 // Note: These can cause problems with downloading files with IE

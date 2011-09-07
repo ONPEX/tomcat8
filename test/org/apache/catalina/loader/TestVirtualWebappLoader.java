@@ -18,6 +18,12 @@ package org.apache.catalina.loader;
 
 import java.io.File;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+
+import org.junit.Test;
+
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
@@ -25,12 +31,14 @@ import org.apache.naming.resources.FileDirContext;
 
 public class TestVirtualWebappLoader extends TomcatBaseTest {
 
+    @Test
     public void testModified() throws Exception {
         WebappLoader loader = new WebappLoader();
         assertNull(loader.getClassLoader());
         assertFalse(loader.modified());
     }
-    
+
+    @Test
     public void testStartInternal() throws Exception {
         Tomcat tomcat = getTomcatInstance();
         File appDir = new File("test/webapp-3.0");      

@@ -53,7 +53,391 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues to not "pop up" wrt. others).
 -->
-<section name="Tomcat 7.0.19 (markt)">
+<section name="Tomcat 7.0.21 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <add>
+        <bug>41718</bug>: Include a response body when sending a redirect.
+        (markt)
+      </add>
+      <add>
+        <bug>51640</bug>: Improve the memory leak prevention for leaks triggered
+        by java.sql.DriverManager. (markt)
+      </add>
+      <fix>
+        <bug>51644</bug>: Fix annotation scanning for contexts with a
+        multi-level context path such as /a/b. (markt)
+      </fix>
+      <fix>
+        Unregisters MBean of DataSource when web application stops. (kfujino)
+      </fix>
+      <fix>
+        <bug>51650</bug>: Code clean-up. Patch provided by Felix Schumacher.
+        (markt)
+      </fix>
+      <fix>
+        <bug>51653</bug>: Move application level error page handling from the
+        Host to the Context. This ensures that application error page handling
+        is completed before the requestDestroyed event of any
+        ServletRequestListener is fired. (markt)
+      </fix>
+      <fix>
+        <bug>51654</bug>: Improve handling of invalid appBase settings for Host
+        elements. (markt)
+      </fix>
+      <fix>
+        <bug>51658</bug>: Fix possible NPE when logging a failed request. Based
+        on a suggestion by Felix Schumacher. (markt)
+      </fix>
+      <fix>
+        <bug>51688</bug>: JreMemoryLeakPreventionListener now protects against
+        AWT thread creation. (schultz)
+      </fix>
+      <fix>
+        <bug>51712</bug>: Ensure cache control headers are sent when appropriate
+        even if the request is secure. Patch provided by Michael Zampani.
+        (markt)
+      </fix>
+      <fix>
+        <bug>51713</bug>: Improve message that is logged if there is an error
+        in the value of <code>protocol</code> in a <code>Connector</code>.
+        (kkolinko)
+      </fix>
+      <fix>
+        <bug>51739</bug>: When using a landing page with FORM authentication
+        ensure that the request has a valid HTTP method. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        <bug>51641</bug>: Use correct key when removing processor instances from
+        the connections map during clean-up. Patch provided by zhh. (mark)
+      </fix>
+      <fix>
+        More changes to align the code between the different HTTP connectors.
+        (markt)
+      </fix>
+      <fix>
+        Ensure AjpMessage headers are correct for the direction of the message.
+        (markt)
+      </fix>
+      <scode>
+        Code clean-up and re-factoring to reduce duplicate code in the AJP
+        processor implementations. (markt) 
+      </scode>
+      <add>
+        Detect incomplete AJP messages and reject the associated request if one
+        is found. (markt) 
+      </add>
+      <fix>
+        <bug>51698</bug>: Fix CVE-2011-3190. Prevent AJP message injection.
+        (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        <bug>41673</bug>: Use platform line-endings when reporting compilation
+        errors. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Cluster">
+    <changelog>
+      <add>
+        <bug>51736</bug>: Make rpcTimeout configurable in BackupManager. 
+        (kfujino)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <fix>
+        <bug>51649</bug>: Update the documentation web application to include
+        the ThreadLocal leak prevention listener. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <add>
+        <bug>51583</bug> (<rev>1157874</rev>, <rev>1162102</rev>): Fix
+        shutdown delay in jdbc-pool. (fhanik/kkolinko)
+      </add>
+      <fix>
+        <bug>51558</bug>: Don&apos;t force the use of StandardManager when using
+        any of the <code>Tomcat#addWebapp()</code> methods. (markt)
+      </fix>
+      <fix>
+        <bug>51704</bug>: Make use of <code>File#mkdirs()</code> more robust.
+        (markt)
+      </fix>
+    </changelog>
+  </subsection>  
+</section>
+<section name="Tomcat 7.0.20 (markt)" rtext="released 2011-08-11">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        Corrected missing comma in the value of <code>jarsToSkip</code>
+        property in <code>conf/catalina.properties</code> file, which
+        caused tomcat-jdbc.jar and commons-beanutils*.jar to be not
+        ignored when scanning jars for tag libraries. (kkolinko)
+      </fix>
+      <fix>
+        <bug>41709</bug>: Provide exception messages where no message is
+        provided currently for IllegalStateExcpetions triggered by calling
+        HttpServletResponse methods when the reponse is committed. (markt)
+      </fix>
+      <fix>
+        <bug>51509</bug>: Fix potential concurrency issue in CSRF prevention
+        filter that may lead to some requests failing that should not. (markt)
+      </fix>
+      <fix>
+        <bug>51518</bug>: Correct error in web.xml parsing rules for the
+        &lt;others/&gt; tag when using absolute ordering. (markt)
+      </fix>
+      <add>
+        Move the SetCharacterEncoding filter from the examples web application
+        to the <code>org.apache.catalina.filters</code> package so it is
+        available for all web applications. (markt)
+      </add>
+      <fix>
+        <bug>51550</bug>: Internal errors in Tomcat components that process
+        requests before they are passed to a web application, such as
+        Authenticators, now return a 500 response rather than a 200 response.
+        (markt)
+      </fix>
+      <fix>
+        <bug>51555</bug>: Allow destroy() to be called on Lifecycle components
+        that are in the initialized state. (markt)
+      </fix>
+      <add>
+        Add x-threadname pattern format token to ExtendedAccessLogValve to log
+        the current request thread name. Based on a patch from Felix Schumacher.
+        (timw)
+      </add>
+      <fix>
+        <bug>51584</bug>: Ensure file paths are encoded/decoded when translated
+        to/from URLs when working with resources from a Context so special
+        characters don't cause issues. (markt)
+      </fix>
+      <fix>
+        <bug>51586</bug>: Expand error handling to cover anything that is
+        recoverable (or might be recoverable) when loading classes during
+        HandlesTypes processing. (markt)
+      </fix>
+      <fix>
+        <bug>51588</bug>: Make it easier to extend the AccessLogValve to add
+        support for custom elements. (markt)
+      </fix>
+      <fix>
+        Ensure that calls to StandardWrapper methods() that may trigger creation
+        of a Servlet instance always do so in way that correctly instantiates a
+        Servlet instance. (markt)
+      </fix>
+      <fix>
+        In JDBCStore: Committing connection if autoCommit is false.
+        Make sure committed connection is returned to the pool if datasource is 
+        enabled. (kfujino)
+      </fix>
+      <add>
+        Split <code>condition</code> attribute of AccessLogValve into two,
+        <code>conditionIf</code> and <code>conditionUnless</code>. Implement
+        conditional logging that logs only if a request attribute is present.
+        (kkolinko)
+      </add>
+      <fix>
+        Allow to have several AccessLogValve instances in the same scope (e.g.
+        in the same Context). (kkolinko)
+      </fix>
+      <fix>
+        <bug>51610</bug>: If an unchecked exception occurs during a lifecycle
+        transition (e.g. web application start) ensure that the component is
+        put into the failed state. (markt)
+      </fix>
+      <fix>
+        <bug>51614</bug>: Avoid calling store.load() and  session.expire()
+        twice in PersistentManager when expiring sessions. (kfujino)
+      </fix>
+      <fix>
+        Prevent spurious log warnings on container stop if a child component has
+        previously failed. (markt)
+      </fix>
+      <fix>
+        Add missing getter and setter for the alwaysUseSession attribute of the
+        authenticators. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        <bug>49595</bug>: Prevent JVM crash with the AJP APR connector when
+        flushing a closed socket. (jfclere)
+      </fix>
+      <fix>
+        <bug>50394</bug>: Return -1 instead of throwing an exception when
+        encountering an EOF while processing an input stream with the HTTP APR
+        connector. (jfclere)
+      </fix>
+      <fix>
+        Correctly handle a connectionTimeout value of -1 (no timeout) for the
+        HTTP NIO and AJP NIO connectors. (markt)
+      </fix>
+      <fix>
+        <bug>51503</bug>: Add additional validation that prevents a connector
+        from starting if it does not have a port > 0. (markt)
+      </fix>
+      <fix>
+        <bug>51557</bug>: Ignore HTTP headers that do not comply with RFC 2616
+        and use header names that are not tokens. (markt)
+      </fix>
+      <add>
+        Improve error handling for HTTP APR if an error occurs while using
+        sendfile. (markt) 
+      </add>
+      <fix>
+        Ensure that when using sendfile, HTTP APR sockets are not added to
+        multiple pollers. This may cause errors during shutdown. (markt)
+      </fix>
+      <update>
+        Set <code>reuse</code> flag of final AJP <code>END_RESPONSE</code>
+        packet to <code>0</code> if we plan to close the connection. (rjung)
+      </update>
+      <update>
+        Correctly indicate if socket is closing when calling recycle for the AJP
+        NIO processor. Note since the flag is unused in this case there were no
+        bugs triggered by the re-factoring error. (rjung)
+      </update>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        <bug>51532</bug>: JSP files with dependencies in JARs were recompiled on
+        every access leading to poor performance. (markt)
+      </fix>
+      <fix>
+        <bug>51544</bug>: Correctly resolve bean methods in EL so accessible
+        methods that are overridden by inaccessible methods do not cause an
+        IllegalAccessException. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <fix>
+        <bug>41498</bug>: Add the allRolesMode attribute to the Realm
+        configuration page in the documentation web application. (markt)
+      </fix>
+      <fix>
+        <bug>48997</bug>: Fixed some typos and correct cross-referencing to the
+        HTTP Connector documentation with the SSL How-To page of the
+        documentation web application. (markt)
+      </fix>
+      <fix>
+        <bug>49122</bug>: Improvements and fixes for index page for ROOT web
+        application. Based on a patch provided by pidster. (markt)
+      </fix>
+      <fix>
+        <bug>51516</bug>: Correct documentation web application to show correct
+        system property name for changing the name of the SSO session cookie.
+        (markt)
+      </fix>
+      <update>
+        Configure the Manager and Host Manager web applications with the Set
+        Character Encoding Filter to make the default request character encoding
+        UTF-8 to improve i18n support. Note that best results will be obtained
+        if the connector is also configured with
+        <code>URIEncoding=&quot;UTF-8&quot;</code>.(markt)  
+      </update>
+      <update>
+        Update the documentation web application to be even more explicit about
+        the implications of setting the path attribute on a Context element in
+        server.xml. (markt)
+      </update>
+      <fix>
+        <bug>51561</bug>: Update the Realm page within the documentation web
+        application to recommend the use of digest.[bat|sh] to generate digests
+        rather than calling RealmBase directly. (markt) 
+      </fix>
+      <fix>
+        <bug>51567</bug>: Update the class loading page of the documentation
+        web application to include information on the search order for the
+        common class loader when separate values are used for $CATALINA_HOME and
+        $CATALINA_BASE. (markt) 
+      </fix>
+      <update>
+        Improve class loading documentation and logging documentation.
+        (kkolinko)
+      </update>
+      <add>
+        Add information to the security page of the the documentation web
+        application for the ciphers attribute of the Connector element. (markt)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <fix>
+        <bug>51503</bug>: Add additional validation to Windows installer that
+        ensure that the shutdown port, HTTP port and AJP port are all specified
+        during the install process. (markt)
+      </fix>
+      <fix>
+        <bug>51531</bug>: Update sample Eclipse classpath file to reflect
+        updated ECJ jar. Patch provided by Ian Brandt. (markt)
+      </fix>
+      <update>
+        Convert Tomcat unit tests to JUnit 4. (kkolinko)
+      </update>
+      <update>
+        Update optional CheckStyle library to 5.4. (kkolinko)
+      </update>
+      <update>
+        Remove <code>resolveHosts</code> attribute from AccessLogValve
+        configuration in the default <code>server.xml</code>. It was documented
+        in 7.0.19 that it has no effect. (kkolinko)
+      </update>
+      <update>
+        Simplify mapping for <code>jsp</code> servlet in the default
+        <code>web.xml</code>. (kkolinko)
+      </update>
+      <fix>
+        Correctly handle uninstall with the Windows installer if the service is
+        installed with a name that contains a &apos;-&apos; character. (markt)
+      </fix>
+      <fix>
+        <bug>51598</bug>: Prevent direct invocation of the Windows uninstaller
+        without a service name from executing since the uninstall will not be
+        complete. (markt)
+      </fix>
+      <fix>
+        Use Tomcat icon (cat) instead of Apache Commons Daemon (feather) one
+        in the list of uninstallable programs on Windows. (kkolinko) 
+      </fix>
+      <update>
+        Update to Apache Commons Daemon 1.0.7. (markt)
+      </update>
+      <fix>
+        <bug>51621</bug>: Add additional required JARs to the deployer
+        distribution. (markt) 
+      </fix>
+      <fix>
+        Fix a small number of warnings reported by FindBugs. (markt)
+      </fix>
+      <update>
+        Update to version 1.1.22 of the native component for the AJP APR/native
+        and HTTP APR/native connectors. (markt)
+      </update>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 7.0.19 (markt)" rtext="released 2011-07-19">
   <subsection name="Catalina">
     <changelog>
       <add>
@@ -80,10 +464,11 @@
         a Context or Host can be identified for the failed request. (markt)
       </fix>
       <update>
-        In JULI FileHandler and in AccessLogValve create a directory
-        automatically when it is specified as a part of the file name, e.g. in
-        the <code>prefix</code> attribute. Earlier this happened only if it was
-        specified with the <code>directory</code> attribute. (kkolinko)
+        Create a directory for access log or error log (in AccessLogValve and
+        in JULI FileHandler) automatically when it is specified as a part of
+        the file name, e.g. in the <code>prefix</code> attribute. Earlier this
+        happened only if it was specified with the <code>directory</code>
+        attribute. (kkolinko)
       </update>
       <fix>
         Log a failure if access log file cannot be opened. (kkolinko)
@@ -1470,7 +1855,7 @@
   <subsection name="Tribes">
     <changelog>
       <fix>
-        <rev>1068549</rev> <bug>50667</bug>: Allow RPC callers to get
+        <bug>50667</bug> (<rev>1068549</rev>): Allow RPC callers to get
         confirmation when sending a reply. (fhanik)
       </fix>  
     </changelog>

@@ -16,6 +16,11 @@
  */
 package org.apache.coyote.ajp;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
+
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
 
@@ -43,9 +48,11 @@ public class TestAbstractAjpProcessor extends TomcatBaseTest {
         
         return protocol;
     }
-    
+
+    @Test
     public void testKeepAlive() throws Exception {
         Tomcat tomcat = getTomcatInstance();
+        tomcat.getConnector().setProperty("connectionTimeout", "-1");
         tomcat.start();
 
         // Must have a real docBase - just use temp
@@ -73,6 +80,9 @@ public class TestAbstractAjpProcessor extends TomcatBaseTest {
             validateResponseBody(responseBody, HelloWorldServlet.RESPONSE_TEXT);
             validateResponseEnd(ajpClient.readMessage(), true);
             
+            // Give connections plenty of time to time out
+            Thread.sleep(2000);
+            
             // Double check the connection is still open
             validateCpong(ajpClient.cping());
         }
@@ -91,7 +101,7 @@ public class TestAbstractAjpProcessor extends TomcatBaseTest {
         assertEquals((byte) 'B', message.buf[1]);
         
         // Set the start position and read the length
-        message.processHeader();
+        message.processHeader(false);
         
         // Check the length
         assertTrue(message.len > 0);
@@ -126,7 +136,7 @@ public class TestAbstractAjpProcessor extends TomcatBaseTest {
         assertEquals((byte) 'B', message.buf[1]);
         
         // Set the start position and read the length
-        message.processHeader();
+        message.processHeader(false);
         
         // Should be a body chunk message
         assertEquals(0x03, message.readByte());
@@ -143,7 +153,7 @@ public class TestAbstractAjpProcessor extends TomcatBaseTest {
         assertEquals((byte) 'A', message.buf[0]);
         assertEquals((byte) 'B', message.buf[1]);
 
-        message.processHeader();
+        message.processHeader(false);
         
         // Should be an end body message
         assertEquals(0x05, message.readByte());
@@ -155,8 +165,8 @@ public class TestAbstractAjpProcessor extends TomcatBaseTest {
         if (message.readByte() > 0) {
             reuse = true;
         }
-        
-        assertEquals(expectedReuse, reuse);
+
+        assertEquals(Boolean.valueOf(expectedReuse), Boolean.valueOf(reuse));
     }
 
     private void validateCpong(TesterAjpMessage message) throws Exception {

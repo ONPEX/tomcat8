@@ -148,7 +148,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: ManagerServlet.java 1127122 2011-05-24 16:04:08Z markt $
+ * @version $Id: ManagerServlet.java 1162172 2011-08-26 17:12:33Z markt $
  */
 
 public class ManagerServlet extends HttpServlet implements ContainerServlet {
@@ -641,7 +641,7 @@ public class ManagerServlet extends HttpServlet implements ContainerServlet {
         File deployedPath = deployed;
         if (tag != null) {
             deployedPath = new File(versioned, tag);
-            if (!deployedPath.isDirectory() && !deployedPath.mkdirs()) {
+            if (!deployedPath.mkdirs() && !deployedPath.isDirectory()) {
                 writer.println(smClient.getString("managerServlet.mkdirFail",
                         deployedPath));
                 return;
@@ -835,7 +835,7 @@ public class ManagerServlet extends HttpServlet implements ContainerServlet {
                 addServiced(name);
                 try {
                     if (config != null) {
-                        if (!configBase.isDirectory() && !configBase.mkdirs()) {
+                        if (!configBase.mkdirs() && !configBase.isDirectory()) {
                             writer.println(smClient.getString(
                                     "managerServlet.mkdirFail",configBase));
                             return;

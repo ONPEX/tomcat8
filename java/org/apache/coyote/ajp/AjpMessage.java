@@ -291,11 +291,13 @@ public class AjpMessage {
     public int getInt() {
         int b1 = buf[pos++] & 0xFF;
         int b2 = buf[pos++] & 0xFF;
+        validatePos(pos);
         return (b1<<8) + b2;
     }
 
 
     public int peekInt() {
+        validatePos(pos + 2);
         int b1 = buf[pos] & 0xFF;
         int b2 = buf[pos+1] & 0xFF;
         return (b1<<8) + b2;
@@ -304,20 +306,36 @@ public class AjpMessage {
     
     public byte getByte() {
         byte res = buf[pos++];
+        validatePos(pos);
         return res;
     }
 
     
     public void getBytes(MessageBytes mb) {
+        doGetBytes(mb, true);
+    }
+    
+    public void getBodyBytes(MessageBytes mb) {
+        doGetBytes(mb, false);
+    }
+    
+    private void doGetBytes(MessageBytes mb, boolean terminated) {
         int length = getInt();
         if ((length == 0xFFFF) || (length == -1)) {
             mb.recycle();
             return;
         }
+        if (terminated) {
+            validatePos(pos + length + 1);
+        } else {
+            validatePos(pos + length);
+        }
         mb.setBytes(buf, pos, length);
         mb.getCharChunk().recycle(); // not valid anymore
         pos += length;
-        pos++; // Skip the terminating \0
+        if (terminated) {
+            pos++; // Skip the terminating \0
+        }
     }
     
     
@@ -335,6 +353,7 @@ public class AjpMessage {
         b1 |= (buf[pos++] & 0xFF);
         b1 <<=8;
         b1 |= (buf[pos++] & 0xFF);
+        validatePos(pos);
         return  b1;
     }
 
@@ -348,13 +367,18 @@ public class AjpMessage {
         return buf.length;
     }
     
-    
+    @Deprecated
     public int processHeader() {
+        return processHeader(true);
+    }
+    
+    public int processHeader(boolean toContainer) {
         pos = 0;
         int mark = getInt();
         len = getInt();
         // Verify message signature
-        if ((mark != 0x1234) && (mark != 0x4142)) {
+        if ((toContainer && mark != 0x1234) ||
+                (!toContainer && mark != 0x4142)) {
             log.error(sm.getString("ajpmessage.invalid", "" + mark));
             if (log.isDebugEnabled()) {
                 dump("In: ");
@@ -388,6 +412,13 @@ public class AjpMessage {
     }
 
 
+    private void validatePos(int posToTest) {
+        if (posToTest > len + 4) {
+            // Trying to read data beyond the end of the AJP message 
+            throw new ArrayIndexOutOfBoundsException(sm.getString(
+                    "ajpMessage.invalidPos", Integer.valueOf(posToTest)));
+        }
+    }
     // ------------------------------------------------------ Protected Methods
 
 

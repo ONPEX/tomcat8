@@ -161,30 +161,38 @@ public class Http11AprProcessor extends AbstractHttp11Processor<Long> {
      * Process pipelined HTTP requests using the specified input and output
      * streams.
      *
+     * @param socketWrapper Socket from which the HTTP requests will be read
+     *               and the HTTP responses will be written.
+     *  
      * @throws IOException error during an I/O operation
      */
     @Override
-    public SocketState process(SocketWrapper<Long> socket)
+    public SocketState process(SocketWrapper<Long> socketWrapper)
         throws IOException {
         RequestInfo rp = request.getRequestProcessor();
         rp.setStage(org.apache.coyote.Constants.STAGE_PARSE);
 
         // Setting up the socket
-        this.socket = socket;
-        long socketRef = socket.getSocket().longValue();
-        inputBuffer.setSocket(socketRef);
-        outputBuffer.setSocket(socketRef);
+        this.socket = socketWrapper;
+        inputBuffer.init(socketWrapper, endpoint);
+        outputBuffer.init(socketWrapper, endpoint);
 
         // Error flag
         error = false;
-        comet = false;
         keepAlive = true;
+        comet = false;
 
-        int keepAliveLeft = maxKeepAliveRequests;
-        long soTimeout = endpoint.getSoTimeout();
-        
+        int soTimeout = endpoint.getSoTimeout();
+
+        if (disableKeepAlive()) {
+            socketWrapper.setKeepAliveLeft(0);
+        }
+
         boolean keptAlive = false;
         boolean openSocket = false;
+        boolean sendfileInProgress = false;
+
+        long socketRef = socketWrapper.getSocket().longValue();
 
         while (!error && keepAlive && !comet && !isAsync() && !endpoint.isPaused()) {
 
@@ -247,8 +255,12 @@ public class Http11AprProcessor extends AbstractHttp11Processor<Long> {
                 }
             }
 
-            if (maxKeepAliveRequests > 0 && --keepAliveLeft == 0)
+            if (maxKeepAliveRequests == 1) {
                 keepAlive = false;
+            } else if (maxKeepAliveRequests > 0 &&
+                    socketWrapper.decrementKeepAlive() <= 0) {
+                keepAlive = false;
+            }
 
             // Process the request in the adapter
             if (!error) {
@@ -305,17 +317,19 @@ public class Http11AprProcessor extends AbstractHttp11Processor<Long> {
                 sendfileData.socket = socketRef;
                 sendfileData.keepAlive = keepAlive;
                 if (!((AprEndpoint)endpoint).getSendfile().add(sendfileData)) {
+                    // Didn't send all of the data to sendfile.
                     if (sendfileData.socket == 0) {
-                        // Didn't send all the data but the socket is no longer
-                        // set. Something went wrong. Close the connection.
-                        // Too late to set status code.
+                        // The socket is no longer set. Something went wrong.
+                        // Close the connection. Too late to set status code.
                         if (log.isDebugEnabled()) {
                             log.debug(sm.getString(
                                     "http11processor.sendfile.error"));
                         }
                         error = true;
                     } else {
-                        openSocket = true;
+                        // The sendfile Poller will add the socket to the main
+                        // Poller once sendfile processing is complete
+                        sendfileInProgress = true;
                     }
                     break;
                 }
@@ -332,9 +346,19 @@ public class Http11AprProcessor extends AbstractHttp11Processor<Long> {
         } else if (comet  || isAsync()) {
             return SocketState.LONG;
         } else {
-            return (openSocket) ? SocketState.OPEN : SocketState.CLOSED;
+            if (sendfileInProgress) {
+                return SocketState.SENDFILE;
+            } else {
+                return (openSocket) ? SocketState.OPEN : SocketState.CLOSED;
+            }
         }
         
+    }
+
+
+    @Override
+    protected boolean disableKeepAlive() {
+        return false;
     }
 
 
@@ -609,12 +633,12 @@ public class Http11AprProcessor extends AbstractHttp11Processor<Long> {
     }
 
     @Override
-    protected AbstractInputBuffer getInputBuffer() {
+    protected AbstractInputBuffer<Long> getInputBuffer() {
         return inputBuffer;
     }
 
     @Override
-    protected AbstractOutputBuffer getOutputBuffer() {
+    protected AbstractOutputBuffer<Long> getOutputBuffer() {
         return outputBuffer;
     }
 }

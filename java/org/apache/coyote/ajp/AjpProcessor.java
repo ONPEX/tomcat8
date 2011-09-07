@@ -23,13 +23,10 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 import org.apache.coyote.ActionCode;
-import org.apache.coyote.OutputBuffer;
 import org.apache.coyote.RequestInfo;
-import org.apache.coyote.Response;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
-import org.apache.tomcat.util.buf.ByteChunk;
 import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 import org.apache.tomcat.util.net.JIoEndpoint;
 import org.apache.tomcat.util.net.SocketStatus;
@@ -129,7 +126,6 @@ public class AjpProcessor extends AbstractAjpProcessor<Socket> {
                 // Get first message of the request
                 if (!readMessage(requestHeaderMessage)) {
                     // This means a connection timeout
-                    rp.setStage(org.apache.coyote.Constants.STAGE_ENDED);
                     break;
                 }
                 // Set back timeout if keep alive timeout is enabled
@@ -147,13 +143,14 @@ public class AjpProcessor extends AbstractAjpProcessor<Socket> {
                     }
                     continue;
                 } else if(type != Constants.JK_AJP13_FORWARD_REQUEST) {
-                    // Usually the servlet didn't read the previous request body
-                    if(log.isDebugEnabled()) {
-                        log.debug("Unexpected message: "+type);
+                    // Unexpected packet type. Unread body packets should have
+                    // been swallowed in finish().
+                    if (log.isDebugEnabled()) {
+                        log.debug("Unexpected message: " + type);
                     }
-                    continue;
+                    error = true;
+                    break;
                 }
-
                 request.setStartTime(System.currentTimeMillis());
             } catch (IOException e) {
                 error = true;
@@ -291,32 +288,6 @@ public class AjpProcessor extends AbstractAjpProcessor<Socket> {
         output.write(src, offset, length);
     }
 
-    /**
-     * Finish AJP response.
-     */
-    @Override
-    protected void finish() throws IOException {
-
-        if (!response.isCommitted()) {
-            // Validate and write response headers
-            try {
-                prepareResponse();
-            } catch (IOException e) {
-                // Set error flag
-                error = true;
-            }
-        }
-
-        if (finished)
-            return;
-
-        finished = true;
-
-        // Add the end message
-        output.write(endMessageArray);
-
-    }
-
 
     /**
      * Read at least the specified amount of bytes, and place them
@@ -365,39 +336,10 @@ public class AjpProcessor extends AbstractAjpProcessor<Socket> {
             return false;
         }
 
-        bodyMessage.getBytes(bodyBytes);
+        bodyMessage.getBodyBytes(bodyBytes);
         empty = false;
         return true;
     }
-
-    /**
-     * Get more request body data from the web server and store it in the
-     * internal buffer.
-     *
-     * @return true if there is more data, false if not.
-     */
-    @Override
-    protected boolean refillReadBuffer() throws IOException {
-        // If the server returns an empty packet, assume that that end of
-        // the stream has been reached (yuck -- fix protocol??).
-        // FORM support
-        if (replay) {
-            endOfStream = true; // we've read everything there is
-        }
-        if (endOfStream) {
-            return false;
-        }
-
-        // Request more data immediately
-        output.write(getBodyMessageArray);
-
-        boolean moreData = receive();
-        if( !moreData ) {
-            endOfStream = true;
-        }
-        return moreData;
-    }
-
 
     /**
      * Read an AJP message.
@@ -414,7 +356,7 @@ public class AjpProcessor extends AbstractAjpProcessor<Socket> {
 
         read(buf, 0, headerLength);
 
-        int messageLength = message.processHeader();
+        int messageLength = message.processHeader(true);
         if (messageLength < 0) {
             // Invalid AJP header signature
             // TODO: Throw some exception and close the connection to frontend.
@@ -435,75 +377,6 @@ public class AjpProcessor extends AbstractAjpProcessor<Socket> {
             }
             read(buf, headerLength, messageLength);
             return true;
-        }
-    }
-
-
-    /**
-     * Callback to write data from the buffer.
-     */
-    @Override
-    protected void flush(boolean explicit) throws IOException {
-        if (explicit && !finished) {
-            // Send the flush message
-            output.write(flushMessageArray);
-        }
-    }
-
-
-    // ----------------------------------- OutputStreamOutputBuffer Inner Class
-
-
-    /**
-     * This class is an output buffer which will write data to an output
-     * stream.
-     */
-    protected class SocketOutputBuffer implements OutputBuffer {
-
-        /**
-         * Write chunk.
-         */
-        @Override
-        public int doWrite(ByteChunk chunk, Response res)
-            throws IOException {
-
-            if (!response.isCommitted()) {
-                // Validate and write response headers
-                try {
-                    prepareResponse();
-                } catch (IOException e) {
-                    // Set error flag
-                    error = true;
-                }
-            }
-
-            int len = chunk.getLength();
-            // 4 - hardcoded, byte[] marshaling overhead
-            // Adjust allowed size if packetSize != default (Constants.MAX_PACKET_SIZE)
-            int chunkSize = Constants.MAX_SEND_SIZE + packetSize - Constants.MAX_PACKET_SIZE;
-            int off = 0;
-            while (len > 0) {
-                int thisTime = len;
-                if (thisTime > chunkSize) {
-                    thisTime = chunkSize;
-                }
-                len -= thisTime;
-                responseHeaderMessage.reset();
-                responseHeaderMessage.appendByte(Constants.JK_AJP13_SEND_BODY_CHUNK);
-                responseHeaderMessage.appendBytes(chunk.getBytes(), chunk.getOffset() + off, thisTime);
-                responseHeaderMessage.end();
-                output.write(responseHeaderMessage.getBuffer(), 0, responseHeaderMessage.getLen());
-
-                off += thisTime;
-            }
-
-            byteCount += chunk.getLength();
-            return chunk.getLength();
-        }
-
-        @Override
-        public long getBytesWritten() {
-            return byteCount;
         }
     }
 }

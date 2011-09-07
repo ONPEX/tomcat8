@@ -50,7 +50,7 @@ import org.apache.tomcat.util.http.MimeHeaders;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: FormAuthenticator.java 1129658 2011-05-31 13:06:11Z markt $
+ * @version $Id: FormAuthenticator.java 1162933 2011-08-29 18:30:11Z markt $
  */
 
 public class FormAuthenticator
@@ -302,6 +302,7 @@ public class FormAuthenticator
                 // the landing page
                 String uri = request.getContextPath() + landingPage;
                 SavedRequest saved = new SavedRequest();
+                saved.setMethod("GET");
                 saved.setRequestURI(uri);
                 request.getSessionInternal(true).setNote(
                         Constants.FORM_REQUEST_NOTE, saved);
@@ -331,6 +332,7 @@ public class FormAuthenticator
                 // the landing page
                 String uri = request.getContextPath() + landingPage;
                 SavedRequest saved = new SavedRequest();
+                saved.setMethod("GET");
                 saved.setRequestURI(uri);
                 session.setNote(Constants.FORM_REQUEST_NOTE, saved);
                 response.sendRedirect(response.encodeRedirectURL(uri));

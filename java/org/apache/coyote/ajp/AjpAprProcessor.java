@@ -21,15 +21,12 @@ import java.io.InterruptedIOException;
 import java.nio.ByteBuffer;
 
 import org.apache.coyote.ActionCode;
-import org.apache.coyote.OutputBuffer;
 import org.apache.coyote.RequestInfo;
-import org.apache.coyote.Response;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.jni.Socket;
 import org.apache.tomcat.jni.Status;
 import org.apache.tomcat.util.ExceptionUtils;
-import org.apache.tomcat.util.buf.ByteChunk;
 import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 import org.apache.tomcat.util.net.AprEndpoint;
 import org.apache.tomcat.util.net.SocketStatus;
@@ -58,7 +55,6 @@ public class AjpAprProcessor extends AbstractAjpProcessor<Long> {
     protected Log getLog() {
         return log;
     }
-
 
     // ----------------------------------------------------------- Constructors
 
@@ -132,7 +128,6 @@ public class AjpAprProcessor extends AbstractAjpProcessor<Long> {
                     // This means that no data is available right now
                     // (long keepalive), so that the processor should be recycled
                     // and the method should return true
-                    rp.setStage(org.apache.coyote.Constants.STAGE_ENDED);
                     break;
                 }
                 // Check message type, process right away and break if
@@ -145,11 +140,13 @@ public class AjpAprProcessor extends AbstractAjpProcessor<Long> {
                     }
                     continue;
                 } else if(type != Constants.JK_AJP13_FORWARD_REQUEST) {
-                    // Usually the servlet didn't read the previous request body
-                    if(log.isDebugEnabled()) {
-                        log.debug("Unexpected message: "+type);
+                    // Unexpected packet type. Unread body packets should have
+                    // been swallowed in finish().
+                    if (log.isDebugEnabled()) {
+                        log.debug("Unexpected message: " + type);
                     }
-                    continue;
+                    error = true;
+                    break;
                 }
 
                 keptAlive = true;
@@ -274,37 +271,15 @@ public class AjpAprProcessor extends AbstractAjpProcessor<Long> {
     protected void output(byte[] src, int offset, int length)
             throws IOException {
         outputBuffer.put(src, offset, length);
-    }
-
-
-    /**
-     * Finish AJP response.
-     */
-    @Override
-    protected void finish() throws IOException {
-
-        if (!response.isCommitted()) {
-            // Validate and write response headers
-            try {
-                prepareResponse();
-            } catch (IOException e) {
-                // Set error flag
-                error = true;
+        
+        long socketRef = socket.getSocket().longValue();
+        
+        if (outputBuffer.position() > 0) {
+            if ((socketRef != 0) && Socket.sendbb(socketRef, 0, outputBuffer.position()) < 0) {
+                throw new IOException(sm.getString("ajpprocessor.failedsend"));
             }
+            outputBuffer.clear();
         }
-
-        if (finished)
-            return;
-
-        finished = true;
-
-        // Add the end message
-        if (outputBuffer.position() + endMessageArray.length > outputBuffer.capacity()) {
-            flush(false);
-        }
-        outputBuffer.put(endMessageArray);
-        flush(false);
-
     }
 
 
@@ -399,38 +374,9 @@ public class AjpAprProcessor extends AbstractAjpProcessor<Long> {
             return false;
         }
 
-        bodyMessage.getBytes(bodyBytes);
+        bodyMessage.getBodyBytes(bodyBytes);
         empty = false;
         return true;
-    }
-
-    /**
-     * Get more request body data from the web server and store it in the
-     * internal buffer.
-     *
-     * @return true if there is more data, false if not.
-     */
-    @Override
-    protected boolean refillReadBuffer() throws IOException {
-        // If the server returns an empty packet, assume that that end of
-        // the stream has been reached (yuck -- fix protocol??).
-        // FORM support
-        if (replay) {
-            endOfStream = true; // we've read everything there is
-        }
-        if (endOfStream) {
-            return false;
-        }
-
-        // Request more data immediately
-        Socket.send(socket.getSocket().longValue(), getBodyMessageArray, 0,
-                getBodyMessageArray.length);
-
-        boolean moreData = receive();
-        if( !moreData ) {
-            endOfStream = true;
-        }
-        return moreData;
     }
 
 
@@ -457,7 +403,7 @@ public class AjpAprProcessor extends AbstractAjpProcessor<Long> {
             read(headerLength);
         }
         inputBuffer.get(message.getBuffer(), 0, headerLength);
-        int messageLength = message.processHeader();
+        int messageLength = message.processHeader(true);
         if (messageLength < 0) {
             // Invalid AJP header signature
             // TODO: Throw some exception and close the connection to frontend.
@@ -495,93 +441,5 @@ public class AjpAprProcessor extends AbstractAjpProcessor<Long> {
         inputBuffer.limit(0);
         outputBuffer.clear();
 
-    }
-
-
-    /**
-     * Callback to write data from the buffer.
-     */
-    @Override
-    protected void flush(boolean explicit) throws IOException {
-        
-        long socketRef = socket.getSocket().longValue();
-        
-        if (outputBuffer.position() > 0) {
-            if (Socket.sendbb(socketRef, 0, outputBuffer.position()) < 0) {
-                throw new IOException(sm.getString("ajpprocessor.failedsend"));
-            }
-            outputBuffer.clear();
-        }
-        // Send explicit flush message
-        if (explicit && !finished) {
-            if (Socket.send(socketRef, flushMessageArray, 0,
-                    flushMessageArray.length) < 0) {
-                throw new IOException(sm.getString("ajpprocessor.failedflush"));
-            }
-        }
-    }
-
-
-    // ----------------------------------- OutputStreamOutputBuffer Inner Class
-
-
-    /**
-     * This class is an output buffer which will write data to an output
-     * stream.
-     */
-    protected class SocketOutputBuffer
-        implements OutputBuffer {
-
-
-        /**
-         * Write chunk.
-         */
-        @Override
-        public int doWrite(ByteChunk chunk, Response res)
-            throws IOException {
-
-            if (!response.isCommitted()) {
-                // Validate and write response headers
-                try {
-                    prepareResponse();
-                } catch (IOException e) {
-                    // Set error flag
-                    error = true;
-                }
-            }
-
-            int len = chunk.getLength();
-            // 4 - hardcoded, byte[] marshaling overhead
-            // Adjust allowed size if packetSize != default (Constants.MAX_PACKET_SIZE)
-            int chunkSize = Constants.MAX_SEND_SIZE + packetSize - Constants.MAX_PACKET_SIZE;
-            int off = 0;
-            while (len > 0) {
-                int thisTime = len;
-                if (thisTime > chunkSize) {
-                    thisTime = chunkSize;
-                }
-                len -= thisTime;
-                if (outputBuffer.position() + thisTime +
-                    Constants.H_SIZE + 4 > outputBuffer.capacity()) {
-                    flush(false);
-                }
-                outputBuffer.put((byte) 0x41);
-                outputBuffer.put((byte) 0x42);
-                outputBuffer.putShort((short) (thisTime + 4));
-                outputBuffer.put(Constants.JK_AJP13_SEND_BODY_CHUNK);
-                outputBuffer.putShort((short) thisTime);
-                outputBuffer.put(chunk.getBytes(), chunk.getOffset() + off, thisTime);
-                outputBuffer.put((byte) 0x00);
-                off += thisTime;
-            }
-
-            byteCount += chunk.getLength();
-            return chunk.getLength();
-        }
-
-        @Override
-        public long getBytesWritten() {
-            return byteCount;
-        }
     }
 }

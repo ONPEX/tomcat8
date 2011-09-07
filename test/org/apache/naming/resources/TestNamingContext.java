@@ -29,6 +29,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.deploy.ContextResource;
 import org.apache.catalina.startup.Tomcat;
@@ -37,10 +41,12 @@ import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestNamingContext extends TomcatBaseTest {
 
+    @Test
     public void testLookupSingletonResource() throws Exception {
         doTestLookup(true);
     }
-    
+
+    @Test
     public void testLookupNonSingletonResource() throws Exception {
         doTestLookup(false);
     }
@@ -106,6 +112,7 @@ public class TestNamingContext extends TomcatBaseTest {
         }
     }
 
+    @Test
     public void testListBindings() throws Exception {
         Tomcat tomcat = getTomcatInstance();
         tomcat.enableNaming();
@@ -156,7 +163,8 @@ public class TestNamingContext extends TomcatBaseTest {
             }
         }
     }
-    
+
+    @Test
     public void testBeanFactory() throws Exception {
         Tomcat tomcat = getTomcatInstance();
         tomcat.enableNaming();

@@ -18,6 +18,7 @@
 package org.apache.el;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,12 +28,16 @@ import javax.el.ExpressionFactory;
 import javax.el.ValueExpression;
 import javax.el.ValueReference;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import org.junit.Test;
 
 import org.apache.jasper.el.ELContextImpl;
 
-public class TestValueExpressionImpl extends TestCase {
+public class TestValueExpressionImpl {
 
+    @Test
     public void testGetValueReference() {
         ExpressionFactory factory = ExpressionFactory.newInstance();
         ELContext context = new ELContextImpl();
@@ -58,7 +63,7 @@ public class TestValueExpressionImpl extends TestCase {
         assertEquals("name", vr.getProperty());
     }
 
- 
+    @Test
     public void testBug49345() {
         ExpressionFactory factory = ExpressionFactory.newInstance();
         ELContext context = new ELContextImpl();
@@ -87,7 +92,7 @@ public class TestValueExpressionImpl extends TestCase {
         assertEquals("name", vr.getProperty());
     }
 
-
+    @Test
     public void testBug50105() {
         ExpressionFactory factory = ExpressionFactory.newInstance();
         ELContext context = new ELContextImpl();
@@ -110,12 +115,13 @@ public class TestValueExpressionImpl extends TestCase {
         assertEquals("fooAPPLEbar", result2);
     }
 
+    @Test
     public void testBug51177ObjectMap() {
         ExpressionFactory factory = ExpressionFactory.newInstance();
         ELContext context = new ELContextImpl();
         
         Object o1 = "String value";
-        Object o2 = new Integer(32);
+        Object o2 = Integer.valueOf(32);
 
         Map<Object,Object> map = new HashMap<Object,Object>();
         map.put("key1", o1);
@@ -135,13 +141,14 @@ public class TestValueExpressionImpl extends TestCase {
         ve2.setValue(context, o1);
         assertEquals(o1, ve2.getValue(context));
     }
-    
+
+    @Test
     public void testBug51177ObjectList() {
         ExpressionFactory factory = ExpressionFactory.newInstance();
         ELContext context = new ELContextImpl();
         
         Object o1 = "String value";
-        Object o2 = new Integer(32);
+        Object o2 = Integer.valueOf(32);
 
         List<Object> list = new ArrayList<Object>();
         list.add(0, o1);
@@ -162,4 +169,48 @@ public class TestValueExpressionImpl extends TestCase {
         assertEquals(o1, ve2.getValue(context));
     }
 
+
+    /**
+     * Test returning an empty list as a bean property.
+     */
+    @Test
+    public void testBug51544Bean() throws Exception {
+        ExpressionFactory factory = ExpressionFactory.newInstance();
+        ELContext context = new ELContextImpl();
+        
+        TesterBeanA beanA = new TesterBeanA();
+        beanA.setValList(Collections.emptyList());
+        
+        ValueExpression var =
+            factory.createValueExpression(beanA, TesterBeanA.class);
+        context.getVariableMapper().setVariable("beanA", var);
+
+        ValueExpression ve = factory.createValueExpression(
+                context, "${beanA.valList.size()}", Integer.class);
+
+        Integer result = (Integer) ve.getValue(context);
+        assertEquals(Integer.valueOf(0), result);
+    }
+
+
+    /**
+     * Test using list directly as variable.
+     */
+    @Test
+    public void testBug51544Direct() throws Exception {
+        ExpressionFactory factory = ExpressionFactory.newInstance();
+        ELContext context = new ELContextImpl();
+        
+        List<?> list = Collections.emptyList();
+        
+        ValueExpression var =
+            factory.createValueExpression(list, List.class);
+        context.getVariableMapper().setVariable("list", var);
+
+        ValueExpression ve = factory.createValueExpression(
+                context, "${list.size()}", Integer.class);
+
+        Integer result = (Integer) ve.getValue(context);
+        assertEquals(Integer.valueOf(0), result);
+    }
 }

@@ -49,6 +49,7 @@ import org.apache.catalina.core.ApplicationSessionCookieConfig;
 import org.apache.catalina.security.SecurityUtil;
 import org.apache.catalina.util.CharsetMapper;
 import org.apache.catalina.util.DateTool;
+import org.apache.catalina.util.RequestUtil;
 import org.apache.tomcat.util.buf.CharChunk;
 import org.apache.tomcat.util.buf.UEncoder;
 import org.apache.tomcat.util.http.FastHttpDateFormat;
@@ -62,7 +63,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: Response.java 1142959 2011-07-05 10:08:00Z rjung $
+ * @version $Id: Response.java 1156603 2011-08-11 12:48:16Z markt $
  */
 
 public class Response
@@ -1327,13 +1328,17 @@ public class Response
             return; 
 
         // Clear any data content that has been buffered
-        resetBuffer();
+        resetBuffer(true);
 
         // Generate a temporary redirect to the specified location
         try {
             String absolute = toAbsolute(location);
             setStatus(SC_FOUND);
             setHeader("Location", absolute);
+            PrintWriter writer = getWriter();
+            writer.print(sm.getString("coyoteResponse.sendRedirect.note",
+                    RequestUtil.filter(absolute)));
+            flushBuffer();
         } catch (IllegalArgumentException e) {
             setStatus(SC_NOT_FOUND);
         }
