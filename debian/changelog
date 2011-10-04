@@ -1,3 +1,9 @@
+tomcat7 (7.0.22-1) UNRELEASED; urgency=low
+
+  * New upstream release.
+
+ -- Miguel Landaeta <miguel@miguel.cc>  Tue, 04 Oct 2011 18:40:11 -0430
+
 tomcat7 (7.0.21-1) unstable; urgency=low
 
   * New upstream release.
