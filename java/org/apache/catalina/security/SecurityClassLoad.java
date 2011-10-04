@@ -25,7 +25,7 @@ package org.apache.catalina.security;
  *
  * @author Glenn L. Nielsen
  * @author Jean-Francois Arcand
- * @version $Id: SecurityClassLoad.java 1144031 2011-07-07 20:53:51Z markt $
+ * @version $Id: SecurityClassLoad.java 1174064 2011-09-22 11:23:57Z markt $
  */
 
 public final class SecurityClassLoad {
@@ -87,10 +87,10 @@ public final class SecurityClassLoad {
              "DefaultInstanceManager$3");
         loader.loadClass
             (basePackage +
-             "DefaultInstanceManager$4");
+             "DefaultInstanceManager$AnnotationCacheEntry");
         loader.loadClass
             (basePackage +
-             "DefaultInstanceManager$5");
+             "DefaultInstanceManager$AnnotationCacheEntryType");
         loader.loadClass
             (basePackage +
              "ApplicationHttpRequest$AttributeNamesEnumerator");

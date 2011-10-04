@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
  * of Context (representing an individual servlet context).
  *
  * @author Craig R. McClanahan
- * @version $Id: Host.java 1058357 2011-01-12 23:49:18Z markt $
+ * @version $Id: Host.java 1163999 2011-09-01 11:02:52Z markt $
  */
 
 public interface Host extends Container {
@@ -83,7 +83,7 @@ public interface Host extends Container {
      */
     public void setXmlBase(String xmlBase);
 
-        /**
+    /**
      * Return the application root for this Host.  This can be an absolute
      * pathname, a relative pathname, or a URL.
      */

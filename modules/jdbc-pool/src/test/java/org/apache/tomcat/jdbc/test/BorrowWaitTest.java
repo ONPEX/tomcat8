@@ -39,7 +39,9 @@ public class BorrowWaitTest extends DefaultTestCase {
         }catch (SQLException x) {
             long delta = System.currentTimeMillis();
             boolean inrange = Math.abs(wait-delta) < 1000;
-            assertTrue("Connection should have been acquired within +/- 1 second.",true);
+            assertTrue(
+                    "Connection should have been acquired within +/- 1 second.",
+                    inrange);
         }
         con.close();
     }
@@ -49,6 +51,7 @@ public class BorrowWaitTest extends DefaultTestCase {
             System.err.println("testWaitTimeInfinite() test is disabled.");
             return;//this would lock up the test suite
         }
+        /*
         int wait = -1;
         this.init();
         this.datasource.setMaxActive(1);
@@ -64,6 +67,7 @@ public class BorrowWaitTest extends DefaultTestCase {
             assertTrue("Connection should have been acquired within +/- 1 second.",true);
         }
         con.close();
+        */
     }
 
 

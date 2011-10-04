@@ -44,7 +44,7 @@ import javax.naming.spi.NamingManager;
  * Catalina JNDI Context implementation.
  *
  * @author Remy Maucherat
- * @version $Id: NamingContext.java 1033925 2010-11-11 13:00:52Z markt $
+ * @version $Id: NamingContext.java 1163633 2011-08-31 14:20:17Z markt $
  */
 public class NamingContext implements Context {
 
@@ -743,8 +743,8 @@ public class NamingContext implements Context {
      * @exception NamingException if a naming exception is encountered
      */
     @Override
-    public void close()
-        throws NamingException {
+    public void close() throws NamingException {
+        checkWritable();
         env.clear();
     }
 

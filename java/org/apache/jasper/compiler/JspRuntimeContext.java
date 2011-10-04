@@ -57,7 +57,7 @@ import org.apache.juli.logging.LogFactory;
  * Only used if a web application context is a directory.
  *
  * @author Glenn L. Nielsen
- * @version $Revision: 1081391 $
+ * @version $Revision: 1172614 $
  */
 public final class JspRuntimeContext {
 
@@ -250,6 +250,7 @@ public final class JspRuntimeContext {
                                                replaced.getJspUri(), context.getContextPath()));
             }
             unloadJspServletWrapper(replaced);
+            entry.clearReplaced();
         }
         return entry;
     }

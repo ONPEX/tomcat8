@@ -27,7 +27,6 @@ import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
-import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.EventListener;
 import java.util.HashMap;
@@ -56,7 +55,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  *
  * @author Remy Maucherat
  * @author Jean-Francois Arcand
- * @version $Id: ApplicationContextFacade.java 1104557 2011-05-17 20:57:46Z kkolinko $
+ * @version $Id: ApplicationContextFacade.java 1166080 2011-09-07 09:24:40Z markt $
  */
 
 public class ApplicationContextFacade implements ServletContext {
@@ -118,7 +117,7 @@ public class ApplicationContextFacade implements ServletContext {
         classCache.put("getRealPath", clazz);
         classCache.put("getAttribute", clazz);
         classCache.put("log", clazz);
-        classCache.put("setSessionTrackingModes", new Class[]{EnumSet.class} );
+        classCache.put("setSessionTrackingModes", new Class[]{Set.class} );
     }
 
 
@@ -571,7 +570,7 @@ public class ApplicationContextFacade implements ServletContext {
     @SuppressWarnings("unchecked") // doPrivileged() returns the correct type
     public Set<SessionTrackingMode> getDefaultSessionTrackingModes() {
         if (SecurityUtil.isPackageProtectionEnabled()) {
-            return (EnumSet<SessionTrackingMode>)
+            return (Set<SessionTrackingMode>)
                 doPrivileged("getDefaultSessionTrackingModes", null);
         } else {
             return context.getDefaultSessionTrackingModes();
@@ -582,7 +581,7 @@ public class ApplicationContextFacade implements ServletContext {
     @SuppressWarnings("unchecked") // doPrivileged() returns the correct type
     public Set<SessionTrackingMode> getEffectiveSessionTrackingModes() {
         if (SecurityUtil.isPackageProtectionEnabled()) {
-            return (EnumSet<SessionTrackingMode>)
+            return (Set<SessionTrackingMode>)
                 doPrivileged("getEffectiveSessionTrackingModes", null);
         } else {
             return context.getEffectiveSessionTrackingModes();

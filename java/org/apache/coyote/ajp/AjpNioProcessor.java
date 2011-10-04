@@ -98,6 +98,7 @@ public class AjpNioProcessor extends AbstractAjpProcessor<NioChannel> {
         this.socket = socket.getSocket();
         
         long soTimeout = endpoint.getSoTimeout();
+        boolean cping = false;
 
         // Error flag
         error = false;
@@ -118,6 +119,11 @@ public class AjpNioProcessor extends AbstractAjpProcessor<NioChannel> {
                 // not regular request processing
                 int type = requestHeaderMessage.getByte();
                 if (type == Constants.JK_AJP13_CPING_REQUEST) {
+                    if (endpoint.isPaused()) {
+                        recycle(true);
+                        break;
+                    }
+                    cping = true;
                     try {
                         output(pongMessageArray, 0, pongMessageArray.length);
                     } catch (IOException e) {
@@ -163,12 +169,13 @@ public class AjpNioProcessor extends AbstractAjpProcessor<NioChannel> {
                 }
             }
 
-            if (endpoint.isPaused()) {
+            if (!error && !cping && endpoint.isPaused()) {
                 // 503 - Service unavailable
                 response.setStatus(503);
                 adapter.log(request, response, 0);
                 error = true;
             }
+            cping = false;
 
             // Process the request in the adapter
             if (!error) {
@@ -186,7 +193,7 @@ public class AjpNioProcessor extends AbstractAjpProcessor<NioChannel> {
                     error = true;
                 }
             }
-            
+
             if (isAsync() && !error) {
                 break;
             }
@@ -216,7 +223,7 @@ public class AjpNioProcessor extends AbstractAjpProcessor<NioChannel> {
 
             recycle(false);
         }
-        
+
         rp.setStage(org.apache.coyote.Constants.STAGE_ENDED);
 
         if (!error && !endpoint.isPaused()) {
@@ -228,10 +235,9 @@ public class AjpNioProcessor extends AbstractAjpProcessor<NioChannel> {
         } else {
             return SocketState.CLOSED;
         }
-        
     }
 
-    
+
     // ----------------------------------------------------- ActionHook Methods
 
 

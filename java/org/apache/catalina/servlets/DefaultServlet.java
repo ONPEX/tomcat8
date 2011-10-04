@@ -114,7 +114,7 @@ import org.apache.tomcat.util.res.StringManager;
  * </p>
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: DefaultServlet.java 1145380 2011-07-11 22:08:06Z markt $
+ * @version $Id: DefaultServlet.java 1174914 2011-09-23 17:47:08Z kkolinko $
  */
 
 public class DefaultServlet
@@ -1378,13 +1378,6 @@ public class DefaultServlet
         throws IOException, ServletException {
 
         String name = cacheEntry.name;
-
-        // Number of characters to trim from the beginnings of filenames
-        int trim = name.length();
-        if (!name.endsWith("/"))
-            trim += 1;
-        if (name.equals("/"))
-            trim = 1;
 
         // Prepare a writer to a buffered area
         ByteArrayOutputStream stream = new ByteArrayOutputStream();

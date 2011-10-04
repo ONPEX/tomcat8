@@ -55,7 +55,7 @@ import org.apache.tomcat.util.res.StringManager;
  * be subclassed to create more sophisticated Manager implementations.
  *
  * @author Craig R. McClanahan
- * @version $Id: ManagerBase.java 1097899 2011-04-29 17:49:37Z markt $
+ * @version $Id: ManagerBase.java 1175277 2011-09-24 22:37:12Z kkolinko $
  */
 
 public abstract class ManagerBase extends LifecycleMBeanBase
@@ -86,6 +86,12 @@ public abstract class ManagerBase extends LifecycleMBeanBase
 
 
     /**
+     * The descriptive name of this Manager implementation (for logging).
+     */
+    private static final String name = "ManagerBase";
+
+
+    /**
      * The default maximum inactive interval for Sessions created by
      * this Manager.
      */
@@ -96,12 +102,6 @@ public abstract class ManagerBase extends LifecycleMBeanBase
      * The session id length of Sessions created by this Manager.
      */
     protected int sessionIdLength = 16;
-
-
-    /**
-     * The descriptive name of this Manager implementation (for logging).
-     */
-    protected static String name = "ManagerBase";
 
 
     /**

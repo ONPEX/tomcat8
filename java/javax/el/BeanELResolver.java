@@ -414,14 +414,16 @@ public class BeanELResolver extends ELResolver {
             }
             Method[] methods = clazz.getMethods();
             for (Method m : methods) {
-                if (methodName.equals(m.getName()) && 
-                        m.getParameterTypes().length == paramCount) {
-                    // Same number of parameters - use the first match
-                    matchingMethod = getMethod(clazz, m);
-                    break;
-                }
-                if (m.isVarArgs()) {
-                    matchingMethod = getMethod(clazz, m);
+                if (methodName.equals(m.getName())) {
+                    if (m.getParameterTypes().length == paramCount) {
+                        // Same number of parameters - use the first match
+                        matchingMethod = getMethod(clazz, m);
+                        break;
+                    }
+                    if (m.isVarArgs()
+                            && paramCount > m.getParameterTypes().length - 2) {
+                        matchingMethod = getMethod(clazz, m);
+                    }
                 }
             }
             if (matchingMethod == null) {
@@ -440,21 +442,21 @@ public class BeanELResolver extends ELResolver {
             if (matchingMethod.isVarArgs()) {
                 int varArgIndex = parameterTypes.length - 1;
                 // First argCount-1 parameters are standard
-                for (int i = 0; (i < varArgIndex - 1); i++) {
+                for (int i = 0; (i < varArgIndex); i++) {
                     parameters[i] = factory.coerceToType(params[i],
                             parameterTypes[i]);
                 }
-                // Last parameter is the varags
+                // Last parameter is the varargs
                 Class<?> varArgClass =
                     parameterTypes[varArgIndex].getComponentType();
+                final Object varargs = Array.newInstance(
+                    varArgClass,
+                    (paramCount - varArgIndex));
                 for (int i = (varArgIndex); i < paramCount; i++) {
-                    Object varargs = Array.newInstance(
-                            parameterTypes[paramCount],
-                            (paramCount - varArgIndex));
-                    Array.set(varargs, i,
+                    Array.set(varargs, i - varArgIndex,
                             factory.coerceToType(params[i], varArgClass));
-                    parameters[varArgIndex] = varargs;
                 }
+                parameters[varArgIndex] = varargs;
             } else {
                 parameters = new Object[parameterTypes.length];
                 for (int i = 0; i < parameterTypes.length; i++) {

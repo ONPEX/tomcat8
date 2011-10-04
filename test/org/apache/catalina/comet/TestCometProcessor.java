@@ -151,15 +151,32 @@ public class TestCometProcessor extends TomcatBaseTest {
         Thread.sleep(3000);
         
         tomcat.getConnector().stop();
+        // Allow the executor a chance to send the end event
+        Thread.sleep(100);
         tomcat.getConnector().destroy();
 
-        // Sleep for a couple of seconds to give enough time for the connector
-        // stop message to be processed
-        Thread.sleep(2000);
+        // Wait for the write thread to stop
+        int count = 0;
+        while (writeThread.isAlive() && count < 50) {
+            Thread.sleep(100);
+            count ++;
+        }
+
+        // Wait for the read thread to stop
+        while (readThread.isAlive() && count < 50) {
+            Thread.sleep(100);
+            count ++;
+        }
 
         // Write should trigger an exception once the connector stops since the
         // socket should be closed
-        assertNotNull(writeThread.getException());
+        assertNotNull("No exception in writing thread",
+                writeThread.getException());
+
+        // Termination of Read thread varies by platform and protocol
+        // In all cases, the END event should be sent.
+        assertTrue("Comet END event not received",
+                readThread.getResponse().contains("Client: END"));
     }
 
     private boolean isCometSupported() {
@@ -215,7 +232,7 @@ public class TestCometProcessor extends TomcatBaseTest {
         
         private int pingCount;
         private OutputStream os;
-        private Exception e = null;
+        private volatile Exception e = null;
 
         public PingWriterThread(int pingCount, OutputStream os) {
             this.pingCount = pingCount;
@@ -247,7 +264,6 @@ public class TestCometProcessor extends TomcatBaseTest {
 
         private InputStream is;
         private StringBuilder response = new StringBuilder();
-        private Exception e = null;
 
         public ResponseReaderThread(InputStream is) {
             this.is = is;
@@ -255,10 +271,6 @@ public class TestCometProcessor extends TomcatBaseTest {
 
         public String getResponse() {
             return response.toString();
-        }
-
-        public Exception getException() {
-            return e;
         }
 
         @Override
@@ -270,7 +282,7 @@ public class TestCometProcessor extends TomcatBaseTest {
                     c = is.read();
                 }
             } catch (Exception e) {
-                this.e = e;
+                // Ignore
             }
         }
     }

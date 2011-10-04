@@ -77,7 +77,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: WebappLoader.java 1162172 2011-08-26 17:12:33Z markt $
+ * @version $Id: WebappLoader.java 1174921 2011-09-23 17:51:56Z kkolinko $
  */
 
 public class WebappLoader extends LifecycleMBeanBase
@@ -1036,7 +1036,6 @@ public class WebappLoader extends LifecycleMBeanBase
 
         // Assemble the class path information from our class loader chain
         ClassLoader loader = getClassLoader();
-        int layers = 0;
         int n = 0;
         while (loader != null) {
             if (!(loader instanceof URLClassLoader)) {
@@ -1073,7 +1072,6 @@ public class WebappLoader extends LifecycleMBeanBase
                 n++;
             }
             loader = loader.getParent();
-            layers++;
         }
 
         this.classpath=classpath.toString();

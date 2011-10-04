@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -37,10 +38,15 @@ import static org.junit.Assert.fail;
 import org.junit.After;
 import org.junit.Before;
 
+import org.apache.catalina.Container;
+import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleState;
+import org.apache.catalina.Server;
+import org.apache.catalina.Service;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.AprLifecycleListener;
 import org.apache.catalina.core.StandardServer;
+import org.apache.catalina.session.StandardManager;
 import org.apache.catalina.valves.AccessLogValve;
 import org.apache.tomcat.util.buf.ByteChunk;
 
@@ -55,6 +61,8 @@ public abstract class TomcatBaseTest {
     private static int port = 8000;
 
     public static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
+
+    private List<File> deleteOnTearDown = new ArrayList<File>();
 
     /**
      * Make Tomcat instance accessible to sub-classes.
@@ -80,8 +88,15 @@ public abstract class TomcatBaseTest {
 
     /**
      * Helper method that returns the path of the temporary directory used by
-     * the test runs. The directory is configured during {@link #setUp()} and is
-     * deleted at {@link #tearDown()}.
+     * the test runs. The directory is configured during {@link #setUp()}.
+     * 
+     * <p>
+     * It is used as <code>${catalina.base}</code> for the instance of Tomcat
+     * that is being started, but can be used to store other temporary files as
+     * well. Its <code>work</code> and <code>webapps</code> subdirectories are
+     * deleted at {@link #tearDown()}. If you have other files or directories
+     * that have to be deleted on cleanup, register them with
+     * {@link #addDeleteOnTearDown(File)}.
      */
     public File getTemporaryDirectory() {
         return tempDir;
@@ -102,6 +117,17 @@ public abstract class TomcatBaseTest {
      */
     public boolean isAccessLogEnabled() {
         return accessLogEnabled;
+    }
+
+    /**
+     * Schedule the given file or directory to be deleted during after-test
+     * cleanup.
+     * 
+     * @param file
+     *            File or directory
+     */
+    public void addDeleteOnTearDown(File file) {
+        deleteOnTearDown.add(file);
     }
 
     @Before
@@ -126,7 +152,7 @@ public abstract class TomcatBaseTest {
             fail("Unable to create appBase for test");
         }
         
-        tomcat = new Tomcat();
+        tomcat = new TomcatWithFastSessionIDs();
 
         String protocol = getProtocol();
         Connector connector = new Connector(protocol);
@@ -184,7 +210,15 @@ public abstract class TomcatBaseTest {
             }
             tomcat.destroy();
         }
-        ExpandWar.delete(tempDir);
+        // Cannot delete the whole tempDir, because logs are there,
+        // and they might be open for writing.
+        // Delete known subdirectories of it.
+        deleteOnTearDown.add(new File(tempDir, "webapps"));
+        deleteOnTearDown.add(new File(tempDir, "work"));
+        for (File file : deleteOnTearDown) {
+            ExpandWar.delete(file);
+        }
+        deleteOnTearDown.clear();
     }
     
     /**
@@ -358,4 +392,27 @@ public abstract class TomcatBaseTest {
         return rc;
     }
 
+    private static class TomcatWithFastSessionIDs extends Tomcat {
+
+        @Override
+        public void start() throws LifecycleException {
+            // Use fast, insecure session ID generation for all tests
+            Server server = getServer();
+            for (Service service : server.findServices()) {
+                Container e = service.getContainer();
+                for (Container h : e.findChildren()) {
+                    for (Container c : h.findChildren()) {
+                        StandardManager m = (StandardManager) c.getManager();
+                        if (m == null) {
+                            m = new StandardManager();
+                            m.setSecureRandomClass(
+                                    "org.apache.catalina.startup.FastNonSecureRandom");
+                            c.setManager(m);
+                        }
+                    }
+                }
+            }
+            super.start();
+        }
+    }
 }

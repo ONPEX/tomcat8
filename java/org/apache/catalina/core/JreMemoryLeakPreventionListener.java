@@ -24,6 +24,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.sql.DriverManager;
+import java.util.StringTokenizer;
 
 import javax.imageio.ImageIO;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -78,6 +79,19 @@ public class JreMemoryLeakPreventionListener implements LifecycleListener {
     public boolean isAWTThreadProtection() { return awtThreadProtection; }
     public void setAWTThreadProtection(boolean awtThreadProtection) {
       this.awtThreadProtection = awtThreadProtection;
+    }
+
+    /**
+     * Protect against the memory leak caused when the
+     * <code>sun.java2d.Disposer</code> class is loaded by a web application.
+     * Defaults to <code>false</code> because a new Thread is launched.
+     */
+    private boolean java2dDisposerProtection = false;
+    public boolean isJava2DDisposerProtection() {
+        return java2dDisposerProtection;
+    }
+    public void setJava2DDisposerProtection(boolean java2dDisposerProtection) {
+        this.java2dDisposerProtection = java2dDisposerProtection;
     }
 
     /**
@@ -189,7 +203,21 @@ public class JreMemoryLeakPreventionListener implements LifecycleListener {
     public void setDriverManagerProtection(boolean driverManagerProtection) {
         this.driverManagerProtection = driverManagerProtection;
     }
-
+    
+    /**
+     * List of comma-separated fully qualified class names to load and initialize during
+     * the startup of this Listener. This allows to pre-load classes that are known to 
+     * provoke classloader leaks if they are loaded during a request processing.
+     */
+    private String classesToInitialize = null;
+    public String getClassesToInitialize() {
+        return classesToInitialize;
+    }
+    public void setClassesToInitialize(String classesToInitialize) {
+        this.classesToInitialize = classesToInitialize;
+    }
+    
+    
     @Override
     public void lifecycleEvent(LifecycleEvent event) {
         // Initialise these classes when Tomcat starts
@@ -235,6 +263,18 @@ public class JreMemoryLeakPreventionListener implements LifecycleListener {
                 // etc.) thread
                 if (awtThreadProtection) {
                   java.awt.Toolkit.getDefaultToolkit();
+                }
+
+                // Trigger the creation of the "Java2D Disposer" thread.
+                // See https://issues.apache.org/bugzilla/show_bug.cgi?id=51687
+                if(java2dDisposerProtection) {
+                    try {
+                        Class.forName("sun.java2d.Disposer");
+                    }
+                    catch (ClassNotFoundException cnfe) {
+                        // Ignore this case: we must be running on a
+                        // non-Sun-based JRE.
+                    }
                 }
 
                 /*
@@ -391,6 +431,22 @@ public class JreMemoryLeakPreventionListener implements LifecycleListener {
                         } else {
                             log.debug(sm.getString(
                                     "jreLeakListener.ldapPoolManagerFail"), e);
+                        }
+                    }
+                }
+                
+                if (classesToInitialize != null) {
+                    StringTokenizer strTok =
+                        new StringTokenizer(classesToInitialize, ", \r\n\t");
+                    while (strTok.hasMoreTokens()) {
+                        String classNameToLoad = strTok.nextToken();
+                        try {
+                            Class.forName(classNameToLoad);
+                        } catch (ClassNotFoundException e) {
+                            log.error(
+                                sm.getString("jreLeakListener.classToInitializeFail",
+                                    classNameToLoad), e);
+                            // continue with next class to load
                         }
                     }
                 }
