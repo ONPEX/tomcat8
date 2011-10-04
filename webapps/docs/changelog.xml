@@ -53,7 +53,232 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues to not "pop up" wrt. others).
 -->
-<section name="Tomcat 7.0.21 (markt)">
+<section name="Tomcat 7.0.22 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        <bug>51550</bug>: An additional change that ensures any exceptions
+        thrown by an Authenticator (or any other Valve configured for the
+        Context) will be handled by the custom error pages for the Context if an
+        appropriate error page is configured. (markt) 
+      </fix>
+      <fix>
+        <bug>51580</bug>: Added a nicer error message when a WAR file contains
+        filenames not properly encoded in UTF-8. (schultz)
+      </fix>
+      <fix>
+        <bug>51687</bug>: Added (optional) protection against
+        sun.java2d.Disposer thread pinning a WebappClassLoader into memory
+        in the JreMemoryLeakPreventionListener. (schultz)
+      </fix>
+      <add>
+        <bug>51741</bug>: Fixes a problem with Eclipse WTP "Serve modules
+        without publishing" feature where applications failed to access
+        resources when using getResource() on the classloader. (slaurent)
+      </add>
+      <fix>
+        <bug>51744</bug>: Prevent application code from closing the associated
+        JNDI context while the application is running. (markt)
+      </fix>
+      <fix>
+        Correct a regression with the fix for <bug>51653</bug> that broke custom
+        error pages for 4xx responses from the Authenticators. Error handling
+        and request listeners are now handled in the StandardHostValve to ensure
+        they wrap all Context level activity. (markt)
+      </fix>
+      <fix>
+        <bug>51758</bug>: The digester (used for processing XML files) used the
+        logger name <code>org.apache.commons.digester.Digester</code> rather
+        than the expected <code>org.apache.tomcat.util.digester.Digester</code>.
+        The digester has been changed to use the expected logger name.
+        (markt/kkolinko)
+      </fix>
+      <fix>
+        <bug>51774</bug>: Fix incorrect cached method signature that prevented
+        session tracking modes from being defined in web.xml when running under
+        a security manager. (markt) 
+      </fix>
+      <add>
+        Add an annotation cache to the <code>DefaultInstanceManager</code> that
+        improves performance for applications that make use of a lot of
+        non-poolable objects (e.g. tag files) that need to be scanned for
+        annotations when created. (markt)
+      </add>
+      <fix>
+        Use the specification compliant request attribute of
+        <code>javax.servlet.request.ssl_session_id</code> to access the SSL
+        session ID and deprecated the Tomcat specific request attribute. (markt)
+      </fix>
+      <add>
+        Allow to overwrite the check for distributability
+        of session attributes by session implementations. (rjung)
+      </add>
+      <update>
+        Add Java 7 sunec.jar and zipfs.jar to the list of JARs
+        to skip when scanning for TLDs and web fragments. (rjung)
+      </update>
+      <add>
+        <bug>51862</bug>: Added a <code>classesToInitialize</code> attribute to 
+        <code>JreMemoryLeakPreventionListener</code> to allow pre-loading of configurable
+        classes to avoid some classloader leaks. (slaurent)
+      </add>
+      <fix>
+        Reduce visibility of static field <code>ManagerBase.name</code> and
+        make it final. (kkolinko)
+      </fix>
+      <update>
+        Add thread name to juli OneLineFormatter. (rjung)
+      </update>
+      <fix>
+        Ensure Servlets that implement ContainerServlet always get treated as
+        restricted. (markt)
+      </fix>
+      <fix>
+        Ensure that the access log always uses the correct value for the remote
+        IP address associated with the request and that requests with multiple
+        errors do not result in multiple entires in the access log. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <scode>
+        Remove unused and undocumented socketCloseDelay attribute from NIO
+        connector. (markt)
+      </scode>
+      <fix>
+        <bug>49683</bug>: Support separate connection and keep-alive timeouts
+        for the APR/native connector HTTP and AJP connectors. (markt)
+      </fix>
+      <scode>
+        Further re-factoring of the HTTP connectors to align the BIO, NIO and
+        APR implementations. (markt) 
+      </scode>
+      <fix>
+        <bug>51794</bug>: Fix race condition in NioEndpoint. (fhanik)
+      </fix>
+      <fix>
+        <bug>51811</bug>: Correct SSL configuration property name from
+        sslImplemenationName to sslImplementationName. (rjung)
+      </fix>
+      <fix>
+        Fix a timing issue in NIO connector that meant that stopping a connector
+        did not trigger a Comet END event if the associated processor was
+        processing a READ event when the connector was stopped. (markt)
+      </fix>
+      <fix>
+        Replace unneeded call that iterated events queue in NioEndpoint.Poller.
+        (kkolinko)
+      </fix>
+      <fix>
+        <bug>51860</bug>: Fix issues if using NIO with a custom
+        SSLImplementation. Based on a suggestion by Roman Tsirulnikov. (markt)
+      </fix>
+      <fix>
+        Allow the BIO HTTP connector to be used with SSL when running under Java
+        7. (markt)
+      </fix>
+      <update>
+        Don't send AJP CPONG if endpoint is already paused. (rjung)
+      </update>
+      <update>
+        Align APR AJP connector with NIO one. Send 503 if endpoint is paused.
+        (rjung)
+      </update>
+      <update>
+        Accept AJP request even if endpoint is paused, if CPING was successful.
+        (rjung)
+      </update>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        When unloading JSPs due to configuration of the
+        <code>maxLoadedJsps</code> initialisation parameter, the unloading code
+        was retaining a reference to the to the unloaded JSP preventing the
+        associated class from being unloaded until the JSP that replaced it was
+        itself unloaded. (markt) 
+      </fix>
+      <fix>
+        <bug>51852</bug>: Correct two problems in the handling of varargs
+        methods with the BeanELResolver. The first meant the wrong method was
+        sometimes called and the second that an ArrayIndexOutOfBoundsExceptions
+        could be thrown. Patch (including a test case) provided by Matt Benson.
+        (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Cluster">
+    <changelog>
+      <update>
+        Refactor cluster manager configuration: move handling of common
+        attributes to base class. (kfujino, rjung)
+      </update>
+      <add>
+        New cluster manager attribute <code>sessionAttributeFilter</code>
+        allows to filter which session attributes are replicated using a
+        regular expression applied to the attribute name. (rjung)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <fix>
+        Correct the documentation for <code>connectionLinger</code> attribute
+        for the AJP and HTTP connectors. (markt)
+      </fix>
+      <update>
+        Document caveat of using <code>RemoteAddrValve</code> with IPv6
+        addresses. (kkolinko)
+      </update>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <fix>
+        In jdbc-pool: Avoid IllegalArgumentException when setting maxActive 
+        less than or equal to 0.
+        ArrayBlockingQueue doesn't allow capacity of 0 or less. (kfujino)
+      </fix>
+      <fix>
+        <bug>48392</bug> (<rev>1169796</rev>): In jdbc-pool: Fix typo in
+        <code>StatementDecoratorInterceptor</code>. (fhanik) 
+      </fix>
+      <fix>
+        <bug>51139</bug>:
+        In jdbc-pool: validatorClassName and suspectTimeout are ignored. 
+        In order to support them correctly, validatorClassName and 
+        suspectTimeout are added to a property list. (kfujino)
+      </fix>
+      <fix>
+        <bug>51786</bug>:
+        In jdbc-pool: Discarded connection is not active in a pool any longer. 
+        It removes from the active connection list. (kfujino)
+      </fix>
+      <fix>
+        <bug>51871</bug>: In jdbc-pool: Fix dependency in Maven POM file of
+        tomcat-jbdc. (kkolinko)
+      </fix>
+      <update>
+        Update the "test" target in the default build file to report a test
+        failure only after all available connector variants (bio, nio, apr)
+        have been tested. Do not stop after first connector that fails.
+        (kkolinko)
+      </update>
+      <update>
+        <bug>51887</bug>: When running the unit tests, use a fast but insecure
+        random number source for session ID generation to reduce the delays
+        caused by waiting for entropy. (kkolinko/markt)
+      </update>
+      <scode>
+        Code clean-up to further reduce the number of warnings reported by
+        Eclipse, FindBugs and CheckStyle. (markt/kkolinko)
+      </scode>
+    </changelog>
+  </subsection>  
+</section>
+<section name="Tomcat 7.0.21 (markt)" rtext="released 2011-09-01">
   <subsection name="Catalina">
     <changelog>
       <add>
@@ -1416,10 +1641,6 @@
         suggested by Werner Donn. (markt)
       </add>
       <fix>
-        <bug>50929</bug>: When wrapping an exception, include the root cause.
-        Patch provided by sebb. (markt) 
-      </fix>
-      <fix>
         Make the CSRF nonce cache serializable so that it can be replicated
         across a cluster and/or persisted across Tomcat restarts. (markt)
       </fix>
@@ -1458,6 +1679,10 @@
         since this too cannot be reliably determined. (markt)
       </fix>
       <fix>
+        <bug>50929</bug>: When wrapping an exception, include the root cause.
+        Patch provided by sebb. (markt) 
+      </fix>
+      <fix>
         <bug>50991</bug>: Fix regression in fix for <bug>25060</bug> that called
         close on a JNDI resource while it was still available to the
         application. (markt)
@@ -1485,8 +1710,8 @@
         Don&apos;t register non-singelton DataSource resources with JMX. (markt)
       </fix>
       <add>
-        Provide additional configuration options for the DIGEST authenticator.
-        (markt)
+        CVE-2011-1184: Provide additional configuration options for the DIGEST
+        authenticator. (markt)
       </add>
       <fix>
         Provide a workaround for Tomcat hanging during shutdown when running the
@@ -1985,7 +2210,8 @@
       </fix>
       <fix>
         Improve HTTP specification compliance in support of
-        <code>Accept-Language</code> header. (kkolinko)
+        <code>Accept-Language</code> header. This protects from known exploit
+        of the Oracle JVM bug that triggers a DoS, CVE-2010-4476. (kkolinko)
       </fix>
     </changelog>
   </subsection>

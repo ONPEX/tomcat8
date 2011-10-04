@@ -111,6 +111,7 @@ public class AjpProcessor extends AbstractAjpProcessor<Socket> {
         if (keepAliveTimeout > 0) {
             soTimeout = socket.getSocket().getSoTimeout();
         }
+        boolean cping = false;
 
         // Error flag
         error = false;
@@ -136,6 +137,11 @@ public class AjpProcessor extends AbstractAjpProcessor<Socket> {
                 // not regular request processing
                 int type = requestHeaderMessage.getByte();
                 if (type == Constants.JK_AJP13_CPING_REQUEST) {
+                    if (endpoint.isPaused()) {
+                        recycle(true);
+                        break;
+                    }
+                    cping = true;
                     try {
                         output.write(pongMessageArray);
                     } catch (IOException e) {
@@ -179,12 +185,13 @@ public class AjpProcessor extends AbstractAjpProcessor<Socket> {
                 }
             }
 
-            if (endpoint.isPaused()) {
+            if (!error && !cping && endpoint.isPaused()) {
                 // 503 - Service unavailable
                 response.setStatus(503);
                 adapter.log(request, response, 0);
                 error = true;
             }
+            cping = false;
 
             // Process the request in the adapter
             if (!error) {

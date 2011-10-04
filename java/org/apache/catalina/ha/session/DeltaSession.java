@@ -53,7 +53,7 @@ import org.apache.tomcat.util.res.StringManager;
  * track of deltas during a request.
  *
  * @author Filip Hanik
- * @version $Id: DeltaSession.java 1135069 2011-06-13 09:44:33Z kfujino $
+ * @version $Id: DeltaSession.java 1175194 2011-09-24 16:32:19Z rjung $
  */
 
 public class DeltaSession extends StandardSession implements Externalizable,ClusterSession,ReplicatedMapEntry {
@@ -559,6 +559,37 @@ public class DeltaSession extends StandardSession implements Externalizable,Clus
 
 
     /**
+     * Check whether the Object can be distributed.
+     * The object is always distributable, if the cluster manager
+     * decides to never distribute it.
+     * @param name The name of the attribute to check
+     * @param value The value of the attribute to check
+     * @return true if the attribute is distributable, false otherwise
+     */
+    @Override
+    protected boolean isAttributeDistributable(String name, Object value) {
+        if (manager instanceof ClusterManagerBase &&
+            !((ClusterManagerBase)manager).willAttributeDistribute(name))
+            return true;
+        return super.isAttributeDistributable(name, value);
+    }
+
+    /**
+     * Exclude attributes from replication.
+     * @param name the attribute's name
+     * @return true if attribute should not be replicated
+     */
+    @Override
+    protected boolean exclude(String name) {
+
+        if (super.exclude(name))
+            return true;
+        if (manager instanceof ClusterManagerBase)
+            return !((ClusterManagerBase)manager).willAttributeDistribute(name);
+        return false;
+    }
+
+    /**
      * Remove the object bound with the specified name from this session. If the
      * session does not have an object bound with this name, this method does
      * nothing.
@@ -634,6 +665,7 @@ public class DeltaSession extends StandardSession implements Externalizable,Clus
     }
 
     // -------------------------------------------- HttpSession Private Methods
+
 
     /**
      * Read a serialized version of this session object from the specified

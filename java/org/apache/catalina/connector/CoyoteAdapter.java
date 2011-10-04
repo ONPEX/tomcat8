@@ -57,7 +57,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: CoyoteAdapter.java 1158158 2011-08-16 08:58:35Z markt $
+ * @version $Id: CoyoteAdapter.java 1176592 2011-09-27 20:19:01Z markt $
  */
 public class CoyoteAdapter implements Adapter {
     
@@ -466,10 +466,8 @@ public class CoyoteAdapter implements Adapter {
 
         Request request = (Request) req.getNote(ADAPTER_NOTES);
         Response response = (Response) res.getNote(ADAPTER_NOTES);
-        boolean create = false;
         
         if (request == null) {
-            create = true;
             // Create objects
             request = connector.createRequest();
             request.setCoyoteRequest(req);
@@ -511,9 +509,7 @@ public class CoyoteAdapter implements Adapter {
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
             log.warn(sm.getString("coyoteAdapter.accesslogFail"), t);
-        }
-        
-        if (create) {
+        } finally {
             request.recycle();
             response.recycle();
         }

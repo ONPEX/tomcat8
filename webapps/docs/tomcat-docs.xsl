@@ -17,7 +17,7 @@
 -->
 <!-- Content Stylesheet for "tomcat-docs" Documentation -->
 
-<!-- $Id: tomcat-docs.xsl 1036949 2010-11-19 17:18:04Z markt $ -->
+<!-- $Id: tomcat-docs.xsl 1175614 2011-09-25 22:48:41Z kkolinko $ -->
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   version="1.0">
@@ -109,10 +109,8 @@
         </xsl:if>
         </td>
         <td>
-          <font face="arial,helvetica,sanserif">
-            <h1><xsl:value-of select="$project/title"/></h1>
-            Version <xsl:value-of select="$version"/>, <xsl:value-of select="$build-date"/>
-          </font>
+          <h1><font face="arial,helvetica,sanserif"><xsl:value-of select="$project/title"/></font></h1>
+          <font face="arial,helvetica,sanserif">Version <xsl:value-of select="$version"/>, <xsl:value-of select="$build-date"/></font>
         </td>
         <td>
           <xsl:comment>APACHE LOGO</xsl:comment>

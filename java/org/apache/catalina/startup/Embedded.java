@@ -98,7 +98,7 @@ import org.apache.tomcat.util.res.StringManager;
  * of how Tomcat is set up and launched as an Embedded application.
  *
  * @author Craig R. McClanahan
- * @version $Id: Embedded.java 1134042 2011-06-09 19:04:37Z markt $
+ * @version $Id: Embedded.java 1175897 2011-09-26 15:01:21Z markt $
  * 
  * @deprecated Use {@link Tomcat} instead.
  */
@@ -160,7 +160,7 @@ public class Embedded  extends StandardService {
     /**
      * Custom mappings of login methods to authenticators
      */
-    protected HashMap<String,Authenticator> authenticators;
+    protected volatile HashMap<String,Authenticator> authenticators;
 
 
     /**
