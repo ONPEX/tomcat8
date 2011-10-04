@@ -62,7 +62,7 @@ clean:
 	dh_testroot
 	-$(ANT_INVOKE) clean
 	rm -rf "output/"
-	rm -f build-stamp
+	rm -f build-stamp modules/jdbc-pool/output/resources/MANIFEST.MF
 	dh_clean
 	mh_clean
 
