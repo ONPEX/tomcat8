@@ -1,5 +1,4 @@
-Format-Specification:
- http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?op=file&rev=166
+Format: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?op=file&rev=166
 Upstream-Name: Tomcat7
 Upstream-Contact: Merten Falk <nevesenin@cpan.org>
 Source: http://tomcat.apache.org/download-70.cgi
