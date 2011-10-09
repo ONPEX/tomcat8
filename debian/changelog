@@ -6,10 +6,8 @@ tomcat7 (7.0.22-1) UNRELEASED; urgency=low
 
   [ tony mancill ]
   * Add dependency on JRE to tomcat7-common (Closes: #644340)
-  * JAVA_HOME is now set to /usr/lib/jvm/default_java in 
-    /etc/default/tomcat7
 
- -- tony mancill <tmancill@debian.org>  Sat, 08 Oct 2011 21:42:17 -0700
+ -- tony mancill <tmancill@debian.org>  Sat, 08 Oct 2011 21:48:37 -0700
 
 tomcat7 (7.0.21-1) unstable; urgency=low
 
