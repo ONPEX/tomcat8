@@ -1,4 +1,4 @@
-tomcat7 (7.0.22-1) UNRELEASED; urgency=low
+tomcat7 (7.0.22-1) unstable; urgency=low
 
   [ Miguel Landaeta ]
   * New upstream release.
@@ -6,8 +6,9 @@ tomcat7 (7.0.22-1) UNRELEASED; urgency=low
 
   [ tony mancill ]
   * Add dependency on JRE to tomcat7-common (Closes: #644340)
+  * Modify init script to look for JVM in /usr/lib/jvm/default-java
 
- -- tony mancill <tmancill@debian.org>  Sat, 08 Oct 2011 21:48:37 -0700
+ -- tony mancill <tmancill@debian.org>  Sat, 08 Oct 2011 21:58:41 -0700
 
 tomcat7 (7.0.21-1) unstable; urgency=low
 
