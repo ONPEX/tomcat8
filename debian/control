@@ -13,7 +13,8 @@ Homepage: http://tomcat.apache.org
 
 Package: tomcat7-common
 Architecture: all
-Depends: libtomcat7-java (>= ${source:Version}), ${misc:Depends}
+Depends: libtomcat7-java (>= ${source:Version}), ${misc:Depends},
+ default-jre-headless | java-5-runtime | java-6-runtime | java-7-runtime
 Description: Servlet and JSP engine -- common files
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Sun Microsystems, and provides a "pure Java" HTTP web
