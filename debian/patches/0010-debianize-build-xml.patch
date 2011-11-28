@@ -5,15 +5,15 @@ Last-Update: 2011-05-16
 
 --- tomcat7-7.0.14.orig/build.xml
 +++ tomcat7-7.0.14/build.xml
-@@ -472,7 +472,7 @@
-     </checkstyle>
+@@ -482,7 +482,7 @@
+     </copy>
    </target>
  
--  <target name="compile" depends="build-prepare,download-compile,validate">
-+  <target name="compile" depends="build-prepare">
- 
-     <!-- Add the builtin catalina.properties -->
-     <copy todir="java/org/apache/catalina/startup"
+-  <target name="compile" depends="build-prepare,download-compile,compile-prepare,validate">
++  <target name="compile" depends="build-prepare,compile-prepare">
+     <!-- Compile internal server components -->
+     <javac srcdir="java" destdir="${tomcat.classes}"
+            debug="${compile.debug}"
 @@ -767,12 +767,14 @@
    <target name="deploy" depends="package,build-docs,deploy-webapps"
            description="Default. Builds a working Tomcat instance">
