@@ -30,7 +30,7 @@ import org.apache.el.util.MessageFactory;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: AstFunction.java 939311 2010-04-29 14:01:02Z kkolinko $
+ * @version $Id: AstFunction.java 1201570 2011-11-14 01:38:18Z kkolinko $
  */
 public final class AstFunction extends SimpleNode {
 
@@ -114,8 +114,15 @@ public final class AstFunction extends SimpleNode {
             throw new ELException(MessageFactory.get("error.function", this
                     .getOutputName()), iae);
         } catch (InvocationTargetException ite) {
+            Throwable cause = ite.getCause();
+            if (cause instanceof ThreadDeath) {
+                throw (ThreadDeath) cause;
+            }
+            if (cause instanceof VirtualMachineError) {
+                throw (VirtualMachineError) cause;
+            }
             throw new ELException(MessageFactory.get("error.function", this
-                    .getOutputName()), ite.getCause());
+                    .getOutputName()), cause);
         }
         return result;
     }

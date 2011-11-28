@@ -95,14 +95,7 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
      */
     protected NioEndpoint.SendfileData sendfileData = null;
 
-    /**
-     * Closed flag, a Comet async thread can 
-     * signal for this Nio processor to be closed and recycled instead
-     * of waiting for a timeout.
-     * Closed by HttpServletResponse.getWriter().close()
-     */
-    protected boolean cometClose = false;
-    
+
     /**
      * Socket associated with the current connection.
      */
@@ -134,7 +127,9 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
                     attach.setComet(comet);
                     if (comet) {
                         Integer comettimeout = (Integer) request.getAttribute("org.apache.tomcat.comet.timeout");
-                        if (comettimeout != null) attach.setTimeout(comettimeout.longValue());
+                        if (comettimeout != null) {
+                            attach.setTimeout(comettimeout.longValue());
+                        }
                     } else {
                         //reset the timeout
                         if (keepAlive) {
@@ -162,12 +157,18 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
         if (error) {
             return SocketState.CLOSED;
         } else if (!comet) {
-            return (keepAlive)?SocketState.OPEN:SocketState.CLOSED;
+            if (keepAlive) {
+                inputBuffer.nextRequest();
+                outputBuffer.nextRequest();
+                return SocketState.OPEN;
+            } else {
+                return SocketState.CLOSED;
+            }
         } else {
             return SocketState.LONG;
         }
     }
-    
+
 
     @Override
     protected void resetTimeouts() {
@@ -201,14 +202,14 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
 
         // When entering the processing loop there will always be data to read
         // so no point changing timeouts at this point
-        
+
         // For the second and subsequent executions of the processing loop, a
         // non-blocking read is used so again no need to set the timeouts
-        
+
         // Because NIO supports non-blocking reading of the request line and
         // headers the timeouts need to be set when returning the socket to
         // the poller rather than here.
-        
+
         // NO-OP
     }
 
@@ -249,7 +250,7 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
         socket.getSocket().getIOChannel().socket().setSoTimeout(timeout);
     }
 
-    
+
     @Override
     protected void setCometTimeouts(SocketWrapper<NioChannel> socketWrapper) {
         // Comet support
@@ -261,7 +262,9 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
                 attach.setComet(comet);
                 if (comet) {
                     Integer comettimeout = (Integer) request.getAttribute("org.apache.tomcat.comet.timeout");
-                    if (comettimeout != null) attach.setTimeout(comettimeout.longValue());
+                    if (comettimeout != null) {
+                        attach.setTimeout(comettimeout.longValue());
+                    }
                 }
             }
         }
@@ -289,7 +292,6 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
     @Override
     public void recycleInternal() {
         socket = null;
-        cometClose = false;
         comet = false;
         sendfileData = null;
     }
@@ -307,33 +309,7 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
     @Override
     public void actionInternal(ActionCode actionCode, Object param) {
 
-        if (actionCode == ActionCode.CLOSE) {
-            // Close
-            // End the processing of the current request, and stop any further
-            // transactions with the client
-
-            comet = false;
-            cometClose = true;
-            SelectionKey key = socket.getSocket().getIOChannel().keyFor(socket.getSocket().getPoller().getSelector());
-            if ( key != null ) {
-                NioEndpoint.KeyAttachment attach = (NioEndpoint.KeyAttachment) key.attachment();
-                if ( attach!=null && attach.getComet()) {
-                    //if this is a comet connection
-                    //then execute the connection closure at the next selector loop
-                    //request.getAttributes().remove("org.apache.tomcat.comet.timeout");
-                    //attach.setTimeout(5000); //force a cleanup in 5 seconds
-                    //attach.setError(true); //this has caused concurrency errors
-                }
-            }
-
-            try {
-                outputBuffer.endRequest();
-            } catch (IOException e) {
-                // Set error flag
-                error = true;
-            }
-
-        } else if (actionCode == ActionCode.REQ_HOST_ADDR_ATTRIBUTE) {
+        if (actionCode == ActionCode.REQ_HOST_ADDR_ATTRIBUTE) {
 
             // Get remote host address
             if ((remoteAddr == null) && (socket != null)) {
@@ -375,8 +351,9 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
 
         } else if (actionCode == ActionCode.REQ_LOCAL_ADDR_ATTRIBUTE) {
 
-            if (localAddr == null)
-               localAddr = socket.getSocket().getIOChannel().socket().getLocalAddress().getHostAddress();
+            if (localAddr == null) {
+                localAddr = socket.getSocket().getIOChannel().socket().getLocalAddress().getHostAddress();
+            }
 
             request.localAddr().setString(localAddr);
 
@@ -399,21 +376,25 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
             try {
                 if (sslSupport != null) {
                     Object sslO = sslSupport.getCipherSuite();
-                    if (sslO != null)
+                    if (sslO != null) {
                         request.setAttribute
                             (SSLSupport.CIPHER_SUITE_KEY, sslO);
+                    }
                     sslO = sslSupport.getPeerCertificateChain(false);
-                    if (sslO != null)
+                    if (sslO != null) {
                         request.setAttribute
                             (SSLSupport.CERTIFICATE_KEY, sslO);
+                    }
                     sslO = sslSupport.getKeySize();
-                    if (sslO != null)
+                    if (sslO != null) {
                         request.setAttribute
                             (SSLSupport.KEY_SIZE_KEY, sslO);
+                    }
                     sslO = sslSupport.getSessionId();
-                    if (sslO != null)
+                    if (sslO != null) {
                         request.setAttribute
                             (SSLSupport.SESSION_ID_KEY, sslO);
+                    }
                     request.setAttribute(SSLSupport.SESSION_MGR, sslSupport);
                 }
             } catch (Exception e) {
@@ -467,30 +448,44 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
         } else if (actionCode == ActionCode.COMET_END) {
             comet = false;
         }  else if (actionCode == ActionCode.COMET_CLOSE) {
-            if (socket==null || socket.getSocket().getAttachment(false)==null) return;
+            if (socket==null || socket.getSocket().getAttachment(false)==null) {
+                return;
+            }
             NioEndpoint.KeyAttachment attach = (NioEndpoint.KeyAttachment)socket.getSocket().getAttachment(false);
             attach.setCometOps(NioEndpoint.OP_CALLBACK);
-            //notify poller if not on a tomcat thread
             RequestInfo rp = request.getRequestProcessor();
-            if ( rp.getStage() != org.apache.coyote.Constants.STAGE_SERVICE ) //async handling
+            if (rp.getStage() != org.apache.coyote.Constants.STAGE_SERVICE) {
+                // Close event for this processor triggered by request
+                // processing in another processor, a non-Tomcat thread (i.e.
+                // an application controlled thread) or similar.
                 socket.getSocket().getPoller().add(socket.getSocket());
+            }
         } else if (actionCode == ActionCode.COMET_SETTIMEOUT) {
-            if (param==null) return;
-            if (socket==null || socket.getSocket().getAttachment(false)==null) return;
+            if (param==null) {
+                return;
+            }
+            if (socket==null || socket.getSocket().getAttachment(false)==null) {
+                return;
+            }
             NioEndpoint.KeyAttachment attach = (NioEndpoint.KeyAttachment)socket.getSocket().getAttachment(false);
             long timeout = ((Long)param).longValue();
             //if we are not piggy backing on a worker thread, set the timeout
             RequestInfo rp = request.getRequestProcessor();
-            if ( rp.getStage() != org.apache.coyote.Constants.STAGE_SERVICE ) //async handling
+            if ( rp.getStage() != org.apache.coyote.Constants.STAGE_SERVICE ) {
                 attach.setTimeout(timeout);
+            }
         } else if (actionCode == ActionCode.ASYNC_COMPLETE) {
             if (asyncStateMachine.asyncComplete()) {
                 ((NioEndpoint)endpoint).processSocket(this.socket.getSocket(),
                         SocketStatus.OPEN, true);
             }
         } else if (actionCode == ActionCode.ASYNC_SETTIMEOUT) {
-            if (param==null) return;
-            if (socket==null || socket.getSocket().getAttachment(false)==null) return;
+            if (param==null) {
+                return;
+            }
+            if (socket==null || socket.getSocket().getAttachment(false)==null) {
+                return;
+            }
             NioEndpoint.KeyAttachment attach = (NioEndpoint.KeyAttachment)socket.getSocket().getAttachment(false);
             long timeout = ((Long)param).longValue();
             //if we are not piggy backing on a worker thread, set the timeout

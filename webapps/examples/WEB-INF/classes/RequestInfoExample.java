@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-/* $Id: RequestInfoExample.java 982412 2010-08-04 21:55:19Z markt $
+/* $Id: RequestInfoExample.java 1200123 2011-11-10 04:03:27Z kkolinko $
  *
  */
 
@@ -79,30 +79,30 @@ public class RequestInfoExample extends HttpServlet {
         out.println(request.getMethod());
         out.println("</td></tr><tr><td>");
         out.println(RB.getString("requestinfo.label.requesturi"));
-        out.println("</td><td>");        
+        out.println("</td><td>");
         out.println(HTMLFilter.filter(request.getRequestURI()));
-        out.println("</td></tr><tr><td>");        
+        out.println("</td></tr><tr><td>");
         out.println(RB.getString("requestinfo.label.protocol"));
-        out.println("</td><td>");        
+        out.println("</td><td>");
         out.println(request.getProtocol());
         out.println("</td></tr><tr><td>");
         out.println(RB.getString("requestinfo.label.pathinfo"));
-        out.println("</td><td>");        
+        out.println("</td><td>");
         out.println(HTMLFilter.filter(request.getPathInfo()));
         out.println("</td></tr><tr><td>");
         out.println(RB.getString("requestinfo.label.remoteaddr"));
 
         String cipherSuite=
             (String)request.getAttribute("javax.servlet.request.cipher_suite");
-        out.println("</td><td>");                
+        out.println("</td><td>");
         out.println(request.getRemoteAddr());
         out.println("</table>");
-        
+
         if(cipherSuite!=null){
             out.println("</td></tr><tr><td>");
             out.println("SSLCipherSuite:");
             out.println("</td>");
-            out.println("<td>");    
+            out.println("<td>");
             out.println(request.getAttribute("javax.servlet.request.cipher_suite"));
             out.println("</td>");
         }

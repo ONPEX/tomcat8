@@ -14,8 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.catalina.startup;
 
 
@@ -33,7 +31,11 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
@@ -49,7 +51,6 @@ import org.apache.catalina.Host;
 import org.apache.catalina.Lifecycle;
 import org.apache.catalina.LifecycleEvent;
 import org.apache.catalina.LifecycleListener;
-import org.apache.catalina.core.ContainerBase;
 import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.util.ContextName;
 import org.apache.catalina.util.IOTools;
@@ -67,7 +68,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: HostConfig.java 1162172 2011-08-26 17:12:33Z markt $
+ * @version $Id: HostConfig.java 1201928 2011-11-14 22:07:08Z markt $
  */
 public class HostConfig
     implements LifecycleListener {
@@ -144,8 +145,8 @@ public class HostConfig
     /**
      * Map of deployed applications.
      */
-    protected HashMap<String, DeployedApplication> deployed =
-        new HashMap<String, DeployedApplication>();
+    protected Map<String, DeployedApplication> deployed =
+        new ConcurrentHashMap<String, DeployedApplication>();
 
     
     /**
@@ -466,7 +467,7 @@ public class HostConfig
         String[] filteredAppPaths = filterAppPaths(appBase.list());
         // Deploy XML descriptors from configBase
         deployDescriptors(configBase, configBase.list());
-        // Deploy WARs, and loop if additional descriptors are found
+        // Deploy WARs
         deployWARs(appBase, filteredAppPaths);
         // Deploy expanded folders
         deployDirectories(appBase, filteredAppPaths);
@@ -519,19 +520,26 @@ public class HostConfig
         ContextName cn = new ContextName(name);
         String baseName = cn.getBaseName();
         
-        // Deploy XML descriptors from configBase
+        if (deploymentExists(baseName)) {
+            return;
+        }
+
+        // Deploy XML descriptor from configBase
         File xml = new File(configBase, baseName + ".xml");
-        if (xml.exists())
-            deployDescriptor(cn, xml, baseName + ".xml");
-        // Deploy WARs, and loop if additional descriptors are found
+        if (xml.exists()) {
+            deployDescriptor(cn, xml);
+            return;
+        }
+        // Deploy WAR
         File war = new File(appBase, baseName + ".war");
-        if (war.exists())
-            deployWAR(cn, war, baseName + ".war");
-        // Deploy expanded folders
+        if (war.exists()) {
+            deployWAR(cn, war);
+            return;
+        }
+        // Deploy expanded folder
         File dir = new File(appBase, baseName);
         if (dir.exists())
-            deployDirectory(cn, dir, baseName);
-        
+            deployDirectory(cn, dir);
     }
 
 
@@ -543,19 +551,29 @@ public class HostConfig
         if (files == null)
             return;
         
+        ExecutorService es = host.getStartStopExecutor();
+        List<Future<?>> results = new ArrayList<Future<?>>();
+
         for (int i = 0; i < files.length; i++) {
             File contextXml = new File(configBase, files[i]);
 
             if (files[i].toLowerCase(Locale.ENGLISH).endsWith(".xml")) {
                 ContextName cn = new ContextName(files[i]);
-                String name = cn.getName();
 
-                if (isServiced(name))
+                if (isServiced(cn.getName()) || deploymentExists(cn.getName()))
                     continue;
                 
-                String file = files[i];
+                results.add(
+                        es.submit(new DeployDescriptor(this, cn, contextXml)));
+            }
+        }
 
-                deployDescriptor(cn, contextXml, file);
+        for (Future<?> result : results) {
+            try {
+                result.get();
+            } catch (Exception e) {
+                log.error(sm.getString(
+                        "hostConfig.deployDescriptor.threaded.error"), e);
             }
         }
     }
@@ -564,31 +582,30 @@ public class HostConfig
     /**
      * @param cn
      * @param contextXml
-     * @param file
      */
-    protected void deployDescriptor(ContextName cn, File contextXml, String file) {
-        if (deploymentExists(cn.getName())) {
-            return;
-        }
+    protected void deployDescriptor(ContextName cn, File contextXml) {
         
         DeployedApplication deployedApp = new DeployedApplication(cn.getName());
 
         // Assume this is a configuration descriptor and deploy it
         if(log.isInfoEnabled()) {
-            log.info(sm.getString("hostConfig.deployDescriptor", file,
-                    configBase.getPath()));
+            log.info(sm.getString("hostConfig.deployDescriptor",
+                    contextXml.getAbsolutePath()));
         }
 
         Context context = null;
+        boolean isExternalWar = false;
+        boolean isExternal = false;
+        File expandedDocBase = null;
         try {
             synchronized (digester) {
                 try {
                     context = (Context) digester.parse(contextXml);
-                    if (context == null) {
-                        log.error(sm.getString("hostConfig.deployDescriptor.error",
-                                file));
-                        return;
-                    }
+                } catch (Exception e) {
+                    log.error(sm.getString(
+                            "hostConfig.deployDescriptor.error",
+                            contextXml.getAbsolutePath()));
+                    context = new FailedContext();
                 } finally {
                     digester.reset();
                 }
@@ -604,8 +621,6 @@ public class HostConfig
             context.setPath(cn.getPath());
             context.setWebappVersion(cn.getVersion());
             // Add the associated docBase to the redeployed list if it's a WAR
-            boolean isExternalWar = false;
-            boolean isExternal = false;
             if (context.getDocBase() != null) {
                 File docBase = new File(context.getDocBase());
                 if (!docBase.isAbsolute()) {
@@ -630,12 +645,18 @@ public class HostConfig
                     context.setDocBase(null);
                 }
             }
+
             host.addChild(context);
+        } catch (Throwable t) {
+            ExceptionUtils.handleThrowable(t);
+            log.error(sm.getString("hostConfig.deployDescriptor.error",
+                                   contextXml.getAbsolutePath()), t);
+        } finally {
             // Get paths for WAR and expanded WAR in appBase
 
             // default to appBase dir + name
-            File expandedDocBase = new File(appBase(), cn.getBaseName());
-            if (context.getDocBase() != null) {
+            expandedDocBase = new File(appBase(), cn.getBaseName());
+            if (context != null && context.getDocBase() != null) {
                 // first assume docBase is absolute
                 expandedDocBase = new File(context.getDocBase());
                 if (!expandedDocBase.isAbsolute()) {
@@ -643,6 +664,7 @@ public class HostConfig
                     expandedDocBase = new File(appBase(), context.getDocBase());
                 }
             }
+
             // Add the eventual unpacked WAR and all the resources which will be
             // watched inside it
             if (isExternalWar && unpackWARs) {
@@ -675,10 +697,9 @@ public class HostConfig
                             Long.valueOf(contextXml.lastModified()));
                 }
             }
-        } catch (Throwable t) {
-            ExceptionUtils.handleThrowable(t);
-            log.error(sm.getString("hostConfig.deployDescriptor.error",
-                                   file), t);
+            // Add the global redeploy resources (which are never deleted) at
+            // the end so they don't interfere with the deletion process
+            addGlobalRedeployResources(deployedApp);
         }
 
         if (context != null && host.findChild(context.getName()) != null) {
@@ -695,14 +716,17 @@ public class HostConfig
         if (files == null)
             return;
         
+        ExecutorService es = host.getStartStopExecutor();
+        List<Future<?>> results = new ArrayList<Future<?>>();
+
         for (int i = 0; i < files.length; i++) {
             
             if (files[i].equalsIgnoreCase("META-INF"))
                 continue;
             if (files[i].equalsIgnoreCase("WEB-INF"))
                 continue;
-            File dir = new File(appBase, files[i]);
-            if (files[i].toLowerCase(Locale.ENGLISH).endsWith(".war") && dir.isFile()
+            File war = new File(appBase, files[i]);
+            if (files[i].toLowerCase(Locale.ENGLISH).endsWith(".war") && war.isFile()
                     && !invalidWars.contains(files[i]) ) {
                 
                 ContextName cn = new ContextName(files[i]);
@@ -715,12 +739,19 @@ public class HostConfig
                     continue;
                 }
 
-                if (isServiced(cn.getName()))
+                if (isServiced(cn.getName()) || deploymentExists(cn.getName()))
                     continue;
                 
-                String file = files[i];
-                
-                deployWAR(cn, dir, file);
+                results.add(es.submit(new DeployWar(this, cn, war)));
+            }
+        }
+
+        for (Future<?> result : results) {
+            try {
+                result.get();
+            } catch (Exception e) {
+                log.error(sm.getString(
+                        "hostConfig.deployWar.threaded.error"), e);
             }
         }
     }
@@ -765,12 +796,8 @@ public class HostConfig
     /**
      * @param cn
      * @param war
-     * @param file
      */
-    protected void deployWAR(ContextName cn, File war, String file) {
-        
-        if (deploymentExists(cn.getName()))
-            return;
+    protected void deployWAR(ContextName cn, File war) {
         
         // Checking for a nested /META-INF/context.xml
         JarFile jar = null;
@@ -779,12 +806,10 @@ public class HostConfig
         BufferedOutputStream ostream = null;
         File xml;
         if (copyXML) {
-            xml = new File(configBase(),
-                    file.substring(0, file.lastIndexOf(".")) + ".xml");
+            xml = new File(configBase(), cn.getBaseName() + ".xml");
         } else {
             xml = new File(appBase(),
-                    file.substring(0, file.lastIndexOf(".")) +
-                    "/META-INF/context.xml");
+                    cn.getBaseName() + "/META-INF/context.xml");
         }
         boolean xmlInWar = false;
         
@@ -850,19 +875,20 @@ public class HostConfig
         
         // Deploy the application in this WAR file
         if(log.isInfoEnabled()) 
-            log.info(sm.getString("hostConfig.deployWar", file));
+            log.info(sm.getString("hostConfig.deployWar",
+                    war.getAbsolutePath()));
 
+        Context context = null;
         try {
-            Context context = null;
             if (deployXML && xml.exists()) {
                 synchronized (digester) {
                     try {
                         context = (Context) digester.parse(xml);
-                        if (context == null) {
-                            log.error(sm.getString("hostConfig.deployDescriptor.error",
-                                    file));
-                            return;
-                        }
+                    } catch (Exception e) {
+                        log.error(sm.getString(
+                                "hostConfig.deployDescriptor.error",
+                                war.getAbsolutePath()));
+                        context = new FailedContext();
                     } finally {
                         digester.reset();
                     }
@@ -876,17 +902,17 @@ public class HostConfig
                             jar.getJarEntry(Constants.ApplicationContextXml);
                         istream = jar.getInputStream(entry);
                         context = (Context) digester.parse(istream);
-
+                    } catch (Exception e) {
+                        log.error(sm.getString(
+                                "hostConfig.deployDescriptor.error",
+                                war.getAbsolutePath()));
+                    } finally {
                         if (context == null) {
-                            log.error(sm.getString(
-                                    "hostConfig.deployDescriptor.error",
-                                    file));
-                            return;
+                            context = new FailedContext();
                         }
                         context.setConfigFile(new URL("jar:" +
                                 war.toURI().toString() + "!/" +
                                 Constants.ApplicationContextXml));
-                    } finally {
                         if (istream != null) {
                             try {
                                 istream.close();
@@ -928,11 +954,16 @@ public class HostConfig
             context.setName(cn.getName());
             context.setPath(cn.getPath());
             context.setWebappVersion(cn.getVersion());
-            context.setDocBase(file);
+            context.setDocBase(cn.getBaseName() + ".war");
             host.addChild(context);
+        } catch (Throwable t) {
+            ExceptionUtils.handleThrowable(t);
+            log.error(sm.getString("hostConfig.deployWar.error",
+                    war.getAbsolutePath()), t);
+        } finally {
             // If we're unpacking WARs, the docBase will be mutated after
             // starting the context
-            if (unpackWARs && (context.getDocBase() != null)) {
+            if (unpackWARs && context != null && context.getDocBase() != null) {
                 File docBase = new File(appBase(), cn.getBaseName());
                 deployedApp.redeployResources.put(docBase.getAbsolutePath(),
                         Long.valueOf(docBase.lastModified()));
@@ -945,9 +976,9 @@ public class HostConfig
             } else {
                 addWatchedResources(deployedApp, null, context);
             }
-        } catch (Throwable t) {
-            ExceptionUtils.handleThrowable(t);
-            log.error(sm.getString("hostConfig.deployWar.error", file), t);
+            // Add the global redeploy resources (which are never deleted) at
+            // the end so they don't interfere with the deletion process
+            addGlobalRedeployResources(deployedApp);
         }
         
         deployed.put(cn.getName(), deployedApp);
@@ -962,6 +993,9 @@ public class HostConfig
         if (files == null)
             return;
         
+        ExecutorService es = host.getStartStopExecutor();
+        List<Future<?>> results = new ArrayList<Future<?>>();
+
         for (int i = 0; i < files.length; i++) {
 
             if (files[i].equalsIgnoreCase("META-INF"))
@@ -972,10 +1006,19 @@ public class HostConfig
             if (dir.isDirectory()) {
                 ContextName cn = new ContextName(files[i]);
 
-                if (isServiced(cn.getName()))
+                if (isServiced(cn.getName()) || deploymentExists(cn.getName()))
                     continue;
 
-                deployDirectory(cn, dir, files[i]);
+                results.add(es.submit(new DeployDirectory(this, cn, dir)));
+            }
+        }
+
+        for (Future<?> result : results) {
+            try {
+                result.get();
+            } catch (Exception e) {
+                log.error(sm.getString(
+                        "hostConfig.deployDir.threaded.error"), e);
             }
         }
     }
@@ -984,38 +1027,35 @@ public class HostConfig
     /**
      * @param cn
      * @param dir
-     * @param file
      */
-    protected void deployDirectory(ContextName cn, File dir, String file) {
+    protected void deployDirectory(ContextName cn, File dir) {
         
-        if (deploymentExists(cn.getName()))
-            return;
-
         DeployedApplication deployedApp = new DeployedApplication(cn.getName());
 
         // Deploy the application in this directory
         if( log.isInfoEnabled() ) 
-            log.info(sm.getString("hostConfig.deployDir", file));
+            log.info(sm.getString("hostConfig.deployDir",
+                    dir.getAbsolutePath()));
+
+        Context context = null;
+        File xml = new File(dir, Constants.ApplicationContextXml);
+        File xmlCopy = null;
         try {
-            Context context = null;
-            File xml = new File(dir, Constants.ApplicationContextXml);
-            File xmlCopy = null;
             if (deployXML && xml.exists()) {
                 synchronized (digester) {
                     try {
                         context = (Context) digester.parse(xml);
-                        if (context == null) {
-                            log.error(sm.getString(
-                                    "hostConfig.deployDescriptor.error",
-                                    xml));
-                            return;
-                        }
+                    } catch (Exception e) {
+                        log.error(sm.getString(
+                                "hostConfig.deployDescriptor.error",
+                                xml));
+                        context = new FailedContext();
                     } finally {
                         digester.reset();
                     }
                 }
                 if (copyXML) {
-                    xmlCopy = new File(configBase(), file + ".xml");
+                    xmlCopy = new File(configBase(), cn.getBaseName() + ".xml");
                     InputStream is = null;
                     OutputStream os = null;
                     try {
@@ -1051,8 +1091,13 @@ public class HostConfig
             context.setName(cn.getName());
             context.setPath(cn.getPath());
             context.setWebappVersion(cn.getVersion());
-            context.setDocBase(file);
+            context.setDocBase(cn.getBaseName());
             host.addChild(context);
+        } catch (Throwable t) {
+            ExceptionUtils.handleThrowable(t);
+            log.error(sm.getString("hostConfig.deployDir.error",
+                    dir.getAbsolutePath()), t);
+        } finally {
             deployedApp.redeployResources.put(dir.getAbsolutePath(),
                     Long.valueOf(dir.lastModified()));
             if (deployXML && xml.exists()) {
@@ -1067,9 +1112,9 @@ public class HostConfig
                 }
             }
             addWatchedResources(deployedApp, dir.getAbsolutePath(), context);
-        } catch (Throwable t) {
-            ExceptionUtils.handleThrowable(t);
-            log.error(sm.getString("hostConfig.deployDir.error", file), t);
+            // Add the global redeploy resources (which are never deleted) at
+            // the end so they don't interfere with the deletion process
+            addGlobalRedeployResources(deployedApp);
         }
 
         deployed.put(cn.getName(), deployedApp);
@@ -1127,6 +1172,25 @@ public class HostConfig
     }
     
 
+    protected void addGlobalRedeployResources(DeployedApplication app) {
+        // Redeploy resources processing is hard-coded to never delete this file
+        File hostContextXml =
+                new File(getConfigBaseName(), Constants.HostContextXml);
+        if (hostContextXml.isFile()) {
+            app.redeployResources.put(hostContextXml.getAbsolutePath(),
+                    Long.valueOf(hostContextXml.lastModified()));
+        }
+
+        // Redeploy resources in CATALINA_BASE/conf are never deleted
+        File globalContextXml =
+                returnCanonicalPath(Constants.DefaultContextXml);
+        if (globalContextXml.isFile()) {
+            app.redeployResources.put(globalContextXml.getAbsolutePath(),
+                    Long.valueOf(globalContextXml.lastModified()));
+        }
+    }
+
+
     /**
      * Check resources for redeployment and reloading.
      */
@@ -1146,8 +1210,7 @@ public class HostConfig
                     // Undeploy application
                     if (log.isInfoEnabled())
                         log.info(sm.getString("hostConfig.undeploy", app.name));
-                    ContainerBase context =
-                        (ContainerBase) host.findChild(app.name);
+                    Container context = host.findChild(app.name);
                     try {
                         host.removeChild(context);
                     } catch (Throwable t) {
@@ -1160,6 +1223,13 @@ public class HostConfig
                         try {
                             File current = new File(resources[j]);
                             current = current.getCanonicalFile();
+                            // Never delete per host context.xml defaults
+                            if (Constants.HostContextXml.equals(
+                                    current.getName())) {
+                                continue;
+                            }
+                            // Only delete resources in the appBase or the
+                            // host's configBase
                             if ((current.getAbsolutePath().startsWith(
                                     appBase().getAbsolutePath() +
                                     File.separator))
@@ -1197,8 +1267,7 @@ public class HostConfig
                 // Undeploy application
                 if (log.isInfoEnabled())
                     log.info(sm.getString("hostConfig.undeploy", app.name));
-                ContainerBase context = 
-                    (ContainerBase) host.findChild(app.name);
+                Container context = host.findChild(app.name);
                 try {
                     host.removeChild(context);
                 } catch (Throwable t) {
@@ -1211,6 +1280,13 @@ public class HostConfig
                     try {
                         File current = new File(resources[j]);
                         current = current.getCanonicalFile();
+                        // Never delete per host context.xml defaults
+                        if (Constants.HostContextXml.equals(
+                                current.getName())) {
+                            continue;
+                        }
+                        // Only delete resources in the appBase or the host's
+                        // configBase
                         if ((current.getAbsolutePath().startsWith(
                                 appBase().getAbsolutePath() + File.separator))
                             || (current.getAbsolutePath().startsWith(
@@ -1232,6 +1308,13 @@ public class HostConfig
                     try {
                         File current = new File(resources2[j]);
                         current = current.getCanonicalFile();
+                        // Never delete per host context.xml defaults
+                        if (Constants.HostContextXml.equals(
+                                current.getName())) {
+                            continue;
+                        }
+                        // Only delete resources in the appBase or the host's
+                        // configBase
                         if ((current.getAbsolutePath().startsWith(
                                 appBase().getAbsolutePath() + File.separator))
                             || ((current.getAbsolutePath().startsWith(
@@ -1477,7 +1560,61 @@ public class HostConfig
         /**
          * Instant where the application was last put in service.
          */
-     public long timestamp = System.currentTimeMillis();
+        public long timestamp = System.currentTimeMillis();
     }
 
+    private static class DeployDescriptor implements Runnable {
+
+        private HostConfig config;
+        private ContextName cn;
+        private File descriptor;
+
+        public DeployDescriptor(HostConfig config, ContextName cn,
+                File descriptor) {
+            this.config = config;
+            this.cn = cn;
+            this.descriptor= descriptor;
+        }
+
+        @Override
+        public void run() {
+            config.deployDescriptor(cn, descriptor);
+        }
+    }
+
+    private static class DeployWar implements Runnable {
+
+        private HostConfig config;
+        private ContextName cn;
+        private File war;
+
+        public DeployWar(HostConfig config, ContextName cn, File war) {
+            this.config = config;
+            this.cn = cn;
+            this.war = war;
+        }
+
+        @Override
+        public void run() {
+            config.deployWAR(cn, war);
+        }
+    }
+
+    private static class DeployDirectory implements Runnable {
+
+        private HostConfig config;
+        private ContextName cn;
+        private File dir;
+
+        public DeployDirectory(HostConfig config, ContextName cn, File dir) {
+            this.config = config;
+            this.cn = cn;
+            this.dir = dir;
+        }
+
+        @Override
+        public void run() {
+            config.deployDirectory(cn, dir);
+        }
+    }
 }

@@ -33,9 +33,9 @@ import java.util.NoSuchElementException;
  * Constructors are provided to easily create such wrappers.
  *
  * @author Craig R. McClanahan
- * @version $Id: Enumerator.java 1081765 2011-03-15 13:10:33Z markt $
+ * @version $Id: Enumerator.java 1195962 2011-11-01 12:37:24Z markt $
  */
-
+@Deprecated
 public final class Enumerator<T> implements Enumeration<T> {
 
 

@@ -31,7 +31,7 @@ import java.sql.SQLException;
  */
 public class TrapException extends JdbcInterceptor {
 
-    
+
     public TrapException() {
     }
 
@@ -41,9 +41,12 @@ public class TrapException extends JdbcInterceptor {
             return super.invoke(proxy, method, args);
         }catch (Exception t) {
             Throwable exception = t;
-            if (t instanceof InvocationTargetException) {
-                exception = t.getCause()!=null?t.getCause():t;
-            } 
+            if (t instanceof InvocationTargetException && t.getCause() != null) {
+                exception = t.getCause();
+                if (exception instanceof Error) {
+                    throw exception;
+                }
+            }
             Class<?> exceptionClass = exception.getClass();
             if (!isDeclaredException(method, exceptionClass)) {
                 if (isDeclaredException(method,SQLException.class)) {
@@ -58,16 +61,16 @@ public class TrapException extends JdbcInterceptor {
             }
             throw exception;
         }
-        
+
     }
-    
+
     public boolean isDeclaredException(Method m, Class<?> clazz) {
         for (Class<?> cl : m.getExceptionTypes()) {
             if (cl.equals(clazz) || cl.isAssignableFrom(clazz)) return true;
         }
         return false;
     }
-    
+
     /**
      * no-op for this interceptor. no state is stored.
      */
@@ -75,5 +78,5 @@ public class TrapException extends JdbcInterceptor {
     public void reset(ConnectionPool parent, PooledConnection con) {
         // NOOP
     }
-    
+
 }

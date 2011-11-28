@@ -20,7 +20,7 @@ package org.apache.tomcat.jni;
 /** SSL Socket
  *
  * @author Mladen Turk
- * @version $Id: SSLSocket.java 939309 2010-04-29 13:54:26Z kkolinko $
+ * @version $Id: SSLSocket.java 1200164 2011-11-10 05:46:02Z kkolinko $
  */
 
 public class SSLSocket {
@@ -78,8 +78,8 @@ public class SSLSocket {
      * @param level Type of Client Certificate verification.
      */
     public static native void setVerify(long sock, int level, int depth);
-    
-    /**    
+
+    /**
      * Return SSL Info parameter as byte array.
      *
      * @param sock The socket to read the data from.

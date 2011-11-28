@@ -32,7 +32,7 @@ import org.apache.tomcat.util.bcel.util.BCELComparator;
  * class file.  Those interested in programatically generating classes
  * should see the <a href="../generic/ClassGen.html">ClassGen</a> class.
 
- * @version $Id: JavaClass.java 1057670 2011-01-11 14:52:05Z markt $
+ * @version $Id: JavaClass.java 1181133 2011-10-10 18:49:14Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */
 public class JavaClass extends AccessFlags
@@ -186,7 +186,7 @@ public class JavaClass extends AccessFlags
     public String toString() {
         String access = Utility.accessToString(access_flags, true);
         access = access.equals("") ? "" : (access + " ");
-        StringBuffer buf = new StringBuffer(128);
+        StringBuilder buf = new StringBuilder(128);
         buf.append(access).append(Utility.classOrInterface(access_flags)).append(" ").append(
                 class_name).append(" extends ").append(
                 Utility.compactClassName(superclass_name, false)).append('\n');
@@ -237,7 +237,7 @@ public class JavaClass extends AccessFlags
 
     private static final String indent( Object obj ) {
         StringTokenizer tok = new StringTokenizer(obj.toString(), "\n");
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         while (tok.hasMoreTokens()) {
             buf.append("\t").append(tok.nextToken()).append("\n");
         }

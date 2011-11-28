@@ -77,7 +77,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: WebappLoader.java 1174921 2011-09-23 17:51:56Z kkolinko $
+ * @version $Id: WebappLoader.java 1201610 2011-11-14 06:52:52Z kkolinko $
  */
 
 public class WebappLoader extends LifecycleMBeanBase
@@ -623,6 +623,7 @@ public class WebappLoader extends LifecycleMBeanBase
                 .registerComponent(classLoader, cloname, null);
 
         } catch (Throwable t) {
+            t = ExceptionUtils.unwrapInvocationTargetException(t);
             ExceptionUtils.handleThrowable(t);
             log.error( "LifecycleException ", t );
             throw new LifecycleException("start: ", t);
@@ -1096,6 +1097,8 @@ public class WebappLoader extends LifecycleMBeanBase
                 return (String)o;
             return null;
         } catch( Exception ex ) {
+            Throwable t = ExceptionUtils.unwrapInvocationTargetException(ex);
+            ExceptionUtils.handleThrowable(t);
             if (log.isDebugEnabled())
                 log.debug("getClasspath ", ex);
         }

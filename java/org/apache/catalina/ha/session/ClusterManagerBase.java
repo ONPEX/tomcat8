@@ -31,7 +31,7 @@ import org.apache.catalina.tribes.io.ReplicationStream;
 /**
  * 
  * @author Filip Hanik
- * @version $Id: ClusterManagerBase.java 1175159 2011-09-24 11:16:50Z rjung $
+ * @version $Id: ClusterManagerBase.java 1200634 2011-11-10 23:48:52Z rjung $
  */
 
 public abstract class ClusterManagerBase extends ManagerBase
@@ -183,7 +183,10 @@ public abstract class ClusterManagerBase extends ManagerBase
     protected void clone(ClusterManagerBase copy) {
         copy.setName("Clone-from-" + getName());
         copy.setCluster(getCluster());
-        copy.maxActiveSessions = getMaxActiveSessions();
+        copy.setMaxActiveSessions(getMaxActiveSessions());
+        copy.setMaxInactiveInterval(getMaxInactiveInterval());
+        copy.setSessionIdLength(getSessionIdLength());
+        copy.setProcessExpiresFrequency(getProcessExpiresFrequency());
         copy.setNotifyListenersOnReplication(isNotifyListenersOnReplication());
         copy.setSessionAttributeFilter(getSessionAttributeFilter());
     }

@@ -42,14 +42,14 @@ import java.util.Locale;
  * package someplace.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: URL.java 1060907 2011-01-19 19:08:36Z markt $
+ * @version $Id: URL.java 1200170 2011-11-10 05:54:22Z kkolinko $
  */
 
 public final class URL implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    
+
     // ----------------------------------------------------------- Constructors
 
     /**
@@ -109,7 +109,7 @@ public final class URL implements Serializable {
             }
 
             // Parse out the new protocol
-            for (i = start; !aRef && (i < limit) ; i++) { 
+            for (i = start; !aRef && (i < limit) ; i++) {
                 c = spec.charAt(i);
                 if (c == ':') {
                     String s = spec.substring(start, i).toLowerCase(Locale.ENGLISH);
@@ -684,7 +684,7 @@ public final class URL implements Serializable {
                         at = ipv6-1;
                     }
                 }
-                                                        
+
                 int colon = authority.indexOf(':', at+1);
                 if (colon >= 0) {
                     try {

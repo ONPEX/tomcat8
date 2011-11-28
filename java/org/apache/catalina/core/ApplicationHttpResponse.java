@@ -37,7 +37,7 @@ import javax.servlet.http.HttpServletResponseWrapper;
  * keep these two classes in synchronization when making changes!
  *
  * @author Craig R. McClanahan
- * @version $Id: ApplicationHttpResponse.java 1104557 2011-05-17 20:57:46Z kkolinko $
+ * @version $Id: ApplicationHttpResponse.java 1188832 2011-10-25 17:53:29Z markt $
  */
 
 class ApplicationHttpResponse extends HttpServletResponseWrapper {
@@ -51,6 +51,7 @@ class ApplicationHttpResponse extends HttpServletResponseWrapper {
      *
      * @param response The servlet response being wrapped
      */
+    @Deprecated
     public ApplicationHttpResponse(HttpServletResponse response) {
 
         this(response, false);
@@ -370,6 +371,7 @@ class ApplicationHttpResponse extends HttpServletResponseWrapper {
     /**
      * Return the included flag for this response.
      */
+    @Deprecated
     boolean isIncluded() {
 
         return (this.included);

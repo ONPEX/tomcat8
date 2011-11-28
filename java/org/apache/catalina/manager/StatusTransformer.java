@@ -41,7 +41,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * use XSLT, that is unnecessarily complex.
  *
  * @author Peter Lin
- * @version $Id: StatusTransformer.java 1089638 2011-04-06 21:31:25Z rjung $
+ * @version $Id: StatusTransformer.java 1201569 2011-11-14 01:36:07Z kkolinko $
  */
 
 public class StatusTransformer {
@@ -160,6 +160,7 @@ public class StatusTransformer {
             method.invoke(null, paramValues);
             ok = true;
         } catch (Throwable t) {
+            t = ExceptionUtils.unwrapInvocationTargetException(t);
             ExceptionUtils.handleThrowable(t);
         }
         

@@ -28,7 +28,7 @@ import org.apache.tomcat.util.bcel.util.BCELComparator;
  * for a method in the class. See JVM specification for details.
  * A method has access flags, a name, a signature and a number of attributes.
  *
- * @version $Id: Method.java 1057670 2011-01-11 14:52:05Z markt $
+ * @version $Id: Method.java 1181133 2011-10-10 18:49:14Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */
 public final class Method extends FieldOrMethod {
@@ -122,7 +122,7 @@ public final class Method extends FieldOrMethod {
     public final String toString() {
         ConstantUtf8 c;
         String name, signature, access; // Short cuts to constant pool
-        StringBuffer buf;
+        StringBuilder buf;
         access = Utility.accessToString(access_flags);
         // Get name and signature from constant pool
         c = (ConstantUtf8) constant_pool.getConstant(signature_index, Constants.CONSTANT_Utf8);
@@ -131,7 +131,7 @@ public final class Method extends FieldOrMethod {
         name = c.getBytes();
         signature = Utility.methodSignatureToString(signature, name, access, true,
                 getLocalVariableTable());
-        buf = new StringBuffer(signature);
+        buf = new StringBuilder(signature);
         for (int i = 0; i < attributes_count; i++) {
             Attribute a = attributes[i];
             if (!((a instanceof Code) || (a instanceof ExceptionTable))) {

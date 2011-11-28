@@ -76,7 +76,7 @@ import org.apache.tomcat.util.res.StringManager;
  * with each context and server.
  *
  * @author Remy Maucherat
- * @version $Id: NamingContextListener.java 1156518 2011-08-11 07:35:39Z kfujino $
+ * @version $Id: NamingContextListener.java 1190357 2011-10-28 14:32:44Z markt $
  */
 
 public class NamingContextListener
@@ -141,6 +141,13 @@ public class NamingContextListener
     
 
     /**
+     * Determines if an attempt to write to a read-only context results in an
+     * exception or if the request is ignored.
+     */
+    private boolean exceptionOnFailedWrite = true;
+
+
+    /**
      * The string manager for this package.
      */
     protected static final StringManager sm =
@@ -148,6 +155,25 @@ public class NamingContextListener
 
 
     // ------------------------------------------------------------- Properties
+
+    /**
+     * Returns whether or not an attempt to modify the JNDI context will trigger
+     * an exception or if the request will be ignored.
+     */
+    public boolean getExceptionOnFailedWrite() {
+        return exceptionOnFailedWrite;
+    }
+
+
+    /**
+     * Controls whether or not an attempt to modify the JNDI context will
+     * trigger an exception or if the request will be ignored.
+     *
+     * @param exceptionOnFailedWrite    The new value
+     */
+    public void setExceptionOnFailedWrite(boolean exceptionOnFailedWrite) {
+        this.exceptionOnFailedWrite = exceptionOnFailedWrite;
+    }
 
 
     /**
@@ -171,6 +197,7 @@ public class NamingContextListener
     /**
      * Return the comp context.
      */
+    @Deprecated
     public javax.naming.Context getCompContext() {
         return this.compCtx;
     }
@@ -187,6 +214,7 @@ public class NamingContextListener
     /**
      * Return the associated naming context.
      */
+    @Deprecated
     public NamingContext getNamingContext() {
         return (this.namingContext);
     }
@@ -230,6 +258,10 @@ public class NamingContextListener
             if( log.isDebugEnabled() ) {
                 log.debug("Bound " + container );
             }
+
+            // Configure write when read-only behaviour
+            namingContext.setExceptionOnFailedWrite(
+                    getExceptionOnFailedWrite());
 
             // Setting the context in read/write mode
             ContextAccessController.setWritable(getName(), container);

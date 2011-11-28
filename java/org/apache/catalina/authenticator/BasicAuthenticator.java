@@ -22,6 +22,7 @@ package org.apache.catalina.authenticator;
 import java.io.IOException;
 import java.security.Principal;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.catalina.connector.Request;
@@ -41,7 +42,7 @@ import org.apache.tomcat.util.buf.MessageBytes;
  * and Digest Access Authentication."
  *
  * @author Craig R. McClanahan
- * @version $Id: BasicAuthenticator.java 1005834 2010-10-08 14:02:05Z markt $
+ * @version $Id: BasicAuthenticator.java 1189224 2011-10-26 14:02:40Z kkolinko $
  */
 
 public class BasicAuthenticator
@@ -156,8 +157,8 @@ public class BasicAuthenticator
 
             principal = context.getRealm().authenticate(username, password);
             if (principal != null) {
-                register(request, response, principal, Constants.BASIC_METHOD,
-                         username, password);
+                register(request, response, principal,
+                        HttpServletRequest.BASIC_AUTH, username, password);
                 return (true);
             }
         }
@@ -179,6 +180,6 @@ public class BasicAuthenticator
 
     @Override
     protected String getAuthMethod() {
-        return Constants.BASIC_METHOD;
+        return HttpServletRequest.BASIC_AUTH;
     }
 }

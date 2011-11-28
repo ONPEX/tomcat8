@@ -21,19 +21,19 @@ import java.lang.reflect.InvocationTargetException;
 import javax.naming.NamingException;
 
 /**
- * @version $Id: InstanceManager.java 1156179 2011-08-10 13:38:24Z markt $
+ * @version $Id: InstanceManager.java 1200164 2011-11-10 05:46:02Z kkolinko $
  */
 public interface InstanceManager {
 
     public Object newInstance(String className)
-        throws IllegalAccessException, InvocationTargetException, NamingException, 
+        throws IllegalAccessException, InvocationTargetException, NamingException,
             InstantiationException, ClassNotFoundException;
 
-    public Object newInstance(String fqcn, ClassLoader classLoader) 
-        throws IllegalAccessException, InvocationTargetException, NamingException, 
+    public Object newInstance(String fqcn, ClassLoader classLoader)
+        throws IllegalAccessException, InvocationTargetException, NamingException,
             InstantiationException, ClassNotFoundException;
 
-    public void newInstance(Object o) 
+    public void newInstance(Object o)
         throws IllegalAccessException, InvocationTargetException, NamingException;
 
     public void destroyInstance(Object o)

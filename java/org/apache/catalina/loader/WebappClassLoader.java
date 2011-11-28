@@ -27,7 +27,6 @@ import java.io.InputStream;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
@@ -86,14 +85,16 @@ import org.apache.tomcat.util.res.StringManager;
  * compatible with a normal <code>URLClassLoader</code>, although its internal
  * behavior may be completely different.
  * <p>
- * <strong>IMPLEMENTATION NOTE</strong> - This class loader faithfully follows 
- * the delegation model recommended in the specification. The system class 
- * loader will be queried first, then the local repositories, and only then 
- * delegation to the parent class loader will occur. This allows the web 
+ * <strong>IMPLEMENTATION NOTE</strong> - By default, this class loader follows
+ * the delegation model required by the specification. The system class
+ * loader will be queried first, then the local repositories, and only then
+ * delegation to the parent class loader will occur. This allows the web
  * application to override any shared class except the classes from J2SE.
  * Special handling is provided from the JAXP XML parser interfaces, the JNDI
  * interfaces, and the classes from the servlet API, which are never loaded 
- * from the webapp repository.
+ * from the webapp repositories. The <code>delegate</code> property
+ * allows an application to modify this behavior to move the parent class loader
+ * ahead of the local repositories.
  * <p>
  * <strong>IMPLEMENTATION NOTE</strong> - Due to limitations in Jasper 
  * compilation technology, any repository which contains classes from 
@@ -116,7 +117,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: WebappClassLoader.java 1163802 2011-08-31 20:35:22Z slaurent $
+ * @version $Id: WebappClassLoader.java 1202038 2011-11-15 04:30:21Z kkolinko $
  */
 public class WebappClassLoader
     extends URLClassLoader
@@ -292,7 +293,8 @@ public class WebappClassLoader
      * usual Java2 delegation model)?  If set to <code>false</code>,
      * this class loader will search its own repositories first, and
      * delegate to the parent only if the class or resource is not
-     * found locally.
+     * found locally. Note that the default, <code>false</code>, is
+     * the behavior called for by the servlet specification.
      */
     protected boolean delegate = false;
 
@@ -536,6 +538,14 @@ public class WebappClassLoader
 
     /**
      * Set the "delegate first" flag for this class loader.
+     * If this flag is true, this class loader delegates
+     * to the parent class loader
+     * <strong>before</strong> searching its own repositories, as
+     * in an ordinary (non-servlet) chain of Java class loaders.
+     * If set to <code>false</code> (the default),
+     * this class loader will search its own repositories first, and
+     * delegate to the parent only if the class or resource is not
+     * found locally, as per the servlet specification.
      *
      * @param delegate The new "delegate first" flag
      */
@@ -2039,8 +2049,10 @@ public class WebappClassLoader
             }
         } catch (Exception e) {
             // So many things to go wrong above...
+            Throwable t = ExceptionUtils.unwrapInvocationTargetException(e);
+            ExceptionUtils.handleThrowable(t);
             log.warn(sm.getString(
-                    "webappClassLoader.jdbcRemoveFailed", contextName), e);
+                    "webappClassLoader.jdbcRemoveFailed", contextName), t);
         } finally {
             if (is != null) {
                 try {
@@ -2196,11 +2208,6 @@ public class WebappClassLoader
                         continue;
                     }
                     
-                    // Skip threads that have already died
-                    if (!thread.isAlive()) {
-                        continue;
-                    }
-
                     // JVM controlled threads
                     ThreadGroup tg = thread.getThreadGroup();
                     if (tg != null &&
@@ -2218,6 +2225,11 @@ public class WebappClassLoader
                         continue;
                     }
                    
+                    // Skip threads that have already died
+                    if (!thread.isAlive()) {
+                        continue;
+                    }
+
                     // TimerThread can be stopped safely so treat separately
                     if (thread.getClass().getName().equals(
                             "java.util.TimerThread") &&
@@ -2345,22 +2357,13 @@ public class WebappClassLoader
             log.error(sm.getString("webappClassLoader.warnTimerThread",
                     contextName, thread.getName()));
 
-        } catch (NoSuchFieldException e) {
+        } catch (Exception e) {
+            // So many things to go wrong above...
+            Throwable t = ExceptionUtils.unwrapInvocationTargetException(e);
+            ExceptionUtils.handleThrowable(t);
             log.warn(sm.getString(
                     "webappClassLoader.stopTimerThreadFail",
-                    thread.getName(), contextName), e);
-        } catch (IllegalAccessException e) {
-            log.warn(sm.getString(
-                    "webappClassLoader.stopTimerThreadFail",
-                    thread.getName(), contextName), e);
-        } catch (NoSuchMethodException e) {
-            log.warn(sm.getString(
-                    "webappClassLoader.stopTimerThreadFail",
-                    thread.getName(), contextName), e);
-        } catch (InvocationTargetException e) {
-            log.warn(sm.getString(
-                    "webappClassLoader.stopTimerThreadFail",
-                    thread.getName(), contextName), e);
+                    thread.getName(), contextName), t);
         }
     }
 

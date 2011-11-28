@@ -55,7 +55,7 @@ import org.apache.catalina.valves.ValveBase;
  * <code>org.apache.catalina.core.StandardServer</code> component.</p>
  *
  * @author Amy Roh
- * @version $Id: MBeanFactory.java 1029527 2010-11-01 02:04:53Z markt $
+ * @version $Id: MBeanFactory.java 1196316 2011-11-01 22:05:15Z markt $
  */
 
 public class MBeanFactory {
@@ -594,7 +594,9 @@ public class MBeanFactory {
                                                              "configBaseName");
             String baseName = context.getBaseName();
             File configFile = new File(new File(configPath), baseName+".xml");
-            context.setConfigFile(configFile.toURI().toURL());
+            if (configFile.isFile()) {
+                context.setConfigFile(configFile.toURI().toURL());
+            }
             mserver.invoke(deployer, "manageApp",
                            new Object[] {context},
                            new String[] {"org.apache.catalina.Context"});

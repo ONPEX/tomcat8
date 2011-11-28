@@ -36,7 +36,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * An implementation of a blocking queue with fairness waiting and lock dispersal to avoid contention.
  * invocations to method poll(...) will get handed out in the order they were received.
- * Locking is fine grained, a shared lock is only used during the first level of contention, waiting is done in a 
+ * Locking is fine grained, a shared lock is only used during the first level of contention, waiting is done in a
  * lock per thread basis so that order is guaranteed once the thread goes into a suspended monitor state.
  * <br/>
  * Not all of the methods of the {@link java.util.concurrent.BlockingQueue} are implemented.
@@ -45,24 +45,24 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 
 public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
-    
+
     final int LOCK_COUNT = Runtime.getRuntime().availableProcessors();
-    
+
     final AtomicInteger putQueue = new AtomicInteger(0);
     final AtomicInteger pollQueue = new AtomicInteger(0);
-    
+
     public int getNextPut() {
         int idx = Math.abs(putQueue.incrementAndGet()) % LOCK_COUNT;
         return idx;
     }
-    
+
     public int getNextPoll() {
         int idx = Math.abs(pollQueue.incrementAndGet()) % LOCK_COUNT;
         return idx;
     }
     /**
-     * Phase one entry lock in order to give out 
-     * per-thread-locks for the waiting phase we have 
+     * Phase one entry lock in order to give out
+     * per-thread-locks for the waiting phase we have
      * a phase one lock during the contention period.
      */
     private final ReentrantLock[] locks = new ReentrantLock[LOCK_COUNT];
@@ -76,7 +76,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
      * All threads waiting for an object are stored in a linked list
      */
     final LinkedList<ExchangeCountDownLatch<E>>[] waiters;
-    
+
     /**
      * Creates a new fair blocking queue.
      */
@@ -97,6 +97,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
      * Will always return true, queue is unbounded.
      * {@inheritDoc}
      */
+    @Override
     public boolean offer(E e) {
         int idx = getNextPut();
         //during the offer, we will grab the main lock
@@ -125,9 +126,10 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
 
     /**
      * Will never timeout, as it invokes the {@link #offer(Object)} method.
-     * Once a lock has been acquired, the  
+     * Once a lock has been acquired, the
      * {@inheritDoc}
      */
+    @Override
     public boolean offer(E e, long timeout, TimeUnit unit) throws InterruptedException {
         return offer(e);
     }
@@ -137,6 +139,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
      * Objects are returned in the order the threads requested them.
      * {@inheritDoc}
      */
+    @Override
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
         int idx = getNextPoll();
         E result = null;
@@ -175,7 +178,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
         }
         return result;
     }
-    
+
     /**
      * Request an item from the queue asynchronously
      * @return - a future pending the result from the queue poll request
@@ -210,10 +213,11 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
         }
         return result;
     }
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean remove(Object e) {
         for (int idx=0; idx<LOCK_COUNT; idx++) {
             final ReentrantLock lock = this.locks[idx];
@@ -227,10 +231,11 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
         }
         return false;
     }
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public int size() {
         int size = 0;
         for (int idx=0; idx<LOCK_COUNT; idx++) {
@@ -242,6 +247,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Iterator<E> iterator() {
         return new FairIterator();
     }
@@ -249,6 +255,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public E poll() {
         int idx = getNextPoll();
         final ReentrantLock lock = this.locks[idx];
@@ -263,6 +270,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean contains(Object e) {
         for (int idx=0; idx<LOCK_COUNT; idx++) {
             boolean result = items[idx].contains(e);
@@ -278,6 +286,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean add(E e) {
         return offer(e);
     }
@@ -286,6 +295,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
      * {@inheritDoc}
      * @throws UnsupportedOperationException - this operation is not supported
      */
+    @Override
     public int drainTo(Collection<? super E> c, int maxElements) {
         throw new UnsupportedOperationException("int drainTo(Collection<? super E> c, int maxElements)");
     }
@@ -294,6 +304,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
      * {@inheritDoc}
      * @throws UnsupportedOperationException - this operation is not supported
      */
+    @Override
     public int drainTo(Collection<? super E> c) {
         return drainTo(c,Integer.MAX_VALUE);
     }
@@ -301,6 +312,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void put(E e) throws InterruptedException {
         offer(e);
     }
@@ -308,6 +320,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int remainingCapacity() {
         return Integer.MAX_VALUE - size();
     }
@@ -315,6 +328,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public E take() throws InterruptedException {
         return this.poll(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
     }
@@ -322,6 +336,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean addAll(Collection<? extends E> c) {
         Iterator<? extends E> i = c.iterator();
         while (i.hasNext()) {
@@ -335,6 +350,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
      * {@inheritDoc}
      * @throws UnsupportedOperationException - this operation is not supported
      */
+    @Override
     public void clear() {
         throw new UnsupportedOperationException("void clear()");
 
@@ -344,6 +360,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
      * {@inheritDoc}
      * @throws UnsupportedOperationException - this operation is not supported
      */
+    @Override
     public boolean containsAll(Collection<?> c) {
         throw new UnsupportedOperationException("boolean containsAll(Collection<?> c)");
     }
@@ -351,6 +368,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isEmpty() {
         return size() == 0;
     }
@@ -359,6 +377,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
      * {@inheritDoc}
      * @throws UnsupportedOperationException - this operation is not supported
      */
+    @Override
     public boolean removeAll(Collection<?> c) {
         throw new UnsupportedOperationException("boolean removeAll(Collection<?> c)");
     }
@@ -367,6 +386,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
      * {@inheritDoc}
      * @throws UnsupportedOperationException - this operation is not supported
      */
+    @Override
     public boolean retainAll(Collection<?> c) {
         throw new UnsupportedOperationException("boolean retainAll(Collection<?> c)");
     }
@@ -375,6 +395,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
      * {@inheritDoc}
      * @throws UnsupportedOperationException - this operation is not supported
      */
+    @Override
     public Object[] toArray() {
         throw new UnsupportedOperationException("Object[] toArray()");
     }
@@ -383,6 +404,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
      * {@inheritDoc}
      * @throws UnsupportedOperationException - this operation is not supported
      */
+    @Override
     public <T> T[] toArray(T[] a) {
         throw new UnsupportedOperationException("<T> T[] toArray(T[] a)");
     }
@@ -391,6 +413,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
      * {@inheritDoc}
      * @throws UnsupportedOperationException - this operation is not supported
      */
+    @Override
     public E element() {
         throw new UnsupportedOperationException("E element()");
     }
@@ -399,6 +422,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
      * {@inheritDoc}
      * @throws UnsupportedOperationException - this operation is not supported
      */
+    @Override
     public E peek() {
         throw new UnsupportedOperationException("E peek()");
     }
@@ -407,6 +431,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
      * {@inheritDoc}
      * @throws UnsupportedOperationException - this operation is not supported
      */
+    @Override
     public E remove() {
         throw new UnsupportedOperationException("E remove()");
     }
@@ -420,19 +445,21 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
         protected volatile T item = null;
         protected volatile ExchangeCountDownLatch<T> latch = null;
         protected volatile boolean canceled = false;
-        
+
         public ItemFuture(T item) {
             this.item = item;
         }
-        
+
         public ItemFuture(ExchangeCountDownLatch<T> latch) {
             this.latch = latch;
         }
-        
+
+        @Override
         public boolean cancel(boolean mayInterruptIfRunning) {
             return false; //don't allow cancel for now
         }
 
+        @Override
         public T get() throws InterruptedException, ExecutionException {
             if (item!=null) {
                 return item;
@@ -444,6 +471,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
             }
         }
 
+        @Override
         public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
             if (item!=null) {
                 return item;
@@ -456,14 +484,16 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
             }
         }
 
+        @Override
         public boolean isCancelled() {
             return false;
         }
 
+        @Override
         public boolean isDone() {
             return (item!=null || latch.getItem()!=null);
         }
-        
+
     }
 
     //------------------------------------------------------------------
@@ -498,7 +528,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
                 try {
                     elements = (E[]) new Object[MultiLockFairBlockingQueue.this.items[idx].size()];
                     MultiLockFairBlockingQueue.this.items[idx].toArray(elements);
-                    
+
                 } finally {
                     lock.unlock();
                 }
@@ -507,10 +537,12 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
             elements = (E[]) new Object[list.size()];
             list.toArray(elements);
         }
+        @Override
         public boolean hasNext() {
             return index<elements.length;
         }
 
+        @Override
         public E next() {
             if (!hasNext()) {
                 throw new NoSuchElementException();
@@ -519,6 +551,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
             return element;
         }
 
+        @Override
         public void remove() {
             for (int idx=0; idx<LOCK_COUNT; idx++) {
                 final ReentrantLock lock = MultiLockFairBlockingQueue.this.locks[idx];
@@ -530,7 +563,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
                     lock.unlock();
                 }
             }
-            
+
         }
 
     }

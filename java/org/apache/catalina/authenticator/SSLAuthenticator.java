@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.security.Principal;
 import java.security.cert.X509Certificate;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.catalina.Globals;
@@ -37,7 +38,7 @@ import org.apache.coyote.ActionCode;
  * that utilizes SSL certificates to identify client users.
  *
  * @author Craig R. McClanahan
- * @version $Id: SSLAuthenticator.java 1075792 2011-03-01 12:32:25Z markt $
+ * @version $Id: SSLAuthenticator.java 1189224 2011-10-26 14:02:40Z kkolinko $
  */
 
 public class SSLAuthenticator
@@ -163,8 +164,8 @@ public class SSLAuthenticator
         }
 
         // Cache the principal (if requested) and record this authentication
-        register(request, response, principal, Constants.CERT_METHOD,
-                 null, null);
+        register(request, response, principal,
+                HttpServletRequest.CLIENT_CERT_AUTH, null, null);
         return (true);
 
     }
@@ -172,6 +173,6 @@ public class SSLAuthenticator
 
     @Override
     protected String getAuthMethod() {
-        return Constants.CERT_METHOD;
+        return HttpServletRequest.CLIENT_CERT_AUTH;
     }
 }

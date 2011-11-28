@@ -21,7 +21,7 @@ import java.nio.ByteBuffer;
 /** File
  *
  * @author Mladen Turk
- * @version $Id: File.java 939309 2010-04-29 13:54:26Z kkolinko $
+ * @version $Id: File.java 1200164 2011-11-10 05:46:02Z kkolinko $
  */
 
 public class File {
@@ -242,7 +242,7 @@ public class File {
      *              APR_CREATE | APR_READ | APR_WRITE | APR_EXCL | APR_DELONCLOSE
      * @param pool The pool to allocate the file out of.
      * @return The apr file to use as a temporary file.
-     * 
+     *
      * This function  generates  a unique temporary file name from template.
      * The last six characters of template must be XXXXXX and these are replaced
      * with a string that makes the filename unique. Since it will  be  modified,

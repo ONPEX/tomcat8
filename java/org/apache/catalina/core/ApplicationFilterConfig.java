@@ -21,10 +21,10 @@ package org.apache.catalina.core;
 
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.management.ObjectName;
@@ -38,9 +38,9 @@ import org.apache.catalina.Context;
 import org.apache.catalina.Globals;
 import org.apache.catalina.deploy.FilterDef;
 import org.apache.catalina.security.SecurityUtil;
-import org.apache.catalina.util.Enumerator;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.InstanceManager;
+import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.log.SystemLogHandler;
 import org.apache.tomcat.util.modeler.Registry;
 import org.apache.tomcat.util.res.StringManager;
@@ -52,7 +52,7 @@ import org.apache.tomcat.util.res.StringManager;
  * is first started.
  *
  * @author Craig R. McClanahan
- * @version $Id: ApplicationFilterConfig.java 1078022 2011-03-04 15:52:01Z markt $
+ * @version $Id: ApplicationFilterConfig.java 1201569 2011-11-14 01:36:07Z kkolinko $
  */
 
 public final class ApplicationFilterConfig implements FilterConfig, Serializable {
@@ -64,6 +64,11 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
 
     private static final org.apache.juli.logging.Log log =
         LogFactory.getLog(ApplicationFilterConfig.class);
+
+    /**
+     * Empty String collection to serve as the basis for empty enumerations.
+     */
+    private static final List<String> emptyString = Collections.emptyList();
 
     // ----------------------------------------------------------- Constructors
 
@@ -181,11 +186,10 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
         Map<String,String> map = filterDef.getParameterMap();
         
         if (map == null) {
-            return (new Enumerator<String>(new ArrayList<String>()));
+            return Collections.enumeration(emptyString);
         }
 
-        return new Enumerator<String>(map.keySet());
-
+        return Collections.enumeration(map.keySet());
     }
 
 
@@ -310,7 +314,10 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
                 try {
                     ((StandardContext) context).getInstanceManager().destroyInstance(this.filter);
                 } catch (Exception e) {
-                    context.getLogger().error("ApplicationFilterConfig.preDestroy", e);
+                    Throwable t = ExceptionUtils
+                            .unwrapInvocationTargetException(e);
+                    ExceptionUtils.handleThrowable(t);
+                    context.getLogger().error("ApplicationFilterConfig.preDestroy", t);
                 }
             }
         }
@@ -360,7 +367,10 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
                     try {
                         ((StandardContext) context).getInstanceManager().destroyInstance(this.filter);
                     } catch (Exception e) {
-                        context.getLogger().error("ApplicationFilterConfig.preDestroy", e);
+                        Throwable t = ExceptionUtils
+                                .unwrapInvocationTargetException(e);
+                        ExceptionUtils.handleThrowable(t);
+                        context.getLogger().error("ApplicationFilterConfig.preDestroy", t);
                     }
                 }
             }

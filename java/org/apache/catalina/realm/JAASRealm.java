@@ -31,10 +31,10 @@ import javax.security.auth.login.CredentialExpiredException;
 import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.catalina.Container;
 import org.apache.catalina.LifecycleException;
-import org.apache.catalina.authenticator.Constants;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
@@ -122,7 +122,7 @@ org.foobar.auth.DatabaseLoginModule REQUIRED
 *
 * @author Craig R. McClanahan
 * @author Yoav Shapira
- * @version $Id: JAASRealm.java 1029527 2010-11-01 02:04:53Z markt $
+ * @version $Id: JAASRealm.java 1189224 2011-10-26 14:02:40Z kkolinko $
  */
 
 public class JAASRealm
@@ -357,7 +357,7 @@ public class JAASRealm
         return authenticate(username,
                 new JAASCallbackHandler(this, username, clientDigest, nonce,
                         nc, cnonce, qop, realmName, md5a2,
-                        Constants.DIGEST_METHOD));
+                        HttpServletRequest.DIGEST_AUTH));
     }
 
 
@@ -488,7 +488,7 @@ public class JAASRealm
 
         return authenticate(username,
                 new JAASCallbackHandler(this, username, null, null, null, null,
-                        null, null, null, Constants.CERT_METHOD));
+                        null, null, null, HttpServletRequest.CLIENT_CERT_AUTH));
 
     }
 

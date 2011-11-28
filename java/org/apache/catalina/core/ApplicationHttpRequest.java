@@ -21,6 +21,7 @@ package org.apache.catalina.core;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -37,7 +38,6 @@ import org.apache.catalina.Context;
 import org.apache.catalina.Globals;
 import org.apache.catalina.Manager;
 import org.apache.catalina.Session;
-import org.apache.catalina.util.Enumerator;
 import org.apache.catalina.util.RequestUtil;
 
 
@@ -55,7 +55,7 @@ import org.apache.catalina.util.RequestUtil;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: ApplicationHttpRequest.java 1078022 2011-03-04 15:52:01Z markt $
+ * @version $Id: ApplicationHttpRequest.java 1195962 2011-11-01 12:37:24Z markt $
  */
 
 class ApplicationHttpRequest extends HttpServletRequestWrapper {
@@ -400,8 +400,7 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
     public Enumeration<String> getParameterNames() {
 
         parseParameters();
-        return (new Enumerator<String>(parameters.keySet()));
-
+        return Collections.enumeration(parameters.keySet());
     }
 
 

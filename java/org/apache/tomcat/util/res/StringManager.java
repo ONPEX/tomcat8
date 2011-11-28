@@ -43,7 +43,7 @@ import java.util.ResourceBundle;
  * <p>Please see the documentation for java.util.ResourceBundle for
  * more information.
  *
- * @version $Id: StringManager.java 1043103 2010-12-07 15:40:06Z markt $
+ * @version $Id: StringManager.java 1200166 2011-11-10 05:50:36Z kkolinko $
  *
  * @author James Duncan Davidson [duncan@eng.sun.com]
  * @author James Todd [gonzo@eng.sun.com]
@@ -97,11 +97,11 @@ public class StringManager {
     /**
         Get a string from the underlying resource bundle or return
         null if the String is not found.
-     
+
         @param key to desired resource String
         @return resource String matching <i>key</i> from underlying
                 bundle or null if not found.
-        @throws IllegalArgumentException if <i>key</i> is null.        
+        @throws IllegalArgumentException if <i>key</i> is null.
      */
     public String getString(String key) {
         if(key == null){
@@ -195,7 +195,7 @@ public class StringManager {
             map = new Hashtable<Locale, StringManager>();
             managers.put(packageName, map);
         }
-        
+
         StringManager mgr = map.get(locale);
         if (mgr == null) {
             mgr = new StringManager(packageName, locale);

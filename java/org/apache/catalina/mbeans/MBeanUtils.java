@@ -67,7 +67,7 @@ import org.apache.tomcat.util.modeler.Registry;
  *
  * @author Craig R. McClanahan
  * @author Amy Roh
- * @version $Id: MBeanUtils.java 1085323 2011-03-25 11:20:50Z markt $
+ * @version $Id: MBeanUtils.java 1189423 2011-10-26 20:12:27Z markt $
  */
 
 public class MBeanUtils {
@@ -1075,7 +1075,6 @@ public class MBeanUtils {
         if (domain == null)
             domain = mserver.getDefaultDomain();
         ObjectName oname = createObjectName(domain, connector);
-        connector.setService(null);
         if( mserver.isRegistered( oname ))  {
             mserver.unregisterMBean(oname);
         }

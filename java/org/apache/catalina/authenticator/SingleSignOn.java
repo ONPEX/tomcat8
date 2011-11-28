@@ -55,7 +55,7 @@ import org.apache.tomcat.util.res.StringManager;
  * </ul>
  *
  * @author Craig R. McClanahan
- * @version $Id: SingleSignOn.java 1025684 2010-10-20 19:26:05Z markt $
+ * @version $Id: SingleSignOn.java 1188401 2011-10-24 21:50:26Z markt $
  */
 
 public class SingleSignOn extends ValveBase implements SessionListener {
@@ -100,6 +100,7 @@ public class SingleSignOn extends ValveBase implements SessionListener {
     /**
      * The string manager for this package.
      */
+    @Deprecated
     protected static final StringManager sm =
         StringManager.getManager(Constants.Package);
 

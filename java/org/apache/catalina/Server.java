@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,7 +43,7 @@ import org.apache.catalina.startup.Catalina;
  * class in its constructor(s).
  *
  * @author Craig R. McClanahan
- * @version $Id: Server.java 1079405 2011-03-08 15:58:53Z markt $
+ * @version $Id: Server.java 1200162 2011-11-10 05:37:57Z kkolinko $
  */
 
 public interface Server extends Lifecycle {
@@ -68,7 +68,7 @@ public interface Server extends Lifecycle {
 
     /**
      * Set the global naming resources.
-     * 
+     *
      * @param globalNamingResources The new global naming resources
      */
     public void setGlobalNamingResources
@@ -122,7 +122,7 @@ public interface Server extends Lifecycle {
      */
     public void setShutdown(String shutdown);
 
-    
+
     /**
      * Return the parent class loader for this component. If not set, return
      * {@link #getCatalina()} {@link Catalina#getParentClassLoader()}. If
@@ -138,17 +138,17 @@ public interface Server extends Lifecycle {
      */
     public void setParentClassLoader(ClassLoader parent);
 
-    
+
     /**
      * Return the outer Catalina startup/shutdown component if present.
      */
     public Catalina getCatalina();
-    
+
     /**
      * Set the outer Catalina startup/shutdown component if present.
      */
     public void setCatalina(Catalina catalina);
-    
+
     // --------------------------------------------------------- Public Methods
 
 

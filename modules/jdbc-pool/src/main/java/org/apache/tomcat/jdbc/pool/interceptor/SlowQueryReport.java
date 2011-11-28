@@ -44,7 +44,7 @@ public class SlowQueryReport extends AbstractQueryReport  {
     /**
      * we will be keeping track of query stats on a per pool basis
      */
-    protected static ConcurrentHashMap<String,ConcurrentHashMap<String,QueryStats>> perPoolStats = 
+    protected static ConcurrentHashMap<String,ConcurrentHashMap<String,QueryStats>> perPoolStats =
         new ConcurrentHashMap<String,ConcurrentHashMap<String,QueryStats>>();
     /**
      * the queries that are used for this interceptor.
@@ -54,16 +54,16 @@ public class SlowQueryReport extends AbstractQueryReport  {
      * Maximum number of queries we will be storing
      */
     protected int  maxQueries= 1000; //don't store more than this amount of queries
-    
+
     /**
      * Returns the query stats for a given pool
      * @param poolname - the name of the pool we want to retrieve stats for
-     * @return a hash map containing statistics for 0 to maxQueries 
+     * @return a hash map containing statistics for 0 to maxQueries
      */
     public static ConcurrentHashMap<String,QueryStats> getPoolStats(String poolname) {
         return perPoolStats.get(poolname);
     }
-    
+
     /**
      * Creates a slow query report interceptor
      */
@@ -106,19 +106,19 @@ public class SlowQueryReport extends AbstractQueryReport  {
     public void closeInvoked() {
         queries = null;
     }
-    
+
     @Override
     public void prepareStatement(String sql, long time) {
         QueryStats qs = getQueryStats(sql);
         qs.prepare(time, System.currentTimeMillis());
     }
-    
+
     @Override
     public void prepareCall(String sql, long time) {
         QueryStats qs = getQueryStats(sql);
         qs.prepare(time, System.currentTimeMillis());
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -131,16 +131,14 @@ public class SlowQueryReport extends AbstractQueryReport  {
             //create the map to hold our stats
             //however TODO we need to improve the eviction
             //selection
-            queries = new ConcurrentHashMap<String,QueryStats>() {
-                
-            };
+            queries = new ConcurrentHashMap<String,QueryStats>();
             if (perPoolStats.putIfAbsent(pool.getName(), queries)!=null) {
                 //there already was one
                 queries = SlowQueryReport.perPoolStats.get(pool.getName());
             }
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -149,8 +147,9 @@ public class SlowQueryReport extends AbstractQueryReport  {
         perPoolStats.remove(pool.getName());
         super.poolClosed(pool);
     }
-    
+
     protected QueryStats getQueryStats(String sql) {
+        if (sql==null) sql = "";
         ConcurrentHashMap<String,QueryStats> queries = SlowQueryReport.this.queries;
         if (queries==null) return null;
         QueryStats qs = queries.get(sql);
@@ -167,7 +166,7 @@ public class SlowQueryReport extends AbstractQueryReport  {
         }
         return qs;
     }
-    
+
     /**
      * TODO - implement a better algorithm
      * @param queries
@@ -178,14 +177,14 @@ public class SlowQueryReport extends AbstractQueryReport  {
             String sql = it.next();
             it.remove();
             if (log.isDebugEnabled()) log.debug("Removing slow query, capacity reached:"+sql);
-        } 
+        }
     }
 
 
     @Override
     public void reset(ConnectionPool parent, PooledConnection con) {
         super.reset(parent, con);
-        if (parent!=null) 
+        if (parent!=null)
             queries = SlowQueryReport.perPoolStats.get(parent.getName());
     }
 
@@ -207,7 +206,7 @@ public class SlowQueryReport extends AbstractQueryReport  {
 
 
     /**
-     * 
+     *
      * @author fhanik
      *
      */
@@ -225,7 +224,7 @@ public class SlowQueryReport extends AbstractQueryReport  {
             "prepareTime",
             "lastInvocation"
         };
-        
+
         static final  String[] FIELD_DESCRIPTIONS = new String[] {
             "The SQL query",
             "The number of query invocations, a call to executeXXX",
@@ -239,8 +238,8 @@ public class SlowQueryReport extends AbstractQueryReport  {
             "The total number of milliseconds spent preparing this query",
             "The date and time of the last invocation"
         };
-        
-        static final OpenType[] FIELD_TYPES = new OpenType[] { 
+
+        static final OpenType[] FIELD_TYPES = new OpenType[] {
             SimpleType.STRING,
             SimpleType.INTEGER,
             SimpleType.LONG,
@@ -251,7 +250,7 @@ public class SlowQueryReport extends AbstractQueryReport  {
             SimpleType.LONG,
             SimpleType.INTEGER,
             SimpleType.LONG,
-            SimpleType.LONG 
+            SimpleType.LONG
         };
 
         private final String query;
@@ -265,19 +264,19 @@ public class SlowQueryReport extends AbstractQueryReport  {
         private volatile int prepareCount;
         private volatile long prepareTime;
         private volatile long lastInvocation = 0;
-        
+
         public static String[] getFieldNames() {
             return FIELD_NAMES;
         }
-        
+
         public static String[] getFieldDescriptions() {
             return FIELD_DESCRIPTIONS;
         }
-        
+
         public static OpenType[] getFieldTypes() {
             return FIELD_TYPES;
         }
-        
+
         @Override
         public String toString() {
             StringBuilder buf = new StringBuilder("QueryStats[query:");
@@ -305,7 +304,7 @@ public class SlowQueryReport extends AbstractQueryReport  {
             buf.append("]");
             return buf.toString();
         }
-        
+
         public CompositeDataSupport getCompositeData(final CompositeType type) throws OpenDataException{
             Object[] values = new Object[] {
                     query,
@@ -322,17 +321,17 @@ public class SlowQueryReport extends AbstractQueryReport  {
             };
             return new CompositeDataSupport(type,FIELD_NAMES,values);
         }
-        
+
         public QueryStats(String query) {
             this.query = query;
         }
-        
+
         public void prepare(long invocationTime, long now) {
             prepareCount++;
             prepareTime+=invocationTime;
-            
+
         }
-        
+
         public void add(long invocationTime, long now) {
             //not thread safe, but don't sacrifice performance for this kind of stuff
             maxInvocationTime = Math.max(invocationTime, maxInvocationTime);
@@ -347,13 +346,13 @@ public class SlowQueryReport extends AbstractQueryReport  {
             totalInvocationTime+=invocationTime;
             lastInvocation = now;
         }
-        
+
         public void failure(long invocationTime, long now) {
             add(invocationTime,now);
             failures++;
-            
+
         }
-        
+
         public String getQuery() {
             return query;
         }
@@ -386,20 +385,20 @@ public class SlowQueryReport extends AbstractQueryReport  {
         public int hashCode() {
             return query.hashCode();
         }
-        
+
         @Override
         public boolean equals(Object other) {
             if (other instanceof QueryStats) {
                 QueryStats qs = (QueryStats)other;
                 return qs.query.equals(this.query);
-            } 
+            }
             return false;
         }
-        
+
         public boolean isOlderThan(QueryStats other) {
             return this.lastInvocation < other.lastInvocation;
         }
     }
-    
-    
+
+
 }

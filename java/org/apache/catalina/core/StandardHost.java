@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
 
 import org.apache.catalina.Container;
@@ -45,7 +46,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardHost.java 1057788 2011-01-11 18:35:42Z markt $
+ * @version $Id: StandardHost.java 1190190 2011-10-28 07:59:16Z markt $
  */
 
 public class StandardHost extends ContainerBase implements Host {
@@ -179,6 +180,11 @@ public class StandardHost extends ContainerBase implements Host {
 
     // ------------------------------------------------------------- Properties
 
+     @Override
+     public ExecutorService getStartStopExecutor() {
+         return startStopExecutor;
+     }
+
 
     /**
      * Return the application root for this Host.  This can be an absolute
@@ -186,10 +192,9 @@ public class StandardHost extends ContainerBase implements Host {
      */
     @Override
     public String getAppBase() {
-
         return (this.appBase);
-
     }
+
 
     /**
      * Return the XML root for this Host.  This can be an absolute
@@ -202,6 +207,7 @@ public class StandardHost extends ContainerBase implements Host {
         return (this.xmlBase);
 
     }
+
 
     /**
      * Set the application root for this Host.  This can be an absolute
@@ -218,6 +224,7 @@ public class StandardHost extends ContainerBase implements Host {
 
     }
     
+
     /**
      * Set the Xml root for this Host.  This can be an absolute
      * pathname, a relative pathname, or a URL.
@@ -233,6 +240,7 @@ public class StandardHost extends ContainerBase implements Host {
         support.firePropertyChange("xmlBase", oldXmlBase, this.xmlBase);
 
     }
+
 
     /**
      * Returns true if the Host will attempt to create directories for appBase and xmlBase

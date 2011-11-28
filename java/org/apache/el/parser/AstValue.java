@@ -38,7 +38,7 @@ import org.apache.el.util.ReflectionUtil;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: AstValue.java 1071561 2011-02-17 09:59:30Z markt $
+ * @version $Id: AstValue.java 1201570 2011-11-14 01:38:18Z kkolinko $
  */
 public final class AstValue extends SimpleNode {
 
@@ -265,7 +265,14 @@ public final class AstValue extends SimpleNode {
         } catch (IllegalArgumentException iae) {
             throw new ELException(iae);
         } catch (InvocationTargetException ite) {
-            throw new ELException(ite.getCause());
+            Throwable cause = ite.getCause();
+            if (cause instanceof ThreadDeath) {
+                throw (ThreadDeath) cause;
+            }
+            if (cause instanceof VirtualMachineError) {
+                throw (VirtualMachineError) cause;
+            }
+            throw new ELException(cause);
         }
         return result;
     }

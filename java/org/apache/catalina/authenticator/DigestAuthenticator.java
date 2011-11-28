@@ -47,7 +47,7 @@ import org.apache.juli.logging.LogFactory;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: DigestAuthenticator.java 1158177 2011-08-16 10:04:00Z markt $
+ * @version $Id: DigestAuthenticator.java 1189224 2011-10-26 14:02:40Z kkolinko $
  */
 
 public class DigestAuthenticator extends AuthenticatorBase {
@@ -272,7 +272,7 @@ public class DigestAuthenticator extends AuthenticatorBase {
             if (principal != null) {
                 String username = parseUsername(authorization);
                 register(request, response, principal,
-                         Constants.DIGEST_METHOD,
+                        HttpServletRequest.DIGEST_AUTH,
                          username, null);
                 return (true);
             }
@@ -295,7 +295,7 @@ public class DigestAuthenticator extends AuthenticatorBase {
 
     @Override
     protected String getAuthMethod() {
-        return Constants.DIGEST_METHOD;
+        return HttpServletRequest.DIGEST_AUTH;
     }
 
 

@@ -18,6 +18,8 @@ package org.apache.catalina.authenticator;
 
 import java.security.Principal;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.catalina.Session;
 
 /**
@@ -27,7 +29,7 @@ import org.apache.catalina.Session;
  * reauthentications when SingleSignOn is in use.
  *
  * @author  B Stansberry, based on work by Craig R. McClanahan
- * @version $Revision: 1025684 $
+ * @version $Revision: 1189224 $
  *
  * @see SingleSignOn
  * @see AuthenticatorBase#reauthenticateFromSSO
@@ -179,8 +181,8 @@ public class SingleSignOnEntry
         this.username = username;
         this.password = password;
         this.canReauthenticate =
-            (Constants.BASIC_METHOD.equals(authType)
-                || Constants.FORM_METHOD.equals(authType));
+            (HttpServletRequest.BASIC_AUTH.equals(authType)
+                || HttpServletRequest.FORM_AUTH.equals(authType));
     }
 
 }

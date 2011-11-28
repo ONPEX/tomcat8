@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,16 +23,16 @@ package org.apache.catalina;
  * Global constants that are applicable to multiple packages within Catalina.
  *
  * @author Craig R. McClanahan
- * @version $Id: Globals.java 1166689 2011-09-08 13:49:50Z markt $
+ * @version $Id: Globals.java 1200218 2011-11-10 08:44:03Z kkolinko $
  */
 
 public final class Globals {
 
     /**
      * The servlet context attribute under which we store the alternate
-     * deployment descriptor for this web application 
+     * deployment descriptor for this web application
      */
-    public static final String ALT_DD_ATTR = 
+    public static final String ALT_DD_ATTR =
         "org.apache.catalina.deploy.alt_dd";
 
 
@@ -57,14 +57,14 @@ public final class Globals {
     /**
      * Request dispatcher state.
      */
-    public static final String DISPATCHER_TYPE_ATTR = 
+    public static final String DISPATCHER_TYPE_ATTR =
         "org.apache.catalina.core.DISPATCHER_TYPE";
 
 
     /**
      * Request dispatcher path.
      */
-    public static final String DISPATCHER_REQUEST_PATH_ATTR = 
+    public static final String DISPATCHER_REQUEST_PATH_ATTR =
         "org.apache.catalina.core.DISPATCHER_REQUEST_PATH";
 
 
@@ -156,13 +156,24 @@ public final class Globals {
     public static final String SUBJECT_ATTR =
         "javax.security.auth.subject";
 
-    
+
     public static final String GSS_CREDENTIAL_ATTR =
         "org.apache.catalina.realm.GSS_CREDENTIAL";
 
 
     /**
-     * The master flag which controls strict servlet specification 
+     * The request attribute that is set to {@code Boolean.TRUE} if some request
+     * parameters have been ignored during request parameters parsing. It can
+     * happen, for example, if there is a limit on the total count of parseable
+     * parameters, or if parameter cannot be decoded, or any other error
+     * happened during parameter parsing.
+     */
+    public static final String PARAMETER_PARSE_FAILED_ATTR =
+        "org.apache.catalina.parameter_parse_failed";
+
+
+    /**
+     * The master flag which controls strict servlet specification
      * compliance.
      */
     public static final boolean STRICT_SERVLET_COMPLIANCE =
@@ -174,14 +185,14 @@ public final class Globals {
      */
     public static final boolean IS_SECURITY_ENABLED =
         (System.getSecurityManager() != null);
-    
+
     /**
-     * 
+     *
      */
-    public static final String ASYNC_SUPPORTED_ATTR = 
+    public static final String ASYNC_SUPPORTED_ATTR =
         "org.apache.catalina.ASYNC_SUPPORTED";
 
-    
+
     /**
      * Default domain for MBeans if none can be determined
      */

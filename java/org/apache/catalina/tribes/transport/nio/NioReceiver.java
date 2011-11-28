@@ -42,7 +42,7 @@ import org.apache.juli.logging.LogFactory;
 
 /**
  * @author Filip Hanik
- * @version $Id: NioReceiver.java 1142666 2011-07-04 13:54:52Z kkolinko $
+ * @version $Id: NioReceiver.java 1189808 2011-10-27 15:32:00Z markt $
  */
 public class NioReceiver extends ReceiverBase implements Runnable {
 
@@ -132,7 +132,12 @@ public class NioReceiver extends ReceiverBase implements Runnable {
         // Get the associated ServerSocket to bind it with
         ServerSocket serverSocket = serverChannel.socket();
         // create a new Selector for use below
-        selector = Selector.open();
+        synchronized (Selector.class) {
+            // Selector.open() isn't thread safe
+            // http://bugs.sun.com/view_bug.do?bug_id=6427854
+            // Affects 1.6.0_29, fixed in 1.7.0_01
+            selector = Selector.open();
+        }
         // set the port the server channel will listen to
         //serverSocket.bind(new InetSocketAddress(getBind(), getTcpListenPort()));
         bind(serverSocket,getPort(),getAutoBind());
@@ -283,7 +288,7 @@ public class NioReceiver extends ReceiverBase implements Runnable {
                 // get an iterator over the set of selected keys
                 Iterator<SelectionKey> it = (selector!=null)?selector.selectedKeys().iterator():null;
                 // look at each key in the selected set
-                while (selector!=null && it.hasNext()) {
+                while (it!=null && it.hasNext()) {
                     SelectionKey key = it.next();
                     // Is a new connection coming in?
                     if (key.isAcceptable()) {

@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,7 +24,6 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -54,15 +53,12 @@ import org.apache.tomcat.util.buf.ByteChunk;
  * Base test case that provides a Tomcat instance for each test - mainly so we
  * don't have to keep writing the cleanup code.
  */
-public abstract class TomcatBaseTest {
+public abstract class TomcatBaseTest extends LoggingBaseTest {
     private Tomcat tomcat;
-    private File tempDir;
     private boolean accessLogEnabled = false;
     private static int port = 8000;
 
     public static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
-
-    private List<File> deleteOnTearDown = new ArrayList<File>();
 
     /**
      * Make Tomcat instance accessible to sub-classes.
@@ -77,7 +73,7 @@ public abstract class TomcatBaseTest {
     public int getPort() {
         return port;
     }
-    
+
     /**
      * Sub-classes may want to add connectors on a new port
      */
@@ -87,71 +83,25 @@ public abstract class TomcatBaseTest {
     }
 
     /**
-     * Helper method that returns the path of the temporary directory used by
-     * the test runs. The directory is configured during {@link #setUp()}.
-     * 
-     * <p>
-     * It is used as <code>${catalina.base}</code> for the instance of Tomcat
-     * that is being started, but can be used to store other temporary files as
-     * well. Its <code>work</code> and <code>webapps</code> subdirectories are
-     * deleted at {@link #tearDown()}. If you have other files or directories
-     * that have to be deleted on cleanup, register them with
-     * {@link #addDeleteOnTearDown(File)}.
-     */
-    public File getTemporaryDirectory() {
-        return tempDir;
-    }
-
-    /**
-     * Helper method that returns the directory where Tomcat build resides. It
-     * is used to access resources that are part of default Tomcat deployment.
-     * E.g. the examples webapp.
-     */
-    public File getBuildDirectory() {
-        return new File(System.getProperty("tomcat.test.tomcatbuild",
-                "output/build"));
-    }
-
-    /**
      * Sub-classes may want to check, whether an AccessLogValve is active
      */
     public boolean isAccessLogEnabled() {
         return accessLogEnabled;
     }
 
-    /**
-     * Schedule the given file or directory to be deleted during after-test
-     * cleanup.
-     * 
-     * @param file
-     *            File or directory
-     */
-    public void addDeleteOnTearDown(File file) {
-        deleteOnTearDown.add(file);
-    }
-
     @Before
+    @Override
     public void setUp() throws Exception {
-        // Need to use JULI so log messages from the tests are visible
-        System.setProperty("java.util.logging.manager",
-                "org.apache.juli.ClassLoaderLogManager");
-        System.setProperty("java.util.logging.config.file", new File(
-                getBuildDirectory(), "conf/logging.properties").toString());
+        super.setUp();
 
-        tempDir = new File(System.getProperty("tomcat.test.temp", "output/tmp"));
-        if (!tempDir.mkdirs() && !tempDir.isDirectory()) {
-            fail("Unable to create temporary directory for test");
-        }
-        
-        System.setProperty("catalina.base", tempDir.getAbsolutePath());
         // Trigger loading of catalina.properties
         CatalinaProperties.getProperty("foo");
-        
-        File appBase = new File(tempDir, "webapps");
+
+        File appBase = new File(getTemporaryDirectory(), "webapps");
         if (!appBase.exists() && !appBase.mkdir()) {
             fail("Unable to create appBase for test");
         }
-        
+
         tomcat = new TomcatWithFastSessionIDs();
 
         String protocol = getProtocol();
@@ -172,8 +122,9 @@ public abstract class TomcatBaseTest {
             server.addLifecycleListener(listener);
             connector.setAttribute("pollerThreadCount", Integer.valueOf(1));
         }
-        
-        tomcat.setBaseDir(tempDir.getAbsolutePath());
+
+        File catalinaBase = getTemporaryDirectory();
+        tomcat.setBaseDir(catalinaBase.getAbsolutePath());
         tomcat.getHost().setAppBase(appBase.getAbsolutePath());
 
         accessLogEnabled = Boolean.parseBoolean(
@@ -184,12 +135,17 @@ public abstract class TomcatBaseTest {
             alv.setPattern("%h %l %u %t \"%r\" %s %b %I %D");
             tomcat.getHost().getPipeline().addValve(alv);
         }
+
+        // Cannot delete the whole tempDir, because logs are there,
+        // but delete known subdirectories of it.
+        addDeleteOnTearDown(new File(catalinaBase, "webapps"));
+        addDeleteOnTearDown(new File(catalinaBase, "work"));
     }
-    
+
     protected String getProtocol() {
         // Has a protocol been specified
         String protocol = System.getProperty("tomcat.test.protocol");
-        
+
         // Use BIO by default
         if (protocol == null) {
             protocol = "org.apache.coyote.http11.Http11Protocol";
@@ -199,28 +155,24 @@ public abstract class TomcatBaseTest {
     }
 
     @After
+    @Override
     public void tearDown() throws Exception {
-        // Some tests may call tomcat.destroy(), some tests may just call
-        // tomcat.stop(), some not call either method. Make sure that stop() &
-        // destroy() are called as necessary.
-        if (tomcat.server != null &&
-                tomcat.server.getState() != LifecycleState.DESTROYED) {
-            if (tomcat.server.getState() != LifecycleState.STOPPED) {
-                tomcat.stop();
+        try {
+            // Some tests may call tomcat.destroy(), some tests may just call
+            // tomcat.stop(), some not call either method. Make sure that stop()
+            // & destroy() are called as necessary.
+            if (tomcat.server != null
+                    && tomcat.server.getState() != LifecycleState.DESTROYED) {
+                if (tomcat.server.getState() != LifecycleState.STOPPED) {
+                    tomcat.stop();
+                }
+                tomcat.destroy();
             }
-            tomcat.destroy();
+        } finally {
+            super.tearDown();
         }
-        // Cannot delete the whole tempDir, because logs are there,
-        // and they might be open for writing.
-        // Delete known subdirectories of it.
-        deleteOnTearDown.add(new File(tempDir, "webapps"));
-        deleteOnTearDown.add(new File(tempDir, "work"));
-        for (File file : deleteOnTearDown) {
-            ExpandWar.delete(file);
-        }
-        deleteOnTearDown.clear();
     }
-    
+
     /**
      * Simple Hello World servlet for use by test cases
      */
@@ -238,7 +190,7 @@ public abstract class TomcatBaseTest {
             out.print(RESPONSE_TEXT);
         }
     }
-    
+
 
     /**
      *  Wrapper for getting the response.
@@ -259,13 +211,13 @@ public abstract class TomcatBaseTest {
             Map<String, List<String>> resHead) throws IOException {
         return getUrl(path, out, 1000000, reqHead, resHead);
     }
-    
+
     public static int getUrl(String path, ByteChunk out, int readTimeout,
             Map<String, List<String>> reqHead,
             Map<String, List<String>> resHead) throws IOException {
 
         URL url = new URL(path);
-        HttpURLConnection connection = 
+        HttpURLConnection connection =
             (HttpURLConnection) url.openConnection();
         connection.setUseCaches(false);
         connection.setReadTimeout(readTimeout);
@@ -310,7 +262,7 @@ public abstract class TomcatBaseTest {
         }
         return rc;
     }
-    
+
     public static ByteChunk postUrl(byte[] body, String path)
             throws IOException {
         ByteChunk out = new ByteChunk();
@@ -322,13 +274,13 @@ public abstract class TomcatBaseTest {
             Map<String, List<String>> resHead) throws IOException {
         return postUrl(body, path, out, null, resHead);
     }
-    
+
     public static int postUrl(byte[] body, String path, ByteChunk out,
             Map<String, List<String>> reqHead,
             Map<String, List<String>> resHead) throws IOException {
 
         URL url = new URL(path);
-        HttpURLConnection connection = 
+        HttpURLConnection connection =
             (HttpURLConnection) url.openConnection();
         connection.setDoOutput(true);
         connection.setReadTimeout(1000000);
@@ -346,7 +298,7 @@ public abstract class TomcatBaseTest {
             }
         }
         connection.connect();
-        
+
         // Write the request body
         OutputStream os = null;
         try {

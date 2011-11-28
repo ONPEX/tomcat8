@@ -45,22 +45,27 @@ public class NioSenderTest {
     public NioSenderTest()  {
         // Default constructor
     }
-    
+
     public synchronized int inc() {
         return ++counter;
     }
-    
+
     public synchronized ChannelData getMessage(Member mbr) {
         String msg = "Thread-"+Thread.currentThread().getName()+" Message:"+inc();
         ChannelData data = new ChannelData(true);
         data.setMessage(new XByteBuffer(msg.getBytes(),false));
         data.setAddress(mbr);
-        
+
         return data;
     }
 
     public void init() throws Exception {
-        selector = Selector.open();
+        synchronized (Selector.class) {
+            // Selector.open() isn't thread safe
+            // http://bugs.sun.com/view_bug.do?bug_id=6427854
+            // Affects 1.6.0_29, fixed in 1.7.0_01
+            selector = Selector.open();
+        }
         mbr = new MemberImpl("localhost",4444,0);
         NioSender sender = new NioSender();
         sender.setDestination(mbr);
@@ -102,7 +107,7 @@ public class NioSenderTest {
                         sender.reset();
                         sender.setMessage(XByteBuffer.createDataPackage(getMessage(mbr)));
                     }
-                    
+
 
                 } catch (Throwable t) {
                     t.printStackTrace();

@@ -63,7 +63,7 @@ public class JIoEndpoint extends AbstractEndpoint {
      * Associated server socket.
      */
     protected ServerSocket serverSocket = null;
-    
+
 
     // ------------------------------------------------------------ Constructor
 
@@ -75,13 +75,6 @@ public class JIoEndpoint extends AbstractEndpoint {
 
     // ------------------------------------------------------------- Properties
 
-    /**
-     * Acceptor thread count.
-     */
-    protected int acceptorThreadCount = 0;
-    public void setAcceptorThreadCount(int acceptorThreadCount) { this.acceptorThreadCount = acceptorThreadCount; }
-    public int getAcceptorThreadCount() { return acceptorThreadCount; }
-    
     /**
      * Handling of accepted sockets.
      */
@@ -122,7 +115,7 @@ public class JIoEndpoint extends AbstractEndpoint {
     public interface Handler extends AbstractEndpoint.Handler {
         public SocketState process(SocketWrapper<Socket> socket,
                 SocketStatus status);
-        public SSLImplementation getSslImplementation(); 
+        public SSLImplementation getSslImplementation();
     }
 
 
@@ -155,7 +148,7 @@ public class JIoEndpoint extends AbstractEndpoint {
                         processSocketAsync(socket,SocketStatus.TIMEOUT);
                     }
                 }
-                
+
                 // Loop if endpoint is paused
                 while (paused && running) {
                     try {
@@ -164,18 +157,17 @@ public class JIoEndpoint extends AbstractEndpoint {
                         // Ignore
                     }
                 }
-                
+
             }
         }
     }
 
-    
+
     // --------------------------------------------------- Acceptor Inner Class
     /**
      * Server socket acceptor thread.
      */
-    protected class Acceptor implements Runnable {
-
+    protected class Acceptor extends AbstractEndpoint.Acceptor {
 
         /**
          * The background thread that listens for incoming TCP/IP connections and
@@ -191,8 +183,9 @@ public class JIoEndpoint extends AbstractEndpoint {
 
                 // Loop if endpoint is paused
                 while (paused && running) {
+                    state = AcceptorState.PAUSED;
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(50);
                     } catch (InterruptedException e) {
                         // Ignore
                     }
@@ -201,10 +194,12 @@ public class JIoEndpoint extends AbstractEndpoint {
                 if (!running) {
                     break;
                 }
+                state = AcceptorState.RUNNING;
+
                 try {
                     //if we have reached max connections, wait
                     countUpOrAwaitConnection();
-                    
+
                     Socket socket = null;
                     try {
                         // Accept the next incoming connection from the server
@@ -252,6 +247,7 @@ public class JIoEndpoint extends AbstractEndpoint {
                 }
                 // The processor will recycle itself when it finishes
             }
+            state = AcceptorState.ENDED;
         }
     }
 
@@ -264,10 +260,10 @@ public class JIoEndpoint extends AbstractEndpoint {
      * external Executor thread pool.
      */
     protected class SocketProcessor implements Runnable {
-        
+
         protected SocketWrapper<Socket> socket = null;
         protected SocketStatus status = null;
-        
+
         public SocketProcessor(SocketWrapper<Socket> socket) {
             if (socket==null) throw new NullPointerException();
             this.socket = socket;
@@ -296,7 +292,7 @@ public class JIoEndpoint extends AbstractEndpoint {
                         // Tell to close the socket
                         state = SocketState.CLOSED;
                     }
-                        
+
                     if ((state != SocketState.CLOSED)) {
                         if (status == null) {
                             state = handler.process(socket, SocketStatus.OPEN);
@@ -339,7 +335,7 @@ public class JIoEndpoint extends AbstractEndpoint {
             socket = null;
             // Finish up this request
         }
-        
+
     }
 
 
@@ -388,9 +384,9 @@ public class JIoEndpoint extends AbstractEndpoint {
                 throw be;
             }
         }
-        
+
     }
-    
+
     @Override
     public void startInternal() throws Exception {
 
@@ -402,18 +398,11 @@ public class JIoEndpoint extends AbstractEndpoint {
             if (getExecutor() == null) {
                 createExecutor();
             }
-            
+
             initializeConnectionLatch();
 
-            // Start acceptor threads
-            for (int i = 0; i < acceptorThreadCount; i++) {
-                Thread acceptorThread = new Thread(new Acceptor(),
-                        getName() + "-Acceptor-" + i);
-                acceptorThread.setPriority(threadPriority);
-                acceptorThread.setDaemon(getDaemon());
-                acceptorThread.start();
-            }
-            
+            startAcceptorThreads();
+
             // Start async timeout thread
             Thread timeoutThread = new Thread(new AsyncTimeout(),
                     getName() + "-AsyncTimeout");
@@ -457,6 +446,12 @@ public class JIoEndpoint extends AbstractEndpoint {
     }
 
 
+    @Override
+    protected AbstractEndpoint.Acceptor createAcceptor() {
+        return new Acceptor();
+    }
+
+
     /**
      * Configure the socket.
      */
@@ -480,14 +475,14 @@ public class JIoEndpoint extends AbstractEndpoint {
         return true;
     }
 
-    
+
     /**
      * Process a new connection from a new client. Wraps the socket so
      * keep-alive and other attributes can be tracked and then passes the socket
      * to the executor for processing.
-     * 
+     *
      * @param socket    The socket associated with the client.
-     * 
+     *
      * @return          <code>true</code> if the socket is passed to the
      *                  executor, <code>false</code> if something went wrong or
      *                  if the endpoint is shutting down. Returning
@@ -516,12 +511,12 @@ public class JIoEndpoint extends AbstractEndpoint {
         }
         return true;
     }
-    
-    
+
+
     /**
      * Process an existing async connection. If processing is required, passes
      * the wrapped socket to an executor for processing.
-     * 
+     *
      * @param socket    The socket associated with the client.
      * @param status    Only OPEN and TIMEOUT are used. The others are used for
      *                  Comet requests that are not supported by the BIO (JIO)
@@ -595,5 +590,5 @@ public class JIoEndpoint extends AbstractEndpoint {
             return null;
         }
     }
-    
+
 }

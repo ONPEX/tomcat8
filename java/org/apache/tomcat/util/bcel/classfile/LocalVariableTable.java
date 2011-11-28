@@ -27,7 +27,7 @@ import org.apache.tomcat.util.bcel.Constants;
  * This class represents colection of local variables in a
  * method. This attribute is contained in the <em>Code</em> attribute.
  *
- * @version $Id: LocalVariableTable.java 1154575 2011-08-06 20:19:29Z markt $
+ * @version $Id: LocalVariableTable.java 1181133 2011-10-10 18:49:14Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Code
  * @see LocalVariable
@@ -119,7 +119,7 @@ public class LocalVariableTable extends Attribute {
      */
     @Override
     public final String toString() {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         for (int i = 0; i < local_variable_table_length; i++) {
             buf.append(local_variable_table[i].toString());
             if (i < local_variable_table_length - 1) {
@@ -143,6 +143,4 @@ public class LocalVariableTable extends Attribute {
         c.constant_pool = _constant_pool;
         return c;
     }
-
-
 }

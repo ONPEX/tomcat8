@@ -76,6 +76,18 @@ public class DataSourceLinkFactory extends ResourceLinkFactory {
             DataSourceHandler handler = new DataSourceHandler((DataSource)datasource, username, password);
             return proxyConstructor.newInstance(handler);    
         }catch (Exception x) {
+            if (x instanceof InvocationTargetException) {
+                Throwable cause = x.getCause();
+                if (cause instanceof ThreadDeath) {
+                    throw (ThreadDeath) cause;
+                }
+                if (cause instanceof VirtualMachineError) {
+                    throw (VirtualMachineError) cause;
+                }
+                if (cause instanceof Exception) {
+                    x = (Exception) cause;
+                }
+            }
             if (x instanceof NamingException) throw (NamingException)x;
             else {
                 NamingException nx = new NamingException(x.getMessage());
@@ -114,9 +126,9 @@ public class DataSourceLinkFactory extends ResourceLinkFactory {
             try {
                 return method.invoke(ds,args);
             }catch (Throwable t) {
-                if (t instanceof InvocationTargetException) {
-                    InvocationTargetException it = (InvocationTargetException)t;
-                    throw it.getCause()!=null?it.getCause():it;
+                if (t instanceof InvocationTargetException
+                        && t.getCause() != null) {
+                    throw t.getCause();
                 } else {
                     throw t;
                 }

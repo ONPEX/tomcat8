@@ -23,7 +23,7 @@ package org.apache.tomcat.util.bcel.classfile;
  * method. These factory objects should implement this interface.
 
  * @see Attribute
- * @version $Id: AttributeReader.java 981816 2010-08-03 10:44:58Z markt $
+ * @version $Id: AttributeReader.java 1181133 2011-10-10 18:49:14Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */
 public interface AttributeReader {
@@ -52,6 +52,6 @@ public interface AttributeReader {
      it to construct an attribute.  In the case of errors, a null can be
      returned which will cause the parsing of the class file to fail.
      */
-    public Attribute createAttribute( int name_index, int length, java.io.DataInputStream file,
+    Attribute createAttribute( int name_index, int length, java.io.DataInputStream file,
             ConstantPool constant_pool );
 }

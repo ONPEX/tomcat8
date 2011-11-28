@@ -14,8 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.catalina.connector;
 
 import java.util.Arrays;
@@ -44,7 +42,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: Connector.java 1161340 2011-08-25 00:28:41Z kkolinko $
+ * @version $Id: Connector.java 1200173 2011-11-10 06:11:10Z kkolinko $
  */
 
 
@@ -170,6 +168,13 @@ public class Connector extends LifecycleMBeanBase  {
     protected static final StringManager sm =
         StringManager.getManager(Constants.Package);
 
+
+    /**
+     * The maximum number of parameters (GET plus POST) which will be
+     * automatically parsed by the container. 10000 by default. A value of less
+     * than 0 means no limit.
+     */
+    protected int maxParameterCount = 10000;
 
     /**
      * Maximum size of a POST which will be automatically parsed by the
@@ -343,7 +348,7 @@ public class Connector extends LifecycleMBeanBase  {
 
     }
 
-    
+
     /**
      * Return the default timeout for async requests in ms.
      */
@@ -366,7 +371,7 @@ public class Connector extends LifecycleMBeanBase  {
 
     }
 
-    
+
     /**
      * Return the "enable DNS lookups" flag.
      */
@@ -400,14 +405,34 @@ public class Connector extends LifecycleMBeanBase  {
     }
 
 
-     /**
-      * Return the mapper.
-      */
-     public Mapper getMapper() {
+    /**
+     * Return the mapper.
+     */
+    public Mapper getMapper() {
+        return (mapper);
+    }
 
-         return (mapper);
 
-     }
+    /**
+     * Return the maximum number of parameters (GET plus POST) that will be
+     * automatically parsed by the container. A value of less than 0 means no
+     * limit.
+     */
+    public int getMaxParameterCount() {
+        return maxParameterCount;
+    }
+
+
+    /**
+     * Set the maximum number of parameters (GET plus POST) that will be
+     * automatically parsed by the container. A value of less than 0 means no
+     * limit.
+     *
+     * @param maxParameterCount The new setting
+     */
+    public void setMaxParameterCount(int maxParameterCount) {
+        this.maxParameterCount = maxParameterCount;
+    }
 
 
     /**
@@ -469,11 +494,13 @@ public class Connector extends LifecycleMBeanBase  {
 
         HashSet<String> methodSet = new HashSet<String>();
 
-        if( null != methods )
+        if( null != methods ) {
             methodSet.addAll(Arrays.asList(methods.split("\\s*,\\s*")));
+        }
 
-        if( methodSet.contains("TRACE") )
+        if( methodSet.contains("TRACE") ) {
             throw new IllegalArgumentException(sm.getString("coyoteConnector.parseBodyMethodNoTrace"));
+        }
 
         this.parseBodyMethods = methods;
         this.parseBodyMethodsSet = methodSet;
@@ -528,7 +555,7 @@ public class Connector extends LifecycleMBeanBase  {
         return getProtocolHandlerClassName();
 
     }
-    
+
 
     /**
      * Set the Coyote protocol which will be used by the connector.
@@ -848,7 +875,7 @@ public class Connector extends LifecycleMBeanBase  {
 
 
     protected String createObjectNameKeyProperties(String type) {
-        
+
         Object addressObj = getProperty("address");
 
         StringBuilder sb = new StringBuilder("type=");
@@ -896,14 +923,15 @@ public class Connector extends LifecycleMBeanBase  {
     protected void initInternal() throws LifecycleException {
 
         super.initInternal();
-        
+
         // Initialize adapter
         adapter = new CoyoteAdapter(this);
         protocolHandler.setAdapter(adapter);
 
         // Make sure parseBodyMethodsSet has a default
-        if( null == parseBodyMethodsSet )
+        if( null == parseBodyMethodsSet ) {
             setParseBodyMethods(getParseBodyMethods());
+        }
 
         try {
             protocolHandler.init();
@@ -976,7 +1004,7 @@ public class Connector extends LifecycleMBeanBase  {
     @Override
     protected void destroyInternal() throws LifecycleException {
         mapperListener.destroy();
-        
+
         try {
             protocolHandler.destroy();
         } catch (Exception e) {
@@ -988,7 +1016,7 @@ public class Connector extends LifecycleMBeanBase  {
         if (getService() != null) {
             getService().removeConnector(this);
         }
-        
+
         super.destroyInternal();
     }
 

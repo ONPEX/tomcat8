@@ -29,7 +29,7 @@ import org.apache.juli.logging.LogFactory;
  * Receive replicated SessionMessage form other cluster node.
  * @author Filip Hanik
  * @author Peter Rossbach
- * @version $Id: ClusterSessionListener.java 951992 2010-06-06 21:31:20Z markt $
+ * @version $Id: ClusterSessionListener.java 1195393 2011-10-31 10:22:31Z kfujino $
  */
 public class ClusterSessionListener extends ClusterListener {
 
@@ -88,10 +88,22 @@ public class ClusterSessionListener extends ClusterListener {
                 }
             } else {
                 ClusterManager mgr = managers.get(ctxname);
-                if (mgr != null)
+                if (mgr != null) {
                     mgr.messageDataReceived(msg);
-                else if (log.isWarnEnabled())
-                    log.warn("Context manager doesn't exist:" + ctxname);
+                } else {
+                    if (log.isWarnEnabled())
+                        log.warn("Context manager doesn't exist:" + ctxname);
+
+                    // A no context manager message is replied in order to avoid 
+                    // timeout of GET_ALL_SESSIONS sync phase.  
+                    if (msg.getEventType() == SessionMessage.EVT_GET_ALL_SESSIONS) {
+                        SessionMessage replymsg = new SessionMessageImpl(ctxname,
+                                SessionMessage.EVT_ALL_SESSION_NOCONTEXTMANAGER, 
+                                null, "NO-CONTEXT-MANAGER","NO-CONTEXT-MANAGER-" + ctxname);
+                        cluster.send(replymsg, msg.getAddress());
+                    }
+                }
+                    
             }
         }
         return;

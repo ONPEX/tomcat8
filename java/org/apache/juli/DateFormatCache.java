@@ -21,6 +21,7 @@ package org.apache.juli;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 
 /**
@@ -40,7 +41,7 @@ import java.util.TimeZone;
  * <p>The cache can be created with a parent cache to build a cache hierarchy.
  * Access to the parent cache is threadsafe.</p>
  *
- * @version $Id: DateFormatCache.java 1154574 2011-08-06 20:00:39Z markt $
+ * @version $Id: DateFormatCache.java 1185021 2011-10-17 06:23:02Z rjung $
  */
 
 public class DateFormatCache {
@@ -59,8 +60,8 @@ public class DateFormatCache {
      * Replace the millisecond formatting character 'S' by
      * some dummy characters in order to make the resulting
      * formatted time stamps cacheable. Our consumer might
-     * choose to replace the dummies with the actual milliseconds
-     * because that's relatively cheap.
+     * choose to replace the dummy chars with the actual
+     * milliseconds because that's relatively cheap.
      */
     private String tidyFormat(String format) {
         boolean escape = false;
@@ -123,7 +124,7 @@ public class DateFormatCache {
             for (int i = 0; i < cacheSize; i++) {
                 cache[i] = null;
             }
-            formatter = new SimpleDateFormat(format);
+            formatter = new SimpleDateFormat(format, Locale.US);
             formatter.setTimeZone(TimeZone.getDefault());
             this.parent = parent;
         }

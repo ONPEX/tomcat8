@@ -37,7 +37,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.management.ListenerNotFoundException;
@@ -118,7 +117,6 @@ import org.apache.tomcat.JarScanner;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.modeler.Registry;
 import org.apache.tomcat.util.scan.StandardJarScanner;
-import org.apache.tomcat.util.threads.DedicatedThreadExecutor;
 
 /**
  * Standard implementation of the <b>Context</b> interface.  Each
@@ -127,7 +125,7 @@ import org.apache.tomcat.util.threads.DedicatedThreadExecutor;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardContext.java 1162172 2011-08-26 17:12:33Z markt $
+ * @version $Id: StandardContext.java 1201569 2011-11-14 01:36:07Z kkolinko $
  */
 
 public class StandardContext extends ContainerBase
@@ -859,7 +857,22 @@ public class StandardContext extends ContainerBase
 
     private boolean preemptiveAuthentication = false;
 
+    private boolean sendRedirectBody = false;
+
+    private boolean jndiExceptionOnFailedWrite = true;
+
     // ----------------------------------------------------- Context Properties
+    
+    @Override
+    public boolean getSendRedirectBody() {
+        return sendRedirectBody;
+    }
+
+
+    @Override
+    public void setSendRedirectBody(boolean sendRedirectBody) {
+        this.sendRedirectBody = sendRedirectBody;
+    }
 
 
     @Override
@@ -1263,6 +1276,7 @@ public class StandardContext extends ContainerBase
      * Returns true if the resources associated with this context are
      * filesystem based.
      */
+    @Deprecated
     public boolean isFilesystemBased() {
 
         return (filesystemBased);
@@ -1773,6 +1787,7 @@ public class StandardContext extends ContainerBase
     /**
      * Return the compiler classpath.
      */
+    @Deprecated
     public String getCompilerClasspath(){
         return compilerClasspath;
     }
@@ -1781,6 +1796,7 @@ public class StandardContext extends ContainerBase
     /**
      * Set the compiler classpath.
      */
+    @Deprecated
     public void setCompilerClasspath(String compilerClasspath) {
         this.compilerClasspath = compilerClasspath;
     }
@@ -2250,6 +2266,7 @@ public class StandardContext extends ContainerBase
     /**
      * Return the "replace welcome files" property.
      */
+    @Deprecated
     public boolean isReplaceWelcomeFiles() {
 
         return (this.replaceWelcomeFiles);
@@ -2492,6 +2509,26 @@ public class StandardContext extends ContainerBase
 
     // ------------------------------------------------------ Public Properties
 
+    /**
+     * Returns whether or not an attempt to modify the JNDI context will trigger
+     * an exception or if the request will be ignored.
+     */
+    public boolean getJndiExceptionOnFailedWrite() {
+        return jndiExceptionOnFailedWrite;
+    }
+
+
+    /**
+     * Controls whether or not an attempt to modify the JNDI context will
+     * trigger an exception or if the request will be ignored.
+     *
+     * @param jndiExceptionOnFailedWrite
+     */
+    public void setJndiExceptionOnFailedWrite(
+            boolean jndiExceptionOnFailedWrite) {
+        this.jndiExceptionOnFailedWrite = jndiExceptionOnFailedWrite;
+    }
+
 
     /**
      * Return the Locale to character set mapper class for this Context.
@@ -2572,6 +2609,7 @@ public class StandardContext extends ContainerBase
     /**
      * Save config ?
      */
+    @Deprecated
     public boolean isSaveConfig() {
         return saveConfig;
     }
@@ -2580,6 +2618,7 @@ public class StandardContext extends ContainerBase
     /**
      * Set save config flag.
      */
+    @Deprecated
     public void setSaveConfig(boolean saveConfig) {
         this.saveConfig = saveConfig;
     }
@@ -3491,6 +3530,7 @@ public class StandardContext extends ContainerBase
     /**
      * FIXME: Fooling introspection ...
      */
+    @Deprecated
     public Context findMappingObject() {
         return (Context) getMappingObject();
     }
@@ -4585,6 +4625,7 @@ public class StandardContext extends ContainerBase
                         new ApplicationFilterConfig(this, filterDefs.get(name));
                     filterConfigs.put(name, filterConfig);
                 } catch (Throwable t) {
+                    t = ExceptionUtils.unwrapInvocationTargetException(t);
                     ExceptionUtils.handleThrowable(t);
                     getLogger().error
                         (sm.getString("standardContext.filterStart", name), t);
@@ -4659,6 +4700,7 @@ public class StandardContext extends ContainerBase
             try {
                 results[i] = instanceManager.newInstance(listeners[i]);
             } catch (Throwable t) {
+                t = ExceptionUtils.unwrapInvocationTargetException(t);
                 ExceptionUtils.handleThrowable(t);
                 getLogger().error
                     (sm.getString("standardContext.applicationListener",
@@ -4774,6 +4816,7 @@ public class StandardContext extends ContainerBase
                 try {
                     getInstanceManager().destroyInstance(listeners[j]);
                 } catch (Throwable t) {
+                    t = ExceptionUtils.unwrapInvocationTargetException(t);
                     ExceptionUtils.handleThrowable(t);
                     getLogger().error
                        (sm.getString("standardContext.listenerStop",
@@ -4793,6 +4836,7 @@ public class StandardContext extends ContainerBase
                 try {
                     getInstanceManager().destroyInstance(listeners[j]);
                 } catch (Throwable t) {
+                    t = ExceptionUtils.unwrapInvocationTargetException(t);
                     ExceptionUtils.handleThrowable(t);
                     getLogger().error
                         (sm.getString("standardContext.listenerStop",
@@ -5057,6 +5101,7 @@ public class StandardContext extends ContainerBase
             if (getNamingContextListener() == null) {
                 NamingContextListener ncl = new NamingContextListener();
                 ncl.setName(getNamingContextName());
+                ncl.setExceptionOnFailedWrite(getJndiExceptionOnFailedWrite());
                 addLifecycleListener(ncl);
                 setNamingContextListener(ncl);
             }
@@ -5187,9 +5232,7 @@ public class StandardContext extends ContainerBase
             }
         }
 
-        DedicatedThreadExecutor temporaryExecutor = new DedicatedThreadExecutor();
         try {
-            
             // Create context attributes that will be required
             if (ok) {
                 getServletContext().setAttribute(
@@ -5214,22 +5257,7 @@ public class StandardContext extends ContainerBase
 
             // Configure and call application event listeners
             if (ok) {
-                // we do it in a dedicated thread for memory leak protection, in
-                // case the Listeners registers some ThreadLocals that they
-                // forget to cleanup
-                Boolean listenerStarted =
-                    temporaryExecutor.execute(new Callable<Boolean>() {
-                        @Override
-                        public Boolean call() throws Exception {
-                            ClassLoader old = bindThread();
-                            try {
-                                return Boolean.valueOf(listenerStart());
-                            } finally {
-                                unbindThread(old);
-                            }
-                        }
-                    });
-                if (!listenerStarted.booleanValue()) {
+                if (!listenerStart()) {
                     log.error( "Error listenerStart");
                     ok = false;
                 }
@@ -5250,22 +5278,7 @@ public class StandardContext extends ContainerBase
 
             // Configure and call application filters
             if (ok) {
-                // we do it in a dedicated thread for memory leak protection, in
-                // case the Filters register some ThreadLocals that they forget
-                // to cleanup
-                Boolean filterStarted =
-                    temporaryExecutor.execute(new Callable<Boolean>() {
-                        @Override
-                        public Boolean call() throws Exception {
-                            ClassLoader old = bindThread();
-                            try {
-                                return Boolean.valueOf(filterStart());
-                            } finally {
-                                unbindThread(old);
-                            }
-                        }
-                    });
-                if (!filterStarted.booleanValue()) {
+                if (!filterStart()) {
                     log.error("Error filterStart");
                     ok = false;
                 }
@@ -5273,27 +5286,12 @@ public class StandardContext extends ContainerBase
             
             // Load and initialize all "load on startup" servlets
             if (ok) {
-                // we do it in a dedicated thread for memory leak protection, in
-                // case the Servlets register some ThreadLocals that they forget
-                // to cleanup
-                temporaryExecutor.execute(new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        ClassLoader old = bindThread();
-                        try {
-                            loadOnStartup(findChildren());
-                            return null;
-                        } finally {
-                            unbindThread(old);
-                        }
-                    }
-                });
+                loadOnStartup(findChildren());
             }
             
         } finally {
             // Unbinding thread
             unbindThread(oldCCL);
-            temporaryExecutor.shutdown();
         }
 
         // Set available status depending upon startup success
@@ -5433,61 +5431,28 @@ public class StandardContext extends ContainerBase
 
             // Stop our child containers, if any
             final Container[] children = findChildren();
-            // we do it in a dedicated thread for memory leak protection, in
-            // case some webapp code registers some ThreadLocals that they
-            // forget to cleanup
-            // TODO Figure out why DedicatedThreadExecutor hangs randomly in the
-            //      unit tests if used here
-            RunnableWithLifecycleException stop =
-                    new RunnableWithLifecycleException() {
-                @Override
-                public void run() {
-                    ClassLoader old = bindThread();
-                    try {
-                        for (int i = 0; i < children.length; i++) {
-                            try {
-                                children[i].stop();
-                            } catch (LifecycleException e) {
-                                le = e;
-                                return;
-                            }
-                        }
             
-                        // Stop our filters
-                        filterStop();
-            
-                        // Stop ContainerBackgroundProcessor thread
-                        threadStop();
-            
-                        if (manager != null && manager instanceof Lifecycle &&
-                                ((Lifecycle) manager).getState().isAvailable()) {
-                            try {
-                                ((Lifecycle) manager).stop();
-                            } catch (LifecycleException e) {
-                                le = e;
-                                return;
-                            }
-                        }
-            
-                        // Stop our application listeners
-                        listenerStop();
-                    }finally{
-                        unbindThread(old);
-                    }
-                }
-            };
-            
-            Thread t = new Thread(stop);
-            t.setName("stop children - " + getObjectName().toString());
-            t.start();
+            ClassLoader old = bindThread();
             try {
-                t.join();
-            } catch (InterruptedException e) {
-                // Shouldn't happen
-                throw new LifecycleException(e);
-            }
-            if (stop.getLifecycleException() != null) {
-                throw stop.getLifecycleException();
+                for (int i = 0; i < children.length; i++) {
+                    children[i].stop();
+                }
+            
+                // Stop our filters
+                filterStop();
+            
+                // Stop ContainerBackgroundProcessor thread
+                threadStop();
+            
+                if (manager != null && manager instanceof Lifecycle &&
+                        ((Lifecycle) manager).getState().isAvailable()) {
+                    ((Lifecycle) manager).stop();
+                }
+            
+                // Stop our application listeners
+                listenerStop();
+            } finally{
+                unbindThread(old);
             }
 
             // Finalize our character set mapper
@@ -6353,6 +6318,7 @@ public class StandardContext extends ContainerBase
     /**
      * Return the naming resources associated with this web application.
      */
+    @Deprecated
     public javax.naming.directory.DirContext getStaticResources() {
 
         return getResources();
@@ -6364,6 +6330,7 @@ public class StandardContext extends ContainerBase
      * Return the naming resources associated with this web application.
      * FIXME: Fooling introspection ... 
      */
+    @Deprecated
     public javax.naming.directory.DirContext findStaticResources() {
 
         return getResources();
@@ -6490,6 +6457,7 @@ public class StandardContext extends ContainerBase
         return true;
     }
     
+    @Deprecated
     public void startRecursive() throws LifecycleException {
         // nothing to start recursive, the servlets will be started by load-on-startup
         start();
@@ -6531,21 +6499,13 @@ public class StandardContext extends ContainerBase
         return startTime;
     }
     
+    @Deprecated
     public boolean isEventProvider() {
         return false;
     }
     
+    @Deprecated
     public boolean isStatisticsProvider() {
         return false;
-    }
-
-    private abstract static class RunnableWithLifecycleException
-            implements Runnable {
-        
-        protected LifecycleException le = null;
-        
-        public LifecycleException getLifecycleException() {
-            return le;
-        }
     }
 }

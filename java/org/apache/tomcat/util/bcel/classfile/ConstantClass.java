@@ -28,11 +28,11 @@ import org.apache.tomcat.util.bcel.Constants;
  * <A HREF="org.apache.tomcat.util.bcel.classfile.Constant.html">Constant</A> class 
  * and represents a reference to a (external) class.
  *
- * @version $Id: ConstantClass.java 992409 2010-09-03 18:35:59Z markt $
+ * @version $Id: ConstantClass.java 1181135 2011-10-10 18:51:44Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Constant
  */
-public final class ConstantClass extends Constant implements ConstantObject {
+public final class ConstantClass extends Constant {
 
     private static final long serialVersionUID = -6603658849582876642L;
     private int name_index; // Identical to ConstantString except for the name

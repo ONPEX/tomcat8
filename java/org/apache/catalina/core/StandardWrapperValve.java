@@ -46,7 +46,7 @@ import org.apache.tomcat.util.res.StringManager;
  * <code>StandardWrapper</code> container implementation.
  *
  * @author Craig R. McClanahan
- * @version $Id: StandardWrapperValve.java 1140750 2011-06-28 17:49:25Z markt $
+ * @version $Id: StandardWrapperValve.java 1177979 2011-10-01 13:51:13Z markt $
  */
 
 final class StandardWrapperValve
@@ -349,7 +349,13 @@ final class StandardWrapperValve
         // This should be a Request attribute...
         long t1=System.currentTimeMillis();
         // FIXME: Add a flag to count the total amount of events processed ? requestCount++;
+        
         StandardWrapper wrapper = (StandardWrapper) getContainer();
+        if (wrapper == null) {
+            // Context has been shutdown. Nothing to do here.
+            return;
+        }
+
         Servlet servlet = null;
         Context context = (Context) wrapper.getParent();
 

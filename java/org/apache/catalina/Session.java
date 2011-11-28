@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,7 +31,7 @@ import javax.servlet.http.HttpSession;
  * between requests for a particular user of a web application.
  *
  * @author Craig R. McClanahan
- * @version $Id: Session.java 1094069 2011-04-16 22:25:28Z markt $
+ * @version $Id: Session.java 1200162 2011-11-10 05:37:57Z kkolinko $
  */
 
 public interface Session {
@@ -132,7 +132,7 @@ public interface Session {
      *
      * @param id        The new session identifier
      * @param notify    Should any associated listeners be notified that a new
-     *                      session has been created? 
+     *                      session has been created?
      */
     public void setId(String id, boolean notify);
 

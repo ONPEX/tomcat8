@@ -27,7 +27,7 @@ import org.apache.tomcat.util.bcel.util.BCELComparator;
  * This class represents the field info structure, i.e., the representation 
  * for a variable in the class. See JVM specification for details.
  *
- * @version $Id: Field.java 1057670 2011-01-11 14:52:05Z markt $
+ * @version $Id: Field.java 1181133 2011-10-10 18:49:14Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */
 public final class Field extends FieldOrMethod {
@@ -89,7 +89,7 @@ public final class Field extends FieldOrMethod {
         access = access.equals("") ? "" : (access + " ");
         signature = Utility.signatureToString(getSignature());
         name = getName();
-        StringBuffer buf = new StringBuffer(64);
+        StringBuilder buf = new StringBuilder(64);
         buf.append(access).append(signature).append(" ").append(name);
         ConstantValue cv = getConstantValue();
         if (cv != null) {
