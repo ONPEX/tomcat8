@@ -31,7 +31,7 @@ import org.apache.catalina.connector.Connector;
  * and classes on the system class path.
  *
  * @author Craig R. McClanahan
- * @version $Id: Service.java 1058357 2011-01-12 23:49:18Z markt $
+ * @version $Id: Service.java 1200162 2011-11-10 05:37:57Z kkolinko $
  */
 
 public interface Service extends Lifecycle {
@@ -141,7 +141,7 @@ public interface Service extends Lifecycle {
      * @return Executor
      */
     public Executor getExecutor(String name);
-    
+
     /**
      * Removes an executor from the service
      * @param ex Executor

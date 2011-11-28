@@ -28,7 +28,7 @@ import java.util.Iterator;
  * an <code>&lt;res-env-refy&gt;</code> element in the deployment descriptor.
  *
  * @author Craig R. McClanahan
- * @version $Id: ContextTransaction.java 939305 2010-04-29 13:43:39Z kkolinko $
+ * @version $Id: ContextTransaction.java 1190039 2011-10-27 21:14:53Z markt $
  */
 
 public class ContextTransaction implements Serializable {
@@ -94,12 +94,15 @@ public class ContextTransaction implements Serializable {
     /**
      * The NamingResources with which we are associated (if any).
      */
+    @Deprecated
     protected NamingResources resources = null;
 
+    @Deprecated
     public NamingResources getNamingResources() {
         return (this.resources);
     }
 
+    @Deprecated
     void setNamingResources(NamingResources resources) {
         this.resources = resources;
     }

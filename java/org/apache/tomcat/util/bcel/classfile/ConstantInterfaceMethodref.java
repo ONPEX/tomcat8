@@ -25,7 +25,7 @@ import org.apache.tomcat.util.bcel.Constants;
 /** 
  * This class represents a constant pool reference to an interface method.
  *
- * @version $Id: ConstantInterfaceMethodref.java 992409 2010-09-03 18:35:59Z markt $
+ * @version $Id: ConstantInterfaceMethodref.java 1181133 2011-10-10 18:49:14Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */
 public final class ConstantInterfaceMethodref extends ConstantCP {
@@ -42,6 +42,4 @@ public final class ConstantInterfaceMethodref extends ConstantCP {
     ConstantInterfaceMethodref(DataInputStream file) throws IOException {
         super(Constants.CONSTANT_InterfaceMethodref, file);
     }
-
-
 }

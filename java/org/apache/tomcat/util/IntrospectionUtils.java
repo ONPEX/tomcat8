@@ -30,20 +30,20 @@ import java.util.Hashtable;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-// Depends: JDK1.1
-
 /**
  * Utils for introspection and reflection
  */
 public final class IntrospectionUtils {
 
-    
+
     private static final org.apache.juli.logging.Log log=
         org.apache.juli.logging.LogFactory.getLog( IntrospectionUtils.class );
-    
+
     /**
      * Call execute() - any ant-like task should work
+     * @deprecated Not used
      */
+    @Deprecated
     public static void execute(Object proxy, String method) throws Exception {
         Method executeM = null;
         Class<?> c = proxy.getClass();
@@ -58,7 +58,9 @@ public final class IntrospectionUtils {
 
     /**
      * Call void setAttribute( String ,Object )
+     * @deprecated Not used
      */
+    @Deprecated
     public static void setAttribute(Object proxy, String n, Object v)
             throws Exception {
         if (proxy instanceof AttributeHolder) {
@@ -85,7 +87,9 @@ public final class IntrospectionUtils {
 
     /**
      * Call void getAttribute( String )
+     * @deprecated Not used
      */
+    @Deprecated
     public static Object getAttribute(Object proxy, String n) throws Exception {
         Method executeM = null;
         Class<?> c = proxy.getClass();
@@ -102,7 +106,9 @@ public final class IntrospectionUtils {
 
     /**
      * Construct a URLClassLoader. Will compile and work in JDK1.1 too.
+     * @deprecated Not used
      */
+    @Deprecated
     public static ClassLoader getURLClassLoader(URL urls[], ClassLoader parent) {
         try {
             Class<?> urlCL = Class.forName("java.net.URLClassLoader");
@@ -134,7 +140,7 @@ public final class IntrospectionUtils {
      * Guess a product install/home by analyzing the class path. It works for
      * product using the pattern: lib/executable.jar or if executable.jar is
      * included in classpath by a shell script. ( java -jar also works )
-     * 
+     *
      * Insures both "install" and "home" System properties are set. If either or
      * both System properties are unset, "install" and "home" will be set to the
      * same value. This value will be the other System property that is set, or
@@ -221,7 +227,9 @@ public final class IntrospectionUtils {
 
     /**
      * Debug method, display the classpath
+     * @deprecated Not used
      */
+    @Deprecated
     public static void displayClassPath(String msg, URL[] cp) {
         if (log.isDebugEnabled()) {
             log.debug(msg);
@@ -231,6 +239,10 @@ public final class IntrospectionUtils {
         }
     }
 
+    /**
+     * @deprecated Used only by deprecated method
+     */
+    @Deprecated
     public static final String PATH_SEPARATOR = System.getProperty("path.separator");
 
     /**
@@ -238,7 +250,9 @@ public final class IntrospectionUtils {
      * property. This System property lists the classpath entries common to web
      * applications. This System property is currently used by Jasper when its
      * JSP servlet compiles the Java file for a JSP.
+     * @deprecated Not used
      */
+    @Deprecated
     public static String classPathAdd(URL urls[], String cp) {
         if (urls == null)
             return cp;
@@ -345,9 +359,9 @@ public final class IntrospectionUtils {
                     if (methods[i].getReturnType()==Boolean.TYPE){
                         setPropertyMethodBool = methods[i];
                     }else {
-                        setPropertyMethodVoid = methods[i];    
+                        setPropertyMethodVoid = methods[i];
                     }
-                    
+
                 }
             }
 
@@ -359,7 +373,8 @@ public final class IntrospectionUtils {
                 params[1] = value;
                 if (setPropertyMethodBool != null) {
                     try {
-                        return (Boolean) setPropertyMethodBool.invoke(o, params);
+                        return ((Boolean) setPropertyMethodBool.invoke(o,
+                                params)).booleanValue();
                     }catch (IllegalArgumentException biae) {
                         //the boolean method had the wrong
                         //parameter types. lets try the other
@@ -387,6 +402,7 @@ public final class IntrospectionUtils {
                 log.debug("IntrospectionUtils: IllegalAccessException for " +
                         o.getClass() + " " + name + "=" + value + ")", iae);
         } catch (InvocationTargetException ie) {
+            ExceptionUtils.handleThrowable(ie.getCause());
             if (log.isDebugEnabled())
                 log.debug("IntrospectionUtils: InvocationTargetException for " +
                         o.getClass() + " " + name + "=" + value + ")", ie);
@@ -435,6 +451,7 @@ public final class IntrospectionUtils {
                 log.debug("IntrospectionUtils: IllegalAccessException for " +
                         o.getClass() + " " + name + ")", iae);
         } catch (InvocationTargetException ie) {
+            ExceptionUtils.handleThrowable(ie.getCause());
             if (log.isDebugEnabled())
                 log.debug("IntrospectionUtils: InvocationTargetException for " +
                         o.getClass() + " " + name + ")");
@@ -442,8 +459,10 @@ public final class IntrospectionUtils {
         return null;
     }
 
-    /** 
+    /**
+     * @deprecated Not used
      */
+    @Deprecated
     public static void setProperty(Object o, String name) {
         String setter = "set" + capitalize(name);
         try {
@@ -529,6 +548,10 @@ public final class IntrospectionUtils {
         return new String(chars);
     }
 
+    /**
+     * @deprecated Not used
+     */
+    @Deprecated
     public static String unCapitalize(String name) {
         if (name == null || name.length() == 0) {
             return name;
@@ -543,7 +566,9 @@ public final class IntrospectionUtils {
     /**
      * Add all the jar files in a dir to the classpath, represented as a Vector
      * of URLs.
+     * @deprecated Is used only by deprecated method
      */
+    @Deprecated
     public static void addToClassPath(Vector<URL> cpV, String dir) {
         try {
             String cpComp[] = getFilesByExt(dir, ".jar");
@@ -560,6 +585,10 @@ public final class IntrospectionUtils {
         }
     }
 
+    /**
+     * @deprecated Is used only by deprecated method
+     */
+    @Deprecated
     public static void addToolsJar(Vector<URL> v) {
         try {
             // Add tools.jar in any case
@@ -587,7 +616,9 @@ public final class IntrospectionUtils {
 
     /**
      * Return all files with a given extension in a dir
+     * @deprecated Is used only by deprecated method
      */
+    @Deprecated
     public static String[] getFilesByExt(String ld, String ext) {
         File dir = new File(ld);
         String[] names = null;
@@ -608,7 +639,9 @@ public final class IntrospectionUtils {
 
     /**
      * Construct a file url from a file, using a base dir
+     * @deprecated Is used only by deprecated method
      */
+    @Deprecated
     public static URL getURL(String base, String file) {
         try {
             File baseF = new File(base);
@@ -630,13 +663,15 @@ public final class IntrospectionUtils {
      * Add elements from the classpath <i>cp </i> to a Vector <i>jars </i> as
      * file URLs (We use Vector for JDK 1.1 compat).
      * <p>
-     * 
+     *
      * @param jars The jar list
      * @param cp a String classpath of directory or jar file elements
      *   separated by path.separator delimiters.
      * @throws IOException If an I/O error occurs
      * @throws MalformedURLException Doh ;)
+     * @deprecated Is used only by deprecated method
      */
+    @Deprecated
     public static void addJarsFromClassPath(Vector<URL> jars, String cp)
             throws IOException, MalformedURLException {
         String sep = System.getProperty("path.separator");
@@ -659,7 +694,9 @@ public final class IntrospectionUtils {
 
     /**
      * Return a URL[] that can be used to construct a class loader
+     * @deprecated Is used only by deprecated method
      */
+    @Deprecated
     public static URL[] getClassPath(Vector<URL> v) {
         URL[] urls = new URL[v.size()];
         for (int i = 0; i < v.size(); i++) {
@@ -671,7 +708,9 @@ public final class IntrospectionUtils {
     /**
      * Construct a URL classpath from files in a directory, a cpath property,
      * and tools.jar.
+     * @deprecated Not used
      */
+    @Deprecated
     public static URL[] getClassPath(String dir, String cpath,
             String cpathProp, boolean addTools) throws IOException,
             MalformedURLException {
@@ -702,7 +741,7 @@ public final class IntrospectionUtils {
     public static void clear() {
         objectMethods.clear();
     }
-    
+
     static Hashtable<Class<?>,Method[]> objectMethods =
         new Hashtable<Class<?>,Method[]>();
 
@@ -748,7 +787,9 @@ public final class IntrospectionUtils {
 
     /** Test if the object implements a particular
      *  method
+     * @deprecated Not used
      */
+    @Deprecated
     public static boolean hasHook(Object obj, String methodN) {
         try {
             Method myMethods[] = findMethods(obj.getClass());
@@ -774,6 +815,10 @@ public final class IntrospectionUtils {
         return false;
     }
 
+    /**
+     * @deprecated Not used
+     */
+    @Deprecated
     public static void callMain(Class<?> c, String args[]) throws Exception {
         Class<?> p[] = new Class[1];
         p[0] = args.getClass();
@@ -802,9 +847,18 @@ public final class IntrospectionUtils {
         if (m == null)
             throw new NoSuchMethodException(target.getClass().getName() + " "
                     + methodN);
-        return m.invoke(target, new Object[] { param1 });
+        try {
+            return m.invoke(target, new Object[] { param1 });
+        } catch (InvocationTargetException ie) {
+            ExceptionUtils.handleThrowable(ie.getCause());
+            throw ie;
+        }
     }
 
+    /**
+     * @deprecated Not used, though compliments callMethod1 and callMethodN here
+     */
+    @Deprecated
     public static Object callMethod0(Object target, String methodN)
             throws Exception {
         if (target == null) {
@@ -822,10 +876,19 @@ public final class IntrospectionUtils {
         if (m == null)
             throw new NoSuchMethodException(target.getClass().getName() + " "
                     + methodN);
-        return m.invoke(target, emptyArray);
+        try {
+            return m.invoke(target, emptyArray);
+        } catch (InvocationTargetException ie) {
+            ExceptionUtils.handleThrowable(ie.getCause());
+            throw ie;
+        }
     }
 
-    static Object[] emptyArray = new Object[] {};
+    /**
+     * @deprecated Used only by deprecated method
+     */
+    @Deprecated
+    private static final Object[] emptyArray = new Object[] {};
 
     public static Object callMethodN(Object target, String methodN,
             Object params[], Class<?> typeParams[]) throws Exception {
@@ -837,21 +900,27 @@ public final class IntrospectionUtils {
                         " in " + target + " CLASS " + target.getClass());
             return null;
         }
-        Object o = m.invoke(target, params);
+        try {
+            Object o = m.invoke(target, params);
 
-        if (log.isDebugEnabled()) {
-            // debug
-            StringBuilder sb = new StringBuilder();
-            sb.append("" + target.getClass().getName() + "." + methodN + "( ");
-            for (int i = 0; i < params.length; i++) {
-                if (i > 0)
-                    sb.append(", ");
-                sb.append(params[i]);
+            if (log.isDebugEnabled()) {
+                // debug
+                StringBuilder sb = new StringBuilder();
+                sb.append(target.getClass().getName()).append('.')
+                        .append(methodN).append("( ");
+                for (int i = 0; i < params.length; i++) {
+                    if (i > 0)
+                        sb.append(", ");
+                    sb.append(params[i]);
+                }
+                sb.append(")");
+                log.debug("IntrospectionUtils:" + sb.toString());
             }
-            sb.append(")");
-            log.debug("IntrospectionUtils:" + sb.toString());
+            return o;
+        } catch (InvocationTargetException ie) {
+            ExceptionUtils.handleThrowable(ie.getCause());
+            throw ie;
         }
-        return o;
     }
 
     public static Object convert(String object, Class<?> paramType) {
@@ -891,7 +960,7 @@ public final class IntrospectionUtils {
         }
         return result;
     }
-    
+
     // -------------------- Get property --------------------
     // This provides a layer of abstraction
 
@@ -901,6 +970,10 @@ public final class IntrospectionUtils {
 
     }
 
+    /**
+     * @deprecated Is used only by deprecated method
+     */
+    @Deprecated
     public static interface AttributeHolder {
 
         public void setAttribute(String key, Object o);

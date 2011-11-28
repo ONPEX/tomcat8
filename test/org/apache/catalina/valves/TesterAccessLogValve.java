@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,13 +22,19 @@ import java.util.List;
 
 import javax.servlet.ServletException;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import org.apache.catalina.AccessLog;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 
 public class TesterAccessLogValve extends ValveBase implements AccessLog {
 
-    private List<Entry> entries = new ArrayList<Entry>();
+    // Timing tests need a small error margin to prevent failures
+    private static final long ERROR_MARGIN = 10;
+
+    private final List<Entry> entries = new ArrayList<Entry>();
 
     public TesterAccessLogValve() {
         // Async requests are supported
@@ -59,14 +65,30 @@ public class TesterAccessLogValve extends ValveBase implements AccessLog {
         getNext().invoke(request, response);
     }
 
-    public List<Entry> getEntries() {
-        return entries;
+    public void validateAccessLog(int count, int status, long minTime,
+            long maxTime) throws Exception {
+
+        // Wait (but not too long) until all expected entries appear (access log
+        // entry will be made after response has been returned to user)
+        for (int i = 0; i < 10 && entries.size() < count; i++) {
+            Thread.sleep(100);
+        }
+
+        assertEquals(count, entries.size());
+        for (int j = 0; j < count; j++) {
+            Entry entry = entries.get(j);
+            assertEquals(status, entry.getStatus());
+            assertTrue(entry.toString(),
+                    entry.getTime() >= minTime - ERROR_MARGIN);
+            assertTrue(entry.toString(),
+                    entry.getTime() < maxTime + ERROR_MARGIN);
+        }
     }
 
     public static class Entry {
-        private String uri;
-        private int status;
-        private long time;
+        private final String uri;
+        private final int status;
+        private final long time;
 
         public Entry(String uri, int status, long time) {
             this.uri = uri;

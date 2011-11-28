@@ -59,14 +59,14 @@
     <attributes>
 
       <attribute name="backgroundProcessorDelay" required="false">
-        <p>This value represents the delay in seconds between the 
-        invocation of the backgroundProcess method on this engine and 
-        its child containers, including all hosts and contexts. 
-        Child containers will not be invoked if their delay value is not 
-        negative (which would mean they are using their own processing 
-        thread). Setting this to a positive value will cause 
-        a thread to be spawn. After waiting the specified amount of time, 
-        the thread will invoke the backgroundProcess method on this engine 
+        <p>This value represents the delay in seconds between the
+        invocation of the backgroundProcess method on this engine and
+        its child containers, including all hosts and contexts.
+        Child containers will not be invoked if their delay value is not
+        negative (which would mean they are using their own processing
+        thread). Setting this to a positive value will cause
+        a thread to be spawn. After waiting the specified amount of time,
+        the thread will invoke the backgroundProcess method on this engine
         and all its child containers. If not specified, the default value for
         this attribute is 10, which represent a 10 seconds delay.</p>
       </attribute>
@@ -100,6 +100,17 @@
         using multiple <a href="service.html">Service</a> elements in the same
         <a href="server.html">Server</a>, each Engine MUST be assigned a unique
         name.</em></p>
+      </attribute>
+
+      <attribute name="startStopThreads" required="false">
+        <p>The number of threads this <strong>Engine</strong> will use to start
+        child <a href="host.html">Host</a> elements in parallel. The special
+        value of 0 will result in the value of
+        <code>Runtime.getRuntime().availableProcessors()</code> being used.
+        Negative values will result in
+        <code>Runtime.getRuntime().availableProcessors() + value</code> being
+        used unless this is less than 1 in which case 1 thread will be used. If
+        not specified, the default value of 1 will be used. </p>
       </attribute>
 
     </attributes>
@@ -153,7 +164,7 @@
 
   <subsection name="Logging">
 
-    <p>An engine is associated with the 
+    <p>An engine is associated with the
        <code>org.apache.catalina.core.ContainerBase.[enginename]</code>
        log category.  Note that the brackets are actually part of the name,
        don't omit them.</p>

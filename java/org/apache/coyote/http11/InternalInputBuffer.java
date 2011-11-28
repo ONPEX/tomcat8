@@ -260,6 +260,10 @@ public class InternalInputBuffer extends AbstractInputBuffer<Socket> {
     @Override
     public boolean parseHeaders()
         throws IOException {
+        if (!parsingHeader) {
+            throw new IllegalStateException(
+                    sm.getString("iib.parseheaders.ise.error"));
+        }
 
         while (parseHeader()) {
             // Loop until we run out of headers
@@ -296,11 +300,11 @@ public class InternalInputBuffer extends AbstractInputBuffer<Socket> {
 
             chr = buf[pos];
 
-            if ((chr == Constants.CR) || (chr == Constants.LF)) {
-                if (chr == Constants.LF) {
-                    pos++;
-                    return false;
-                }
+            if (chr == Constants.CR) {
+                // Skip
+            } else if (chr == Constants.LF) {
+                pos++;
+                return false;
             } else {
                 break;
             }

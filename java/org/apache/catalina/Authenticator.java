@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,11 +32,11 @@ import org.apache.catalina.deploy.LoginConfig;
  * provides some sort of authentication service.
  *
  * @author Craig R. McClanahan
- * @version $Id: Authenticator.java 1005834 2010-10-08 14:02:05Z markt $
+ * @version $Id: Authenticator.java 1200156 2011-11-10 05:30:28Z kkolinko $
  */
 
 public interface Authenticator {
-    
+
     /**
      * Authenticate the user making this request, based on the specified
      * login configuration.  Return <code>true</code> if any specified
@@ -52,7 +52,7 @@ public interface Authenticator {
      */
     public boolean authenticate(Request request, HttpServletResponse response,
             LoginConfig config) throws IOException;
-    
+
     public void login(String userName, String password, Request request)
             throws ServletException;
 

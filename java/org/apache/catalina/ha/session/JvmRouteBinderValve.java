@@ -87,7 +87,7 @@ import org.apache.tomcat.util.res.StringManager;
  * requested sessions are migrated.
  * 
  * @author Peter Rossbach
- * @version $Id: JvmRouteBinderValve.java 1133177 2011-06-07 22:14:52Z markt $
+ * @version $Id: JvmRouteBinderValve.java 1187152 2011-10-21 01:26:04Z kfujino $
  */
 public class JvmRouteBinderValve extends ValveBase implements ClusterValve {
 
@@ -411,7 +411,7 @@ public class JvmRouteBinderValve extends ValveBase implements ClusterValve {
     protected void sendSessionIDClusterBackup(Request request, String sessionId,
             String newSessionID) {
         CatalinaCluster c = getCluster();
-        if (c != null) {
+        if (c != null && !(getManager(request) instanceof BackupManager)) {
             SessionIDMessage msg = new SessionIDMessage();
             msg.setOrignalSessionID(sessionId);
             msg.setBackupSessionID(newSessionID);

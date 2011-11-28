@@ -29,7 +29,7 @@ import org.apache.tomcat.util.bcel.Constants;
  * local variables and the the of stack items at a given byte code offset.
  * See CLDC specification &sect;5.3.1.2
  *
- * @version $Id: StackMapTableEntry.java 1059614 2011-01-16 16:50:25Z markt $
+ * @version $Id: StackMapTableEntry.java 1181133 2011-10-10 18:49:14Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     StackMap
  * @see     StackMapType
@@ -154,7 +154,7 @@ public final class StackMapTableEntry implements Cloneable, Serializable {
      */
     @Override
     public final String toString() {
-        StringBuffer buf = new StringBuffer(64);
+        StringBuilder buf = new StringBuilder(64);
         buf.append("(");
         if (frame_type >= Constants.SAME_FRAME && frame_type <= Constants.SAME_FRAME_MAX) {
             buf.append("SAME");
@@ -209,6 +209,4 @@ public final class StackMapTableEntry implements Cloneable, Serializable {
         }
         return null;
     }
-
-
 }

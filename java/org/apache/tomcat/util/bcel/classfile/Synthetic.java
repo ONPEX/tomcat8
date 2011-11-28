@@ -32,7 +32,7 @@ import org.apache.tomcat.util.bcel.Constants;
  * is intended to be instantiated from the
  * <em>Attribute.readAttribute()</em> method.
  *
- * @version $Id: Synthetic.java 1057670 2011-01-11 14:52:05Z markt $
+ * @version $Id: Synthetic.java 1181133 2011-10-10 18:49:14Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Attribute
  */
@@ -95,7 +95,7 @@ public final class Synthetic extends Attribute {
      */
     @Override
     public final String toString() {
-        StringBuffer buf = new StringBuffer("Synthetic");
+        StringBuilder buf = new StringBuilder("Synthetic");
         if (length > 0) {
             buf.append(" ").append(Utility.toHexString(bytes));
         }

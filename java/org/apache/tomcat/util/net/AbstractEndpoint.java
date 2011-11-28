@@ -30,6 +30,7 @@ import javax.net.ssl.KeyManagerFactory;
 
 import org.apache.juli.logging.Log;
 import org.apache.tomcat.util.IntrospectionUtils;
+import org.apache.tomcat.util.net.AbstractEndpoint.Acceptor.AcceptorState;
 import org.apache.tomcat.util.res.StringManager;
 import org.apache.tomcat.util.threads.LimitLatch;
 import org.apache.tomcat.util.threads.ResizableExecutor;
@@ -56,14 +57,14 @@ public abstract class AbstractEndpoint {
             //      ASYNC_END (if possible)
             OPEN, CLOSED, LONG, ASYNC_END, SENDFILE
         }
-        
+
 
         /**
          * Obtain the GlobalRequestProcessor associated with the handler.
          */
         public Object getGlobal();
-        
-        
+
+
         /**
          * Recycle resources associated with the handler.
          */
@@ -72,6 +73,25 @@ public abstract class AbstractEndpoint {
 
     protected enum BindState {
         UNBOUND, BOUND_ON_INIT, BOUND_ON_START
+    }
+
+    public abstract static class Acceptor implements Runnable {
+        public enum AcceptorState {
+            NEW, RUNNING, PAUSED, ENDED
+        }
+
+        protected volatile AcceptorState state = AcceptorState.NEW;
+        public final AcceptorState getState() {
+            return state;
+        }
+
+        private String threadName;
+        protected final void setThreadName(final String threadName) {
+            this.threadName = threadName;
+        }
+        protected final String getThreadName() {
+            return threadName;
+        }
     }
 
     private static final int INITIAL_ERROR_DELAY = 50;
@@ -109,8 +129,33 @@ public abstract class AbstractEndpoint {
         return socketProperties;
     }
 
+    /**
+     * Threads used to accept new connections and pass them to worker threads.
+     */
+    protected Acceptor[] acceptors;
+
 
     // ----------------------------------------------------------------- Properties
+
+    /**
+     * Acceptor thread count.
+     */
+    protected int acceptorThreadCount = 0;
+    public void setAcceptorThreadCount(int acceptorThreadCount) {
+        this.acceptorThreadCount = acceptorThreadCount;
+    }
+    public int getAcceptorThreadCount() { return acceptorThreadCount; }
+
+
+    /**
+     * Priority of the acceptor threads.
+     */
+    protected int acceptorThreadPriority = Thread.NORM_PRIORITY;
+    public void setAcceptorThreadPriority(int acceptorThreadPriority) {
+        this.acceptorThreadPriority = acceptorThreadPriority;
+    }
+    public int getAcceptorThreadPriority() { return acceptorThreadPriority; }
+
 
     private int maxConnections = 10000;
     public void setMaxConnections(int maxCon) {
@@ -162,7 +207,7 @@ public abstract class AbstractEndpoint {
      * Controls when the Endpoint binds the port. <code>true</code>, the default
      * binds the port on {@link #init()} and unbinds it on {@link #destroy()}.
      * If set to <code>false</code> the port is bound on {@link #start()} and
-     * unbound on {@link #stop()}.  
+     * unbound on {@link #stop()}.
      */
     private boolean bindOnInit = true;
     public boolean getBindOnInit() { return bindOnInit; }
@@ -306,7 +351,7 @@ public abstract class AbstractEndpoint {
      */
     protected HashMap<String, Object> attributes =
         new HashMap<String, Object>();
-    /** 
+    /**
      * Generic property setter called when a property for which a specific
      * setter already exists within the
      * {@link org.apache.coyote.ProtocolHandler} needs to be made available to
@@ -351,7 +396,7 @@ public abstract class AbstractEndpoint {
     public String getProperty(String name) {
         return (String) getAttribute(name);
     }
-    
+
     /**
      * Return the amount of threads that are managed by the pool.
      *
@@ -463,6 +508,16 @@ public abstract class AbstractEndpoint {
             if (getLog().isDebugEnabled()) {
                 getLog().debug("Socket unlock completed for:"+saddr);
             }
+
+            // Wait for upto 1000ms acceptor threads to unlock
+            long waitLeft = 1000;
+            for (Acceptor acceptor : acceptors) {
+                while (waitLeft > 0 &&
+                        acceptor.getState() == AcceptorState.RUNNING) {
+                    Thread.sleep(50);
+                    waitLeft -= 50;
+                }
+            }
         } catch(Exception e) {
             if (getLog().isDebugEnabled()) {
                 getLog().debug(sm.getString("endpoint.debug.unlock", "" + getPort()), e);
@@ -499,7 +554,7 @@ public abstract class AbstractEndpoint {
             bindState = BindState.BOUND_ON_INIT;
         }
     }
-    
+
     public final void start() throws Exception {
         if (bindState == BindState.UNBOUND) {
             bind();
@@ -508,6 +563,26 @@ public abstract class AbstractEndpoint {
         startInternal();
     }
 
+    protected final void startAcceptorThreads() {
+        int count = getAcceptorThreadCount();
+        acceptors = new Acceptor[count];
+
+        for (int i = 0; i < count; i++) {
+            acceptors[i] = createAcceptor();
+            Thread t = new Thread(acceptors[i], getName() + "-Acceptor-" + i);
+            t.setPriority(getAcceptorThreadPriority());
+            t.setDaemon(getDaemon());
+            t.start();
+        }
+    }
+
+
+    /**
+     * Hook to allow Endpoints to provide a specific Acceptor implementation.
+     */
+    protected abstract Acceptor createAcceptor();
+
+
     /**
      * Pause the endpoint, which will stop it accepting new connections.
      */
@@ -515,12 +590,6 @@ public abstract class AbstractEndpoint {
         if (running && !paused) {
             paused = true;
             unlockAccept();
-            // Heuristic: Sleep for a while to ensure pause of the endpoint
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                // Ignore
-            }
         }
     }
 
@@ -571,25 +640,25 @@ public abstract class AbstractEndpoint {
     public abstract boolean getUseComet();
     public abstract boolean getUseCometTimeout();
     public abstract boolean getUsePolling();
-    
+
     protected LimitLatch initializeConnectionLatch() {
         if (connectionLimitLatch==null) {
             connectionLimitLatch = new LimitLatch(getMaxConnections());
         }
         return connectionLimitLatch;
     }
-    
+
     protected void releaseConnectionLatch() {
         LimitLatch latch = connectionLimitLatch;
         if (latch!=null) latch.releaseAll();
         connectionLimitLatch = null;
     }
-    
+
     protected void countUpOrAwaitConnection() throws InterruptedException {
         LimitLatch latch = connectionLimitLatch;
         if (latch!=null) latch.countUpOrAwait();
     }
-    
+
     protected long countDownConnection() {
         LimitLatch latch = connectionLimitLatch;
         if (latch!=null) {
@@ -600,14 +669,14 @@ public abstract class AbstractEndpoint {
             return result;
         } else return -1;
     }
-    
+
     /**
      * Provides a common approach for sub-classes to handle exceptions where a
      * delay is required to prevent a Thread from entering a tight loop which
      * will consume CPU and may also trigger large amounts of logging. For
      * example, this can happen with the Acceptor thread if the ulimit for open
      * files is reached.
-     * 
+     *
      * @param currentErrorDelay The current delay beign applied on failure
      * @return  The delay to apply on the next failure
      */
@@ -620,7 +689,7 @@ public abstract class AbstractEndpoint {
                 // Ignore
             }
         }
-        
+
         // On subsequent exceptions, start the delay at 50ms, doubling the delay
         // on every subsequent exception until the delay reaches 1.6 seconds.
         if (currentErrorDelay == 0) {

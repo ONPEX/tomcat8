@@ -53,7 +53,7 @@ import org.apache.tomcat.util.res.StringManager;
  * track of deltas during a request.
  *
  * @author Filip Hanik
- * @version $Id: DeltaSession.java 1175194 2011-09-24 16:32:19Z rjung $
+ * @version $Id: DeltaSession.java 1189393 2011-10-26 19:10:25Z kkolinko $
  */
 
 public class DeltaSession extends StandardSession implements Externalizable,ClusterSession,ReplicatedMapEntry {
@@ -263,7 +263,7 @@ public class DeltaSession extends StandardSession implements Externalizable,Clus
      */
     @Override
     public void setId(String id) {
-        super.setId(id);
+        super.setId(id, true);
         resetDeltaRequest();
     }
 

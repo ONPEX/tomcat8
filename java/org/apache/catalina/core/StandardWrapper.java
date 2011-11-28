@@ -21,11 +21,13 @@ package org.apache.catalina.core;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.management.ListenerNotFoundException;
 import javax.management.MBeanNotificationInfo;
@@ -59,7 +61,6 @@ import org.apache.catalina.LifecycleState;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.mbeans.MBeanUtils;
 import org.apache.catalina.security.SecurityUtil;
-import org.apache.catalina.util.Enumerator;
 import org.apache.catalina.util.InstanceSupport;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
@@ -76,7 +77,7 @@ import org.apache.tomcat.util.modeler.Registry;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardWrapper.java 1152621 2011-07-31 19:34:14Z markt $
+ * @version $Id: StandardWrapper.java 1201569 2011-11-14 01:36:07Z kkolinko $
  */
 @SuppressWarnings("deprecation") // SingleThreadModel
 public class StandardWrapper extends ContainerBase
@@ -289,10 +290,21 @@ public class StandardWrapper extends ContainerBase
      * Static class array used when the SecurityManager is turned on and 
      * <code>Servlet.service</code>  is invoked.
      */                                                 
+    @Deprecated
     protected static Class<?>[] classTypeUsedInService = new Class[]{
                                                          ServletRequest.class,
                                                          ServletResponse.class};
     
+
+    private final ReentrantReadWriteLock parametersLock =
+            new ReentrantReadWriteLock();
+
+    private final ReentrantReadWriteLock mappingsLock =
+            new ReentrantReadWriteLock();
+
+    private final ReentrantReadWriteLock referencesLock =
+            new ReentrantReadWriteLock();
+
 
     // ------------------------------------------------------------- Properties
 
@@ -743,8 +755,11 @@ public class StandardWrapper extends ContainerBase
     @Override
     public void addInitParameter(String name, String value) {
 
-        synchronized (parameters) {
+        try {
+            parametersLock.writeLock().lock();
             parameters.put(name, value);
+        } finally {
+            parametersLock.writeLock().unlock();
         }
         fireContainerEvent("addInitParameter", name);
 
@@ -772,8 +787,11 @@ public class StandardWrapper extends ContainerBase
     @Override
     public void addMapping(String mapping) {
 
-        synchronized (mappings) {
+        try {
+            mappingsLock.writeLock().lock();
             mappings.add(mapping);
+        } finally {
+            mappingsLock.writeLock().unlock();
         }
         if(parent.getState().equals(LifecycleState.STARTED))
             fireContainerEvent(ADD_MAPPING_EVENT, mapping);
@@ -791,8 +809,11 @@ public class StandardWrapper extends ContainerBase
     @Override
     public void addSecurityReference(String name, String link) {
 
-        synchronized (references) {
+        try {
+            referencesLock.writeLock().lock();
             references.put(name, link);
+        } finally {
+            referencesLock.writeLock().unlock();
         }
         fireContainerEvent("addSecurityReference", name);
 
@@ -947,8 +968,11 @@ public class StandardWrapper extends ContainerBase
     @Override
     public String findInitParameter(String name) {
 
-        synchronized (parameters) {
+        try {
+            parametersLock.readLock().lock();
             return parameters.get(name);
+        } finally {
+            parametersLock.readLock().unlock();
         }
 
     }
@@ -961,9 +985,12 @@ public class StandardWrapper extends ContainerBase
     @Override
     public String[] findInitParameters() {
 
-        synchronized (parameters) {
+        try {
+            parametersLock.readLock().lock();
             String results[] = new String[parameters.size()];
             return parameters.keySet().toArray(results);
+        } finally {
+            parametersLock.readLock().unlock();
         }
 
     }
@@ -975,8 +1002,11 @@ public class StandardWrapper extends ContainerBase
     @Override
     public String[] findMappings() {
 
-        synchronized (mappings) {
+        try {
+            mappingsLock.readLock().lock();
             return mappings.toArray(new String[mappings.size()]);
+        } finally {
+            mappingsLock.readLock().unlock();
         }
 
     }
@@ -991,8 +1021,11 @@ public class StandardWrapper extends ContainerBase
     @Override
     public String findSecurityReference(String name) {
 
-        synchronized (references) {
+        try {
+            referencesLock.readLock().lock();
             return references.get(name);
+        } finally {
+            referencesLock.readLock().unlock();
         }
 
     }
@@ -1005,9 +1038,12 @@ public class StandardWrapper extends ContainerBase
     @Override
     public String[] findSecurityReferences() {
 
-        synchronized (references) {
+        try {
+            referencesLock.readLock().lock();
             String results[] = new String[references.size()];
             return references.keySet().toArray(results);
+        } finally {
+            referencesLock.readLock().unlock();
         }
 
     }
@@ -1016,6 +1052,7 @@ public class StandardWrapper extends ContainerBase
     /**
      * FIXME: Fooling introspection ...
      */
+    @Deprecated
     public Wrapper findMappingObject() {
         return (Wrapper) getMappingObject();
     }
@@ -1103,6 +1140,7 @@ public class StandardWrapper extends ContainerBase
                 throw new ServletException
                     (sm.getString("standardWrapper.notServlet", servletClass), e);
             } catch (Throwable e) {
+                e = ExceptionUtils.unwrapInvocationTargetException(e);
                 ExceptionUtils.handleThrowable(e);
                 unavailable(null);
 
@@ -1263,8 +1301,11 @@ public class StandardWrapper extends ContainerBase
     @Override
     public void removeInitParameter(String name) {
 
-        synchronized (parameters) {
+        try {
+            parametersLock.writeLock().lock();
             parameters.remove(name);
+        } finally {
+            parametersLock.writeLock().unlock();
         }
         fireContainerEvent("removeInitParameter", name);
 
@@ -1292,8 +1333,11 @@ public class StandardWrapper extends ContainerBase
     @Override
     public void removeMapping(String mapping) {
 
-        synchronized (mappings) {
+        try {
+            mappingsLock.writeLock().lock();
             mappings.remove(mapping);
+        } finally {
+            mappingsLock.writeLock().unlock();
         }
         if(parent.getState().equals(LifecycleState.STARTED))
             fireContainerEvent(REMOVE_MAPPING_EVENT, mapping);
@@ -1309,8 +1353,11 @@ public class StandardWrapper extends ContainerBase
     @Override
     public void removeSecurityReference(String name) {
 
-        synchronized (references) {
+        try {
+            referencesLock.writeLock().lock();
             references.remove(name);
+        } finally {
+            referencesLock.writeLock().unlock();
         }
         fireContainerEvent("removeSecurityReference", name);
 
@@ -1426,6 +1473,7 @@ public class StandardWrapper extends ContainerBase
                 }
     
             } catch (Throwable t) {
+                t = ExceptionUtils.unwrapInvocationTargetException(t);
                 ExceptionUtils.handleThrowable(t);
                 instanceSupport.fireInstanceEvent
                   (InstanceEvent.AFTER_DESTROY_EVENT, instance, t);
@@ -1475,6 +1523,7 @@ public class StandardWrapper extends ContainerBase
                     }
                 }
             } catch (Throwable t) {
+                t = ExceptionUtils.unwrapInvocationTargetException(t);
                 ExceptionUtils.handleThrowable(t);
                 instancePool = null;
                 nInstances = 0;
@@ -1520,8 +1569,11 @@ public class StandardWrapper extends ContainerBase
     @Override
     public Enumeration<String> getInitParameterNames() {
 
-        synchronized (parameters) {
-            return (new Enumerator<String>(parameters.keySet()));
+        try {
+            parametersLock.readLock().lock();
+            return Collections.enumeration(parameters.keySet());
+        } finally {
+            parametersLock.readLock().unlock();
         }
 
     }
@@ -1557,6 +1609,7 @@ public class StandardWrapper extends ContainerBase
         return swValve.getProcessingTime();
     }
 
+    @Deprecated
     public void setProcessingTime(long processingTime) {
         swValve.setProcessingTime(processingTime);
     }
@@ -1565,6 +1618,7 @@ public class StandardWrapper extends ContainerBase
         return swValve.getMaxTime();
     }
 
+    @Deprecated
     public void setMaxTime(long maxTime) {
         swValve.setMaxTime(maxTime);
     }
@@ -1573,6 +1627,7 @@ public class StandardWrapper extends ContainerBase
         return swValve.getMinTime();
     }
 
+    @Deprecated
     public void setMinTime(long minTime) {
         swValve.setMinTime(minTime);
     }
@@ -1581,6 +1636,7 @@ public class StandardWrapper extends ContainerBase
         return swValve.getRequestCount();
     }
 
+    @Deprecated
     public void setRequestCount(int requestCount) {
         swValve.setRequestCount(requestCount);
     }
@@ -1589,6 +1645,7 @@ public class StandardWrapper extends ContainerBase
         return swValve.getErrorCount();
     }
 
+    @Deprecated
     public void setErrorCount(int errorCount) {
            swValve.setErrorCount(errorCount);
     }
@@ -1605,6 +1662,7 @@ public class StandardWrapper extends ContainerBase
         return loadTime;
     }
 
+    @Deprecated
     public void setLoadTime(long loadTime) {
         this.loadTime = loadTime;
     }
@@ -1921,14 +1979,17 @@ public class StandardWrapper extends ContainerBase
      // ------------------------------------------------------------- Attributes
         
         
+    @Deprecated
     public boolean isEventProvider() {
         return false;
     }
     
+    @Deprecated
     public boolean isStateManageable() {
         return false;
     }
     
+    @Deprecated
     public boolean isStatisticsProvider() {
         return false;
     }

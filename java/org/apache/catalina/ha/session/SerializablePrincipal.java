@@ -38,7 +38,7 @@ import org.apache.tomcat.util.res.StringManager;
  * The GenericPrincipal does NOT implement serializable and I didn't want to
  * change that implementation hence I implemented this one instead.
  * @author Filip Hanik
- * @version $Id: SerializablePrincipal.java 1026793 2010-10-24 13:25:36Z markt $
+ * @version $Id: SerializablePrincipal.java 1186071 2011-10-19 10:21:28Z markt $
  */
 public class SerializablePrincipal  implements java.io.Serializable {
 
@@ -108,7 +108,7 @@ public class SerializablePrincipal  implements java.io.Serializable {
         if (roles != null) {
             this.roles = new String[roles.size()];
             this.roles = roles.toArray(this.roles);
-            if (this.roles.length > 0)
+            if (this.roles.length > 1)
                 Arrays.sort(this.roles);
         }
         if (userPrincipal instanceof Serializable) {

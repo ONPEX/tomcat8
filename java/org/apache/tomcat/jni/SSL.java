@@ -20,7 +20,7 @@ package org.apache.tomcat.jni;
 /** SSL
  *
  * @author Mladen Turk
- * @version $Id: SSL.java 1149092 2011-07-21 09:40:03Z jfclere $
+ * @version $Id: SSL.java 1199985 2011-11-09 21:43:23Z schultz $
  */
 
 public final class SSL {
@@ -228,6 +228,15 @@ public final class SSL {
      * @return APR status code
      */
     public static native int initialize(String engine);
+
+    /**
+     * Enable/Disable FIPS Mode.
+     *
+     * @param mode 1 - enable, 0 - disable
+     *
+     * @return FIPS_mode_set return code
+     */
+    public static native int fipsModeSet(int mode);
 
     /**
      * Add content of the file to the PRNG

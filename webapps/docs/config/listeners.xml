@@ -38,7 +38,7 @@
   actions when specific events occur, usually Tomcat starting or Tomcat
   stopping.</p>
 
-  <p>Listeners may be nested inside a <a href="server.html">Server</a>, 
+  <p>Listeners may be nested inside a <a href="server.html">Server</a>,
   <a href="engine.html">Engine</a>, <a href="host.html">Host</a> or
   <a href="context.html">Context</a>. Some Listeners are only intended to be
   nested inside specific elements. These constraints are noted in the
@@ -80,7 +80,7 @@
   the <code>className</code> attribute MUST be used to select the
   implementation you wish to use.</p>
 
-  <subsection name="APR Lifecycle Listener (org.apache.catalina.core.AprLifecycleListener)">
+  <subsection name="APR Lifecycle Listener - org.apache.catalina.core.AprLifecycleListener">
 
     <p>The <strong>APR Lifecycle Listener</strong> checks for the presence of
     the APR/native library and loads the library if it is present. For more
@@ -95,11 +95,12 @@
     <attributes>
 
       <attribute name="SSLEngine" required="false">
-        <p>Name of the SSLEngine to use. off: Do not use SSL, on: Use SSL but no
-        specific ENGINE. The default value is <b>on</b>. This initializes the
+        <p>Name of the SSLEngine to use. <code>off</code>: do not use SSL,
+        <code>on</code>: use SSL but no specific ENGINE.</p>
+        <p>The default value is <b>on</b>. This initializes the
         native SSL engine, which must be enabled in the APR/native connector by
         the use of the <code>SSLEnabled</code> attribute.</p>
-        <p>See the <a href="http://www.openssl.org">Official OpenSSL website</a>
+        <p>See the <a href="http://www.openssl.org/">Official OpenSSL website</a>
         for more details on supported SSL hardware engines and manufacturers.
         </p>
       </attribute>
@@ -110,11 +111,20 @@
         this to <code>/dev/urandom</code> to allow quicker start times.</p>
       </attribute>
 
+      <attribute name="FIPSMode" required="false">
+        <p>Set to <code>on</code> to instruct OpenSSL to go into FIPS mode.
+        FIPS mode <em>requires you to have a FIPS-capable OpenSSL library which
+        you must build yourself</em>.
+        FIPS mode also requires Tomcat native library version 1.1.23 or later,
+        which <em>must be built against the FIPS-compatible OpenSSL</em> library.
+        If this attribute is "on", <b>SSLEngine</b> must be enabled as well.
+        The default value is <code>off</code>.</p>
+      </attribute>
     </attributes>
 
   </subsection>
 
-  <subsection name="Jasper Listener (org.apache.catalina.core.JasperListener)">
+  <subsection name="Jasper Listener - org.apache.catalina.core.JasperListener">
 
     <p>The <strong>Jasper Listener</strong> initializes the Jasper 2 JSP engine
     before any web applications that may use it are loaded. For more
@@ -129,8 +139,7 @@
 
   </subsection>
 
-  <subsection name="Global Resources Lifecycle Listener
-  (org.apache.catalina.mbeans.GlobalResourcesLifecycleListener)">
+  <subsection name="Global Resources Lifecycle Listener - org.apache.catalina.mbeans.GlobalResourcesLifecycleListener">
 
     <p>The <strong>Global Resources Lifecycle Listener</strong> initializes the
     Global JNDI resources defined in server.xml as part of the <a
@@ -145,8 +154,7 @@
 
   </subsection>
 
-  <subsection name="JRE Memory Leak Prevention Listener
-      (org.apache.catalina.core.JreMemoryLeakPreventionListener)">
+  <subsection name="JRE Memory Leak Prevention Listener - org.apache.catalina.core.JreMemoryLeakPreventionListener">
 
     <p>The <strong>JRE Memory Leak Prevention Listener</strong> provides
     work-arounds for known places where the Java Runtime environment uses
@@ -156,7 +164,7 @@
     this listener starts as Tomcat's common class loader is the context class
     loader at that time. It also provides work-arounds for known issues that
     can result in locked JAR files.</p>
-    
+
     <p>This listener must only be nested within <a href="server.html">Server</a>
     elements.</p>
 
@@ -182,21 +190,21 @@
       </attribute>
 
       <attribute name="classesToInitialize" required="false">
-        <p>List of comma-separated fully qualified class names to load and initialize 
-        during the startup of this Listener. This allows to pre-load classes that are 
-        known to provoke classloader leaks if they are loaded during a request 
-        processing. Non-JRE classes may be referenced, like 
+        <p>List of comma-separated fully qualified class names to load and initialize
+        during the startup of this Listener. This allows to pre-load classes that are
+        known to provoke classloader leaks if they are loaded during a request
+        processing. Non-JRE classes may be referenced, like
         <code>oracle.jdbc.driver.OracleTimeoutThreadPerVM</code>.
-        The default value is empty, but specific JRE classes are loaded by other leak 
+        The default value is empty, but specific JRE classes are loaded by other leak
         protection features managed by other attributes of this Listener.</p>
       </attribute>
 
       <attribute name="driverManagerProtection" required="false">
         <p>The first use of <code>java.sql.DriverManager</code> will trigger the
-        loading of JDBNC Driver in the the current class loader. The web
+        loading of JDBC Driver in the the current class loader. The web
         application level memory leak protection can take care of this in most
         cases but triggering the loading here has fewer side-effects. The
-        default is <code>true</code></p>
+        default is <code>true</code>.</p>
       </attribute>
 
       <attribute name="gcDaemonProtection" required="false">
@@ -218,24 +226,24 @@
 
       <attribute name="ldapPoolProtection" required="false">
         <p>Enables protection so that the PoolCleaner thread started by
-        <code>com.sun.jndi.ldap.LdapPoolManager</code> does not result in a 
-        memory leak. The thread is started the first time the 
-        <code>LdapPoolManager</code> class is used if the system property 
+        <code>com.sun.jndi.ldap.LdapPoolManager</code> does not result in a
+        memory leak. The thread is started the first time the
+        <code>LdapPoolManager</code> class is used if the system property
         <code>com.sun.jndi.ldap.connect.pool.timeout</code> is set to a value
-        greater than 0. Without this protection, if a web application uses this 
-        class the PoolCleaner thread will be configured with the thread's 
-        context class loader set to the web application class loader which in 
-        turn will trigger a memory leak on reload. Defaults to 
+        greater than 0. Without this protection, if a web application uses this
+        class the PoolCleaner thread will be configured with the thread's
+        context class loader set to the web application class loader which in
+        turn will trigger a memory leak on reload. Defaults to
         <code>true</code>.</p>
       </attribute>
 
       <attribute name="securityLoginConfigurationProtection" required="false">
         <p>Enables protection so that usage of the
-        <code>javax.security.auth.login.Configuration</code> class by a web 
-        application does not provoke a memory leak. The first access of this 
-        class will trigger the initializer that will retain a static reference 
-        to the context class loader. The protection loads the class with the 
-        system class loader to ensure that the static initializer is not 
+        <code>javax.security.auth.login.Configuration</code> class by a web
+        application does not provoke a memory leak. The first access of this
+        class will trigger the initializer that will retain a static reference
+        to the context class loader. The protection loads the class with the
+        system class loader to ensure that the static initializer is not
         triggered by a web application. Defaults to <code>true</code>.</p>
       </attribute>
 
@@ -281,7 +289,7 @@
 
   </subsection>
 
-  <subsection name="Security Lifecycle Listener (org.apache.catalina.security.SecurityListener)">
+  <subsection name="Security Lifecycle Listener - org.apache.catalina.security.SecurityListener">
 
     <p>The <strong>Security Lifecycle Listener</strong> performs a number of
     security checks when Tomcat starts and prevents Tomcat from starting if they
@@ -316,7 +324,7 @@
 
   </subsection>
 
-  <subsection name="ThreadLocal Leak Prevention Listener (org.apache.catalina.core.ThreadLocalLeakPreventionListener)">
+  <subsection name="ThreadLocal Leak Prevention Listener - org.apache.catalina.core.ThreadLocalLeakPreventionListener">
 
     <p>The <strong>ThreadLocal Leak Prevention Listener</strong> triggers the
     renewal of threads in Executor pools when a
@@ -336,8 +344,7 @@
 
 <section name="Additional Implementations">
 
-  <subsection name="JMX Remote Lifecycle Listener
-  (org.apache.catalina.mbeans.JmxRemoteLifecycleListener)">
+  <subsection name="JMX Remote Lifecycle Listener - org.apache.catalina.mbeans.JmxRemoteLifecycleListener">
 
     <p>This listener requires <code>catalina-jmx-remote.jar</code> to be placed
     in <code>$CATALINA_HOME/lib</code>. This jar may be found in the extras
@@ -363,7 +370,7 @@
 
       <attribute name="rmiRegistryPortPlatform" required="true">
         <p>The port to be used by the JMX/RMI registry for the Platform MBeans.
-        The replaces the use of the
+        This replaces the use of the
         <code>com.sun.management.jmxremote.port</code> system property that
         should not be set when using this valve.</p>
       </attribute>
@@ -379,7 +386,7 @@
       </attribute>
 
     </attributes>
-    
+
     <h3>Using file-based Authentication and Authorisation</h3>
 
     <p>If this listener was configured in server.xml as:
@@ -438,7 +445,7 @@
   </source>
     then we would need to provide LDAP credentials instead.
     </p>
-    
+
     <p><strong>Note that the examples above do not use SSL. JMX access should
     be considered equivalent to administrative access and secured accordingly.
     </strong></p>

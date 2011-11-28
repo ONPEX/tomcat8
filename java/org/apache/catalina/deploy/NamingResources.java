@@ -40,6 +40,7 @@ import org.apache.catalina.util.LifecycleMBeanBase;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.naming.ContextBindings;
+import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.res.StringManager;
 
 
@@ -48,7 +49,7 @@ import org.apache.tomcat.util.res.StringManager;
  * Naming Context and their associated JNDI context.
  *
  * @author Remy Maucherat
- * @version $Id: NamingResources.java 1087291 2011-03-31 13:11:26Z markt $
+ * @version $Id: NamingResources.java 1201569 2011-11-14 01:36:07Z kkolinko $
  */
 
 public class NamingResources extends LifecycleMBeanBase implements Serializable {
@@ -693,6 +694,7 @@ public class NamingResources extends LifecycleMBeanBase implements Serializable 
     /**
      * Return true if the name specified already exists.
      */
+    @Deprecated
     public boolean exists(String name) {
 
         return (entries.containsKey(name));
@@ -1032,8 +1034,10 @@ public class NamingResources extends LifecycleMBeanBase implements Serializable 
                 log.warn(sm.getString("namingResources.cleanupCloseFailed",
                         closeMethod, name, container), e);
             } catch (InvocationTargetException e) {
+                Throwable t = ExceptionUtils.unwrapInvocationTargetException(e);
+                ExceptionUtils.handleThrowable(t);
                 log.warn(sm.getString("namingResources.cleanupCloseFailed",
-                        closeMethod, name, container), e);
+                        closeMethod, name, container), t);
             }
         }
     }

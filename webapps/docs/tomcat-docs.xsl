@@ -17,7 +17,7 @@
 -->
 <!-- Content Stylesheet for "tomcat-docs" Documentation -->
 
-<!-- $Id: tomcat-docs.xsl 1175614 2011-09-25 22:48:41Z kkolinko $ -->
+<!-- $Id: tomcat-docs.xsl 1200139 2011-11-10 04:19:11Z kkolinko $ -->
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   version="1.0">
@@ -69,9 +69,11 @@
       <xsl:variable name="name">
         <xsl:value-of select="."/>
       </xsl:variable>
+      <!--
       <xsl:variable name="email">
         <xsl:value-of select="@email"/>
       </xsl:variable>
+       -->
       <meta name="author" content="{$name}"/>
       <!-- Don't publish e-mail addresses
       <meta name="email" content="{$email}"/>
@@ -80,6 +82,10 @@
         <style type="text/css" media="print">
             .noPrint {display: none;}
             td#mainBody {width: 100%;}
+        </style>
+        <style type="text/css">
+            code {background-color:rgb(224,255,255);padding:0 0.1em;}
+            code.attributeName, code.propertyName {background-color:transparent;}
         </style>
     </head>
 
@@ -278,7 +284,7 @@
           <xsl:value-of select="@anchor" />
         </xsl:when>
         <xsl:otherwise>
-          <xsl:if test="local-name()='subsection' and 
+          <xsl:if test="local-name()='subsection' and
               count(//*[(local-name()='section' or local-name()='subsection') and @name=current()/@name]) &gt; 1
               ">
             <xsl:value-of select="concat(ancestor::section/@name, '/')"/>
@@ -358,10 +364,10 @@
         <tr>
           <td align="left" valign="center">
             <xsl:if test="@required = 'true'">
-              <strong><code><xsl:value-of select="@name"/></code></strong>
+              <strong><code class="attributeName"><xsl:value-of select="@name"/></code></strong>
             </xsl:if>
             <xsl:if test="@required != 'true'">
-              <code><xsl:value-of select="@name"/></code>
+              <code class="attributeName"><xsl:value-of select="@name"/></code>
             </xsl:if>
           </td>
           <td align="left" valign="center">
@@ -386,7 +392,7 @@
       <xsl:for-each select="property">
         <tr>
           <td align="left" valign="center">
-            <code><xsl:value-of select="@name"/></code>
+            <code class="propertyName"><xsl:value-of select="@name"/></code>
           </td>
           <td align="left" valign="center">
             <xsl:apply-templates/>
@@ -512,7 +518,7 @@
       <xsl:variable name="link"><xsl:value-of select="$buglink"/><xsl:value-of select="text()"/></xsl:variable>
       <a href="{$link}"><xsl:apply-templates/></a>
   </xsl:template>
-  
+
   <!-- Link to a SVN revision report -->
   <xsl:template match="rev">
       <xsl:variable name="link"><xsl:value-of select="$revlink"/><xsl:value-of select="text()"/></xsl:variable>
@@ -540,7 +546,7 @@
         </font>
     </td>
   </xsl:template>
-  
+
   <!-- Process everything else by just passing it through -->
   <xsl:template match="*|@*">
     <xsl:copy>

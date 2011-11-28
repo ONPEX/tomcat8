@@ -28,11 +28,11 @@ import org.apache.tomcat.util.bcel.Constants;
  * <A HREF="org.apache.tomcat.util.bcel.classfile.Constant.html">Constant</A> class 
  * and represents a reference to a String object.
  *
- * @version $Id: ConstantString.java 992409 2010-09-03 18:35:59Z markt $
+ * @version $Id: ConstantString.java 1181135 2011-10-10 18:51:44Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Constant
  */
-public final class ConstantString extends Constant implements ConstantObject {
+public final class ConstantString extends Constant {
 
     private static final long serialVersionUID = 2809338612858801341L;
     private int string_index; // Identical to ConstantClass except for this name
@@ -86,6 +86,4 @@ public final class ConstantString extends Constant implements ConstantObject {
     public final String toString() {
         return super.toString() + "(string_index = " + string_index + ")";
     }
-
-
 }

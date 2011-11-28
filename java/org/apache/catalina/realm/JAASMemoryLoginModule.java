@@ -34,9 +34,9 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.catalina.Globals;
-import org.apache.catalina.authenticator.Constants;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.digester.Digester;
@@ -68,7 +68,7 @@ import org.apache.tomcat.util.digester.Digester;
  * the functionality required of a <code>Realm</code> implementation.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: JAASMemoryLoginModule.java 1026786 2010-10-24 13:08:26Z markt $
+ * @version $Id: JAASMemoryLoginModule.java 1189224 2011-10-26 14:02:40Z kkolinko $
  */
 
 public class JAASMemoryLoginModule extends MemoryRealm implements LoginModule {
@@ -292,10 +292,10 @@ public class JAASMemoryLoginModule extends MemoryRealm implements LoginModule {
         if (authMethod == null) {
             // BASIC or FORM
             principal = super.authenticate(username, password);
-        } else if (authMethod.equals(Constants.DIGEST_METHOD)) {
+        } else if (authMethod.equals(HttpServletRequest.DIGEST_AUTH)) {
             principal = super.authenticate(username, password, nonce, nc,
                     cnonce, qop, realmName, md5a2);
-        } else if (authMethod.equals(Constants.CERT_METHOD)) {
+        } else if (authMethod.equals(HttpServletRequest.CLIENT_CERT_AUTH)) {
             principal = super.getPrincipal(username);
         } else {
             throw new LoginException("Unknown authentication method");

@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,7 +33,7 @@ import javax.servlet.ServletResponse;
  * as opposed to the Wrapper component that manages it.
  *
  * @author Craig R. McClanahan
- * @version $Id: InstanceEvent.java 1072138 2011-02-18 20:43:46Z markt $
+ * @version $Id: InstanceEvent.java 1200159 2011-11-10 05:33:31Z kkolinko $
  */
 
 public final class InstanceEvent extends EventObject {
@@ -316,7 +316,7 @@ public final class InstanceEvent extends EventObject {
 
     /**
      * The exception that was thrown during the processing being reported
-     * by this event (AFTER_INIT_EVENT, AFTER_SERVICE_EVENT, 
+     * by this event (AFTER_INIT_EVENT, AFTER_SERVICE_EVENT,
      * AFTER_DESTROY_EVENT, AFTER_DISPATCH_EVENT, and AFTER_FILTER_EVENT only).
      */
     private Throwable exception = null;

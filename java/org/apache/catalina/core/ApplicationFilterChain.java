@@ -51,7 +51,7 @@ import org.apache.tomcat.util.res.StringManager;
  * method itself.
  *
  * @author Craig R. McClanahan
- * @version $Id: ApplicationFilterChain.java 1078022 2011-03-04 15:52:01Z markt $
+ * @version $Id: ApplicationFilterChain.java 1201569 2011-11-14 01:36:07Z kkolinko $
  */
 
 final class ApplicationFilterChain implements FilterChain, CometFilterChain {
@@ -261,6 +261,7 @@ final class ApplicationFilterChain implements FilterChain, CometFilterChain {
                                               filter, request, response, e);
                 throw e;
             } catch (Throwable e) {
+                e = ExceptionUtils.unwrapInvocationTargetException(e);
                 ExceptionUtils.handleThrowable(e);
                 if (filter != null)
                     support.fireInstanceEvent(InstanceEvent.AFTER_FILTER_EVENT,
@@ -452,6 +453,7 @@ final class ApplicationFilterChain implements FilterChain, CometFilterChain {
                             */
                 throw e;
             } catch (Throwable e) {
+                e = ExceptionUtils.unwrapInvocationTargetException(e);
                 ExceptionUtils.handleThrowable(e);
                 /*if (filter != null)
                     support.fireInstanceEvent(InstanceEvent.AFTER_FILTER_EVENT,

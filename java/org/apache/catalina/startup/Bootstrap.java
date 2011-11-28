@@ -52,7 +52,7 @@ import org.apache.juli.logging.LogFactory;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: Bootstrap.java 1142323 2011-07-02 21:57:12Z markt $
+ * @version $Id: Bootstrap.java 1201569 2011-11-14 01:36:07Z kkolinko $
  */
 
 public final class Bootstrap {
@@ -460,12 +460,12 @@ public final class Bootstrap {
                 log.warn("Bootstrap: command \"" + command + "\" does not exist.");
             }
         } catch (Throwable t) {
-            handleThrowable(t);
             // Unwrap the Exception for clearer error reporting
             if (t instanceof InvocationTargetException &&
                     t.getCause() != null) {
                 t = t.getCause();
             }
+            handleThrowable(t);
             t.printStackTrace();
             System.exit(1);
         }

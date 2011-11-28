@@ -71,6 +71,8 @@
   <property name="test.apr.loc"          value="${tomcat.build}/bin/native"/>
   <!-- base directory for jdbc-pool --> 
   <property name="tomcat.jdbc.dir"       value="${basedir}/modules/jdbc-pool"/>
+  <!-- build output directory for jdbc-pool -->
+  <property name="tomcat.pool"           value="${tomcat.output}/jdbc-pool"/>
 
   <!-- Servlet 3.0 spec requires 1.6+ -->
   <property name="compile.source" value="1.6"/>
@@ -144,8 +146,8 @@
   <property name="tomcat-embed-log4j-src.jar" value="${tomcat.embed.sources}/tomcat-embed-logging-log4j-src.jar"/>
 
   <!-- jdbc-pool JARs & source JARs -->
-  <property name="tomcat-jdbc.jar" value="${tomcat.jdbc.dir}/output/tomcat-jdbc.jar"/>
-  <property name="tomcat-jdbc-src.jar" value="${tomcat.jdbc.dir}/output/tomcat-jdbc-src.jar"/>
+  <property name="tomcat-jdbc.jar" value="${tomcat.pool}/tomcat-jdbc.jar"/>
+  <property name="tomcat-jdbc-src.jar" value="${tomcat.pool}/tomcat-jdbc-src.jar"/>
   
   
   <!-- Tests To Run -->
@@ -472,13 +474,15 @@
     </checkstyle>
   </target>
 
-  <target name="compile" depends="build-prepare,download-compile,validate">
-
+  <target name="compile-prepare">
     <!-- Add the builtin catalina.properties -->
     <copy todir="java/org/apache/catalina/startup"
           file="conf/catalina.properties" encoding="ISO-8859-1">
       <filterset refid="version.filters"/>
     </copy>
+  </target>
+
+  <target name="compile" depends="build-prepare,download-compile,compile-prepare,validate">
     <!-- Compile internal server components -->
     <javac srcdir="java" destdir="${tomcat.classes}"
            debug="${compile.debug}"
@@ -858,7 +862,8 @@
     <!-- build the jdbc-pool jar and source jar-->
     <echo message="Building Tomcat JDBC pool libraries"/>
     <ant antfile="${tomcat.jdbc.dir}/build.xml" dir="${tomcat.jdbc.dir}" inheritall="false" target="build">
-      <property name="tomcat.juli.jar" value="${tomcat-juli.jar}"></property>
+      <property name="tomcat.pool" value="${tomcat.pool}" />
+      <property name="tomcat.juli.jar" value="${tomcat-juli.jar}" />
       <property name="skip.download" value="set"/>
     </ant>
     <copy file="${tomcat-jdbc.jar}" todir="${tomcat.build}/lib"/>
@@ -1632,6 +1637,7 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
         <exclude name="modules/**"/>
         <exclude name="output/**"/>
         <exclude name="build.properties"/>
+        <exclude name=".git/**"/>
       </fileset>
     </copy>
     <!--jdbc-pool sources --> 
@@ -1891,6 +1897,7 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
       <tarfileset dir="${tomcat.dist}" mode="755" prefix="${final.name}">
         <include name="bin/catalina.sh" />
         <include name="bin/configtest.sh" />
+        <include name="bin/daemon.sh" />
         <include name="bin/digest.sh" />
         <include name="bin/jasper.sh" />
         <include name="bin/jspc.sh" />
@@ -1921,6 +1928,7 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
         <include name="BENCHMARKS.txt" />
         <exclude name="bin/catalina.sh" />
         <exclude name="bin/configtest.sh" />
+        <exclude name="bin/daemon.sh" />
         <exclude name="bin/digest.sh" />
         <exclude name="bin/jasper.sh" />
         <exclude name="bin/jspc.sh" />
@@ -2146,6 +2154,7 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
     <!-- Remove the copied catalina.properties -->
     <delete file="java/org/apache/catalina/startup/catalina.properties" />
     <ant antfile="${tomcat.jdbc.dir}/build.xml" dir="${tomcat.jdbc.dir}" inheritall="false" target="clean">
+      <property name="tomcat.pool" value="${tomcat.pool}" />
     </ant>
     <!-- remove jdbc-pool documentation -->
     <delete file="webapps/docs/jdbc-pool.xml"/>

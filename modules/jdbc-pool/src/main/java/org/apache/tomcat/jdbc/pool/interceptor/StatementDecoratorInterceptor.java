@@ -5,17 +5,17 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
- 
+
+
 package org.apache.tomcat.jdbc.pool.interceptor;
 
 import java.lang.reflect.Constructor;
@@ -61,7 +61,7 @@ public class StatementDecoratorInterceptor extends AbstractCreateStatementInterc
 
     /**
      * Creates a constructor for a proxy class, if one doesn't already exist
-     * 
+     *
      * @param idx
      *            - the index of the constructor
      * @param clazz
@@ -114,16 +114,26 @@ public class StatementDecoratorInterceptor extends AbstractCreateStatementInterc
             }
             return createDecorator(proxy, method, args, statement, constructor, sql);
         } catch (Exception x) {
+            if (x instanceof InvocationTargetException) {
+                Throwable cause = x.getCause();
+                if (cause instanceof ThreadDeath) {
+                    throw (ThreadDeath) cause;
+                }
+                if (cause instanceof VirtualMachineError) {
+                    throw (VirtualMachineError) cause;
+                }
+            }
             logger.warn("Unable to create statement proxy for slow query report.", x);
         }
         return statement;
     }
 
-    protected Object createDecorator(Object proxy, Method method, Object[] args, 
-                                     Object statement, Constructor<?> constructor, String sql) 
+    protected Object createDecorator(Object proxy, Method method, Object[] args,
+                                     Object statement, Constructor<?> constructor, String sql)
     throws InstantiationException, IllegalAccessException, InvocationTargetException {
         Object result = null;
-        StatementProxy statementProxy = new StatementProxy<Statement>((Statement)statement,sql);
+        StatementProxy<Statement> statementProxy =
+                new StatementProxy<Statement>((Statement)statement,sql);
         result = constructor.newInstance(new Object[] { statementProxy });
         statementProxy.setActualProxy(result);
         statementProxy.setConnection(proxy);
@@ -141,12 +151,12 @@ public class StatementDecoratorInterceptor extends AbstractCreateStatementInterc
 
     /**
      * Class to measure query execute time
-     * 
+     *
      * @author fhanik
-     * 
+     *
      */
     protected class StatementProxy<T extends java.sql.Statement> implements InvocationHandler {
-        
+
         protected boolean closed = false;
         protected T delegate;
         private Object actualProxy;
@@ -161,13 +171,13 @@ public class StatementDecoratorInterceptor extends AbstractCreateStatementInterc
         public T getDelegate() {
             return this.delegate;
         }
-        
+
         public String getSql() {
             return sql;
         }
 
         public void setConnection(Object proxy) {
-            this.connection = proxy;            
+            this.connection = proxy;
         }
         public Object getConnection() {
             return this.connection;
@@ -179,8 +189,8 @@ public class StatementDecoratorInterceptor extends AbstractCreateStatementInterc
         public Object getActualProxy() {
             return this.actualProxy;
         }
-        
-        
+
+
         public Constructor getConstructor() {
             return constructor;
         }
@@ -197,7 +207,8 @@ public class StatementDecoratorInterceptor extends AbstractCreateStatementInterc
             closed = true;
             delegate = null;
         }
-        
+
+        @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             if (compare(TOSTRING_VAL,method)) {
                 return toString();
@@ -229,9 +240,9 @@ public class StatementDecoratorInterceptor extends AbstractCreateStatementInterc
                     result = method.invoke(delegate, args);
                 }
             } catch (Throwable t) {
-                if (t instanceof InvocationTargetException) {
-                    InvocationTargetException it = (InvocationTargetException) t;
-                    throw it.getCause() != null ? it.getCause() : it;
+                if (t instanceof InvocationTargetException
+                        && t.getCause() != null) {
+                    throw t.getCause();
                 } else {
                     throw t;
                 }
@@ -242,7 +253,8 @@ public class StatementDecoratorInterceptor extends AbstractCreateStatementInterc
             }
             return result;
         }
-        
+
+        @Override
         public String toString() {
             StringBuffer buf = new StringBuffer(StatementProxy.class.getName());
             buf.append("[Proxy=");
@@ -268,11 +280,21 @@ public class StatementDecoratorInterceptor extends AbstractCreateStatementInterc
             this.delegate = delegate;
         }
 
+        @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             if (method.getName().equals("getStatement")) {
                 return this.st;
             } else {
-                return method.invoke(this.delegate, args);
+                try {
+                    return method.invoke(this.delegate, args);
+                } catch (Throwable t) {
+                    if (t instanceof InvocationTargetException
+                            && t.getCause() != null) {
+                        throw t.getCause();
+                    } else {
+                        throw t;
+                    }
+                }
             }
         }
     }

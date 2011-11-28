@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-/* $Id: RequestHeaderExample.java 982412 2010-08-04 21:55:19Z markt $
+/* $Id: RequestHeaderExample.java 1200123 2011-11-10 04:03:27Z kkolinko $
  *
  */
 
@@ -41,7 +41,7 @@ public class RequestHeaderExample extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private static final ResourceBundle RB = ResourceBundle.getBundle("LocalStrings");
-    
+
     @Override
     public void doGet(HttpServletRequest request,
                       HttpServletResponse response)
@@ -63,7 +63,7 @@ public class RequestHeaderExample extends HttpServlet {
 
         // XXX
         // making these absolute till we work out the
-        // addition of a PathInfo issue 
+        // addition of a PathInfo issue
 
         out.println("<a href=\"../reqheaders.html\">");
         out.println("<img src=\"../images/code.gif\" height=24 " +

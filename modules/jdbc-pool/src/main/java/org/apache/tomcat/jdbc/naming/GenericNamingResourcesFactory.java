@@ -43,21 +43,22 @@ import org.apache.juli.logging.LogFactory;
  *              serverName=&quot;localhost&quot;
  *              port=&quot;1527&quot;/&gt;
  * </code></pre>
- * 
+ *
  */
 public class GenericNamingResourcesFactory implements ObjectFactory {
     private static final Log log = LogFactory.getLog(GenericNamingResourcesFactory.class);
-    
+
+    @Override
     public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable<?, ?> environment) throws Exception {
         if ((obj == null) || !(obj instanceof Reference)) {
             return null;
         }
         Reference ref = (Reference) obj;
         Enumeration<RefAddr> refs = ref.getAll();
-        
+
         String type = ref.getClassName();
         Object o = Class.forName(type).newInstance();
-        
+
         while (refs.hasMoreElements()) {
             RefAddr addr = refs.nextElement();
             String param = addr.getType();
@@ -66,7 +67,7 @@ public class GenericNamingResourcesFactory implements ObjectFactory {
                 value = addr.getContent().toString();
             }
             if (setProperty(o, param, value,false)) {
-                
+
             } else {
                 log.debug("Property not configured["+param+"]. No setter found on["+o+"].");
             }
@@ -127,7 +128,7 @@ public class GenericNamingResourcesFactory implements ObjectFactory {
                         // Try a setFoo ( boolean )
                     } else if ("java.lang.Boolean".equals(paramType.getName())
                             || "boolean".equals(paramType.getName())) {
-                        params[0] = new Boolean(value);
+                        params[0] = Boolean.valueOf(value);
 
                         // Try a setFoo ( InetAddress )
                     } else if ("java.net.InetAddress".equals(paramType
@@ -158,9 +159,9 @@ public class GenericNamingResourcesFactory implements ObjectFactory {
                     if (methods[i].getReturnType()==Boolean.TYPE){
                         setPropertyMethodBool = methods[i];
                     }else {
-                        setPropertyMethodVoid = methods[i];    
+                        setPropertyMethodVoid = methods[i];
                     }
-                    
+
                 }
             }
 
@@ -171,7 +172,7 @@ public class GenericNamingResourcesFactory implements ObjectFactory {
                 params[1] = value;
                 if (setPropertyMethodBool != null) {
                     try {
-                        return (Boolean) setPropertyMethodBool.invoke(o, params);
+                        return ((Boolean) setPropertyMethodBool.invoke(o, params)).booleanValue();
                     }catch (IllegalArgumentException biae) {
                         //the boolean method had the wrong
                         //parameter types. lets try the other
@@ -199,13 +200,20 @@ public class GenericNamingResourcesFactory implements ObjectFactory {
                 log.debug("IntrospectionUtils: IllegalAccessException for " +
                         o.getClass() + " " + name + "=" + value + ")", iae);
         } catch (InvocationTargetException ie) {
+            Throwable cause = ie.getCause();
+            if (cause instanceof ThreadDeath) {
+                throw (ThreadDeath) cause;
+            }
+            if (cause instanceof VirtualMachineError) {
+                throw (VirtualMachineError) cause;
+            }
             if (log.isDebugEnabled())
                 log.debug("IntrospectionUtils: InvocationTargetException for " +
                         o.getClass() + " " + name + "=" + value + ")", ie);
         }
         return false;
-    } 
-    
+    }
+
     public static String capitalize(String name) {
         if (name == null || name.length() == 0) {
             return name;

@@ -55,7 +55,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  *
  * @author Remy Maucherat
  * @author Jean-Francois Arcand
- * @version $Id: ApplicationContextFacade.java 1166080 2011-09-07 09:24:40Z markt $
+ * @version $Id: ApplicationContextFacade.java 1201569 2011-11-14 01:36:07Z kkolinko $
  */
 
 public class ApplicationContextFacade implements ServletContext {
@@ -191,6 +191,7 @@ public class ApplicationContextFacade implements ServletContext {
                 return (URL) invokeMethod(context, "getResource", 
                                           new Object[]{path});
             } catch(Throwable t) {
+                ExceptionUtils.handleThrowable(t);
                 if (t instanceof MalformedURLException){
                     throw (MalformedURLException)t;
                 }
@@ -765,6 +766,7 @@ public class ApplicationContextFacade implements ServletContext {
         try{
             return invokeMethod(context, methodName, params);
         }catch(Throwable t){
+            ExceptionUtils.handleThrowable(t);
             throw new RuntimeException(t.getMessage(), t);
         }
     }
@@ -870,8 +872,10 @@ public class ApplicationContextFacade implements ServletContext {
         }
         
         if (ex instanceof InvocationTargetException) {
-            realException =
-                ((InvocationTargetException) ex).getTargetException();
+            realException = ex.getCause();
+            if (realException == null) {
+                realException = ex;
+            }
         } else {
             realException = ex;
         }   

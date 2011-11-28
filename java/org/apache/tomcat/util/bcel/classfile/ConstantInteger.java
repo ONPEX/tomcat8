@@ -28,11 +28,11 @@ import org.apache.tomcat.util.bcel.Constants;
  * <A HREF="org.apache.tomcat.util.bcel.classfile.Constant.html">Constant</A> class 
  * and represents a reference to an int object.
  *
- * @version $Id: ConstantInteger.java 992409 2010-09-03 18:35:59Z markt $
+ * @version $Id: ConstantInteger.java 1181135 2011-10-10 18:51:44Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Constant
  */
-public final class ConstantInteger extends Constant implements ConstantObject {
+public final class ConstantInteger extends Constant {
 
     private static final long serialVersionUID = -6415476571232528966L;
     private int bytes;
@@ -86,6 +86,4 @@ public final class ConstantInteger extends Constant implements ConstantObject {
     public final String toString() {
         return super.toString() + "(bytes = " + bytes + ")";
     }
-
-
 }

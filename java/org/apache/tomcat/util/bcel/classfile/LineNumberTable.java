@@ -28,7 +28,7 @@ import org.apache.tomcat.util.bcel.Constants;
  * purposes. This attribute is used by the <em>Code</em> attribute. It
  * contains pairs of PCs and line numbers.
  *
- * @version $Id: LineNumberTable.java 1057670 2011-01-11 14:52:05Z markt $
+ * @version $Id: LineNumberTable.java 1181133 2011-10-10 18:49:14Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Code
  * @see LineNumber
@@ -102,8 +102,8 @@ public final class LineNumberTable extends Attribute {
      */
     @Override
     public final String toString() {
-        StringBuffer buf = new StringBuffer();
-        StringBuffer line = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
+        StringBuilder line = new StringBuilder();
         String newLine = System.getProperty("line.separator", "\n");
         for (int i = 0; i < line_number_table_length; i++) {
             line.append(line_number_table[i].toString());
@@ -134,6 +134,4 @@ public final class LineNumberTable extends Attribute {
         c.constant_pool = _constant_pool;
         return c;
     }
-
-
 }

@@ -69,7 +69,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * </ul>
  *
  * @author Craig R. McClanahan
- * @version $Id: Tool.java 1142323 2011-07-02 21:57:12Z markt $
+ * @version $Id: Tool.java 1201569 2011-11-14 01:36:07Z kkolinko $
  */
 
 public final class Tool {
@@ -229,6 +229,7 @@ public final class Tool {
             paramValues[0] = params;
             method.invoke(null, paramValues);
         } catch (Throwable t) {
+            t = ExceptionUtils.unwrapInvocationTargetException(t);
             ExceptionUtils.handleThrowable(t);
             log.error("Exception calling main() method", t);
             System.exit(1);

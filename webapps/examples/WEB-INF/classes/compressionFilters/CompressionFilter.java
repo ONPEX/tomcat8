@@ -36,7 +36,7 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author Amy Roh
  * @author Dmitri Valdin
- * @version $Id: CompressionFilter.java 987920 2010-08-22 15:34:34Z markt $
+ * @version $Id: CompressionFilter.java 1200121 2011-11-10 04:01:40Z kkolinko $
  */
 
 public class CompressionFilter implements Filter{
@@ -182,8 +182,8 @@ public class CompressionFilter implements Filter{
             }
             chain.doFilter(request, response);
             return;
-        } 
-        
+        }
+
         if (response instanceof HttpServletResponse) {
             CompressionServletResponseWrapper wrappedResponse =
                 new CompressionServletResponseWrapper((HttpServletResponse)response);

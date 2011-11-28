@@ -32,7 +32,7 @@ import org.apache.tomcat.util.bcel.Constants;
  * within the Code attribute of a method. See CLDC specification
  * &sect;5.3.1.2
  *
- * @version $Id: StackMap.java 1057670 2011-01-11 14:52:05Z markt $
+ * @version $Id: StackMap.java 1181133 2011-10-10 18:49:14Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Code
  * @see     StackMapEntry
@@ -106,7 +106,7 @@ public final class StackMap extends Attribute {
      */
     @Override
     public final String toString() {
-        StringBuffer buf = new StringBuffer("StackMap(");
+        StringBuilder buf = new StringBuilder("StackMap(");
         for (int i = 0; i < map_length; i++) {
             buf.append(map[i].toString());
             if (i < map_length - 1) {

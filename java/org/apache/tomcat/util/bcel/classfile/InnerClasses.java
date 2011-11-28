@@ -29,7 +29,7 @@ import org.apache.tomcat.util.bcel.Constants;
  * to the source file of this class.
  * It is instantiated from the <em>Attribute.readAttribute()</em> method.
  *
- * @version $Id: InnerClasses.java 1057670 2011-01-11 14:52:05Z markt $
+ * @version $Id: InnerClasses.java 1181133 2011-10-10 18:49:14Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Attribute
  */
@@ -103,7 +103,7 @@ public final class InnerClasses extends Attribute {
      */
     @Override
     public final String toString() {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         for (int i = 0; i < number_of_classes; i++) {
             buf.append(inner_classes[i].toString(constant_pool)).append("\n");
         }

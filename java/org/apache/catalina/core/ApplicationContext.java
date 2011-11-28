@@ -29,6 +29,7 @@ import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.EventListener;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +67,6 @@ import org.apache.catalina.Service;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.deploy.FilterDef;
-import org.apache.catalina.util.Enumerator;
 import org.apache.catalina.util.RequestUtil;
 import org.apache.catalina.util.ResourceSet;
 import org.apache.catalina.util.ServerInfo;
@@ -86,7 +86,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: ApplicationContext.java 1130618 2011-06-02 15:54:26Z markt $
+ * @version $Id: ApplicationContext.java 1201569 2011-11-14 01:36:07Z kkolinko $
  */
 
 public class ApplicationContext
@@ -217,6 +217,7 @@ public class ApplicationContext
      * The path must begin with a "/" and is interpreted as relative to the
      * current context root.
      */
+    @Deprecated
     public DirContext getResources() {
 
         return context.getResources();
@@ -247,9 +248,9 @@ public class ApplicationContext
      */
     @Override
     public Enumeration<String> getAttributeNames() {
-
-        return new Enumerator<String>(attributes.keySet(), true);
-
+        Set<String> names = new HashSet<String>();
+        names.addAll(attributes.keySet());
+        return Collections.enumeration(names);
     }
 
 
@@ -331,7 +332,7 @@ public class ApplicationContext
      */
     @Override
     public Enumeration<String> getInitParameterNames() {
-        return (new Enumerator<String>(parameters.keySet()));
+        return Collections.enumeration(parameters.keySet());
     }
 
 
@@ -534,7 +535,7 @@ public class ApplicationContext
             String fullPath = context.getPath() + normPath;
             String hostName = context.getParent().getName();
             try {
-                resources.lookup(path);
+                resources.lookup(normPath);
                 return new URL
                     ("jndi", "", 0, getJNDIUri(hostName, fullPath),
                      new DirContextURLStreamHandler(resources));
@@ -685,7 +686,7 @@ public class ApplicationContext
     @Override
     @Deprecated
     public Enumeration<String> getServletNames() {
-        return (new Enumerator<String>(emptyString));
+        return Collections.enumeration(emptyString);
     }
 
 
@@ -695,7 +696,7 @@ public class ApplicationContext
     @Override
     @Deprecated
     public Enumeration<Servlet> getServlets() {
-        return (new Enumerator<Servlet>(emptyServlet));
+        return Collections.enumeration(emptyServlet);
     }
 
 
@@ -996,6 +997,7 @@ public class ApplicationContext
         } catch (IllegalAccessException e) {
             throw new ServletException(e);
         } catch (InvocationTargetException e) {
+            ExceptionUtils.handleThrowable(e.getCause());
             throw new ServletException(e);
         } catch (NamingException e) {
             throw new ServletException(e);
@@ -1141,6 +1143,7 @@ public class ApplicationContext
         } catch (IllegalAccessException e) {
             throw new ServletException(e);
         } catch (InvocationTargetException e) {
+            ExceptionUtils.handleThrowable(e.getCause());
             throw new ServletException(e);
         } catch (NamingException e) {
             throw new ServletException(e);
@@ -1300,6 +1303,7 @@ public class ApplicationContext
                     "applicationContext.addListener.iae.cnfe", className),
                     e);
         } catch (InvocationTargetException e) {
+            ExceptionUtils.handleThrowable(e.getCause());
             throw new IllegalArgumentException(sm.getString(
                     "applicationContext.addListener.iae.cnfe", className),
                     e);
@@ -1386,6 +1390,7 @@ public class ApplicationContext
         } catch (IllegalAccessException e) {
             throw new ServletException(e);
         } catch (InvocationTargetException e) {
+            ExceptionUtils.handleThrowable(e.getCause());
             throw new ServletException(e);
         } catch (NamingException e) {
             throw new ServletException(e);
@@ -1499,6 +1504,7 @@ public class ApplicationContext
         return this.context;
     }
     
+    @Deprecated
     protected Map<String,String> getReadonlyAttributes() {
         return this.readOnlyAttributes;
     }

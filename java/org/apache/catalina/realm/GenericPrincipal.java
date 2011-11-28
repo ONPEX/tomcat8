@@ -33,7 +33,7 @@ import org.ietf.jgss.GSSCredential;
  * is available for use by <code>Realm</code> implementations.
  *
  * @author Craig R. McClanahan
- * @version $Id: GenericPrincipal.java 1087416 2011-03-31 19:33:04Z markt $
+ * @version $Id: GenericPrincipal.java 1186071 2011-10-19 10:21:28Z markt $
  */
 
 public class GenericPrincipal implements Principal {
@@ -127,7 +127,7 @@ public class GenericPrincipal implements Principal {
         if (roles != null) {
             this.roles = new String[roles.size()];
             this.roles = roles.toArray(this.roles);
-            if (this.roles.length > 0)
+            if (this.roles.length > 1)
                 Arrays.sort(this.roles);
         }
         this.loginContext = loginContext;

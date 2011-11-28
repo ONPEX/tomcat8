@@ -19,14 +19,13 @@
 package org.apache.catalina.core;
 
 
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletRequestWrapper;
-
-import org.apache.catalina.util.Enumerator;
 
 
 /**
@@ -42,7 +41,7 @@ import org.apache.catalina.util.Enumerator;
  * keep these two classes in synchronization when making changes!
  *
  * @author Craig R. McClanahan
- * @version $Id: ApplicationRequest.java 1078049 2011-03-04 16:49:14Z markt $
+ * @version $Id: ApplicationRequest.java 1195962 2011-11-01 12:37:24Z markt $
  */
 
 class ApplicationRequest extends ServletRequestWrapper {
@@ -120,7 +119,7 @@ class ApplicationRequest extends ServletRequestWrapper {
     public Enumeration<String> getAttributeNames() {
 
         synchronized (attributes) {
-            return (new Enumerator<String>(attributes.keySet()));
+            return Collections.enumeration(attributes.keySet());
         }
 
     }

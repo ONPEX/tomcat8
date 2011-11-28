@@ -53,7 +53,386 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues to not "pop up" wrt. others).
 -->
-<section name="Tomcat 7.0.22 (markt)">
+<section name="Tomcat 7.0.23 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <add>
+        <bug>46264</bug>: Add the ability to start and stop containers
+        (primarily Contexts) using a thread pool rather than a single thread.
+        This can significantly improve start and stop time. Based on patches
+        by Joe Kislo and Felix Schumacher. (markt)
+      </add>
+      <fix>
+        <bug>50570</bug>: Enable FIPS mode to be set in AprLifecycleListener.
+        Based upon a patch from Chris Beckey. (schultz/kkolinko)
+      </fix>
+      <fix>
+        <bug>51744</bug>: Throw the correct exception if an application attempts
+        to modify the associated JNDI context. (markt)
+      </fix>
+      <add>
+        <bug>51744</bug>: Add an option to the StandardContext that allows
+        exception throwing when an application attempts to modify the associated
+        JNDI context to be disabled. (markt)
+      </add>
+      <fix>
+        <bug>51910</bug>: Prevent NPE on connector stop if Comet applications
+        are being used without the CometConnectionManagerValve. (markt)
+      </fix>
+      <fix>
+        <bug>51940</bug>: Do not limit saving of request bodies during FORM
+        authentication to POST requests since any HTTP method may include a
+        request body. Based on a patch by Nicholas Sushkin. (markt/kkolinko)
+      </fix>
+      <fix>
+        <bug>51956</bug>: RemoteAddrFilter used getRemoteHost instead of
+        getRemoteAddr when filtering Comet events. (schultz)
+      </fix>
+      <fix>
+        <bug>51952</bug>: Make the inclusion of a response body with a redirect
+        response introduced to address <bug>41718</bug> optional and disabled by
+        default due to the side-effects of including a body with the response in
+        this case. (markt)
+      </fix>
+      <fix>
+        <bug>51972</bug>: Correctly handle protocol relative URLs when used with
+        <code>sendRedirect()</code>. (markt)
+      </fix>
+      <scode>
+        Simplify the deployment code and use full paths in log messages to
+        remove any ambiguity in where a context is being deployed from. (markt)  
+      </scode>
+      <fix>
+        <bug>52009</bug>: Fix a NPE during access log entry recording when an
+        error occurred during the processing of a Comet request. (markt) 
+      </fix>
+      <fix>
+        In <code>OneLineFormatter</code> log formatter in JULI always use
+        the US locale to format the date (esp. the month names). (rjung)
+      </fix>
+      <add>
+        Cache the results of parsing the global and host level web.xml files to
+        improve web application start time. (markt)
+      </add>
+      <fix>
+        <bug>52042</bug>: Correct threading issue in annotation caching that
+        could lead to an NPE if multiple threads were processing the same class
+        hierarchy for annotations. (markt)
+      </fix>
+      <fix>
+        Correct additional threading and premature clearance issues with the
+        annotation cache. (markt)
+      </fix>
+      <fix>
+        Correct a regression in the fix for <bug>49779</bug> that
+        parameters POSTed by an unauthenticated user to a page that required
+        FORM authentication were lost during the authentication process.
+        (markt)
+      </fix>
+      <fix>
+        <bug>52055</bug>: Ensure that the input and output buffers are correctly
+        reset between keep-alive requests when using Servlet 3.0 asynchronous
+        request processing. (markt)
+      </fix>
+      <fix>
+        Ensure changes to the configuration of the RemoteHostValve and the
+        RemoteAddrValve via JMX are thread-safe. (markt)
+      </fix>
+      <fix>
+        Ensure the the memory leak protection for the HttpClient keep-alive
+        always operates even if the thread has already stopped. (markt)
+      </fix>
+      <scode>
+        Remove the Java 1.2 specific error handling around the adding of the
+        shutdown hook. (markt) 
+      </scode>
+      <fix>
+        Correct errors in i18n resources and resource usage that meant some
+        messages were either not used or were incorrectly formatted. (markt)
+      </fix>
+      <scode>
+        Replace the use of deprecated auth method names from
+        <code>authenticator.Constants</code> with the auth method names from
+        <code>HttpServletRequest</code>. (kkolinko)
+      </scode>
+      <add>
+        Make configuration issues for security related Valves and Filters result
+        in the failure of the valve or filter rather than just a warning
+        message. (markt)
+      </add>
+      <add>
+        Improve performance of parameter processing for GET and POST requests.
+        Also add an option to limit the maximum number of parameters processed
+        per request. This defaults to 10000. Excessive parameters are ignored.
+        Note that <code>FailedRequestFilter</code> can be used to reject the
+        request if some parameters were ignored. (markt/kkolinko)
+      </add>
+      <fix>
+        <bug>52091</bug>: Address performance issues related to lock contention
+        in StandardWrapper. Patch provided by Taiki Sugawara. (markt)
+      </fix>
+      <scode>
+        Switch to using Collections.enumeration() rather than custom code that
+        does the same thing. (markt)
+      </scode>
+      <fix>
+        <bug>52113</bug>: Don't assume presence of context.xml file with JMX
+        deployment. (markt)
+      </fix>
+      <update>
+        In <code>RequestFilterValve</code> (<code>RemoteAddrValve</code>,
+        <code>RemoteHostValve</code>): refactor value matching logic into
+        separate method and expose this new method <code>isAllowed</code>
+        through JMX. (kkolinko)
+      </update>
+      <fix>
+        <bug>52156</bug>: Ensure that
+        <code>getServletContext().getResource(path)</code> returns the correct
+        resource when path contains <code>/../</code> sequences or any other
+        sequences that require normalization. (markt)
+      </fix>
+      <add>
+        Report existence of HTTP request parameter parsing errors via new
+        special ServletRequest attribute,
+        <code>org.apache.catalina.parameter_parse_failed</code>. (kkolinko)
+      </add>
+      <add>
+        New filter <code>FailedRequestFilter</code> that will reject a request
+        if there were errors during HTTP parameter parsing. (kkolinko)
+      </add>
+      <update>
+        Improve special attributes handling in Request object by using hash
+        table lookup instead of series of string comparisons. (kkolinko)
+      </update>
+      <scode>
+        Deprecate unused methods in <code>IntrospectionUtils</code> class.
+        (kkolinko)
+      </scode>
+      <fix>
+        Improve processing of errors that are wrapped in
+        <code>InvocationTargetException</code>. Rethrow fatal errors that must
+        be rethrown. (kkolinko)
+      </fix>
+      <fix>
+        Improve handling of failed web application deployments during automatic
+        deployment. Once deployment of a web application fails in one form (e.g.
+        WAR), no further attempt (e.g. directory) will be made to deploy that
+        web application. The base Lifecycle implementation has been improved to
+        allow failed web applications to be started once the configuration
+        issues have been resolved. Any changes to a context.xml file (global,
+        per host or web application specific) will now result in a redeploy
+        of the affected web application(s) that ensures that any changes are
+        correctly applied rather than a reload which ignores changes in
+        context.xml files. (markt/kkolinko) 
+      </fix>
+      <fix>
+        <bug>52173</bug>: Improve Javadoc for <code>delegate</code> attribute
+        of WebappClassLoader. Based on a patch by bmargulies. (markt)
+      </fix>
+      <add>
+        Add <code>denyStatus</code> attribute to <code>RequestFilterValve</code>
+        (<code>RemoteAddrValve</code>, <code>RemoteHostValve</code> valves) and
+        <code>RequestFilter</code> (<code>RemoteAddrFilter</code>,
+        <code>RemoteHostFilter</code> filters). It allows to use different
+        HTTP response code when rejecting denied request. E.g. 404 instead
+        of 403. (kkolinko)
+      </add>
+      <fix>
+        Slightly improve performance of UDecoder.convert(). Align
+        <code>%2f</code> handling between implementations. (kkolinko)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        <bug>51881</bug>: Correctly complete Comet requests when the Comet END
+        event is triggered asynchronously. (markt)
+      </fix>
+      <fix>
+        <bug>51905</bug>: Fix infinite loop in AprEndpoint shutdown if
+        acceptor unlock fails. Reduce timeout before forcefully closing
+        the socket from 30s to 10s. (kkolinko)
+      </fix>
+      <fix>
+        <bug>51912</bug>: Fix HTTP header processing in NIO HTTP connector.
+        (kkolinko)
+      </fix>
+      <fix>
+        Improve MimeHeaders.toString(). (kkolinko)
+      </fix>
+      <fix>
+        Fix threading issue in NIO connectors during shutdown that meant Comet
+        connections were not always shut down cleanly. (markt)
+      </fix>
+      <add>
+        In HTTP connectors: self-guard against using a non-recycled input
+        buffer. Requests will be rejected with response status 400. (kkolinko)
+      </add>
+      <fix>
+        <bug>52121</bug>: Fix possible output corruption when compression is
+        enabled for a connector and the response is flushed. Includes a test
+        case provided by David Marcks. (kkolinko/markt)
+      </fix>
+      <fix>
+        Improve multi-byte character handling in Coyote output for HTTP
+        and AJP. (rjung)
+      </fix>
+      <add>
+        Refactor acceptor unlock code to reduce waiting time during connector
+        pause and stop. (markt)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        Correct possible (but very small) memory leak when using maxLoadedJsps
+        to limit the number of JSPs loaded at any one time. (markt) 
+      </fix>
+      <fix>
+        <bug>52051</bug>: Better handling of missing resource problems with
+        non-standard Servlet mappings so that a 404 response is returned to the
+        client rather than a 500 response. (markt)
+      </fix>
+      <fix>
+        <bug>52091</bug>: Address performance issues related to log creation
+        in TagHandlerPool. Patch provided by Taiki Sugawara. (markt)
+      </fix>
+      <scode>
+        Switch to using Collections.enumeration() rather than custom code that
+        does the same thing. (markt)
+      </scode>
+    </changelog>
+  </subsection>
+  <subsection name="Cluster">
+    <changelog>
+      <fix>
+        Avoid an unnecessary session ID change notice. 
+        Notice of changed session ID by JvmRouteBinderValve is unnecessary to 
+        BackupManager. In BackupManager, change of session ID is replicated by 
+        the call of a setId() method. (kfujino)
+      </fix>
+      <fix>
+        Fix duplicate <code>resetDeltaRequest()</code> call in
+        <code>DeltaSession.setId(String)</code>. (kkolinko)
+      </fix>
+      <fix>
+        Work around a <a href="http://bugs.sun.com/view_bug.do?bug_id=6427854">
+        known JVM bug</a> that is fixed in 1.7.0_01 but still present in
+        1.6.0_29 and was triggering intermittent unit test failures for
+        <code>org.apache.catalina.tribes.group.
+        TestGroupChannelMemberArrival.testMemberArrival</code>.
+        The bug affects any components that use NIO although it was more likely
+        to be observed in the clustering module than the HTTP or AJP NIO
+        connector. (markt) 
+      </fix>
+      <add>
+        When Context manager does not exist, no context manager message is 
+        replied in order to avoid timeout (default 60sec) of 
+        GET_ALL_SESSIONS sync phase. (kfujino)
+      </add>
+      <fix>
+        Fix setting maxInactiveInterval, sessionIdLength and
+        processExpiresFrequency for cluster managers. Use setter
+        when setting maxActiveSessions. (rjung)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <add>
+        <bug>50923</bug>: Use distinct background color for <code>code</code>
+        tag in Tomcat documentation, for better readability. (kkolinko)
+      </add>
+      <fix>
+        <bug>51630</bug>: Fix bug in async0 example that triggered an
+        IllegalStateException in the application log. (markt)
+      </fix>
+      <add>
+        <bug>52025</bug>: Add additional information regarding DriverManager,
+        the service provider mechanism and memory leaks. (markt)
+      </add>
+      <fix>
+        <bug>52049</bug>: Improve setup instructions for running as a Windows
+        service: remove references to specific Windows operating systems - it
+        easily becomes dated; correct information on how a JRE is identified and
+        selected. (markt)
+      </fix>
+      <update>
+        <bug>52172</bug>: Clarify Tomcat build instructions. Patch provided
+        by bmargulies. (kkolinko)
+      </update>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <update>
+        Update the package re-named copy of Commons BCEL (formerly Jakarta BCEL)
+        to the latest code from Commons BCEL trunk. (markt)
+      </update>
+      <scode>
+        Remove some unused code from the packaged renamed Commons BCEL. (markt)
+      </scode>
+      <fix>
+        <bug>52015</bug>: In jdbc-pool: JdbcInterceptor passes not 'this' but 
+        'proxy' to getNext().invoke. (kfujino)
+      </fix>
+      <fix>
+        <bug>52059</bug>: In Windows uninstaller: Do not forget to remove
+        Tomcat keys from 32-bit registry on deinstallation. (kkolinko)
+      </fix>
+      <scode>
+        Start the process of deprecating unused and unnecessary code that will
+        be removed in the next major release (8.0.x). (markt)
+      </scode>
+      <update>
+        Ignore <code>.git</code> directory when building the source
+        distributive. (markt)
+      </update>
+      <update>
+        Remove trailing whitespace from the default configuration files.
+        (kkolinko)
+      </update>
+      <update>
+        Improve <code>RUNNING.txt</code>. (kkolinko)
+      </update>
+      <update>
+        Update optional Checkstyle library to 5.5. (kkolinko)
+      </update>
+      <add>
+        In test suite: add <code>LoggingBaseTest</code> class to allow
+        use of Tomcat logging configuration in tests that do not start Tomcat.
+        (kkolinko)
+      </add>
+      <fix>
+        In test suite: speed up <code>TestGroupChannelSenderConnections</code>.
+        Remove 48 seconds worth of waits. (kkolinko)
+      </fix>
+      <fix>
+        <bug>52148</bug>: Add tomcat-coyote.jar to catalina-tasks.xml as this
+        JAR is now required by the Ant tasks. Patch provided by Volker Krebs.
+        (markt)
+      </fix>
+      <fix>
+        In jdbc-pool: Improve handling of Errors that originate from methods
+        invoked through reflection. In <code>TrapException</code> interceptor:
+        rethrow Error as is, without wrapping it in a RuntimeException.
+        (kkolinko)
+      </fix>
+      <fix>
+        In jdbc-pool: Unwrap InvocationTargetException if it is caught in
+        <code>ResultSetProxy</code>, like we do it elsewhere. (kkolinko)
+      </fix>
+      <fix>
+        When building jdbc-pool from within Tomcat, use Tomcat's
+        <code>output</code> directory location. This allows to move all build
+        output away from the source tree. (kkolinko)
+      </fix>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 7.0.22 (markt)" rtext="released 2011-10-01">
   <subsection name="Catalina">
     <changelog>
       <fix>
@@ -134,9 +513,10 @@
         restricted. (markt)
       </fix>
       <fix>
-        Ensure that the access log always uses the correct value for the remote
-        IP address associated with the request and that requests with multiple
-        errors do not result in multiple entires in the access log. (markt)
+        <bug>51872</bug>: Ensure that the access log always uses the correct
+        value for the remote IP address associated with the request and that
+        requests with multiple errors do not result in multiple entries in
+        the access log. (markt)
       </fix>
     </changelog>
   </subsection>

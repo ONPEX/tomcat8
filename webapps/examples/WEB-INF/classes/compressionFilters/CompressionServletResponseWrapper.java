@@ -30,7 +30,7 @@ import javax.servlet.http.HttpServletResponseWrapper;
  *
  * @author Amy Roh
  * @author Dmitri Valdin
- * @version $Id: CompressionServletResponseWrapper.java 987920 2010-08-22 15:34:34Z markt $
+ * @version $Id: CompressionServletResponseWrapper.java 1200121 2011-11-10 04:01:40Z kkolinko $
  */
 
 public class CompressionServletResponseWrapper extends HttpServletResponseWrapper {
@@ -240,7 +240,7 @@ public class CompressionServletResponseWrapper extends HttpServletResponseWrappe
         } else {
             writer = new PrintWriter(stream);
         }
-        
+
         return (writer);
 
     }

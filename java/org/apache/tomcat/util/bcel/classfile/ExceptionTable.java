@@ -31,7 +31,7 @@ import org.apache.tomcat.util.bcel.Constants;
  * attribute using the name <em>Exceptions</em> (which is inconsistent
  * with the other classes).
  *
- * @version $Id: ExceptionTable.java 1057670 2011-01-11 14:52:05Z markt $
+ * @version $Id: ExceptionTable.java 1181133 2011-10-10 18:49:14Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Code
  */
@@ -105,7 +105,7 @@ public final class ExceptionTable extends Attribute {
      */
     @Override
     public final String toString() {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         String str;
         for (int i = 0; i < number_of_exceptions; i++) {
             str = constant_pool.getConstantString(exception_index_table[i],

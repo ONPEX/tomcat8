@@ -28,15 +28,13 @@ public interface ConnectionPoolMBean extends PoolConfiguration  {
     public int getIdle();
 
     public int getActive();
-    
-    public boolean isPoolSweeperEnabled();
-    
+
     public int getNumIdle();
-    
+
     public int getNumActive();
-    
+
     public int getWaitCount();
-    
+
     //=================================================================
     //       POOL OPERATIONS
     //=================================================================
@@ -50,5 +48,5 @@ public interface ConnectionPoolMBean extends PoolConfiguration  {
     //       POOL NOTIFICATIONS
     //=================================================================
 
-    
+
 }
