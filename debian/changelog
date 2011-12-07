@@ -1,3 +1,10 @@
+tomcat7 (7.0.23-2) UNRELEASED; urgency=low
+
+  * Add nl.po debconf translation (Closes: #651162) 
+    - Thanks to Jeroen Schot
+
+ -- tony mancill <tmancill@debian.org>  Tue, 06 Dec 2011 23:49:52 -0800
+
 tomcat7 (7.0.23-1) unstable; urgency=low
 
   * New upstream release.
