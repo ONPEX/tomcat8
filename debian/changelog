@@ -1,9 +1,14 @@
 tomcat7 (7.0.23-2) UNRELEASED; urgency=low
 
+  [ tony mancill ]
   * Add nl.po debconf translation (Closes: #651162) 
     - Thanks to Jeroen Schot
 
- -- tony mancill <tmancill@debian.org>  Tue, 06 Dec 2011 23:49:52 -0800
+  [ Miguel Landaeta ]
+  * Fix error in debian/rules that caused tomcat to report no version.
+    Thanks to Jorge Barreiro for the patch. (Closes: #651492).
+
+ -- Miguel Landaeta <miguel@miguel.cc>  Fri, 09 Dec 2011 17:42:57 -0430
 
 tomcat7 (7.0.23-1) unstable; urgency=low
 

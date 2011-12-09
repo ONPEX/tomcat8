@@ -21,9 +21,9 @@ T_VER := $(shell dpkg-parsechangelog | egrep '^Version:' \
 	| cut -f 2 -d ' ' | cut -f 2 -d ' '|sed 's/-[^-]*$$//')
 T_JARS := tomcat-i18n-fr tomcat-i18n-es tomcat-i18n-ja catalina-ant
 T_MAVENIZED_JARS := jasper-el annotations-api jasper catalina-ha catalina 
-T_VER_MAJOR := $(echo $(T_VER) | cut -d'.' -f1)
-T_VER_MINOR := $(echo $(T_VER) | cut -d'.' -f2)
-T_VER_BUILD := $(echo $(T_VER) | cut -d'.' -f3)
+T_VER_MAJOR := $(shell echo $(T_VER) | cut -d'.' -f1)
+T_VER_MINOR := $(shell echo $(T_VER) | cut -d'.' -f2)
+T_VER_BUILD := $(shell echo $(T_VER) | cut -d'.' -f3)
 
 ANT_ARGS := -Dcompile.debug=true \
 	-Dant.build.javac.source=1.5 \
