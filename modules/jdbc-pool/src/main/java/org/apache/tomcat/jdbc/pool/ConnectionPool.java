@@ -21,8 +21,13 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.ConcurrentModificationException;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
@@ -430,7 +435,7 @@ public class ConnectionPool {
 
         //if the evictor thread is supposed to run, start it now
         if (properties.isPoolSweeperEnabled()) {
-            poolCleaner = new PoolCleaner("[Pool-Cleaner]:" + properties.getName(), this, properties.getTimeBetweenEvictionRunsMillis());
+            poolCleaner = new PoolCleaner(this, properties.getTimeBetweenEvictionRunsMillis());
             poolCleaner.start();
         } //end if
 
@@ -777,6 +782,30 @@ public class ConnectionPool {
             }
         }
     }
+    /**
+     * Terminate the current transaction for the given connection.
+     * @param con
+     * @return <code>true</code> if the connection TX termination succeeded
+     *         otherwise <code>false</code>
+     */
+    protected boolean terminateTransaction(PooledConnection con) {
+        try {
+            if (con.getPoolProperties().getDefaultAutoCommit()==Boolean.FALSE) {
+                if (this.getPoolProperties().getRollbackOnReturn()) {
+                    boolean autocommit = con.getConnection().getAutoCommit();
+                    if (!autocommit) con.getConnection().rollback();
+                } else if (this.getPoolProperties().getCommitOnReturn()) {
+                    boolean autocommit = con.getConnection().getAutoCommit();
+                    if (!autocommit) con.getConnection().commit();
+                }
+            }
+            return true;
+        } catch (SQLException x) {
+            log.warn("Unable to terminate transaction, connection will be closed.",x);
+            return false;
+        }
+
+    }
 
     /**
      * Determines if a connection should be closed upon return to the pool.
@@ -788,6 +817,7 @@ public class ConnectionPool {
         if (con.isDiscarded()) return true;
         if (isClosed()) return true;
         if (!con.validate(action)) return true;
+        if (!terminateTransaction(con)) return true;
         if (getPoolProperties().getMaxAge()>0 ) {
             return (System.currentTimeMillis()-con.getLastConnected()) > getPoolProperties().getMaxAge();
         } else {
@@ -1161,13 +1191,53 @@ public class ConnectionPool {
 
     }
 
-    protected class PoolCleaner extends Thread {
+
+
+    private static volatile Timer poolCleanTimer = null;
+    private static HashSet<PoolCleaner> cleaners = new HashSet<PoolCleaner>();
+
+    private static synchronized void registerCleaner(PoolCleaner cleaner) {
+        unregisterCleaner(cleaner);
+        cleaners.add(cleaner);
+        if (poolCleanTimer == null) {
+            poolCleanTimer = new Timer("PoolCleaner["
+                    + System.identityHashCode(ConnectionPool.class
+                            .getClassLoader()) + ":"
+                    + System.currentTimeMillis() + "]", true);
+        }
+        poolCleanTimer.scheduleAtFixedRate(cleaner, cleaner.sleepTime,
+                cleaner.sleepTime);
+    }
+
+    private static synchronized void unregisterCleaner(PoolCleaner cleaner) {
+        boolean removed = cleaners.remove(cleaner);
+        if (removed) {
+            cleaner.cancel();
+            if (poolCleanTimer != null) {
+                poolCleanTimer.purge();
+                if (cleaners.size() == 0) {
+                    poolCleanTimer.cancel();
+                    poolCleanTimer = null;
+                }
+            }
+        }
+    }
+
+    public static Set<TimerTask> getPoolCleaners() {
+        return Collections.<TimerTask>unmodifiableSet(cleaners);
+    }
+
+    public static Timer getPoolTimer() {
+        return poolCleanTimer;
+    }
+
+    protected class PoolCleaner extends TimerTask {
         protected ConnectionPool pool;
         protected long sleepTime;
         protected volatile boolean run = true;
-        PoolCleaner(String name, ConnectionPool pool, long sleepTime) {
-            super(name);
-            this.setDaemon(true);
+        protected volatile long lastRun = 0;
+
+        PoolCleaner(ConnectionPool pool, long sleepTime) {
             this.pool = pool;
             this.sleepTime = sleepTime;
             if (sleepTime <= 0) {
@@ -1180,37 +1250,32 @@ public class ConnectionPool {
 
         @Override
         public void run() {
-            while (run) {
+            if (pool.isClosed()) {
+                if (pool.getSize() <= 0) {
+                    run = false;
+                }
+            } else if ((System.currentTimeMillis() - lastRun) > sleepTime) {
+                lastRun = System.currentTimeMillis();
                 try {
-                    sleep(sleepTime);
-                } catch (InterruptedException e) {
-                    // ignore it
-                    Thread.interrupted();
-                    continue;
-                } //catch
+                    if (pool.getPoolProperties().isRemoveAbandoned())
+                        pool.checkAbandoned();
+                    if (pool.getPoolProperties().getMinIdle() < pool.idle
+                            .size())
+                        pool.checkIdle();
+                    if (pool.getPoolProperties().isTestWhileIdle())
+                        pool.testAllIdle();
+                } catch (Exception x) {
+                    log.error("", x);
+                } // catch
+            } // end if
+        } // run
 
-                if (pool.isClosed()) {
-                    if (pool.getSize() <= 0) {
-                        run = false;
-                    }
-                } else {
-                    try {
-                        if (pool.getPoolProperties().isRemoveAbandoned())
-                            pool.checkAbandoned();
-                        if (pool.getPoolProperties().getMinIdle()<pool.idle.size())
-                            pool.checkIdle();
-                        if (pool.getPoolProperties().isTestWhileIdle())
-                            pool.testAllIdle();
-                    } catch (Exception x) {
-                        log.error("", x);
-                    } //catch
-                } //end if
-            } //while
-        } //run
+        public void start() {
+            registerCleaner(this);
+        }
 
         public void stopRunning() {
-            run = false;
-            interrupt();
+            unregisterCleaner(this);
         }
     }
 }

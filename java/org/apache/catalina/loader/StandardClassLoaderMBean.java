@@ -22,8 +22,11 @@ package org.apache.catalina.loader;
  * MBean interface for StandardClassLoader, to allow JMX remote management.
  *
  * @author Remy Maucherat
- * @version $Id: StandardClassLoaderMBean.java 988225 2010-08-23 17:38:41Z markt $
+ * @version $Id: StandardClassLoaderMBean.java 1242113 2012-02-08 21:37:36Z markt $
+ *
+ * @deprecated  Unused. Will be removed in Tomcat 8.0.x.
  */
+@Deprecated
 public interface StandardClassLoaderMBean {
     // Marker interface
 }

@@ -44,13 +44,13 @@ import org.apache.catalina.Service;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
-import org.apache.catalina.core.ApplicationSessionCookieConfig;
 import org.apache.catalina.deploy.LoginConfig;
 import org.apache.catalina.deploy.SecurityCollection;
 import org.apache.catalina.deploy.SecurityConstraint;
 import org.apache.catalina.mbeans.MBeanUtils;
 import org.apache.catalina.util.LifecycleMBeanBase;
 import org.apache.catalina.util.MD5Encoder;
+import org.apache.catalina.util.SessionConfig;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.buf.B2CConverter;
@@ -67,7 +67,7 @@ import org.ietf.jgss.GSSName;
  * location) are identical to those currently supported by Tomcat 3.X.
  *
  * @author Craig R. McClanahan
- * @version $Id: RealmBase.java 1158177 2011-08-16 10:04:00Z markt $
+ * @version $Id: RealmBase.java 1240861 2012-02-05 23:30:20Z markt $
  */
 
 public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
@@ -1016,7 +1016,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
         if ((requestedSessionId != null) &&
             request.isRequestedSessionIdFromURL()) {
             file.append(";");
-            file.append(ApplicationSessionCookieConfig.getSessionUriParamName(
+            file.append(SessionConfig.getSessionUriParamName(
                     request.getContext()));
             file.append("=");
             file.append(requestedSessionId);

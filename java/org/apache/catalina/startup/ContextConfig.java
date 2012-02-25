@@ -14,10 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.catalina.startup;
-
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -29,11 +26,11 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.JarURLConnection;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -46,6 +43,10 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.naming.Binding;
+import javax.naming.NameNotFoundException;
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
 import javax.servlet.ServletContainerInitializer;
 import javax.servlet.ServletContext;
 import javax.servlet.annotation.HandlesTypes;
@@ -79,6 +80,7 @@ import org.apache.catalina.util.ContextName;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.naming.resources.DirContextURLConnection;
+import org.apache.naming.resources.FileDirContext;
 import org.apache.naming.resources.ResourceAttributes;
 import org.apache.tomcat.JarScanner;
 import org.apache.tomcat.JarScannerCallback;
@@ -105,11 +107,9 @@ import org.xml.sax.SAXParseException;
  *
  * @author Craig R. McClanahan
  * @author Jean-Francois Arcand
- * @version $Id: ContextConfig.java 1201928 2011-11-14 22:07:08Z markt $
+ * @version $Id: ContextConfig.java 1245452 2012-02-17 13:58:02Z markt $
  */
-
-public class ContextConfig
-    implements LifecycleListener {
+public class ContextConfig implements LifecycleListener {
 
     private static final Log log = LogFactory.getLog( ContextConfig.class );
     
@@ -134,7 +134,24 @@ public class ContextConfig
      * the name of the implemented authentication method, and the value is
      * the fully qualified Java class name of the corresponding Valve.
      */
-    protected static Properties authenticators = null;
+    protected static final Properties authenticators;
+
+    static {
+        // Load our mapping properties for the standard authenticators
+        InputStream is =
+                ContextConfig.class.getClassLoader().getResourceAsStream(
+                    "org/apache/catalina/startup/Authenticators.properties");
+        Properties props = null;
+        props = new Properties();
+        if (is != null) {
+            try {
+                props.load(is);
+            } catch (IOException e) {
+                props = null;
+            }
+        }
+        authenticators = props;
+    }
 
 
     /**
@@ -165,7 +182,9 @@ public class ContextConfig
 
     /**
      * The default web application's context file location.
+     * @deprecated Unnecessary
      */
+    @Deprecated
     protected String defaultContextXml = null;
     
     
@@ -191,14 +210,34 @@ public class ContextConfig
      * Map of ServletContainerInitializer to classes they expressed interest in.
      */
     protected Map<ServletContainerInitializer, Set<Class<?>>> initializerClassMap =
-        new LinkedHashMap<ServletContainerInitializer, Set<Class<?>>>();
+            new LinkedHashMap<ServletContainerInitializer, Set<Class<?>>>();
     
     /**
      * Map of Types to ServletContainerInitializer that are interested in those
      * types.
      */
     protected Map<Class<?>, Set<ServletContainerInitializer>> typeInitializerMap =
-        new HashMap<Class<?>, Set<ServletContainerInitializer>>();
+            new HashMap<Class<?>, Set<ServletContainerInitializer>>();
+
+    /**
+     * Cache of JavaClass objects (byte code) by fully qualified class name.
+     * Only populated if it is necessary to scan the super types and interfaces
+     * as part of the processing for {@link HandlesTypes}.
+     */
+    protected final Map<String,JavaClassCacheEntry> javaClassCache =
+            new HashMap<String,JavaClassCacheEntry>();
+
+    /**
+     * Flag that indicates if at least one {@link HandlesTypes} entry is present
+     * that represents an annotation.
+     */
+    protected boolean handlesTypesAnnotations = false;
+
+    /**
+     * Flag that indicates if at least one {@link HandlesTypes} entry is present
+     * that represents a non-annotation.
+     */
+    protected boolean handlesTypesNonAnnotations = false;
 
     /**
      * The <code>Digester</code> we will use to process web application
@@ -243,7 +282,9 @@ public class ContextConfig
 
     /**
      * Return the location of the default context file
+     * @deprecated Never changed from default
      */
+    @Deprecated
     public String getDefaultContextXml() {
         if( defaultContextXml == null ) {
             defaultContextXml=Constants.DefaultContextXml;
@@ -258,7 +299,9 @@ public class ContextConfig
      * Set the location of the default context file
      *
      * @param path Absolute/relative path to the default context.xml
+     * @deprecated Unused
      */
+    @Deprecated
     public void setDefaultContextXml(String path) {
 
         this.defaultContextXml = path;
@@ -349,7 +392,7 @@ public class ContextConfig
      * Set up an Authenticator automatically if required, and one has not
      * already been configured.
      */
-    protected synchronized void authenticatorConfig() {
+    protected void authenticatorConfig() {
 
         LoginConfig loginConfig = context.getLoginConfig();
 
@@ -394,25 +437,10 @@ public class ContextConfig
                 customAuthenticators.get(loginConfig.getAuthMethod());
         }
         if (authenticator == null) {
-            // Load our mapping properties if necessary
             if (authenticators == null) {
-                try {
-                    InputStream is=this.getClass().getClassLoader().getResourceAsStream("org/apache/catalina/startup/Authenticators.properties");
-                    if( is!=null ) {
-                        authenticators = new Properties();
-                        authenticators.load(is);
-                    } else {
-                        log.error(sm.getString(
-                                "contextConfig.authenticatorResources"));
-                        ok=false;
-                        return;
-                    }
-                } catch (IOException e) {
-                    log.error(sm.getString(
-                                "contextConfig.authenticatorResources"), e);
-                    ok = false;
-                    return;
-                }
+                log.error(sm.getString("contextConfig.authenticatorResources"));
+                ok = false;
+                return;
             }
 
             // Identify the class name of the Valve we should configure
@@ -746,8 +774,7 @@ public class ContextConfig
             docBase = cn.getBaseName();
 
             File file = null;
-            if (docBase.toLowerCase(Locale.ENGLISH).endsWith(".war")) {
-                // TODO - This is never executed. Bug or code to delete?
+            if (originalDocBase.toLowerCase(Locale.ENGLISH).endsWith(".war")) {
                 file = new File(System.getProperty("java.io.tmpdir"),
                         deploymentCount++ + "-" + docBase + ".war");
             } else {
@@ -1174,6 +1201,8 @@ public class ContextConfig
         parseWebXml(contextWebXml, webXml, false);
         
         if (webXml.getMajorVersion() >= 3) {
+            ServletContext sContext = context.getServletContext();
+
             // Ordering is important here
 
             // Step 1. Identify all the JARs packaged with the application
@@ -1196,14 +1225,41 @@ public class ContextConfig
                 // Step 4. Process /WEB-INF/classes for annotations
                 // This will add any matching classes to the typeInitializerMap
                 if (ok) {
-                    URL webinfClasses;
+                    // Hack required by Eclipse's "serve modules without
+                    // publishing" feature since this backs WEB-INF/classes by
+                    // multiple locations rather than one.
+                    NamingEnumeration<Binding> listBindings = null;
                     try {
-                        webinfClasses = context.getServletContext().getResource(
-                                "/WEB-INF/classes");
-                        processAnnotationsUrl(webinfClasses, webXml);
-                    } catch (MalformedURLException e) {
+                        try {
+                            listBindings = context.getResources().listBindings(
+                                    "/WEB-INF/classes");
+                        } catch (NameNotFoundException ignore) {
+                            // Safe to ignore
+                        }
+                        while (listBindings != null &&
+                                listBindings.hasMoreElements()) {
+                            Binding binding = listBindings.nextElement();
+                            if (binding.getObject() instanceof FileDirContext) {
+                                File webInfClassDir = new File(
+                                        ((FileDirContext) binding.getObject()).getDocBase());
+                                processAnnotationsFile(webInfClassDir, webXml);
+                            } else {
+                                String resource =
+                                        "/WEB-INF/classes/" + binding.getName();
+                                try {
+                                    URL url = sContext.getResource(resource);
+                                    processAnnotationsUrl(url, webXml);
+                                } catch (MalformedURLException e) {
+                                    log.error(sm.getString(
+                                            "contextConfig.webinfClassesUrl",
+                                            resource), e);
+                                }
+                            }
+                        }
+                    } catch (NamingException e) {
                         log.error(sm.getString(
-                                "contextConfig.webinfClassesUrl"), e);
+                                "contextConfig.webinfClassesUrl",
+                                "/WEB-INF/classes"), e);
                     }
                 }
     
@@ -1214,6 +1270,9 @@ public class ContextConfig
                     processAnnotations(orderedFragments);
                 }
     
+                // Cache, if used, is no longer required so clear it
+                javaClassCache.clear();
+
                 // Step 6. Merge web-fragment.xml files into the main web.xml
                 // file.
                 if (ok) {
@@ -1239,9 +1298,9 @@ public class ContextConfig
                     // from having to re-generate it.
                     // TODO Use a ServletContainerInitializer for Jasper
                     String mergedWebXml = webXml.toXml();
-                    context.getServletContext().setAttribute(
+                    sContext.setAttribute(
                            org.apache.tomcat.util.scan.Constants.MERGED_WEB_XML,
-                            mergedWebXml);
+                           mergedWebXml);
                     if (context.getLogEffectiveWebXml()) {
                         log.info("web.xml:\n" + mergedWebXml);
                     }
@@ -1314,18 +1373,22 @@ public class ContextConfig
         
         if (globalWebXml != null) {
             try {
-                File f = new File(new URI(globalWebXml.getSystemId()));
-                globalTimeStamp = f.lastModified();
-            } catch (URISyntaxException e) {
+                URL url = new URL(globalWebXml.getSystemId());
+                globalTimeStamp = url.openConnection().getLastModified();
+            } catch (MalformedURLException e) {
+                globalTimeStamp = -1;
+            } catch (IOException e) {
                 globalTimeStamp = -1;
             }
         }
         
         if (hostWebXml != null) {
             try {
-                File f = new File(new URI(hostWebXml.getSystemId()));
-                hostTimeStamp = f.lastModified();
-            } catch (URISyntaxException e) {
+                URL url = new URL(hostWebXml.getSystemId());
+                hostTimeStamp = url.openConnection().getLastModified();
+            } catch (MalformedURLException e) {
+                hostTimeStamp = -1;
+            } catch (IOException e) {
                 hostTimeStamp = -1;
             }
         }
@@ -1486,6 +1549,11 @@ public class ContextConfig
                 Class<?>[] types = ht.value();
                 if (types != null) {
                     for (Class<?> type : types) {
+                        if (type.isAnnotation()) {
+                            handlesTypesAnnotations = true;
+                        } else {
+                            handlesTypesNonAnnotations = true;
+                        }
                         Set<ServletContainerInitializer> scis =
                             typeInitializerMap.get(type);
                         if (scis == null) {
@@ -1565,10 +1633,25 @@ public class ContextConfig
                     if (jar.entryExists("META-INF/resources/")) {
                         context.addResourceJarUrl(url);
                     }
+                } else if ("file".equals(url.getProtocol())) {
+                    FileDirContext fileDirContext = new FileDirContext();
+                    fileDirContext.setDocBase(new File(url.toURI()).getAbsolutePath());
+                    try {
+                        fileDirContext.lookup("META-INF/resources/");
+                        //lookup succeeded
+                        if(context instanceof StandardContext){
+                            ((StandardContext)context).addResourcesDirContext(fileDirContext);
+                        }
+                    } catch (NamingException e) {
+                        //not found, ignore
+                    }
                 }
             } catch (IOException ioe) {
                 log.error(sm.getString("contextConfig.resourceJarFail", url,
                         context.getName()));
+            } catch (URISyntaxException e) {
+                log.error(sm.getString("contextConfig.resourceJarFail", url,
+                    context.getName()));
             } finally {
                 if (jar != null) {
                     jar.close();
@@ -1980,59 +2063,189 @@ public class ContextConfig
         if (typeInitializerMap.size() == 0)
             return;
         
-        // No choice but to load the class
+        if ((javaClass.getAccessFlags() &
+                org.apache.tomcat.util.bcel.Constants.ACC_ANNOTATION) > 0) {
+            // Skip annotations.
+            return;
+        }
+
         String className = javaClass.getClassName();
         
+        Class<?> clazz = null;
+        if (handlesTypesNonAnnotations) {
+            // This *might* be match for a HandlesType.
+            populateJavaClassCache(className, javaClass);
+            JavaClassCacheEntry entry = javaClassCache.get(className);
+            if (entry.getSciSet() == null) {
+                populateSCIsForCacheEntry(entry);
+            }
+            if (entry.getSciSet().size() > 0) {
+                // Need to try and load the class
+                clazz = loadClass(className);
+                if (clazz == null) {
+                    // Can't load the class so no point continuing
+                    return;
+                }
+
+                for (ServletContainerInitializer sci :
+                        entry.getSciSet()) {
+                    Set<Class<?>> classes = initializerClassMap.get(sci);
+                    if (classes == null) {
+                        classes = new HashSet<Class<?>>();
+                        initializerClassMap.put(sci, classes);
+                    }
+                    classes.add(clazz);
+                }
+            }
+        }
+
+        if (handlesTypesAnnotations) {
+            for (Map.Entry<Class<?>, Set<ServletContainerInitializer>> entry :
+                    typeInitializerMap.entrySet()) {
+                if (entry.getKey().isAnnotation()) {
+                    AnnotationEntry[] annotationEntries =
+                            javaClass.getAnnotationEntries();
+                    for (AnnotationEntry annotationEntry : annotationEntries) {
+                        if (entry.getKey().getName().equals(
+                                getClassName(annotationEntry.getAnnotationType()))) {
+                            if (clazz == null) {
+                                clazz = loadClass(className);
+                                if (clazz == null) {
+                                    // Can't load the class so no point
+                                    // continuing
+                                    return;
+                                }
+                            }
+                            for (ServletContainerInitializer sci : entry.getValue()) {
+                                initializerClassMap.get(sci).add(clazz);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    private void populateJavaClassCache(String className, JavaClass javaClass) {
+        if (javaClassCache.containsKey(className)) {
+            return;
+        }
+
+        // Add this class to the cache
+        javaClassCache.put(className, new JavaClassCacheEntry(javaClass));
+
+        populateJavaClassCache(javaClass.getSuperclassName());
+
+        for (String iterface : javaClass.getInterfaceNames()) {
+            populateJavaClassCache(iterface);
+        }
+    }
+
+    private void populateJavaClassCache(String className) {
+        if (!javaClassCache.containsKey(className)) {
+            String name = className.replace('.', '/') + ".class";
+            InputStream is =
+                    context.getLoader().getClassLoader().getResourceAsStream(name);
+            if (is == null) {
+                return;
+            }
+            ClassParser parser = new ClassParser(is, null);
+            try {
+                JavaClass clazz = parser.parse();
+                populateJavaClassCache(clazz.getClassName(), clazz);
+            } catch (ClassFormatException e) {
+                log.debug(sm.getString("contextConfig.invalidSciHandlesTypes",
+                        className), e);
+            } catch (IOException e) {
+                log.debug(sm.getString("contextConfig.invalidSciHandlesTypes",
+                        className), e);
+            }
+        }
+    }
+
+    private void populateSCIsForCacheEntry(JavaClassCacheEntry cacheEntry) {
+        Set<ServletContainerInitializer> result =
+                new HashSet<ServletContainerInitializer>();
+
+        JavaClass javaClass = cacheEntry.getJavaClass();
+
+        // Super class
+        String superClassName = javaClass.getSuperclassName();
+        JavaClassCacheEntry superClassCacheEntry =
+                javaClassCache.get(superClassName);
+
+        // Avoid an infinite loop with java.lang.Object
+        if (cacheEntry.equals(superClassCacheEntry)) {
+            cacheEntry.setSciSet(new HashSet<ServletContainerInitializer>());
+            return;
+        }
+
+        // May be null of the class is not present or could not be loaded.
+        if (superClassCacheEntry != null) {
+            if (superClassCacheEntry.getSciSet() == null) {
+                populateSCIsForCacheEntry(superClassCacheEntry);
+            }
+            result.addAll(superClassCacheEntry.getSciSet());
+        }
+        result.addAll(getSCIsForClass(superClassName));
+
+        // Interfaces
+        for (String interfaceName : javaClass.getInterfaceNames()) {
+            JavaClassCacheEntry interfaceEntry =
+                    javaClassCache.get(interfaceName);
+            // A null could mean that the class not present in application or
+            // that there is nothing of interest. Either way, nothing to do here
+            // so move along
+            if (interfaceEntry != null) {
+                if (interfaceEntry.getSciSet() == null) {
+                    populateSCIsForCacheEntry(interfaceEntry);
+                }
+                result.addAll(interfaceEntry.getSciSet());
+            }
+            result.addAll(getSCIsForClass(interfaceName));
+        }
+
+        cacheEntry.setSciSet(result);
+    }
+
+    private Set<ServletContainerInitializer> getSCIsForClass(String className) {
+        for (Map.Entry<Class<?>, Set<ServletContainerInitializer>> entry :
+                typeInitializerMap.entrySet()) {
+            Class<?> clazz = entry.getKey();
+            if (!clazz.isAnnotation()) {
+                if (clazz.getName().equals(className)) {
+                    return entry.getValue();
+                }
+            }
+        }
+        return Collections.emptySet();
+    }
+
+    private Class<?> loadClass(String className) {
         Class<?> clazz = null;
         try {
             clazz = context.getLoader().getClassLoader().loadClass(className);
         } catch (NoClassDefFoundError e) {
             log.debug(sm.getString("contextConfig.invalidSciHandlesTypes",
                     className), e);
-            return;
+            return null;
         } catch (ClassNotFoundException e) {
-            log.warn(sm.getString("contextConfig.invalidSciHandlesTypes",
+            log.debug(sm.getString("contextConfig.invalidSciHandlesTypes",
                     className), e);
-            return;
+            return null;
         } catch (ClassFormatError e) {
-            log.warn(sm.getString("contextConfig.invalidSciHandlesTypes",
+            log.debug(sm.getString("contextConfig.invalidSciHandlesTypes",
                     className), e);
-            return;
+            return null;
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
-            log.warn(sm.getString("contextConfig.invalidSciHandlesTypes",
+            log.debug(sm.getString("contextConfig.invalidSciHandlesTypes",
                     className), t);
-            return;
+            return null;
         }
-
-        if (clazz.isAnnotation()) {
-            // Skip
-            return;
-        }
-        
-        boolean match = false;
-        
-        for (Map.Entry<Class<?>, Set<ServletContainerInitializer>> entry :
-                typeInitializerMap.entrySet()) {
-            if (entry.getKey().isAnnotation()) {
-                AnnotationEntry[] annotationEntries = javaClass.getAnnotationEntries();
-                for (AnnotationEntry annotationEntry : annotationEntries) {
-                    if (entry.getKey().getName().equals(
-                        getClassName(annotationEntry.getAnnotationType()))) {
-                        match = true;
-                        break;
-                    }
-                }
-            } else if (entry.getKey().isAssignableFrom(clazz)) {
-                match = true;
-            }
-            if (match) {
-                for (ServletContainerInitializer sci : entry.getValue()) {
-                    initializerClassMap.get(sci).add(clazz);
-                }
-                match = false;
-            }
-        }
+        return clazz;
     }
 
     private static final String getClassName(String internalForm) {
@@ -2440,6 +2653,27 @@ public class ContextConfig
 
         public long getHostTimeStamp() {
             return hostTimeStamp;
+        }
+    }
+
+    private static class JavaClassCacheEntry {
+        private final JavaClass javaClass;
+        private Set<ServletContainerInitializer> sciSet = null;
+
+        public JavaClassCacheEntry(JavaClass javaClass) {
+            this.javaClass = javaClass;
+        }
+
+        public JavaClass getJavaClass() {
+            return javaClass;
+        }
+
+        public Set<ServletContainerInitializer> getSciSet() {
+            return sciSet;
+        }
+
+        public void setSciSet(Set<ServletContainerInitializer> sciSet) {
+            this.sciSet = sciSet;
         }
     }
 }

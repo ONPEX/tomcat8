@@ -22,14 +22,17 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.apache.catalina.startup.LoggingBaseTest;
 import org.apache.tomcat.util.buf.MessageBytes;
 
-public class TestMapper {
+public class TestMapper extends LoggingBaseTest {
 
     private Mapper mapper;
 
     @Before
+    @Override
     public void setUp() throws Exception {
+        super.setUp();
         mapper = new Mapper();
 
         mapper.addHost("sjbjdvwsbvhrb", new String[0], "blah1");
@@ -48,6 +51,7 @@ public class TestMapper {
         mapper.addHost("zzzuyopjvewpovewjhfewoih", new String[0], "blah12");
         mapper.addHost("xxxxgqwiwoih", new String[0], "blah13");
         mapper.addHost("qwigqwiwoih", new String[0], "blah14");
+        mapper.addHostAlias("iowejoiejfoiew", "iowejoiejfoiew_alias");
 
         mapper.setDefaultHostName("ylwrehirkuewh");
 
@@ -84,11 +88,13 @@ public class TestMapper {
 
     @Test
     public void testAddHost() throws Exception {
-        // Check we have the right number (add 16 but one is a duplicate)
-        assertEquals(15, mapper.hosts.length);
+        // Check we have the right number
+        // (added 17 including one host alias but one is a duplicate)
+        assertEquals(16, mapper.hosts.length);
 
         // Make sure adding a duplicate *does not* overwrite
-        assertEquals("blah7", mapper.hosts[3].object);
+        final int iowPos = 3;
+        assertEquals("blah7", mapper.hosts[iowPos].object);
 
         // Check for alphabetical order of host names
         String previous;
@@ -98,6 +104,14 @@ public class TestMapper {
             current = mapper.hosts[i].name;
             assertTrue(previous.compareTo(current) < 0);
         }
+
+        // Check that host alias has the same data
+        Mapper.Host host = mapper.hosts[iowPos];
+        Mapper.Host alias = mapper.hosts[iowPos + 1];
+        assertEquals("iowejoiejfoiew", host.name);
+        assertEquals("iowejoiejfoiew_alias", alias.name);
+        assertEquals(host.contextList, alias.contextList);
+        assertEquals(host.object, alias.object);
     }
 
     @Test
@@ -105,6 +119,8 @@ public class TestMapper {
         MappingData mappingData = new MappingData();
         MessageBytes host = MessageBytes.newInstance();
         host.setString("iowejoiejfoiew");
+        MessageBytes alias = MessageBytes.newInstance();
+        alias.setString("iowejoiejfoiew_alias");
         MessageBytes uri = MessageBytes.newInstance();
         uri.setString("/foo/bar/blah/bobou/foo");
         uri.toChars();
@@ -132,10 +148,38 @@ public class TestMapper {
         assertEquals("/bobou", mappingData.wrapperPath.toString());
         assertEquals("/foo", mappingData.pathInfo.toString());
         assertTrue(mappingData.redirectPath.isNull());
+
+        mappingData.recycle();
+        uri.setString("/foo/bar/bla/bobou/foo");
+        uri.toChars();
+        uri.getCharChunk().setLimit(-1);
+        mapper.map(alias, uri, null, mappingData);
+        assertEquals("blah7", mappingData.host);
+        assertEquals("context3", mappingData.context);
+        assertEquals("wrapper7", mappingData.wrapper);
+        assertEquals("/foo/bar/bla", mappingData.contextPath.toString());
+        assertEquals("/bobou", mappingData.wrapperPath.toString());
+        assertEquals("/foo", mappingData.pathInfo.toString());
+        assertTrue(mappingData.redirectPath.isNull());
     }
 
     @Test
     public void testPerformance() throws Exception {
+        // Takes ~1s on markt's laptop. If this takes more than 4s something
+        // probably needs looking at. If this fails repeatedly then we may need
+        // to increase this limit.
+        final long maxTime = 4000;
+        long time = testPerformanceImpl();
+        if (time >= maxTime) {
+            // Rerun to reject occasional failures, e.g. because of gc
+            log.warn("testPerformance() test completed in " + time + " ms");
+            time = testPerformanceImpl();
+            log.warn("testPerformance() test rerun completed in " + time + " ms");
+        }
+        assertTrue(String.valueOf(time), time < maxTime);
+    }
+
+    private long testPerformanceImpl() throws Exception {
         MappingData mappingData = new MappingData();
         MessageBytes host = MessageBytes.newInstance();
         host.setString("iowejoiejfoiew");
@@ -150,10 +194,6 @@ public class TestMapper {
             mapper.map(host, uri, null, mappingData);
         }
         long time = System.currentTimeMillis() - start;
-
-        // Takes ~1s on markt's laptop. If this takes more than 4s something
-        // probably needs looking at. If this fails repeatedly then we may need
-        // to increase this limit.
-        assertTrue(String.valueOf(time), time < 4000);
+        return time;
     }
 }

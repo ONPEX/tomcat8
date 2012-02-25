@@ -44,7 +44,7 @@ import org.apache.naming.StringManager;
  * Proxy Directory Context implementation.
  *
  * @author Remy Maucherat
- * @version $Id: ProxyDirContext.java 1138019 2011-06-21 14:29:49Z markt $
+ * @version $Id: ProxyDirContext.java 1225631 2011-12-29 19:49:28Z markt $
  */
 
 public class ProxyDirContext implements DirContext {
@@ -203,7 +203,9 @@ public class ProxyDirContext implements DirContext {
 
     /**
      * Return the actual directory context we are wrapping.
+     * @deprecated - unused
      */
+    @Deprecated
     public DirContext getDirContext() {
         return this.dirContext;
     }
@@ -211,7 +213,9 @@ public class ProxyDirContext implements DirContext {
 
     /**
      * Return the document root for this component.
+     * @deprecated - unused
      */
+    @Deprecated
     public String getDocBase() {
         if (dirContext instanceof BaseDirContext)
             return ((BaseDirContext) dirContext).getDocBase();

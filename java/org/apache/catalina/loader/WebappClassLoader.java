@@ -46,11 +46,11 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.Vector;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.jar.Attributes;
 import java.util.jar.Attributes.Name;
@@ -117,7 +117,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: WebappClassLoader.java 1202038 2011-11-15 04:30:21Z kkolinko $
+ * @version $Id: WebappClassLoader.java 1230732 2012-01-12 19:49:43Z markt $
  */
 public class WebappClassLoader
     extends URLClassLoader
@@ -189,7 +189,7 @@ public class WebappClassLoader
      * earlier versions.
      */
     protected static final String[] triggers = {
-        "javax.servlet.Servlet"                     // Servlet API
+        "javax.servlet.Servlet", "javax.el.Expression"       // Servlet API
     };
 
 
@@ -1278,7 +1278,8 @@ public class WebappClassLoader
         if (log.isDebugEnabled())
             log.debug("    findResources(" + name + ")");
 
-        Vector<URL> result = new Vector<URL>();
+        //we use a LinkedHashSet instead of a Vector to avoid duplicates with virtualmappings
+        LinkedHashSet<URL> result = new LinkedHashSet<URL>();
 
         int jarFilesLength = jarFiles.length;
         int repositoriesLength = repositories.length;
@@ -1291,7 +1292,7 @@ public class WebappClassLoader
             Enumeration<URL> otherResourcePaths = super.findResources(name);
 
             while (otherResourcePaths.hasMoreElements()) {
-                result.addElement(otherResourcePaths.nextElement());
+                result.add(otherResourcePaths.nextElement());
             }
 
         }
@@ -1303,7 +1304,7 @@ public class WebappClassLoader
                 // Note : Not getting an exception here means the resource was
                 // found
                 try {
-                    result.addElement(getURI(new File(files[i], name)));
+                    result.add(getURI(new File(files[i], name)));
                 } catch (MalformedURLException e) {
                     // Ignore
                 }
@@ -1321,7 +1322,7 @@ public class WebappClassLoader
                         try {
                             String jarFakeUrl = getURI(jarRealFiles[i]).toString();
                             jarFakeUrl = "jar:" + jarFakeUrl + "!/" + name;
-                            result.addElement(new URL(jarFakeUrl));
+                            result.add(new URL(jarFakeUrl));
                         } catch (MalformedURLException e) {
                             // Ignore
                         }
@@ -1336,12 +1337,24 @@ public class WebappClassLoader
             Enumeration<URL> otherResourcePaths = super.findResources(name);
 
             while (otherResourcePaths.hasMoreElements()) {
-                result.addElement(otherResourcePaths.nextElement());
+                result.add(otherResourcePaths.nextElement());
             }
 
         }
 
-        return result.elements();
+        final Iterator<URL> iterator = result.iterator();
+
+        return new Enumeration<URL>() {
+            @Override
+            public boolean hasMoreElements() {
+                return iterator.hasNext();
+            }
+
+            @Override
+            public URL nextElement() {
+                return iterator.next();
+            }
+        };
 
     }
 
@@ -3281,6 +3294,10 @@ public class WebappClassLoader
         }
         if (name.startsWith("javax.servlet.")) {
             // Web apps should never package any other Servlet or JSP classes
+            return false;
+        }
+        if (name.startsWith("javax.el")) {
+            // Must never load javax.el.* classes
             return false;
         }
 

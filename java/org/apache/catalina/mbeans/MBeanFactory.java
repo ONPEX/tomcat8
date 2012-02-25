@@ -22,6 +22,7 @@ import java.io.File;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
+import org.apache.catalina.Container;
 import org.apache.catalina.Context;
 import org.apache.catalina.Engine;
 import org.apache.catalina.Host;
@@ -44,6 +45,7 @@ import org.apache.catalina.realm.UserDatabaseRealm;
 import org.apache.catalina.session.StandardManager;
 import org.apache.catalina.startup.ContextConfig;
 import org.apache.catalina.startup.HostConfig;
+import org.apache.catalina.util.LifecycleMBeanBase;
 import org.apache.catalina.valves.AccessLogValve;
 import org.apache.catalina.valves.RemoteAddrValve;
 import org.apache.catalina.valves.RemoteHostValve;
@@ -55,7 +57,7 @@ import org.apache.catalina.valves.ValveBase;
  * <code>org.apache.catalina.core.StandardServer</code> component.</p>
  *
  * @author Amy Roh
- * @version $Id: MBeanFactory.java 1196316 2011-11-01 22:05:15Z markt $
+ * @version $Id: MBeanFactory.java 1240334 2012-02-03 20:17:37Z markt $
  */
 
 public class MBeanFactory {
@@ -235,7 +237,11 @@ public class MBeanFactory {
      * @param parent MBean Name of the associated parent component
      *
      * @exception Exception if an MBean cannot be created or registered
+     *
+     * @deprecated  Will be removed in Tomcat 8.0.x. Replaced by {@link
+     *              #createValve(String, String)}.
      */
+    @Deprecated
     public String createAccessLoggerValve(String parent)
         throws Exception {
 
@@ -467,7 +473,11 @@ public class MBeanFactory {
      * @param parent MBean Name of the associated parent component
      *
      * @exception Exception if an MBean cannot be created or registered
+     *
+     * @deprecated  Will be removed in Tomcat 8.0.x. Replaced by {@link
+     *              #createValve(String, String)}.
      */
+    @Deprecated
     public String createRemoteAddrValve(String parent)
         throws Exception {
 
@@ -490,7 +500,11 @@ public class MBeanFactory {
      * @param parent MBean Name of the associated parent component
      *
      * @exception Exception if an MBean cannot be created or registered
+     *
+     * @deprecated  Will be removed in Tomcat 8.0.x. Replaced by {@link
+     *              #createValve(String, String)}.
      */
+    @Deprecated
     public String createRemoteHostValve(String parent)
         throws Exception {
 
@@ -513,7 +527,12 @@ public class MBeanFactory {
      * @param parent MBean Name of the associated parent component
      *
      * @exception Exception if an MBean cannot be created or registered
+     *
+     * @deprecated  Will be removed in Tomcat 8.0.x. Replaced by {@link
+     *              #createValve(String, String)}.
      */
+    @Deprecated
+
     public String createSingleSignOn(String parent)
         throws Exception {
 
@@ -756,6 +775,42 @@ public class MBeanFactory {
             return null;
         }   
 
+    }
+
+
+    /**
+     * Create a new Valve and associate it with a {@link Container}.
+     *
+     * @param className The fully qualified class name of the {@link Valve} to
+     *                  create
+     * @param parent    The MBean name of the associated parent
+     *                  {@link Container}.
+     *
+     * @return  The MBean name of the {@link Valve} that was created or
+     *          <code>null</code> if the {@link Valve} does not implement
+     *          {@link LifecycleMBeanBase}.
+     */
+    public String createValve(String className, String parent)
+            throws Exception {
+
+        // Look for the parent
+        ObjectName parentName = new ObjectName(parent);
+        Container container = getParentContainerFromParent(parentName);
+
+        if (container == null) {
+            // TODO
+            throw new IllegalArgumentException();
+        }
+
+        Valve valve = (Valve) Class.forName(className).newInstance();
+
+        container.getPipeline().addValve(valve);
+
+        if (valve instanceof LifecycleMBeanBase) {
+            return ((LifecycleMBeanBase) valve).getObjectName().toString();
+        } else {
+            return null;
+        }
     }
 
 

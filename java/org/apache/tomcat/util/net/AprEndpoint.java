@@ -37,6 +37,7 @@ import org.apache.tomcat.jni.Pool;
 import org.apache.tomcat.jni.SSL;
 import org.apache.tomcat.jni.SSLContext;
 import org.apache.tomcat.jni.SSLSocket;
+import org.apache.tomcat.jni.Sockaddr;
 import org.apache.tomcat.jni.Socket;
 import org.apache.tomcat.jni.Status;
 import org.apache.tomcat.util.ExceptionUtils;
@@ -316,8 +317,29 @@ public class AprEndpoint extends AbstractEndpoint {
     public void setSSLInsecureRenegotiation(boolean SSLInsecureRenegotiation) { this.SSLInsecureRenegotiation = SSLInsecureRenegotiation; }
     public boolean getSSLInsecureRenegotiation() { return SSLInsecureRenegotiation; }
 
-    // --------------------------------------------------------- Public Methods
 
+    /**
+     * Port in use.
+     */
+    @Override
+    public int getLocalPort() {
+        long s = serverSock;
+        if (s == 0) {
+            return -1;
+        } else {
+            long sa;
+            try {
+                sa = Address.get(Socket.APR_LOCAL, s);
+                Sockaddr addr = Address.getInfo(sa);
+                return addr.port;
+            } catch (Exception e) {
+                return -1;
+            }
+        }
+    }
+
+
+    // --------------------------------------------------------- Public Methods
 
     /**
      * Number of keepalive sockets.
@@ -842,31 +864,9 @@ public class AprEndpoint extends AbstractEndpoint {
      */
     protected boolean processSocket(long socket, SocketStatus status) {
         try {
-            if (status == SocketStatus.OPEN || status == SocketStatus.STOP ||
-                    status == SocketStatus.TIMEOUT) {
-                SocketWrapper<Long> wrapper =
+            SocketWrapper<Long> wrapper =
                     new SocketWrapper<Long>(Long.valueOf(socket));
-                SocketEventProcessor proc =
-                    new SocketEventProcessor(wrapper, status);
-                ClassLoader loader = Thread.currentThread().getContextClassLoader();
-                try {
-                    if (Constants.IS_SECURITY_ENABLED) {
-                        PrivilegedAction<Void> pa = new PrivilegedSetTccl(
-                                getClass().getClassLoader());
-                        AccessController.doPrivileged(pa);
-                    } else {
-                        Thread.currentThread().setContextClassLoader(
-                                getClass().getClassLoader());
-                    }
-                    getExecutor().execute(proc);
-                } finally {
-                    if (Constants.IS_SECURITY_ENABLED) {
-                        PrivilegedAction<Void> pa = new PrivilegedSetTccl(loader);
-                        AccessController.doPrivileged(pa);
-                    } else {
-                        Thread.currentThread().setContextClassLoader(loader);
-                    }
-                }            }
+            getExecutor().execute(new SocketEventProcessor(wrapper, status));
         } catch (RejectedExecutionException x) {
             log.warn("Socket processing request was rejected for:"+socket,x);
             return false;
@@ -941,21 +941,16 @@ public class AprEndpoint extends AbstractEndpoint {
         return log;
     }
 
+
     // --------------------------------------------------- Acceptor Inner Class
-
-
     /**
-     * Server socket acceptor thread.
+     * The background thread that listens for incoming TCP/IP connections and
+     * hands them off to an appropriate processor.
      */
     protected class Acceptor extends AbstractEndpoint.Acceptor {
 
         private final Log log = LogFactory.getLog(AprEndpoint.Acceptor.class);
 
-
-        /**
-         * The background thread that listens for incoming TCP/IP connections and
-         * hands them off to an appropriate processor.
-         */
         @Override
         public void run() {
 
@@ -997,17 +992,13 @@ public class AprEndpoint extends AbstractEndpoint {
                     // Successful accept, reset the error delay
                     errorDelay = 0;
 
-                    /*
-                     * In the case of a deferred accept unlockAccept needs to
-                     * send data. This data will be rubbish, so destroy the
-                     * socket and don't process it.
-                     */
-                    if (deferAccept && (paused || !running)) {
-                        destroySocket(socket);
-                        continue;
-                    }
-                    // Hand this socket off to an appropriate processor
-                    if (!processSocketWithOptions(socket)) {
+                    if (running && !paused) {
+                        // Hand this socket off to an appropriate processor
+                        if (!processSocketWithOptions(socket)) {
+                            // Close socket and pool right away
+                            destroySocket(socket);
+                        }
+                    } else {
                         // Close socket and pool right away
                         destroySocket(socket);
                     }
@@ -1342,7 +1333,6 @@ public class AprEndpoint extends AbstractEndpoint {
                         } else {
                             destroySocket(desc[n*2+1]);
                         }
-                        return true;
                     }
                 }
             } else if (rv < 0) {

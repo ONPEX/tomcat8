@@ -28,11 +28,13 @@ import java.io.FilePermission;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.URLDecoder;
 import java.net.URLStreamHandlerFactory;
 import java.util.ArrayList;
 import java.util.jar.JarFile;
@@ -77,7 +79,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: WebappLoader.java 1201610 2011-11-14 06:52:52Z kkolinko $
+ * @version $Id: WebappLoader.java 1232850 2012-01-18 12:05:43Z markt $
  */
 
 public class WebappLoader extends LifecycleMBeanBase
@@ -1057,9 +1059,9 @@ public class WebappLoader extends LifecycleMBeanBase
             for (int i = 0; i < repositories.length; i++) {
                 String repository = repositories[i].toString();
                 if (repository.startsWith("file://"))
-                    repository = repository.substring(7);
+                    repository = utf8Decode(repository.substring(7));
                 else if (repository.startsWith("file:"))
-                    repository = repository.substring(5);
+                    repository = utf8Decode(repository.substring(5));
                 else if (repository.startsWith("jndi:"))
                     repository =
                         servletContext.getRealPath(repository.substring(5));
@@ -1081,6 +1083,16 @@ public class WebappLoader extends LifecycleMBeanBase
         servletContext.setAttribute(Globals.CLASS_PATH_ATTR,
                                     classpath.toString());
 
+    }
+
+    private String utf8Decode(String input) {
+        String result = null;
+        try {
+            result = URLDecoder.decode(input, "UTF-8");
+        } catch (UnsupportedEncodingException uee) {
+            // Impossible. All JVMs are required to support UTF-8.
+        }
+        return result;
     }
 
     // try to extract the classpath from a loader that is not URLClassLoader

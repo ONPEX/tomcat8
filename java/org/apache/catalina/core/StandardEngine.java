@@ -37,7 +37,7 @@ import org.apache.catalina.Realm;
 import org.apache.catalina.Service;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
-import org.apache.catalina.realm.JAASRealm;
+import org.apache.catalina.realm.NullRealm;
 import org.apache.catalina.util.ServerInfo;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
@@ -49,7 +49,7 @@ import org.apache.juli.logging.LogFactory;
  * You can set the jvmRoute direct or with the System.property <b>jvmRoute</b>.
  *
  * @author Craig R. McClanahan
- * @version $Id: StandardEngine.java 1067725 2011-02-06 18:46:42Z markt $
+ * @version $Id: StandardEngine.java 1240796 2012-02-05 20:14:30Z markt $
  */
 
 public class StandardEngine extends ContainerBase implements Engine {
@@ -121,18 +121,20 @@ public class StandardEngine extends ContainerBase implements Engine {
 
     // ------------------------------------------------------------- Properties
 
-    /** Provide a default in case no explicit configuration is set
+    /**
+     * Obtain the configured Realm and provide a default Realm implementation
+     * when no explicit configuration is set.
      *
-     * @return configured realm, or a JAAS realm by default
+     * @return configured realm, or a {@link NullRealm} by default
      */
     @Override
     public Realm getRealm() {
-        Realm configured=super.getRealm();
-        // If no set realm has been called - default to JAAS
+        Realm configured = super.getRealm();
+        // If no set realm has been called - default to NullRealm
         // This can be overridden at engine, context and host level  
-        if( configured==null ) {
-            configured=new JAASRealm();
-            this.setRealm( configured );
+        if (configured == null) {
+            configured = new NullRealm();
+            this.setRealm(configured);
         }
         return configured;
     }
@@ -270,6 +272,15 @@ public class StandardEngine extends ContainerBase implements Engine {
         throw new IllegalArgumentException
             (sm.getString("standardEngine.notParent"));
 
+    }
+
+
+    @Override
+    protected void initInternal() throws LifecycleException {
+        // Ensure that a Realm is present before any attempt is made to start
+        // one. This will create the default NullRealm if necessary.
+        getRealm();
+        super.initInternal();
     }
 
 

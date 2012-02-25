@@ -43,11 +43,11 @@ import org.apache.catalina.Context;
 import org.apache.catalina.Globals;
 import org.apache.catalina.Session;
 import org.apache.catalina.Wrapper;
-import org.apache.catalina.core.ApplicationSessionCookieConfig;
 import org.apache.catalina.security.SecurityUtil;
 import org.apache.catalina.util.CharsetMapper;
 import org.apache.catalina.util.DateTool;
 import org.apache.catalina.util.RequestUtil;
+import org.apache.catalina.util.SessionConfig;
 import org.apache.tomcat.util.buf.CharChunk;
 import org.apache.tomcat.util.buf.UEncoder;
 import org.apache.tomcat.util.http.FastHttpDateFormat;
@@ -61,7 +61,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: Response.java 1200178 2011-11-10 06:14:46Z kkolinko $
+ * @version $Id: Response.java 1240861 2012-02-05 23:30:20Z markt $
  */
 
 public class Response
@@ -721,7 +721,7 @@ public class Response
                 (sm.getString("coyoteResponse.resetBuffer.ise"));
         }
 
-        outputBuffer.reset();
+        outputBuffer.reset(resetWriterStreamFlags);
 
         if(resetWriterStreamFlags) {
             usingOutputStream = false;
@@ -1614,8 +1614,7 @@ public class Response
                 return (false);
             }
             String tok = ";" +
-                    ApplicationSessionCookieConfig.getSessionUriParamName(
-                                request.getContext()) +
+                    SessionConfig.getSessionUriParamName(request.getContext()) +
                     "=" + session.getIdInternal();
             if( file.indexOf(tok, contextPath.length()) >= 0 ) {
                 return (false);
@@ -1788,7 +1787,7 @@ public class Response
         StringBuilder sb = new StringBuilder(path);
         if( sb.length() > 0 ) { // jsessionid can't be first.
             sb.append(";");
-            sb.append(ApplicationSessionCookieConfig.getSessionUriParamName(
+            sb.append(SessionConfig.getSessionUriParamName(
                     request.getContext()));
             sb.append("=");
             sb.append(sessionId);

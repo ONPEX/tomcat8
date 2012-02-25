@@ -17,8 +17,6 @@
 
 package org.apache.catalina.util;
 
-import java.io.UnsupportedEncodingException;
-
 import org.apache.tomcat.util.buf.B2CConverter;
 import org.apache.tomcat.util.buf.ByteChunk;
 import org.apache.tomcat.util.buf.CharChunk;
@@ -31,7 +29,7 @@ import org.apache.tomcat.util.buf.CharChunk;
  * Internet Message Bodies. Reference 1996
  *
  * @author Jeffrey Rodriguez
- * @version $Id: Base64.java 1140463 2011-06-28 07:22:28Z markt $
+ * @version $Id: Base64.java 1233424 2012-01-19 15:18:06Z markt $
  */
 public final class  Base64
 {
@@ -172,15 +170,7 @@ public final class  Base64
             encodedData[encodedIndex + 3] = PAD;
         }
 
-        String result;
-        try {
-            result = new String(encodedData,
-                    B2CConverter.getCharset("ISO-8859-1"));
-        } catch (UnsupportedEncodingException e) {
-            // Should never happen but in case it does...
-            result = new String(encodedData);
-        }
-        return result;
+        return new String(encodedData, B2CConverter.ISO_8859_1);
     }
 
     /**

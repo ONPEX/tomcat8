@@ -151,16 +151,15 @@ public class NioBlockingSelector {
         KeyAttachment att = (KeyAttachment) key.attachment();
         int read = 0;
         boolean timedout = false;
-        int keycount = 1; //assume we can write
+        int keycount = 1; //assume we can read
         long time = System.currentTimeMillis(); //start the timeout timer
         try {
-            while ( (!timedout) && read == 0) {
+            while(!timedout) {
                 if (keycount > 0) { //only read if we were registered for a read
-                    int cnt = socket.read(buf);
-                    if (cnt == -1)
+                    read = socket.read(buf);
+                    if (read == -1)
                         throw new EOFException();
-                    read += cnt;
-                    if (cnt > 0)
+                    if (read > 0)
                         break;
                 }
                 try {

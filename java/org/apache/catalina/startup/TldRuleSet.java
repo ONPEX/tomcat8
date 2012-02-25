@@ -29,7 +29,7 @@ import org.apache.tomcat.util.digester.RuleSetBase;
  * descriptor resource.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: TldRuleSet.java 939305 2010-04-29 13:43:39Z kkolinko $
+ * @version $Id: TldRuleSet.java 1234145 2012-01-20 21:18:48Z markt $
  */
 
 public class TldRuleSet extends RuleSetBase {
@@ -181,7 +181,7 @@ final class TaglibListenerRule extends Rule {
         
         // Only process the listener if the URI is not a duplicate
         if (!taglibUriRule.isDuplicateUri()) {
-            tldConfig.addApplicationListener(text);
+            tldConfig.addApplicationListener(text.trim());
         }
     }
     

@@ -53,7 +53,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardHostValve.java 1164482 2011-09-02 11:33:05Z markt $
+ * @version $Id: StandardHostValve.java 1240845 2012-02-05 21:58:25Z markt $
  */
 
 final class StandardHostValve extends ValveBase {
@@ -434,8 +434,6 @@ final class StandardHostValve extends ValveBase {
 
         if (container.getLogger().isDebugEnabled())
             container.getLogger().debug("Processing " + errorPage);
-
-        request.setPathInfo(errorPage.getLocation());
 
         try {
             // Forward control to the specified location

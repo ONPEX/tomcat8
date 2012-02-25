@@ -689,6 +689,27 @@ FINE: Request "/docs/config/manager.html" with response status "200"
     should be defined first to ensure that the correct client IP address is
     presented to the Remote Address/Host filters.</p>
 
+    <p><strong>Note:</strong> By default this filter has no effect on the
+    values that are written into access log. The original values are restored
+    when request processing leaves the filter and that always happens earlier
+    than access logging. To pass the remote address, remote host, server port
+    and protocol values set by this filter to the access log,
+    they are put into request attributes. Publishing these values here
+    is enabled by default, but <code>AccessLogValve</code> should be explicitly
+    configured to use them. See documentation for
+    <code>requestAttributesEnabled</code> attribute of
+    <code>AccessLogValve</code>.</p>
+
+    <p>The names of request attributes that are set by this filter
+    and can be used by access logging are the following:</p>
+
+    <ul>
+      <li><code>org.apache.catalina.AccessLog.RemoteAddr</code></li>
+      <li><code>org.apache.catalina.AccessLog.RemoteHost</code></li>
+      <li><code>org.apache.catalina.AccessLog.Protocol</code></li>
+      <li><code>org.apache.catalina.AccessLog.ServerPort</code></li>
+    </ul>
+
   </subsection>
 
   <subsection name="Filter Class Name">
@@ -1019,6 +1040,13 @@ FINE: Request "/docs/config/manager.html" with response status "200"
         <code>x-forwarded-by</code> is used.</p>
       </attribute>
 
+      <attribute name="requestAttributesEnabled" required="false">
+        <p>Set to <code>true</code> to set the request attributes used by
+        AccessLog implementations to override the values returned by the
+        request for remote address, remote host, server port and protocol.
+        If not set, the default value of <code>true</code> will be used.</p>
+      </attribute>
+
       <attribute name="trustedProxies" required="false">
         <p>Regular expression (using <code>java.util.regex</code>) that a
         proxy&apos;s IP address must match to be considered an trusted proxy.
@@ -1149,10 +1177,17 @@ org.apache.catalina.filters.RequestDumperFilter.handlers = \
   <subsection name="Introduction">
 
     <p>User agents don&apos;t always include character encoding information in
-    requests. Depending on the how the request is processed, a default of either
-    ISO-8859-1 or the platform default encoding may be used. This is not always
-    desirable. This filter provides options for setting that encoding or forcing
-    it to a particular value.</p>
+    requests. Depending on the how the request is processed, usually the
+    default encoding of ISO-8859-1 is used. This is not always
+    desirable. This filter provides options for setting that encoding or
+    forcing it to a particular value. Essentially this filter calls
+    <code>ServletRequest.setCharacterEncoding()</code> method.</p>
+
+    <p>Effectively the value set by this filter is used when parsing parameters
+    in a POST request, if parameter parsing occurs later than this filter. Thus
+    the order of filter mappings is important. Note that the encoding for GET
+    requests is not set here, but on a <b>Connector</b>. See
+    CharacterEncoding page in the FAQ for details.</p>
 
   </subsection>
 
@@ -1171,7 +1206,7 @@ org.apache.catalina.filters.RequestDumperFilter.handlers = \
 
     <attributes>
 
-      <attribute name="encoding" required="false">
+      <attribute name="encoding" required="true">
         <p>Name of the character encoding which should be set.</p>
       </attribute>
 
@@ -1179,7 +1214,8 @@ org.apache.catalina.filters.RequestDumperFilter.handlers = \
         <p>Determines if any character encoding specified by the user agent is
         ignored. If this attribute is <code>true</code>, any value provided by
         the user agent is ignored. If <code>false</code>, the encoding is only
-        set if the user agent did not specify an encoding.</p>
+        set if the user agent did not specify an encoding. The default value
+        is <code>false</code>.</p>
       </attribute>
 
     </attributes>
@@ -1237,6 +1273,10 @@ org.apache.catalina.filters.RequestDumperFilter.handlers = \
     calls. In general the risk of breaking a web application by adding this
     filter is not so high, because parameter parsing does check content type
     of the request before consuming the request body.</p>
+
+    <p>Note, that for the POST requests to be parsed correctly, a
+    <code>SetCharacterEncodingFilter</code> filter must be configured above
+    this one. See CharacterEncoding page in the FAQ for details.</p>
 
     <p>The request is rejected with HTTP status code 400 (Bad Request).</p>
 

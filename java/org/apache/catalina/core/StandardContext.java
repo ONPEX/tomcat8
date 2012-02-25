@@ -82,6 +82,7 @@ import org.apache.catalina.LifecycleState;
 import org.apache.catalina.Loader;
 import org.apache.catalina.Manager;
 import org.apache.catalina.Pipeline;
+import org.apache.catalina.Realm;
 import org.apache.catalina.Valve;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.deploy.ApplicationParameter;
@@ -125,7 +126,7 @@ import org.apache.tomcat.util.scan.StandardJarScanner;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardContext.java 1201569 2011-11-14 01:36:07Z kkolinko $
+ * @version $Id: StandardContext.java 1230771 2012-01-12 20:41:17Z markt $
  */
 
 public class StandardContext extends ContainerBase
@@ -1200,8 +1201,21 @@ public class StandardContext extends ContainerBase
                     getName()));
         }
     }
-    
-    
+
+    /**
+     * Add a URL for a JAR that contains static resources in a
+     * META-INF/resources directory that should be included in the static
+     * resources for this context.
+     */
+    public void addResourcesDirContext(DirContext altDirContext) {
+        if (webappResources instanceof BaseDirContext) {
+            ((BaseDirContext) webappResources).addAltDirContext(altDirContext);
+        } else {
+            log.error(sm.getString("standardContext.noResourceJar", altDirContext,
+                    getName()));
+        }
+    }
+
     /**
      * Set the current alias configuration. The list of aliases should be of the
      * form "/aliasPath1=docBase1,/aliasPath2=docBase2" where aliasPathN must
@@ -5130,15 +5144,14 @@ public class StandardContext extends ContainerBase
                 unbindThread(oldCCL);
                 oldCCL = bindThread();
 
-                // Initialize logger again. Other components might have used it too early, 
-                // so it should be reset.
+                // Initialize logger again. Other components might have used it
+                // too early, so it should be reset.
                 logger = null;
                 getLogger();
-                if ((logger != null) && (logger instanceof Lifecycle))
-                    ((Lifecycle) logger).start();
                 
                 if ((cluster != null) && (cluster instanceof Lifecycle))
                     ((Lifecycle) cluster).start();
+                Realm realm = getRealmInternal();
                 if ((realm != null) && (realm instanceof Lifecycle))
                     ((Lifecycle) realm).start();
                 if ((resources != null) && (resources instanceof Lifecycle))
@@ -5485,14 +5498,12 @@ public class StandardContext extends ContainerBase
             // Stop resources
             resourcesStop();
 
+            Realm realm = getRealmInternal();
             if ((realm != null) && (realm instanceof Lifecycle)) {
                 ((Lifecycle) realm).stop();
             }
             if ((cluster != null) && (cluster instanceof Lifecycle)) {
                 ((Lifecycle) cluster).stop();
-            }
-            if ((logger != null) && (logger instanceof Lifecycle)) {
-                ((Lifecycle) logger).stop();
             }
             if ((loader != null) && (loader instanceof Lifecycle)) {
                 ((Lifecycle) loader).stop();
@@ -5546,22 +5557,6 @@ public class StandardContext extends ContainerBase
     @Override
     protected void destroyInternal() throws LifecycleException {
         
-        if ((manager != null) && (manager instanceof Lifecycle)) {
-            ((Lifecycle) manager).destroy();
-        }
-        if ((realm != null) && (realm instanceof Lifecycle)) {
-            ((Lifecycle) realm).destroy();
-        }
-        if ((cluster != null) && (cluster instanceof Lifecycle)) {
-            ((Lifecycle) cluster).destroy();
-        }
-        if ((logger != null) && (logger instanceof Lifecycle)) {
-            ((Lifecycle) logger).destroy();
-        }
-        if ((loader != null) && (loader instanceof Lifecycle)) {
-            ((Lifecycle) loader).destroy();
-        }
-
         // If in state NEW when destroy is called, the object name will never
         // have been set so the notification can't be created
         if (getObjectName() != null) { 

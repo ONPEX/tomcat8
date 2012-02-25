@@ -20,7 +20,7 @@ package org.apache.tomcat.util.bcel;
 /**
  * Constants for the project, mostly defined in the JVM specification.
  *
- * @version $Id: Constants.java 1057670 2011-01-11 14:52:05Z markt $
+ * @version $Id: Constants.java 1237336 2012-01-29 16:43:45Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */
 public interface Constants {
@@ -36,6 +36,10 @@ public interface Constants {
   /** One of the access flags for fields, methods, or classes.
    */
   public static final short ACC_ABSTRACT     = 0x0400;
+
+  /** One of the access flags for fields, methods, or classes.
+   */
+  public static final short ACC_ANNOTATION   = 0x2000;
 
   /** One of the access flags for fields, methods, or classes.
    */
