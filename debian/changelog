@@ -12,6 +12,8 @@ tomcat7 (7.0.26-1) UNRELEASED; urgency=low
   * New upstream release.
   * Add Jakub Adam to Uploaders.
   * Bump Standards-Version to 3.9.3.
+  * Don't Depend libservlet3.0-java-doc on package it documents, relax
+    to Suggests.
 
  -- Jakub Adam <jakub.adam@ktknet.cz>  Sat, 25 Feb 2012 20:51:36 +0100
 
