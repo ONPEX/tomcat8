@@ -3,7 +3,8 @@ Section: java
 Priority: optional
 Maintainer: Debian Java Maintainers <pkg-java-maintainers@lists.alioth.debian.org>
 Uploaders: James Page <james.page@ubuntu.com>,
- Miguel Landaeta <miguel@miguel.cc>, tony mancill <tmancill@debian.org>
+ Miguel Landaeta <miguel@miguel.cc>, tony mancill <tmancill@debian.org>,
+ Jakub Adam <jakub.adam@ktknet.cz>
 Build-Depends: default-jdk, ant-optional, debhelper (>= 7), po-debconf
 Build-Depends-Indep: maven-repo-helper (>> 1.0.1), libecj-java
 Standards-Version: 3.9.2
