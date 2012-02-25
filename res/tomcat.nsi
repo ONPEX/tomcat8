@@ -14,7 +14,7 @@
 ; limitations under the License.
 
 ; Tomcat script for Nullsoft Installer
-; $Id: tomcat.nsi 1189163 2011-10-26 12:19:26Z kkolinko $
+; $Id: tomcat.nsi 1231779 2012-01-15 22:33:12Z kkolinko $
 
   ;Compression options
   CRCCheck on
@@ -117,6 +117,7 @@ Var ServiceInstallLog
 
   ;Install Page order
   !insertmacro MUI_PAGE_WELCOME
+  ; Show file named "INSTALLLICENSE"
   !insertmacro MUI_PAGE_LICENSE INSTALLLICENSE
   ; Use custom onLeave function with COMPONENTS page
   !define MUI_PAGE_CUSTOMFUNCTION_LEAVE pageComponentsLeave
@@ -132,9 +133,6 @@ Var ServiceInstallLog
   ;Uninstall Page order
   !insertmacro MUI_UNPAGE_CONFIRM
   !insertmacro MUI_UNPAGE_INSTFILES
-
-  ;License dialog
-  LicenseData License.rtf
 
   ;Component-selection page
     ;Descriptions

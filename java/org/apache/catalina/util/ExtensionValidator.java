@@ -50,7 +50,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Greg Murray
  * @author Justyna Horwat
- * @version $Id: ExtensionValidator.java 1029527 2010-11-01 02:04:53Z markt $
+ * @version $Id: ExtensionValidator.java 1242101 2012-02-08 21:19:36Z markt $
  *
  */
 public final class ExtensionValidator {
@@ -107,8 +107,6 @@ public final class ExtensionValidator {
 
         // add specified folders to the list
         addFolderList("java.ext.dirs");
-        addFolderList("catalina.ext.dirs");
-
     }
 
 

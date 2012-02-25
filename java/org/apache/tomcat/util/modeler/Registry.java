@@ -581,17 +581,6 @@ public class Registry implements RegistryMBean, MBeanRegistration  {
             managed=findManagedBean(type);
         }
         
-        if( bean instanceof DynamicMBean ) {
-            if( log.isDebugEnabled() ) {
-                log.debug( "Dynamic mbean support ");
-            }
-            // Dynamic mbean
-            loadDescriptors("MbeansDescriptorsDynamicMBeanSource",
-                    bean, type);
-
-            managed=findManagedBean(type);
-        }
-
         // Still not found - use introspection
         if( managed==null ) {
             if( log.isDebugEnabled() ) {
@@ -666,10 +655,7 @@ public class Registry implements RegistryMBean, MBeanRegistration  {
         String type=null;
         Object inputsource=null;
 
-        if( source instanceof DynamicMBean ) {
-            sourceType="MbeansDescriptorsDynamicMBeanSource";
-            inputsource=source;
-        } else if( source instanceof URL ) {
+        if( source instanceof URL ) {
             URL url=(URL)source;
             location=url.toString();
             type=param;
@@ -701,7 +687,7 @@ public class Registry implements RegistryMBean, MBeanRegistration  {
         }
         ModelerSource ds=getModelerSource(sourceType);
         List<ObjectName> mbeans =
-            ds.loadDescriptors(this, location, type, inputsource);
+            ds.loadDescriptors(this, type, inputsource);
 
         return mbeans;
     }
@@ -890,6 +876,10 @@ public class Registry implements RegistryMBean, MBeanRegistration  {
     // May still be used in tomcat 
     // Never part of an official release
     
+    /**
+     * @deprecated
+     */
+    @Deprecated
     public ManagedBean findManagedBean(Class<?> beanClass, String type)
         throws Exception
     {

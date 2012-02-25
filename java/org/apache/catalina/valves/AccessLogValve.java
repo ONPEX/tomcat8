@@ -103,7 +103,7 @@ import org.apache.tomcat.util.buf.B2CConverter;
  * header, the Session or something else in the ServletRequest.<br>
  * It is modeled after the
  * <a href="http://httpd.apache.org/">Apache HTTP Server</a> log configuration
- * syntax:
+ * syntax:</p>
  * <ul>
  * <li><code>%{xxx}i</code> for incoming headers
  * <li><code>%{xxx}o</code> for outgoing response headers
@@ -111,22 +111,21 @@ import org.apache.tomcat.util.buf.B2CConverter;
  * <li><code>%{xxx}r</code> xxx is an attribute in the ServletRequest
  * <li><code>%{xxx}s</code> xxx is an attribute in the HttpSession
  * </ul>
- * </p>
  *
  * <p>
- * Log rotation can be on or off. This is dictated by the rotatable
- * property.
+ * Log rotation can be on or off. This is dictated by the
+ * <code>rotatable</code> property.
  * </p>
  *
  * <p>
  * For UNIX users, another field called <code>checkExists</code> is also
  * available. If set to true, the log file's existence will be checked before
  * each logging. This way an external log rotator can move the file
- * somewhere and tomcat will start with a new file.
+ * somewhere and Tomcat will start with a new file.
  * </p>
  *
  * <p>
- * For JMX junkies, a public method called </code>rotate</code> has
+ * For JMX junkies, a public method called <code>rotate</code> has
  * been made available to allow you to tell this instance to move
  * the existing log file to somewhere else and start writing a new log file.
  * </p>
@@ -154,7 +153,7 @@ import org.apache.tomcat.util.buf.B2CConverter;
  * @author Takayuki Kaneko
  * @author Peter Rossbach
  *
- * @version $Id: AccessLogValve.java 1187022 2011-10-20 19:55:37Z markt $
+ * @version $Id: AccessLogValve.java 1241091 2012-02-06 17:37:45Z rjung $
  */
 
 public class AccessLogValve extends ValveBase implements AccessLog {
@@ -1448,7 +1447,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
          * chars later with the actual milliseconds because that's
          * relatively cheap.
          */
-        private void tidyFormat() {
+        private String tidyFormat(String format) {
             boolean escape = false;
             StringBuilder result = new StringBuilder();
             int len = format.length();
@@ -1465,6 +1464,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
                     escape = !escape;
                 }
             }
+            return result.toString();
         }
 
         protected DateAndTimeElement(String header) {
@@ -1493,7 +1493,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
                     type = formatType.MSEC_FRAC;
                 } else {
                     type = formatType.SDF;
-                    tidyFormat();
+                    format = tidyFormat(format);
                 }
             }
         }
@@ -1634,6 +1634,20 @@ public class AccessLogValve extends ValveBase implements AccessLog {
             // Don't need to flush since trigger for log message is after the
             // response has been committed
             long length = response.getBytesWritten(false);
+            if (length <= 0) {
+                // Protect against nulls and unexpected types as these values
+                // may be set by untrusted applications
+                Object start = request.getAttribute(
+                        "org.apache.tomcat.sendfile.start");
+                if (start instanceof Long) {
+                    Object end = request.getAttribute(
+                            "org.apache.tomcat.sendfile.end");
+                    if (end instanceof Long) {
+                        length = ((Long) end).longValue() -
+                                ((Long) start).longValue();
+                    }
+                }
+            }
             if (length <= 0 && conversion) {
                 buf.append('-');
             } else {

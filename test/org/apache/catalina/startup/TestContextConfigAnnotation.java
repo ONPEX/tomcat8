@@ -49,7 +49,7 @@ import org.apache.catalina.deploy.WebXml;
  * fragment.
  *
  * @author Peter Rossbach
- * @version $Revision: 1198558 $
+ * @version $Revision: 1237607 $
  */
 public class TestContextConfigAnnotation {
 
@@ -267,6 +267,8 @@ public class TestContextConfigAnnotation {
     @Test
     public void testCheckHandleTypes() throws Exception {
         ContextConfig config = new ContextConfig();
+        config.handlesTypesAnnotations = true;
+        config.handlesTypesNonAnnotations = true;
 
         // Need a Context, Loader and ClassLoader for checkHandleTypes
         StandardContext context = new StandardContext();

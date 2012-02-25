@@ -1194,4 +1194,36 @@ public class DataSourceProxy implements PoolConfiguration {
         getPoolProperties().setAlternateUsernameAllowed(alternateUsernameAllowed);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setCommitOnReturn(boolean commitOnReturn) {
+        getPoolProperties().setCommitOnReturn(commitOnReturn);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean getCommitOnReturn() {
+        return getPoolProperties().getCommitOnReturn();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setRollbackOnReturn(boolean rollbackOnReturn) {
+        getPoolProperties().setRollbackOnReturn(rollbackOnReturn);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean getRollbackOnReturn() {
+        return getPoolProperties().getRollbackOnReturn();
+    }
+
 }

@@ -41,15 +41,15 @@ import javax.naming.directory.ModificationItem;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
-import org.apache.catalina.util.RequestUtil;
 import org.apache.naming.NamingContextEnumeration;
 import org.apache.naming.NamingEntry;
+import org.apache.tomcat.util.http.RequestUtil;
 
 /**
  * Filesystem Directory Context implementation helper class.
  *
  * @author Remy Maucherat
- * @version $Id: FileDirContext.java 1078798 2011-03-07 14:55:22Z markt $
+ * @version $Id: FileDirContext.java 1239053 2012-02-01 10:52:00Z markt $
  */
 
 public class FileDirContext extends BaseDirContext {

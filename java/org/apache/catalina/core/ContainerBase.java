@@ -33,13 +33,15 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.management.ObjectName;
 import javax.naming.directory.DirContext;
 import javax.servlet.ServletException;
 
 import org.apache.catalina.AccessLog;
-import org.apache.catalina.CatalinaFactory;
 import org.apache.catalina.Cluster;
 import org.apache.catalina.Container;
 import org.apache.catalina.ContainerEvent;
@@ -228,15 +230,19 @@ public abstract class ContainerBase extends LifecycleMBeanBase
     /**
      * The Pipeline object with which this Container is associated.
      */
-    protected Pipeline pipeline =
-        CatalinaFactory.getFactory().createPipeline(this);
+    protected Pipeline pipeline = new StandardPipeline(this);
 
 
     /**
      * The Realm with which this Container is associated.
      */
-    protected Realm realm = null;
+    private volatile Realm realm = null;
 
+
+    /**
+     * Lock used to control access to the Realm.
+     */
+    private ReadWriteLock realmLock = new ReentrantReadWriteLock();
 
     /**
      * The resources DirContext object with which this Container is associated.
@@ -717,14 +723,29 @@ public abstract class ContainerBase extends LifecycleMBeanBase
     @Override
     public Realm getRealm() {
 
-        if (realm != null)
-            return (realm);
-        if (parent != null)
-            return (parent.getRealm());
-        return (null);
-
+        Lock l = realmLock.readLock();
+        try {
+            l.lock();
+            if (realm != null)
+                return (realm);
+            if (parent != null)
+                return (parent.getRealm());
+            return null;
+        } finally {
+            l.unlock();
+        }
     }
 
+
+    protected Realm getRealmInternal() {
+        Lock l = realmLock.readLock();
+        try {
+            l.lock();
+            return realm;
+        } finally {
+            l.unlock();
+        }
+    }
 
     /**
      * Set the Realm with which this Container is associated.
@@ -732,38 +753,46 @@ public abstract class ContainerBase extends LifecycleMBeanBase
      * @param realm The newly associated Realm
      */
     @Override
-    public synchronized void setRealm(Realm realm) {
+    public void setRealm(Realm realm) {
 
-        // Change components if necessary
-        Realm oldRealm = this.realm;
-        if (oldRealm == realm)
-            return;
-        this.realm = realm;
+        Lock l = realmLock.writeLock();
 
-        // Stop the old component if necessary
-        if (getState().isAvailable() && (oldRealm != null) &&
-            (oldRealm instanceof Lifecycle)) {
-            try {
-                ((Lifecycle) oldRealm).stop();
-            } catch (LifecycleException e) {
-                log.error("ContainerBase.setRealm: stop: ", e);
+        try {
+            l.lock();
+
+            // Change components if necessary
+            Realm oldRealm = this.realm;
+            if (oldRealm == realm)
+                return;
+            this.realm = realm;
+
+            // Stop the old component if necessary
+            if (getState().isAvailable() && (oldRealm != null) &&
+                (oldRealm instanceof Lifecycle)) {
+                try {
+                    ((Lifecycle) oldRealm).stop();
+                } catch (LifecycleException e) {
+                    log.error("ContainerBase.setRealm: stop: ", e);
+                }
             }
-        }
 
-        // Start the new component if necessary
-        if (realm != null)
-            realm.setContainer(this);
-        if (getState().isAvailable() && (realm != null) &&
-            (realm instanceof Lifecycle)) {
-            try {
-                ((Lifecycle) realm).start();
-            } catch (LifecycleException e) {
-                log.error("ContainerBase.setRealm: start: ", e);
+            // Start the new component if necessary
+            if (realm != null)
+                realm.setContainer(this);
+            if (getState().isAvailable() && (realm != null) &&
+                (realm instanceof Lifecycle)) {
+                try {
+                    ((Lifecycle) realm).start();
+                } catch (LifecycleException e) {
+                    log.error("ContainerBase.setRealm: start: ", e);
+                }
             }
-        }
 
-        // Report this property change to interested listeners
-        support.firePropertyChange("realm", oldRealm, this.realm);
+            // Report this property change to interested listeners
+            support.firePropertyChange("realm", oldRealm, this.realm);
+        } finally {
+            l.unlock();
+        }
 
     }
 
@@ -1076,12 +1105,11 @@ public abstract class ContainerBase extends LifecycleMBeanBase
             ((Lifecycle) loader).start();
         logger = null;
         getLogger();
-        if ((logger != null) && (logger instanceof Lifecycle))
-            ((Lifecycle) logger).start();
         if ((manager != null) && (manager instanceof Lifecycle))
             ((Lifecycle) manager).start();
         if ((cluster != null) && (cluster instanceof Lifecycle))
             ((Lifecycle) cluster).start();
+        Realm realm = getRealmInternal();
         if ((realm != null) && (realm instanceof Lifecycle))
             ((Lifecycle) realm).start();
         if ((resources != null) && (resources instanceof Lifecycle))
@@ -1168,6 +1196,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
         if ((resources != null) && (resources instanceof Lifecycle)) {
             ((Lifecycle) resources).stop();
         }
+        Realm realm = getRealmInternal();
         if ((realm != null) && (realm instanceof Lifecycle)) {
             ((Lifecycle) realm).stop();
         }
@@ -1178,9 +1207,6 @@ public abstract class ContainerBase extends LifecycleMBeanBase
                 ((Lifecycle) manager).getState().isAvailable() ) {
             ((Lifecycle) manager).stop();
         }
-        if ((logger != null) && (logger instanceof Lifecycle)) {
-            ((Lifecycle) logger).stop();
-        }
         if ((loader != null) && (loader instanceof Lifecycle)) {
             ((Lifecycle) loader).stop();
         }
@@ -1188,6 +1214,20 @@ public abstract class ContainerBase extends LifecycleMBeanBase
 
     @Override
     protected void destroyInternal() throws LifecycleException {
+
+        if ((manager != null) && (manager instanceof Lifecycle)) {
+            ((Lifecycle) manager).destroy();
+        }
+        Realm realm = getRealmInternal();
+        if ((realm != null) && (realm instanceof Lifecycle)) {
+            ((Lifecycle) realm).destroy();
+        }
+        if ((cluster != null) && (cluster instanceof Lifecycle)) {
+            ((Lifecycle) cluster).destroy();
+        }
+        if ((loader != null) && (loader instanceof Lifecycle)) {
+            ((Lifecycle) loader).destroy();
+        }
 
         // Stop the Valves in our pipeline (including the basic), if any
         if (pipeline instanceof Lifecycle) {
@@ -1319,6 +1359,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
                 log.warn(sm.getString("containerBase.backgroundProcess.manager", manager), e);                
             }
         }
+        Realm realm = getRealmInternal();
         if (realm != null) {
             try {
                 realm.backgroundProcess();

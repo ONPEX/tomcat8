@@ -27,9 +27,10 @@ import java.net.URLClassLoader;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardClassLoader.java 967284 2010-07-23 22:04:32Z markt $
+ * @version $Id: StandardClassLoader.java 1242113 2012-02-08 21:37:36Z markt $
+ * @deprecated  Unnecessary. Will be removed in Tomcat 8.0.x.
  */
-
+@Deprecated
 public class StandardClassLoader
     extends URLClassLoader
     implements StandardClassLoaderMBean {

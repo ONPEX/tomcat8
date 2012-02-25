@@ -69,7 +69,7 @@ import org.apache.tomcat.util.res.StringManager;
  * requests.  Requests of any other type will simply be passed through.
  *
  * @author Craig R. McClanahan
- * @version $Id: AuthenticatorBase.java 1162838 2011-08-29 14:42:49Z markt $
+ * @version $Id: AuthenticatorBase.java 1241170 2012-02-06 20:45:52Z markt $
  */
 
 
@@ -601,6 +601,27 @@ public abstract class AuthenticatorBase extends ValveBase
 
     }
 
+
+    /**
+     * Authenticate the user making this request, based on the login
+     * configuration of the {@link Context} with which this Authenticator is
+     * associated.  Return <code>true</code> if any specified constraint has
+     * been satisfied, or <code>false</code> if we have created a response
+     * challenge already.
+     *
+     * @param request Request we are processing
+     * @param response Response we are populating
+     *
+     * @exception IOException if an input/output error occurs
+     */
+    @Override
+    public boolean authenticate(Request request, HttpServletResponse response)
+            throws IOException {
+        if (context == null || context.getLoginConfig() == null) {
+            return true;
+        }
+        return authenticate(request, response, context.getLoginConfig());
+    }
 
     /**
      * Authenticate the user making this request, based on the specified

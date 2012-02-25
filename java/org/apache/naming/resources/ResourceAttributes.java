@@ -34,7 +34,7 @@ import javax.naming.directory.BasicAttribute;
  * Attributes implementation.
  * 
  * @author <a href="mailto:remm@apache.org">Remy Maucherat</a>
- * @version $Revision: 1069844 $
+ * @version $Revision: 1225631 $
  */
 public class ResourceAttributes implements Attributes {
     
@@ -375,7 +375,9 @@ public class ResourceAttributes implements Attributes {
      * Set creation.
      * 
      * @param creation New creation value
+     * @deprecated - unused
      */
+    @Deprecated
     public void setCreation(long creation) {
         this.creation = creation;
         this.creationDate = null;
@@ -560,7 +562,9 @@ public class ResourceAttributes implements Attributes {
      * Last modified date mutator.
      * 
      * @param lastModifiedDate New last modified date
+     * @deprecated - unused
      */
+    @Deprecated
     public void setLastModifiedDate(Date lastModifiedDate) {
         this.lastModified = lastModifiedDate.getTime();
         this.lastModifiedDate = lastModifiedDate;
@@ -591,7 +595,9 @@ public class ResourceAttributes implements Attributes {
     
     /**
      * @param lastModifiedHttp The lastModifiedHttp to set.
+     * @deprecated - unused
      */
+    @Deprecated
     public void setLastModifiedHttp(String lastModifiedHttp) {
         this.lastModifiedHttp = lastModifiedHttp;
     }

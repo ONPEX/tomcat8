@@ -30,7 +30,7 @@ import org.apache.catalina.tribes.group.InterceptorPayload;
  * FIXME add i18n support to log messages
  * @author Rainer Jung
  * @author Peter Rossbach
- * @version $Id: FastQueue.java 981816 2010-08-03 10:44:58Z markt $
+ * @version $Id: FastQueue.java 1222856 2011-12-23 21:21:31Z markt $
  */
 public class FastQueue {
 
@@ -54,19 +54,18 @@ public class FastQueue {
     /**
      * Current Queue elements size
      */
-    private int size = 0;
+    private volatile int size = 0;
 
     /**
      * check lock to detect strange threadings things
      */
-    private boolean checkLock = false;
+    private volatile boolean checkLock = false;
 
-    
-    private boolean inAdd = false;
+    // Flags used to detect unexpected state
+    private volatile boolean inAdd = false;
+    private volatile boolean inRemove = false;
+    private volatile boolean inMutex = false;
 
-    private boolean inRemove = false;
-
-    private boolean inMutex = false;
 
     /**
      * limit the queue length ( default is unlimited)
@@ -87,7 +86,7 @@ public class FastQueue {
     /**
      * enabled the queue
      */
-    private boolean enabled = true;
+    private volatile boolean enabled = true;
 
     /**
      *  max queue size
@@ -158,7 +157,7 @@ public class FastQueue {
 
     public void setEnabled(boolean enable) {
         enabled = enable;
-        if (!enabled) {
+        if (!enable) {
             lock.abortRemove();
             last = first = null;
         }

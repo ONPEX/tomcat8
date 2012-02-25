@@ -17,7 +17,7 @@
 -->
 <!-- Content Stylesheet for "tomcat-docs" Documentation -->
 
-<!-- $Id: package.xsl 1054620 2011-01-03 14:00:29Z rjung $ -->
+<!-- $Id: package.xsl 1232855 2012-01-18 12:33:47Z kkolinko $ -->
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   version="1.0">
@@ -72,10 +72,10 @@
       <meta name="author" value="{$name}"/>
       <meta name="email" value="{$email}"/>
     </xsl:for-each>
-		<style type="text/css" media="print">
-			.noPrint {display: none;}
-			td#mainBody {width: 100%;}
-		</style>
+    <style type="text/css" media="print">
+.noPrint {display: none;}
+td#mainBody {width: 100%;}
+</style>
     </head>
 
     <body bgcolor="{$body-bg}" text="{$body-fg}" link="{$body-link}"
@@ -150,7 +150,7 @@
       <xsl:comment>PAGE FOOTER</xsl:comment>
       <tr><td colspan="2">
         <div align="center"><font color="{$body-link}" size="-1"><em>
-        Copyright &#169; 1999-2011, Apache Software Foundation
+        Copyright &#169; 1999-2012, Apache Software Foundation
         </em></font></div>
       </td></tr>
 
@@ -433,7 +433,7 @@
       <xsl:variable name="link"><xsl:value-of select="$buglink"/><xsl:value-of select="text()"/></xsl:variable>
       <a href="{$link}"><xsl:apply-templates/></a>
   </xsl:template>
-  
+
   <!-- Link to a SVN revision report -->
   <xsl:template match="rev">
       <xsl:variable name="link"><xsl:value-of select="$revlink"/><xsl:value-of select="text()"/></xsl:variable>

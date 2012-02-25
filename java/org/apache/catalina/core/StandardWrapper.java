@@ -77,7 +77,7 @@ import org.apache.tomcat.util.modeler.Registry;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardWrapper.java 1201569 2011-11-14 01:36:07Z kkolinko $
+ * @version $Id: StandardWrapper.java 1241892 2012-02-08 13:28:05Z markt $
  */
 @SuppressWarnings("deprecation") // SingleThreadModel
 public class StandardWrapper extends ContainerBase
@@ -1896,7 +1896,15 @@ public class StandardWrapper extends ContainerBase
         return keyProperties.toString();
     }
     
+
+    /**
+     * JSR 77. Always return false.
+     */
+    public boolean isStateManageable() {
+        return false;
+    }
     
+
     /* Remove a JMX notficationListener 
      * @see javax.management.NotificationEmitter#removeNotificationListener(javax.management.NotificationListener, javax.management.NotificationFilter, java.lang.Object)
      */
@@ -1981,11 +1989,6 @@ public class StandardWrapper extends ContainerBase
         
     @Deprecated
     public boolean isEventProvider() {
-        return false;
-    }
-    
-    @Deprecated
-    public boolean isStateManageable() {
         return false;
     }
     

@@ -17,6 +17,8 @@
 package org.apache.catalina.mbeans;
 
 import java.io.File;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -45,9 +47,23 @@ public class TestRegistration extends TomcatBaseTest {
 
     private static final String contextName = "/foo";
 
+    private static final String ADDRESS;
+
+    static {
+        String address;
+        try {
+            address = InetAddress.getByName("localhost").getHostAddress();
+        } catch (UnknownHostException e) {
+            address = "INIT_FAILED";
+        }
+        ADDRESS = address;
+    }
+
+
     private static String[] basicMBeanNames() {
         return new String[] {
             "Tomcat:type=Engine",
+            "Tomcat:type=Realm,realmPath=/realm0",
             "Tomcat:type=MBeanFactory",
             "Tomcat:type=NamingResources",
             "Tomcat:type=Server",
@@ -95,11 +111,16 @@ public class TestRegistration extends TomcatBaseTest {
 
     private static String[] connectorMBeanNames(String port, String type) {
         return new String[] {
-        "Tomcat:type=Connector,port=" + port,
-        "Tomcat:type=GlobalRequestProcessor,name=\"http-" + type + "-" + port + "\"",
-        "Tomcat:type=Mapper,port=" + port,
-        "Tomcat:type=ProtocolHandler,port=" + port,
-        "Tomcat:type=ThreadPool,name=\"http-" + type + "-" + port + "\"",
+        "Tomcat:type=Connector,port=" + port + ",address="
+                + ObjectName.quote(ADDRESS),
+        "Tomcat:type=GlobalRequestProcessor,name="
+                + ObjectName.quote("http-" + type + "-" + ADDRESS + "-" + port),
+        "Tomcat:type=Mapper,port=" + port + ",address="
+                + ObjectName.quote(ADDRESS),
+        "Tomcat:type=ProtocolHandler,port=" + port + ",address="
+                + ObjectName.quote(ADDRESS),
+        "Tomcat:type=ThreadPool,name="
+                + ObjectName.quote("http-" + type + "-" + ADDRESS + "-" + port),
         };
     }
 
@@ -111,8 +132,13 @@ public class TestRegistration extends TomcatBaseTest {
     @Test
     public void testMBeanDeregistration() throws Exception {
         final MBeanServer mbeanServer = Registry.getRegistry(null, null).getMBeanServer();
+        // Verify there are no Catalina or Tomcat MBeans
         Set<ObjectName> onames = mbeanServer.queryNames(new ObjectName("Catalina:*"), null);
-        assertEquals("Remaining: " + onames, 0, onames.size());
+        log.info(MBeanDumper.dumpBeans(mbeanServer, onames));
+        assertEquals("Unexpected: " + onames, 0, onames.size());
+        onames = mbeanServer.queryNames(new ObjectName("Tomcat:*"), null);
+        log.info(MBeanDumper.dumpBeans(mbeanServer, onames));
+        assertEquals("Unexpected: " + onames, 0, onames.size());
 
         final Tomcat tomcat = getTomcatInstance();
         final File contextDir = new File(getTemporaryDirectory(), "webappFoo");
@@ -125,6 +151,7 @@ public class TestRegistration extends TomcatBaseTest {
 
         // Verify there are no Catalina MBeans
         onames = mbeanServer.queryNames(new ObjectName("Catalina:*"), null);
+        log.info(MBeanDumper.dumpBeans(mbeanServer, onames));
         assertEquals("Found: " + onames, 0, onames.size());
 
         // Verify there are the correct Tomcat MBeans
@@ -147,7 +174,7 @@ public class TestRegistration extends TomcatBaseTest {
         ArrayList<String> expected = new ArrayList<String>(Arrays.asList(basicMBeanNames()));
         expected.addAll(Arrays.asList(hostMBeanNames("localhost")));
         expected.addAll(Arrays.asList(contextMBeanNames("localhost", contextName)));
-        expected.addAll(Arrays.asList(connectorMBeanNames(Integer.toString(getPort()), protocol)));
+        expected.addAll(Arrays.asList(connectorMBeanNames("auto-1", protocol)));
         expected.addAll(Arrays.asList(optionalMBeanNames("localhost")));
 
         // Did we find all expected MBeans?
@@ -184,8 +211,10 @@ public class TestRegistration extends TomcatBaseTest {
 
         // There should be no Catalina MBeans and no Tomcat MBeans
         onames = mbeanServer.queryNames(new ObjectName("Catalina:*"), null);
+        log.info(MBeanDumper.dumpBeans(mbeanServer, onames));
         assertEquals("Remaining: " + onames, 0, onames.size());
         onames = mbeanServer.queryNames(new ObjectName("Tomcat:*"), null);
+        log.info(MBeanDumper.dumpBeans(mbeanServer, onames));
         assertEquals("Remaining: " + onames, 0, onames.size());
     }
 

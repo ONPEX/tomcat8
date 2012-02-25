@@ -18,11 +18,15 @@ package org.apache.catalina.core;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.security.AccessControlException;
 import java.util.Random;
 
@@ -37,6 +41,7 @@ import org.apache.catalina.deploy.NamingResources;
 import org.apache.catalina.mbeans.MBeanFactory;
 import org.apache.catalina.mbeans.MBeanUtils;
 import org.apache.catalina.startup.Catalina;
+import org.apache.catalina.util.ExtensionValidator;
 import org.apache.catalina.util.LifecycleMBeanBase;
 import org.apache.catalina.util.ServerInfo;
 import org.apache.juli.logging.Log;
@@ -51,7 +56,7 @@ import org.apache.tomcat.util.res.StringManager;
  * (but not required) when deploying and starting Catalina.
  *
  * @author Craig R. McClanahan
- * @version $Id: StandardServer.java 1079405 2011-03-08 15:58:53Z markt $
+ * @version $Id: StandardServer.java 1242101 2012-02-08 21:19:36Z markt $
  */
 public final class StandardServer extends LifecycleMBeanBase implements Server {
 
@@ -776,6 +781,35 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         // Register the naming resources
         globalNamingResources.init();
         
+        // Populate the extension validator with JARs from common and shared
+        // class loaders
+        if (getCatalina() != null) {
+            ClassLoader cl =
+                    getCatalina().getParentClassLoader();
+            // Walk the class loader hierarchy. Stop at the system class loader.
+            // This will add the shared (if present) and common class loaders
+            while (cl != ClassLoader.getSystemClassLoader()) {
+                if (cl instanceof URLClassLoader) {
+                    URL[] urls = ((URLClassLoader) cl).getURLs();
+                    for (URL url : urls) {
+                        if (url.getProtocol().equals("file")) {
+                            try {
+                                File f = new File (url.toURI());
+                                if (f.isFile() &&
+                                        f.getName().endsWith(".jar")) {
+                                    ExtensionValidator.addSystemResource(f);
+                                }
+                            } catch (URISyntaxException e) {
+                                // Ignore
+                            } catch (IOException e) {
+                                // Ignore
+                            }
+                        }
+                    }
+                }
+                cl = cl.getParent();
+            }
+        }
         // Initialize our defined Services
         for (int i = 0; i < services.length; i++) {
             services[i].init();

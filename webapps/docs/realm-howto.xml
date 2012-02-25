@@ -203,10 +203,10 @@ techniques are supported:</p>
 </ul>
 
 <p>If using digested passwords with DIGEST authentication, the cleartext used
-   to generate the digest is different. In the examples above
-   <code>{cleartext-password}</code> must be replaced with
-   <code>{username}:{realm}:{cleartext-password}</code>. For example, in a
-   development environment this might take the form
+   to generate the digest is different and the digest must use the MD5
+   algorithm. In the examples above <code>{cleartext-password}</code> must be
+   replaced with <code>{username}:{realm}:{cleartext-password}</code>. For
+   example, in a development environment this might take the form
    <code>testUser:Authentication required:testPassword</code>. The value for
    <code>{realm}</code> is taken from the <code>&lt;realm-name&gt;</code>
    element of the web application's <code>&lt;login-config&gt;</code>. If
@@ -679,9 +679,6 @@ the name of this attribute.</p>
 <li>If required, configure a username and password for use by Tomcat, that has
     read only access to the information described above.  (Tomcat will
     never attempt to modify this information.)</li>
-<li>Place a copy of the JNDI driver you will be using (typically
-    <code>ldap.jar</code> available with JNDI) inside the
-    <code>$CATALINA_HOME/lib</code> directory.</li>
 <li>Set up a <code>&lt;Realm&gt;</code> element, as described below, in your
     <code>$CATALINA_BASE/conf/server.xml</code> file.</li>
 <li>Restart Tomcat if it is already running.</li>

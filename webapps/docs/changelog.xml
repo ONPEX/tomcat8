@@ -41,7 +41,7 @@
 <!--
   Subsection ordering:
   General, Catalina, Coyote, Jasper, Cluster, Web applications, Extras, Tribes,
-  Other
+  jdbc-pool, Other
 
   Item Ordering:
 
@@ -53,7 +53,496 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues to not "pop up" wrt. others).
 -->
-<section name="Tomcat 7.0.23 (markt)">
+<section name="Tomcat 7.0.26 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <scode>
+        Provide constants for commonly used <code>Charset</code> objects and use
+        these constants where appropriate. (markt)
+      </scode>
+      <fix>
+        Refactor the fix for <bug>52184</bug> to correct two issues (a missing
+        class and incorrect class/method names) when using the extras logging
+        packages. (markt)  
+      </fix>
+      <fix>
+        <bug>52444</bug>: Only load classes during HandlesTypes processing if
+        the class is a match. Previously, every class in the web application was
+        loaded regardless of whether it was a match or not. (markt)  
+      </fix>
+      <fix>
+        <bug>52488</bug>: Correct typo: exipre -> expire. (markt)
+      </fix>
+      <add>
+        Add a unit test for SSO authentication. Patch provided by Brian Burch.
+        (markt)
+      </add>
+      <fix>
+        <bug>52511</bug>: Correct regression in the fix for <bug>51741</bug>
+        that caused a harmless exception to be logged when scanning for
+        annotations and <code>WEB-INF/classes</code> did not exist. (markt) 
+      </fix>
+      <scode>
+        Refactor to remove a circular dependency between
+        <code>org.apache.catalina</code> and <code>org.apache.naming</code>.
+        (markt)
+      </scode>
+      <scode>
+        Remove some initialisation code from the standard start process (i.e.
+        via the scripts) that was intended for embedding but is not required
+        when performing a standard start.(markt) 
+      </scode>
+      <add>
+        Add new method to <code>MBeanFactory</code> that allows any Valve to be
+        created and deprecate the methods to create specific Valves. (markt)
+      </add>
+      <add>
+        Partial sync of MIME type mapping with mime.types from the Apache web
+        server. (rjung)
+      </add>
+      <fix>
+        <bug>52577</bug>: Fix a regression in the fix for <bug>52328</bug>.
+        Prevent output truncation when <code>reset()</code> is called on a
+        response. (mark)
+      </fix>
+      <fix>
+        <bug>52586</bug>: Remove an old and now unnecessary hack that modified
+        the path info reported via the
+        <code>javax.servlet.forward.path_info</code> request attribute when
+        forwarding to an error page. (markt)
+      </fix>
+      <fix>
+        <bug>52587</bug>: Ensure that if it is necessary to fall back to the
+        default NullRealm, the NullRealm instance is created early enough for it
+        to be correctly initialised. (markt)
+      </fix>
+      <fix>
+        Fix millisecond output in AccessLogValve when using a
+        SimpleDateFormat based time pattern. (rjung)
+      </fix>
+      <fix>
+        <bug>52591</bug>: When dumping MBean data, skip attributes where getters
+        throw <code>UnsupportedOperationException</code>. (markt)
+      </fix>
+      <fix>
+        <bug>52607</bug>: Ensure that the extension validator checks the JARs in
+        the shared and common class loaders for extensions. (markt)
+      </fix>
+      <fix>
+        Correct a threading issue in the generation of the list of standard
+        authenticators during Context initialization that could lead to a web
+        application failing to start if Contexts were started in parallel.
+        (markt)
+      </fix>
+      <fix>
+        <bug>52669</bug>: Correct regression that broke annotation processing in
+        <code>/WEB-INF/classes</code> for web applications deployed as WARs,
+        packageless classes and some embedding scenarios. The regression was
+        introduced by the invalid assumptions made in the fix for
+        <bug>51741</bug>. (markt)
+      </fix>
+      <fix>
+        <bug>52671</bug>: When dumping MBean data, skip attributes where getters
+        throw <code>NullPointerException</code>. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <add>
+        <bug>51543</bug>: Provide a meaningful error message when writing more
+        response headers than permitted. (markt) 
+      </add>
+      <fix>
+        <bug>52547</bug>: Ensure that bytes written (which is used by the access
+        log) is correctly reset after an HTTP 1.0 request has been processed.
+        (markt)
+      </fix>
+      <scode>
+        Minor refactoring to reduce code duplication in the HTTP connectors.
+        (markt)
+      </scode>
+      <fix>
+        <bug>52606</bug>: Ensure that POST bodies are available for reply after
+        FORM authentication when using the AJP connectors. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        <bug>52474</bug>: Ensure that leading and trailing white space is
+        removed from listener class names when parsing TLD files. (markt)
+      </fix>
+      <fix>
+        <bug>52480</bug>: When converting class path entries from URLs to
+        files/directories, ensure that any URL encoded characters are converted.
+        Fixes JSP compilation with javac when Tomcat is installed at a path that
+        includes spaces. (markt)
+      </fix>
+      <fix>
+        <bug>52666</bug>: Correct coercion order in EL when processing the
+        equality and inequality operators. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <update>
+        Improve <code>BUILDING.txt</code>. Update instructions for
+        building. Add instructions for using Checkstyle and running the
+        tests. (kkolinko)
+      </update>
+      <add>
+        <bug>38216</bug>: Improve handling of <code>null</code> return values in
+        the JMX proxy servlet which is part of the Manager application.
+        (kkolinko)
+      </add>
+      <fix>
+        <bug>52515</bug>: Make it clear in the Realm how-to in the documentation
+        web application that digested password storage when using DIGEST
+        authentication requires that MD5 digests are used. (markt)
+      </fix>
+      <fix>
+        <bug>52634</bug>: Fix typos in JSP examples. Patch provided by
+        Felix Schumacher. (rjung)
+      </fix>
+      <fix>
+        <bug>52641</bug>: Remove mentioning of ldap.jar from docs.
+        Patch provided by Felix Schumacher. (rjung)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="jdbc-pool">
+    <changelog>
+      <fix>
+        Fix code style issues and enable Checkstyle checks for jdbc-pool when
+        it is built within Tomcat. (kkolinko)
+      </fix>
+      <fix>
+        <bug>51582</bug> Correct set and reset the query cache to avoid NPE   (fhanik)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <fix>
+        Update Commons Daemon to 1.0.9 to resolve <bug>52548</bug> which meant
+        that services created with service.bat did not set the
+        <code>catalina.home</code> and <code>catalina.base</code> system
+        properties. (markt)
+      </fix>
+      <add>
+        Implement check for correct end-of-line characters in the source
+        files. It is run as separate target in <code>build.xml</code>.
+        (kkolinko)
+      </add>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 7.0.25 (markt)" rtext="released 2012-01-21">
+  <subsection name="Web applications">
+    <changelog>
+      <fix>
+        Restore format of the first line of error message for JMX proxy
+        servlet in case scripts were depending on it. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <fix>
+        When building a Windows installer do not copy whole "res" folder to
+        output/dist, but only the files that we need. Apply fixcrlf filter
+        only after the files are copied, so that <code>INSTALLLICENSE</code>
+        file had correct line ends. (kkolinko)
+      </fix>
+      <update>
+        Remove <code>res/License.rtf</code>. The file that is actually shown
+        by the Windows installer is <code>res/INSTALLLICENSE</code>.
+        (kkolinko)
+      </update>
+      <add>
+        Automate the OpenPGP signature generation for the release process.
+        (markt)
+      </add>
+      <fix>
+        Don&apos;t exclude directories named target from the build process.
+        (rjung)
+      </fix>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 7.0.24 (markt)" rtext="not released">
+  <subsection name="Catalina">
+    <changelog>
+      <add>
+        <bug>52184</bug>: Provide greater control over the logging of errors
+        triggered by invalid input data (i.e. data over which Tomcat has no
+        control). (markt/kkolinko) 
+      </add>
+      <fix>
+        <bug>52225</bug>: Fix ClassCastException in an Alias added to
+        existing host through JMX. (kkolinko)
+      </fix>
+      <fix>
+        Do not throw IllegalArgumentException from parseParameters() call
+        when chunked POST request is too large, but treat it like an IO error.
+        The <code>FailedRequestFilter</code> filter can be used to detect this
+        condition. (kkolinko)
+      </fix>
+      <fix>
+        <bug>52245</bug>: Don't allow web applications to package classes from
+        the <code>javax.el</code> package. Patch provided by pid. (markt)
+      </fix>
+      <fix>
+        <bug>52259</bug>: Fix regression caused by the addition of the threaded
+        component start (<bug>46264</bug>) that triggered a deadlock on startup
+        if no Realm was configured. (markt)
+      </fix>
+      <fix>
+        <bug>52293</bug>: Correctly handle the case when
+        <code>antiResourceLocking</code> is enabled at the Context level when
+        <code>unpackWARs</code> is disabled at the Host level. Based on a patch
+        by Justin Miller. (markt)
+      </fix>
+      <fix>
+        In <code>ExtendedAccessLogValve</code> when printing %-encoded value of
+        a parameter, use UTF-8 encoding to convert parameter value to bytes
+        instead of platform default encoding. (markt/kkolinko)
+      </fix>
+      <fix>
+        <bug>52303</bug>: Allow web applications that do not have a login
+        configuration to participate in a SSO session. Patch provided by Brian
+        Burch. (markt)
+      </fix>
+      <fix>
+        <bug>52316</bug>: When using sendfile, use the number of bytes requested
+        to be written to the response in the access log valve for bytes written
+        rather than recording a value of zero. (markt)
+      </fix>
+      <fix>
+        <bug>52326</bug>: Reduce log level for class loading errors during
+        <code>@HandlesTypes</code> processing to debug. (markt) 
+      </fix>
+      <fix>
+        <bug>52328</bug>: Improve performance when large numbers of single
+        characters and/or small strings are written to the response via a
+        Writer. (markt)
+      </fix>
+      <fix>
+        <bug>52384</bug>: Do not fail with parameter parsing when debug logging
+        is enabled. (kkolinko)
+      </fix>
+      <fix>
+        Do not flag extra '&amp;' characters in parameters as parse errors.
+        (kkolinko)
+      </fix>
+      <fix>
+        Reduce log level for the message about hitting
+        <code>maxParameterCount</code> limit from WARN to INFO. (kkolinko)
+      </fix>
+      <fix>
+        <bug>52387</bug>: Ensure that the correct host is used when configuring
+        logging when Tomcat is embedded. Patch provided by David Calavera.
+        (markt)
+      </fix>
+      <update>
+        <bug>52405</bug>: Align the Servlet 3.0 implementation with the changes
+        defined in the first maintenance release (also know as Rev. A). See the
+        <a href="http://jcp.org/aboutJava/communityprocess/maintenance/jsr315/servlet3-mr-reva.html">
+        JCP documentation</a> for a detailed list of changes. (markt) 
+      </update>
+      <fix>
+        Improve JMX names for objects related to Connectors that have the
+        address attribute set. (markt)
+      </fix>
+      <fix>
+        Remove some stale attributes from MBeans. (rjung)
+      </fix>
+      <scode>
+         Move destruction of <code>ContainerBase</code> objects to
+         <code>ContainerBase</code> to ensure that they are destroyed. (markt)
+      </scode>
+      <fix>
+        <bug>52443</bug>: Change the behaviour of the default Realm in the
+        embedded use case so it is set once on the Engine rather than on every
+        Context thereby avoiding the Lifecycle issues with having the same Realm
+        set on multiple Contexts. (markt)
+      </fix>
+      <add>
+        Provide a new Realm implementation, the NullRealm, that does not contain
+        any users and is used as the default Realm implementation (rather than
+        the JAAS Realm which was used prior to this change) if no Realm is
+        specified. (markt)
+      </add>
+      <fix>
+        <bug>52461</bug>: Don't assume file based URLs when checking last
+        modified times for global and host level web.xml files. Patch provided
+        by violetagg. (markt)
+      </fix>
+      <add>
+        Add test cases for the BASIC and NonLogin Authenticators when not using
+        SSO. Patch provided by Brian Burch. (markt)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <add>
+        <bug>52028</bug>: Add support for automatic binding to a free port by a
+        connector if the special value of zero is used for the port. This is
+        mainly useful in embedded and testing scenarios. (markt)
+      </add>
+      <update>
+        Remove obsolete <code>emptySessionPath</code> JMX attribute. (rjung)
+      </update>
+      <fix>
+        Correct error in fix for <bug>49683</bug>. (markt)
+      </fix>
+      <fix>
+        Ensure that the process of unlocking the acceptor thread does not
+        trigger processing of the connection as if it were a valid request.
+        (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        <bug>52450</bug>: Add setter for entityResolver in ParserUtils.
+        This is mainly useful when jasper and dtds are in different
+        class loaders. (mturk)
+      </fix>
+      <fix>
+        <bug>52321</bug>: Ensure that the order of multiple prelude/coda values
+        for JSP pages is respected. (markt)
+      </fix>
+      <fix>
+        <bug>52335</bug>: Only handle <code>&lt;\%</code> and not
+        <code>\%</code> as escaped in template text. (markt)
+      </fix>
+      <fix>
+        <bug>52440</bug>: Ensure that when using
+        <code>ValueExpression.getValueReference()</code> if the expression is an
+        EL variable that the value returned is the <code>ValueReference</code>
+        for the <code>ValueExpression</code> associated with the EL variable.
+        (markt) 
+      </fix>
+      <fix>
+        <bug>52445</bug>: Don&apos;t assume that EL method expressions have
+        exactly three components (identifier, method name, paramaters). (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <add>
+        <bug>38216</bug>: Add the ability to invoke MBean operations to the JMX
+        proxy sevrlet in the Manager application. Based on a patch by
+        Christopher Hlubek. (markt)
+      </add>
+      <update>
+        Further clarify the relation between values used by
+        <code>RemoteIpValve</code> and <code>RemoteIpFilter</code>
+        and their use by <code>AccessLogValve</code>. (kkolinko)
+      </update>
+      <fix>
+        <bug>52243</bug>: Improve windows service documentation to clarify how
+        to include <code>#</code> and/or <code>;</code> in the value of an
+        environment variable that is passed to the service. (markt)
+      </fix>
+      <fix>
+        <bug>52366</bug>: Fix typo in VirtualWebappLoader documentation
+        (configuration example). (rjung)
+      </fix>
+      <update>
+        Replace Bugzilla search link on <code>ROOT/index.jsp</code> page with
+        one pointing to the bug reporting page of Tomcat site. (kkolinko)
+      </update>
+      <update>
+        Move MBean dump code from JMXProxyServlet into a utility class. (rjung)
+      </update>
+    </changelog>
+  </subsection>
+  <subsection name="Tribes">
+    <changelog>
+      <fix>
+        <bug>52208</bug>: Fix threading issue that may lead to harmless NPE
+        during shutdown that has occasionally been observed when running the
+        unit tests. (markt)
+      </fix>
+      <fix>
+        <bug>52213</bug>, <bug>52354</bug>, <bug>52355</bug> and
+        <bug>52356</bug>: Fix some potential concurrency issues in
+        <code>FastQueue</code>. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="jdbc-pool">
+    <changelog>
+      <add>
+        <rev>1207712</rev>: Pool cleaner should be a global thread, not spawn
+        one thread per connection pool. (fhanik)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <update>
+        Update Apache Commons Daemon to 1.0.8. (mturk)
+      </update>
+      <update>
+        Update Apache Commons Pool to 1.5.7. (kkolinko)
+      </update>
+      <fix>
+        Fix line ends in <code>.gitignore</code> files contained in source
+        distributions. (rjung)
+      </fix>
+      <fix>
+        Run Mapper performance test twice if the first run took too long,
+        to ignore occasional failures. (kkolinko)
+      </fix>
+      <fix>
+        Align <code>.gitignore</code> and <code>build.xml</code>
+        exclude patterns with <code>svn:ignore</code>. (kkolinko)
+      </fix>
+      <fix>
+        Configure <code>defaultexcludes</code> for Ant 1.8.1/1.8.2.
+        The <code>.git</code> and <code>.gitignore</code> patterns are
+        in since Ant 1.8.2, but we include <code>.gitignore</code> in
+        src distributions. (kkolinko)
+      </fix>
+      <add>
+        <bug>52237</bug>: Allow JUnit logs to be generated in formats other than
+        plain text. Patch provided by M Hasko. (markt/kkolinko)
+      </add>
+      <fix>
+        Fix build condition for tomcat-dbcp to always rebuild whan a new version
+        of commons-pool or commons-dbcp is downloaded. (kkolinko)
+      </fix>
+      <update>
+        Add example of configuration for <code>SetCharacterEncodingFilter</code>
+        to the default <code>web.xml</code> file. (kkolinko)
+      </update>
+      <update>
+        Switch unit tests to bind Connectors to localhost rather than all
+        available IP addresses. (markt)
+      </update>
+      <update>
+        Update to Eclipse JDT Compiler 3.7.1. (markt)
+      </update>
+      <update>
+        Add Netbeans <code>nbproject</code> folder to <code>svn:ignore</code>
+        and <code>.gitignore</code>. (rjung)
+      </update>
+      <update>
+        Align <code>.gitignore</code> with trunk. (rjung)
+      </update>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 7.0.23 (markt)" rtext="released 2011-11-25">
   <subsection name="Catalina">
     <changelog>
       <add>
@@ -365,6 +854,29 @@
       </update>
     </changelog>
   </subsection>
+  <subsection name="jdbc-pool">
+    <changelog>
+      <fix>
+        <bug>52015</bug>: In jdbc-pool: JdbcInterceptor passes not 'this' but 
+        'proxy' to <code>getNext().invoke</code>. (kfujino)
+      </fix>
+      <fix>
+        In jdbc-pool: Improve handling of Errors that originate from methods
+        invoked through reflection. In <code>TrapException</code> interceptor:
+        rethrow Error as is, without wrapping it in a RuntimeException.
+        (kkolinko)
+      </fix>
+      <fix>
+        In jdbc-pool: Unwrap InvocationTargetException if it is caught in
+        <code>ResultSetProxy</code>, like we do it elsewhere. (kkolinko)
+      </fix>
+      <fix>
+        When building jdbc-pool from within Tomcat, use Tomcat's
+        <code>output</code> directory location. This allows to move all build
+        output away from the source tree. (kkolinko)
+      </fix>
+    </changelog>
+  </subsection>
   <subsection name="Other">
     <changelog>
       <update>
@@ -374,10 +886,6 @@
       <scode>
         Remove some unused code from the packaged renamed Commons BCEL. (markt)
       </scode>
-      <fix>
-        <bug>52015</bug>: In jdbc-pool: JdbcInterceptor passes not 'this' but 
-        'proxy' to getNext().invoke. (kfujino)
-      </fix>
       <fix>
         <bug>52059</bug>: In Windows uninstaller: Do not forget to remove
         Tomcat keys from 32-bit registry on deinstallation. (kkolinko)
@@ -413,21 +921,6 @@
         <bug>52148</bug>: Add tomcat-coyote.jar to catalina-tasks.xml as this
         JAR is now required by the Ant tasks. Patch provided by Volker Krebs.
         (markt)
-      </fix>
-      <fix>
-        In jdbc-pool: Improve handling of Errors that originate from methods
-        invoked through reflection. In <code>TrapException</code> interceptor:
-        rethrow Error as is, without wrapping it in a RuntimeException.
-        (kkolinko)
-      </fix>
-      <fix>
-        In jdbc-pool: Unwrap InvocationTargetException if it is caught in
-        <code>ResultSetProxy</code>, like we do it elsewhere. (kkolinko)
-      </fix>
-      <fix>
-        When building jdbc-pool from within Tomcat, use Tomcat's
-        <code>output</code> directory location. This allows to move all build
-        output away from the source tree. (kkolinko)
       </fix>
     </changelog>
   </subsection>
@@ -614,7 +1107,7 @@
       </update>
     </changelog>
   </subsection>
-  <subsection name="Other">
+  <subsection name="jdbc-pool">
     <changelog>
       <fix>
         In jdbc-pool: Avoid IllegalArgumentException when setting maxActive 
@@ -622,7 +1115,7 @@
         ArrayBlockingQueue doesn't allow capacity of 0 or less. (kfujino)
       </fix>
       <fix>
-        <bug>48392</bug> (<rev>1169796</rev>): In jdbc-pool: Fix typo in
+        <bug>48392</bug> (<rev>1169796</rev>): Fix typo in
         <code>StatementDecoratorInterceptor</code>. (fhanik) 
       </fix>
       <fix>
@@ -637,9 +1130,13 @@
         It removes from the active connection list. (kfujino)
       </fix>
       <fix>
-        <bug>51871</bug>: In jdbc-pool: Fix dependency in Maven POM file of
+        <bug>51871</bug>: Fix dependency in Maven POM file of
         tomcat-jbdc. (kkolinko)
       </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
       <update>
         Update the "test" target in the default build file to report a test
         failure only after all available connector variants (bio, nio, apr)
@@ -766,12 +1263,16 @@
       </fix>
     </changelog>
   </subsection>
-  <subsection name="Other">
+  <subsection name="jdbc-pool">
     <changelog>
       <add>
         <bug>51583</bug> (<rev>1157874</rev>, <rev>1162102</rev>): Fix
         shutdown delay in jdbc-pool. (fhanik/kkolinko)
       </add>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
       <fix>
         <bug>51558</bug>: Don&apos;t force the use of StandardManager when using
         any of the <code>Tomcat#addWebapp()</code> methods. (markt)
@@ -1151,17 +1652,21 @@
       </fix>
     </changelog>
   </subsection>
+  <subsection name="jdbc-pool">
+    <changelog>
+      <add>
+        Include jdbc-pool into Tomcat release. (fhanik)
+      </add>
+    </changelog>
+  </subsection>
   <subsection name="Other">
     <changelog>
       <update>
-        Update to Commons Daemon 1.0.6. (markt)
+        Update to Apache Commons Daemon 1.0.6. (markt)
       </update>
       <update>
         Update to Eclipse JDT Compiler 3.7. (markt)
       </update>
-      <add>
-        Include jdbc-pool into tomcat release. (fhanik)
-      </add>
     </changelog>
   </subsection>
 </section>
@@ -1967,7 +2472,7 @@
         not found it might be because execute permission is needed. (kkolinko)
       </update>
       <update>
-        Update commons pool to 1.5.6. (markt)
+        Update Apache Commons Pool to 1.5.6. (markt)
       </update>
       <fix>
         <bug>51135</bug>: Fix auto-detection of JAVA_HOME for 64-bit Windows
@@ -2751,7 +3256,7 @@
   <subsection name="General">
     <changelog>
       <update>
-        Update to Commons Daemon 1.0.5. (mturk)
+        Update to Apache Commons Daemon 1.0.5. (mturk)
       </update>
     </changelog>
   </subsection>
@@ -3052,7 +3557,7 @@
   <subsection name="General">
     <changelog>
       <update>
-        Update to Commons Daemon 1.0.4. (mturk)
+        Update to Apache Commons Daemon 1.0.4. (mturk)
       </update>
     </changelog>
   </subsection>
@@ -3887,7 +4392,7 @@
         Patch provided by sebb. (markt)
       </fix>
       <update>
-        Update commons pool to 1.5.5. (markt)
+        Update Apache Commons Pool to 1.5.5. (markt)
       </update>
       <update>
         <bug>49955</bug>: Improvement and correction of Building Tomcat guide.
@@ -3928,7 +4433,7 @@
         files. (markt)
       </add>
       <update>
-        Update Commons Daemon from 1.0.2 to 1.0.3.(markt)
+        Update Apache Commons Daemon from 1.0.2 to 1.0.3. (markt)
       </update>
       <update>
         Update Eclipse JDT Core Batch Compiler (ecj.jar) from 3.5.1 to 3.6.

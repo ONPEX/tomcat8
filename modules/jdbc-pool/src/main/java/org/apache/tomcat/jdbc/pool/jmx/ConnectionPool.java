@@ -29,9 +29,9 @@ import javax.management.NotificationListener;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.jdbc.pool.PoolConfiguration;
+import org.apache.tomcat.jdbc.pool.PoolProperties.InterceptorDefinition;
 import org.apache.tomcat.jdbc.pool.PoolUtilities;
 import org.apache.tomcat.jdbc.pool.Validator;
-import org.apache.tomcat.jdbc.pool.PoolProperties.InterceptorDefinition;
 
 public class ConnectionPool extends NotificationBroadcasterSupport implements ConnectionPoolMBean  {
     /**
@@ -745,6 +745,37 @@ public class ConnectionPool extends NotificationBroadcasterSupport implements Co
         //noop
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setCommitOnReturn(boolean commitOnReturn) {
+        getPoolProperties().setCommitOnReturn(commitOnReturn);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean getCommitOnReturn() {
+        return getPoolProperties().getCommitOnReturn();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setRollbackOnReturn(boolean rollbackOnReturn) {
+        getPoolProperties().setRollbackOnReturn(rollbackOnReturn);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean getRollbackOnReturn() {
+        return getPoolProperties().getRollbackOnReturn();
+    }
 
 
 }

@@ -214,7 +214,7 @@
     <attribute
       name="expireSessionsOnShutdown"
       is="true"
-      description="exipre all sessions cluster wide as one node goes down"
+      description="expire all sessions cluster wide as one node goes down"
       type="boolean"/>
     <attribute
       name="info"
@@ -266,10 +266,6 @@
       name="processingTime"
       description="Time spent doing housekeeping and expiration"
       type="long"/>
-    <attribute
-      name="randomFile"
-      description="File source of random - /dev/urandom or a pipe"
-      type="java.lang.String"/>
     <attribute
       name="sendAllSessions"
       is="true"
@@ -344,7 +340,7 @@
     </operation>
     <operation
       name="expireAllLocalSessions"
-      description="Exipre all active local sessions and replicate the invalid sessions"
+      description="expire all active local sessions and replicate the invalid sessions"
       impact="ACTION"
       returnType="void"/>
     <operation
@@ -472,7 +468,7 @@
     <attribute
       name="expireSessionsOnShutdown"
       is="true"
-      description="exipre all sessions cluster wide as one node goes down"
+      description="expire all sessions cluster wide as one node goes down"
       type="boolean"/>
     <attribute
       name="invalidatedSessions"
@@ -541,10 +537,6 @@
       description="The name of the LifecycleState that this component is currently in"
       type="java.lang.String"
       writeable="false"/>
-    <attribute
-      name="randomFile"
-      description="File source of random - /dev/urandom or a pipe"
-      type="java.lang.String"/>
     <attribute
       name="rejectedSessions"
       description="Number of sessions we rejected due to maxActive beeing reached"

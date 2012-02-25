@@ -62,7 +62,7 @@ import org.apache.tomcat.util.res.StringManager;
  * @author Craig R. McClanahan
  * @author Jean-Francois Arcand
  * @author Peter Rossbach
- * @version $Id: DeltaManager.java 1195393 2011-10-31 10:22:31Z kfujino $
+ * @version $Id: DeltaManager.java 1233431 2012-01-19 15:25:50Z markt $
  */
 
 public class DeltaManager extends ClusterManagerBase{
@@ -1208,7 +1208,7 @@ public class DeltaManager extends ClusterManagerBase{
             }//end if
         }//for
         long timeEnd = System.currentTimeMillis();
-        if(log.isDebugEnabled()) log.debug("End expire sessions " + getName() + " exipre processingTime " + (timeEnd - timeNow) + " expired direct sessions: " + expireDirect + " expired direct sessions: " + expireIndirect);
+        if(log.isDebugEnabled()) log.debug("End expire sessions " + getName() + " expire processingTime " + (timeEnd - timeNow) + " expired direct sessions: " + expireDirect + " expired direct sessions: " + expireIndirect);
       
     }
     

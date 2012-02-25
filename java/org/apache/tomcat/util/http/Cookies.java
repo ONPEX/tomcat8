@@ -19,8 +19,12 @@ package org.apache.tomcat.util.http;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.buf.ByteChunk;
 import org.apache.tomcat.util.buf.MessageBytes;
+import org.apache.tomcat.util.log.UserDataHelper;
+import org.apache.tomcat.util.res.StringManager;
 
 /**
  * A collection of cookies - reusable and tuned for server side performance.
@@ -31,10 +35,14 @@ import org.apache.tomcat.util.buf.MessageBytes;
  * @author Costin Manolache
  * @author kevin seguin
  */
-public final class Cookies { // extends MultiMap {
+public final class Cookies {
 
-    private static final org.apache.juli.logging.Log log=
-        org.apache.juli.logging.LogFactory.getLog(Cookies.class );
+    private static final Log log = LogFactory.getLog(Cookies.class);
+
+    private static final UserDataHelper userDataLog = new UserDataHelper(log);
+
+    protected static final StringManager sm =
+            StringManager.getManager("org.apache.tomcat.util.http");
 
     // expected average number of cookies per request
     public static final int INITIAL_SIZE=4;
@@ -128,8 +136,7 @@ public final class Cookies { // extends MultiMap {
     /** Add all Cookie found in the headers of a request.
      */
     public  void processCookies( MimeHeaders headers ) {
-        if( headers==null )
-         {
+        if( headers==null ) {
             return;// nothing to process
         }
         // process each "cookie" header
@@ -148,7 +155,6 @@ public final class Cookies { // extends MultiMap {
                 continue;
             }
 
-            // Uncomment to test the new parsing code
             if( cookieValue.getType() != MessageBytes.T_BYTES ) {
                 Exception e = new Exception();
                 log.warn("Cookies: Parsing cookie as String. Expected bytes.",
@@ -203,11 +209,11 @@ public final class Cookies { // extends MultiMap {
             return false;
         }
         */
-       if (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f') {
-        return true;
-    } else {
-        return false;
-    }
+        if (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f') {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -348,8 +354,22 @@ public final class Cookies { // extends MultiMap {
                         // INVALID COOKIE, advance to next delimiter
                         // The starting character of the cookie value was
                         // not valid.
-                        log.info("Cookies: Invalid cookie. " +
-                                "Value not a token or quoted value");
+                        UserDataHelper.Mode logMode = userDataLog.getNextMode();
+                        if (logMode != null) {
+                            String message = sm.getString(
+                                    "cookies.invalidCookieToken");
+                            switch (logMode) {
+                                case INFO_THEN_DEBUG:
+                                    message += sm.getString(
+                                            "cookies.fallToDebug");
+                                    //$FALL-THROUGH$
+                                case INFO:
+                                    log.info(message);
+                                    break;
+                                case DEBUG:
+                                    log.debug(message);
+                            }
+                        }
                         while (pos < end && bytes[pos] != ';' &&
                                bytes[pos] != ',')
                             {pos++; }
@@ -430,8 +450,20 @@ public final class Cookies { // extends MultiMap {
                 }
 
                 // Unknown cookie, complain
-                log.info("Cookies: Unknown Special Cookie");
-
+                UserDataHelper.Mode logMode = userDataLog.getNextMode();
+                if (logMode != null) {
+                    String message = sm.getString("cookies.invalidSpecial");
+                    switch (logMode) {
+                        case INFO_THEN_DEBUG:
+                            message += sm.getString("cookies.fallToDebug");
+                            //$FALL-THROUGH$
+                        case INFO:
+                            log.info(message);
+                            break;
+                        case DEBUG:
+                            log.debug(message);
+                    }
+                }
             } else { // Normal Cookie
                 if (valueStart == -1 && !CookieSupport.ALLOW_NAME_ONLY) {
                     // Skip name only cookies if not supported
