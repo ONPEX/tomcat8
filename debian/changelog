@@ -1,14 +1,18 @@
-tomcat7 (7.0.23-2) UNRELEASED; urgency=low
+tomcat7 (7.0.26-1) UNRELEASED; urgency=low
 
   [ tony mancill ]
-  * Add nl.po debconf translation (Closes: #651162) 
+  * Add nl.po debconf translation (Closes: #651162)
     - Thanks to Jeroen Schot
 
   [ Miguel Landaeta ]
   * Fix error in debian/rules that caused tomcat to report no version.
     Thanks to Jorge Barreiro for the patch. (Closes: #651492).
 
- -- Miguel Landaeta <miguel@miguel.cc>  Fri, 09 Dec 2011 17:42:57 -0430
+  [ Jakub Adam ]
+  * New upstream release.
+  * Add Jakub Adam to Uploaders.
+
+ -- Jakub Adam <jakub.adam@ktknet.cz>  Sat, 25 Feb 2012 20:51:36 +0100
 
 tomcat7 (7.0.23-1) unstable; urgency=low
 
