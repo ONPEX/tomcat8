@@ -3,7 +3,8 @@ Section: java
 Priority: optional
 Maintainer: Debian Java Maintainers <pkg-java-maintainers@lists.alioth.debian.org>
 Uploaders: James Page <james.page@ubuntu.com>,
- Miguel Landaeta <miguel@miguel.cc>, tony mancill <tmancill@debian.org>
+ Miguel Landaeta <miguel@miguel.cc>, tony mancill <tmancill@debian.org>,
+ Jakub Adam <jakub.adam@ktknet.cz>
 Build-Depends: default-jdk, ant-optional, debhelper (>= 7), po-debconf
 Build-Depends-Indep: maven-repo-helper (>> 1.0.1), libecj-java
 Standards-Version: 3.9.3
@@ -90,7 +91,8 @@ Description: Servlet 3.0 and JSP 2.2 Java API classes
 Package: libservlet3.0-java-doc
 Section: doc
 Architecture: all
-Depends: libservlet3.0-java (>= ${source:Version}), ${misc:Depends}
+Depends: ${misc:Depends}
+Suggests: libservlet3.0-java (>= ${source:Version})
 Description: Servlet 3.0 and JSP 2.2 Java API documentation
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Sun Microsystems, and provides a "pure Java" HTTP web

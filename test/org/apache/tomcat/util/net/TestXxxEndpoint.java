@@ -18,6 +18,7 @@
 package org.apache.tomcat.util.net;
 
 import java.io.File;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 
 import static org.junit.Assert.assertNotNull;
@@ -64,7 +65,8 @@ public class TestXxxEndpoint extends TomcatBaseTest {
          */
         long serverSock = 0;
 
-        String address = null;
+        String address = InetAddress.getByName("localhost").getHostAddress();
+
         // Create the APR address that will be bound
         int family = Socket.APR_INET;
         if (Library.APR_HAVE_IPV6) {
@@ -118,9 +120,9 @@ public class TestXxxEndpoint extends TomcatBaseTest {
         File appDir = new File(getBuildDirectory(), "webapps/examples");
         tomcat.addWebapp(null, "/examples", appDir.getAbsolutePath());
 
-        int port = getPort();
-
         tomcat.start();
+
+        int port = getPort();
 
         tomcat.getConnector().stop();
         Exception e = null;
@@ -136,7 +138,8 @@ public class TestXxxEndpoint extends TomcatBaseTest {
                 nativeSocket = createAprSocket(port, pool);
                 assertTrue(nativeSocket != 0);
             } else {
-                s = new ServerSocket(port);
+                s = new ServerSocket(port, 100,
+                        InetAddress.getByName("localhost"));
             }
         } catch (Exception e1) {
             e = e1;
@@ -165,9 +168,9 @@ public class TestXxxEndpoint extends TomcatBaseTest {
         File appDir = new File(getBuildDirectory(), "webapps/examples");
         tomcat.addWebapp(null, "/examples", appDir.getAbsolutePath());
 
-        int port = getPort();
 
         tomcat.start();
+        int port = getPort();
 
         tomcat.getConnector().stop();
         Exception e = null;
@@ -183,7 +186,8 @@ public class TestXxxEndpoint extends TomcatBaseTest {
                 nativeSocket = createAprSocket(port, pool);
                 assertTrue(nativeSocket != 0);
             } else {
-                s = new ServerSocket(port);
+                s = new ServerSocket(port, 100,
+                        InetAddress.getByName("localhost"));
             }
         } catch (Exception e1) {
             e = e1;

@@ -19,6 +19,7 @@ package org.apache.catalina.valves;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
@@ -93,19 +94,19 @@ import org.apache.tomcat.util.ExceptionUtils;
  *
  *
  * <p>
- * Log rotation can be on or off. This is dictated by the rotatable
- * property.
+ * Log rotation can be on or off. This is dictated by the
+ * <code>rotatable</code> property.
  * </p>
  *
  * <p>
- * For UvNIX users, another field called <code>checkExists</code> is also
+ * For UNIX users, another field called <code>checkExists</code> is also
  * available. If set to true, the log file's existence will be checked before
  * each logging. This way an external log rotator can move the file
- * somewhere and tomcat will start with a new file.
+ * somewhere and Tomcat will start with a new file.
  * </p>
  *
  * <p>
- * For JMX junkies, a public method called </code>rotate</code> has
+ * For JMX junkies, a public method called <code>rotate</code> has
  * been made available to allow you to tell this instance to move
  * the existing log file to somewhere else and start writing a new log file.
  * </p>
@@ -127,7 +128,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * @author Tim Funk
  * @author Peter Rossbach
  *
- * @version $Id: ExtendedAccessLogValve.java 1187022 2011-10-20 19:55:37Z markt $
+ * @version $Id: ExtendedAccessLogValve.java 1223057 2011-12-25 10:00:13Z kkolinko $
  */
 
 public class ExtendedAccessLogValve extends AccessLogValve {
@@ -419,7 +420,12 @@ public class ExtendedAccessLogValve extends AccessLogValve {
             if (null==value || value.length()==0) {
                 return null;
             }
-            return URLEncoder.encode(value);
+            try {
+                return URLEncoder.encode(value, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                // Should never happen - all JVMs are required to support UTF-8
+                return null;
+            }
         }
 
         @Override

@@ -21,13 +21,13 @@
 # modules that Tomcat depends on.  Copy this file to "build.properties"
 # in the top-level source directory, and customize it as needed.
 #
-# $Id: build.properties.default 1203301 2011-11-17 17:49:13Z markt $
+# $Id: build.properties.default 1245466 2012-02-17 14:02:42Z markt $
 # -----------------------------------------------------------------------------
 
 # ----- Version Control Flags -----
 version.major=7
 version.minor=0
-version.build=23
+version.build=26
 version.patch=0
 version.suffix=
 
@@ -45,6 +45,9 @@ test.accesslog=false
 
 # Workaround against http://bugs.sun.com/view_bug.do?bug_id=6202721
 test.jvmarg.egd=-Djava.security.egd=file:/dev/./urandom
+
+# Location of GPG executable (used only for releases)
+gpg.exec=/path/to/gpg
 
 # ----- Default Base Path for Dependent Packages -----
 # Please note this path must be absolute, not relative,
@@ -120,8 +123,8 @@ wsdl4j-lib.loc=${base-maven.loc}/wsdl4j/wsdl4j/${wsdl4j-lib.version}/wsdl4j-${ws
 wsdl4j-lib.jar=${wsdl4j-lib.home}/wsdl4j-${wsdl4j-lib.version}.jar
 
 # ----- Eclipse JDT, version 3.2 or later -----
-jdt.version=3.7
-jdt.release=R-3.7-201106131736
+jdt.version=3.7.1
+jdt.release=R-3.7.1-201109091335
 jdt.home=${base.path}/ecj-${jdt.version}
 jdt.jar=${jdt.home}/ecj-${jdt.version}.jar
 # The download will be moved to the archive area eventually. We are taking care of that in advance.
@@ -147,7 +150,7 @@ commons-dbcp-src.loc.1=${base-commons.loc.1}/dbcp/source/commons-dbcp-${commons-
 commons-dbcp-src.loc.2=${base-commons.loc.2}/dbcp/source/commons-dbcp-${commons-dbcp.version}-src.tar.gz
 
 # ----- Commons Pool, version 1.1 or later -----
-commons-pool.version=1.5.6
+commons-pool.version=1.5.7
 commons-pool.home=${base.path}/commons-pool-${commons-pool.version}-src
 commons-pool-src.loc.1=${base-commons.loc.1}/pool/source/commons-pool-${commons-pool.version}-src.tar.gz
 commons-pool-src.loc.2=${base-commons.loc.2}/pool/source/commons-pool-${commons-pool.version}-src.tar.gz
@@ -161,7 +164,7 @@ nsis.nsisdl.dll=${nsis.home}/Plugins/NSISdl.dll
 nsis.loc=${base-sf.loc}/nsis/nsis-2.46.zip
 
 # ----- Commons Daemon, version 1.0-Alpha or later -----
-commons-daemon.version=1.0.7
+commons-daemon.version=1.0.9
 commons-daemon.home=${base.path}/commons-daemon-${commons-daemon.version}
 commons-daemon.jar=${commons-daemon.home}/commons-daemon-${commons-daemon.version}.jar
 commons-daemon.native.win.home=${commons-daemon.home}/windows

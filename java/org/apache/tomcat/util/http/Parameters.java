@@ -30,6 +30,7 @@ import org.apache.tomcat.util.buf.ByteChunk;
 import org.apache.tomcat.util.buf.CharChunk;
 import org.apache.tomcat.util.buf.MessageBytes;
 import org.apache.tomcat.util.buf.UDecoder;
+import org.apache.tomcat.util.log.UserDataHelper;
 import org.apache.tomcat.util.res.StringManager;
 
 /**
@@ -40,6 +41,10 @@ public final class Parameters {
 
     private static final org.apache.juli.logging.Log log =
         org.apache.juli.logging.LogFactory.getLog(Parameters.class );
+
+    private static final UserDataHelper userDataLog = new UserDataHelper(log);
+
+    private static final UserDataHelper maxParamCountLog = new UserDataHelper(log);
 
     protected static final StringManager sm =
         StringManager.getManager("org.apache.tomcat.util.http");
@@ -315,19 +320,36 @@ public final class Parameters {
             }
 
             if (nameEnd <= nameStart ) {
-                if (log.isInfoEnabled()) {
-                    if (valueEnd >= nameStart && log.isDebugEnabled()) {
-                        String extract = new String(bytes, nameStart,
-                                valueEnd - nameStart, DEFAULT_CHARSET);
-                        log.info(sm.getString("parameters.invalidChunk",
-                                Integer.valueOf(nameStart),
-                                Integer.valueOf(valueEnd),
-                                extract));
+                if (valueStart == -1) {
+                    // &&
+                    if (log.isDebugEnabled()) {
+                        log.debug(sm.getString("parameters.emptyChunk"));
+                    }
+                    // Do not flag as error
+                    continue;
+                }
+                // &=foo&
+                UserDataHelper.Mode logMode = userDataLog.getNextMode();
+                if (logMode != null) {
+                    String extract;
+                    if (valueEnd >= nameStart) {
+                        extract = new String(bytes, nameStart, valueEnd
+                                - nameStart, DEFAULT_CHARSET);
                     } else {
-                        log.info(sm.getString("parameters.invalidChunk",
-                                Integer.valueOf(nameStart),
-                                Integer.valueOf(nameEnd),
-                                null));
+                        extract = "";
+                    }
+                    String message = sm.getString("parameters.invalidChunk",
+                            Integer.valueOf(nameStart),
+                            Integer.valueOf(valueEnd), extract);
+                    switch (logMode) {
+                        case INFO_THEN_DEBUG:
+                            message += sm.getString("parameters.fallToDebug");
+                            //$FALL-THROUGH$
+                        case INFO:
+                            log.info(message);
+                            break;
+                        case DEBUG:
+                            log.debug(message);
                     }
                 }
                 parseFailed = true;
@@ -336,7 +358,11 @@ public final class Parameters {
             }
 
             tmpName.setBytes(bytes, nameStart, nameEnd - nameStart);
-            tmpValue.setBytes(bytes, valueStart, valueEnd - valueStart);
+            if (valueStart >= 0) {
+                tmpValue.setBytes(bytes, valueStart, valueEnd - valueStart);
+            } else {
+                tmpValue.setBytes(bytes, 0, 0);
+            }
 
             // Take copies as if anything goes wrong originals will be
             // corrupted. This means original values can be logged.
@@ -344,7 +370,11 @@ public final class Parameters {
             if (log.isDebugEnabled()) {
                 try {
                     origName.append(bytes, nameStart, nameEnd - nameStart);
-                    origValue.append(bytes, valueStart, valueEnd - valueStart);
+                    if (valueStart >= 0) {
+                        origValue.append(bytes, valueStart, valueEnd - valueStart);
+                    } else {
+                        origValue.append(bytes, 0, 0);
+                    }
                 } catch (IOException ioe) {
                     // Should never happen...
                     log.error(sm.getString("parameters.copyFail"), ioe);
@@ -361,11 +391,15 @@ public final class Parameters {
                 tmpName.setCharset(charset);
                 name = tmpName.toString();
 
-                if (decodeValue) {
-                    urlDecode(tmpValue);
+                if (valueStart >= 0) {
+                    if (decodeValue) {
+                        urlDecode(tmpValue);
+                    }
+                    tmpValue.setCharset(charset);
+                    value = tmpValue.toString();
+                } else {
+                    value = "";
                 }
-                tmpValue.setCharset(charset);
-                value = tmpValue.toString();
 
                 try {
                     addParameter(name, value);
@@ -373,7 +407,21 @@ public final class Parameters {
                     // Hitting limit stops processing further params but does
                     // not cause request to fail.
                     parseFailed = true;
-                    log.warn(ise.getMessage());
+                    UserDataHelper.Mode logMode = maxParamCountLog.getNextMode();
+                    if (logMode != null) {
+                        String message = ise.getMessage();
+                        switch (logMode) {
+                            case INFO_THEN_DEBUG:
+                                message += sm.getString(
+                                        "parameters.maxCountFail.fallToDebug");
+                                //$FALL-THROUGH$
+                            case INFO:
+                                log.info(message);
+                                break;
+                            case DEBUG:
+                                log.debug(message);
+                        }
+                    }
                     break;
                 }
             } catch (IOException e) {
@@ -384,8 +432,22 @@ public final class Parameters {
                         log.debug(sm.getString("parameters.decodeFail.debug",
                                 origName.toString(), origValue.toString()), e);
                     } else if (log.isInfoEnabled()) {
-                        log.info(sm.getString("parameters.decodeFail.info",
-                                tmpName.toString(), tmpValue.toString()), e);
+                        UserDataHelper.Mode logMode = userDataLog.getNextMode();
+                        if (logMode != null) {
+                            String message = sm.getString(
+                                    "parameters.decodeFail.info",
+                                    tmpName.toString(), tmpValue.toString());
+                            switch (logMode) {
+                                case INFO_THEN_DEBUG:
+                                    message += sm.getString("parameters.fallToDebug");
+                                    //$FALL-THROUGH$
+                                case INFO:
+                                    log.info(message);
+                                    break;
+                                case DEBUG:
+                                    log.debug(message);
+                            }
+                        }
                     }
                 }
             }
@@ -400,8 +462,22 @@ public final class Parameters {
         }
 
         if (decodeFailCount > 1 && !log.isDebugEnabled()) {
-            log.info(sm.getString("parameters.multipleDecodingFail",
-                    Integer.valueOf(decodeFailCount)));
+            UserDataHelper.Mode logMode = userDataLog.getNextMode();
+            if (logMode != null) {
+                String message = sm.getString(
+                        "parameters.multipleDecodingFail",
+                        Integer.valueOf(decodeFailCount));
+                switch (logMode) {
+                    case INFO_THEN_DEBUG:
+                        message += sm.getString("parameters.fallToDebug");
+                        //$FALL-THROUGH$
+                    case INFO:
+                        log.info(message);
+                        break;
+                    case DEBUG:
+                        log.debug(message);
+                }
+            }
         }
     }
 

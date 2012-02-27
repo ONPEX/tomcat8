@@ -14,20 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.catalina.manager;
-
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.Array;
-import java.util.Iterator;
 import java.util.Set;
 
 import javax.management.Attribute;
-import javax.management.MBeanAttributeInfo;
-import javax.management.MBeanInfo;
+import javax.management.MBeanOperationInfo;
+import javax.management.MBeanParameterInfo;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import javax.servlet.ServletException;
@@ -35,7 +30,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.tomcat.util.ExceptionUtils;
+import org.apache.catalina.mbeans.MBeanDumper;
 import org.apache.tomcat.util.modeler.Registry;
 
 /**
@@ -105,6 +100,19 @@ public class JMXProxyServlet extends HttpServlet  {
             getAttribute( writer, qry, name );
             return;
         }        
+        qry = request.getParameter("invoke");
+        if(qry != null) {
+            String opName=request.getParameter("op");
+            String ps = request.getParameter("ps");
+            String[] valuesStr;
+            if (ps == null) {
+                valuesStr = new String[0];
+            } else {
+                valuesStr = ps.split(",");
+            }
+            invokeOperation( writer, qry, opName,valuesStr );
+            return;
+        }
         qry=request.getParameter("qry");
         if( qry == null ) {
             qry = "*:*";
@@ -118,10 +126,17 @@ public class JMXProxyServlet extends HttpServlet  {
         try {
             ObjectName oname = new ObjectName(onameStr);
             Object value = mBeanServer.getAttribute(oname, att);
+            String valueStr;
+            if (value != null) {
+                valueStr = value.toString();
+            } else {
+                valueStr = "<null>";
+            }
             writer.println("OK - Attribute get '" + onameStr + "' - " + att
-                    + "= " + escape(value.toString()));
+                    + "= " + MBeanDumper.escape(valueStr));
         } catch (Exception ex) {
             writer.println("Error - " + ex.toString());
+            ex.printStackTrace(writer);
         }
     }
 
@@ -136,6 +151,7 @@ public class JMXProxyServlet extends HttpServlet  {
             writer.println("OK - Attribute set");
         } catch( Exception ex ) {
             writer.println("Error - " + ex.toString());
+            ex.printStackTrace(writer);
         }
     }
 
@@ -147,126 +163,14 @@ public class JMXProxyServlet extends HttpServlet  {
             names=mBeanServer.queryNames(new ObjectName(qry), null);
             writer.println("OK - Number of results: " + names.size());
             writer.println();
-        } catch (Exception e) {
-            writer.println("Error - " + e.toString());
+        } catch (Exception ex) {
+            writer.println("Error - " + ex.toString());
+            ex.printStackTrace(writer);
             return;
         }
 
-        Iterator<ObjectName> it=names.iterator();
-        while( it.hasNext()) {
-            ObjectName oname=it.next();
-            writer.println( "Name: " + oname.toString());
-
-            try {
-                MBeanInfo minfo=mBeanServer.getMBeanInfo(oname);
-                // can't be null - I think
-                String code=minfo.getClassName();
-                if ("org.apache.commons.modeler.BaseModelMBean".equals(code)) {
-                    code=(String)mBeanServer.getAttribute(oname, "modelerType");
-                }
-                writer.println("modelerType: " + code);
-
-                MBeanAttributeInfo attrs[]=minfo.getAttributes();
-                Object value=null;
-
-                for( int i=0; i< attrs.length; i++ ) {
-                    if( ! attrs[i].isReadable() ) continue;
-                    if( ! isSupported( attrs[i].getType() )) continue;
-                    String attName=attrs[i].getName();
-                    if( "modelerType".equals( attName)) continue;
-                    if( attName.indexOf( "=") >=0 ||
-                            attName.indexOf( ":") >=0 ||
-                            attName.indexOf( " ") >=0 ) {
-                        continue;
-                    }
-            
-                    try {
-                        value=mBeanServer.getAttribute(oname, attName);
-                    } catch( Throwable t) {
-                        log("Error getting attribute " + oname +
-                            " " + attName + " " + t.toString());
-                        continue;
-                    }
-                    if( value==null ) continue;
-                    String valueString;
-                    try {
-                        Class<?> c = value.getClass();
-                        if (c.isArray()) {
-                            int len = Array.getLength(value);
-                            StringBuilder sb = new StringBuilder("Array[" +
-                                    c.getComponentType().getName() + "] of length " + len);
-                            if (len > 0) {
-                                sb.append("\r\n");
-                            }
-                            for (int j = 0; j < len; j++) {
-                                sb.append("\t");
-                                Object item = Array.get(value, j);
-                                if (item == null) {
-                                    sb.append("NULL VALUE");
-                                } else {
-                                    try {
-                                        sb.append(escape(item.toString()));
-                                    }
-                                    catch (Throwable t) {
-                                        ExceptionUtils.handleThrowable(t);
-                                        sb.append("NON-STRINGABLE VALUE");
-                                    }
-                                }
-                                if (j < len - 1) {
-                                    sb.append("\r\n");
-                                }
-                            }
-                            valueString = sb.toString();
-                        }
-                        else {
-                            valueString = escape(value.toString());
-                        }
-                        writer.println( attName + ": " + valueString);
-                    }
-                    catch (Throwable t) {
-                        ExceptionUtils.handleThrowable(t);
-                    }
-                }
-            } catch (Throwable t) {
-                ExceptionUtils.handleThrowable(t);
-            }
-            writer.println();
-        }
-
-    }
-
-    public String escape(String value) {
-        // The only invalid char is \n
-        // We also need to keep the string short and split it with \nSPACE
-        // XXX TODO
-        int idx=value.indexOf( "\n" );
-        if( idx < 0 ) return value;
-
-        int prev=0;
-        StringBuilder sb=new StringBuilder();
-        while( idx >= 0 ) {
-            appendHead(sb, value, prev, idx);
-
-            sb.append( "\\n\n ");
-            prev=idx+1;
-            if( idx==value.length() -1 ) break;
-            idx=value.indexOf('\n', idx+1);
-        }
-        if( prev < value.length() )
-            appendHead( sb, value, prev, value.length());
-        return sb.toString();
-    }
-
-    private void appendHead( StringBuilder sb, String value, int start, int end) {
-        if (end < 1) return;
-
-        int pos=start;
-        while( end-pos > 78 ) {
-            sb.append( value.substring(pos, pos+78));
-            sb.append( "\n ");
-            pos=pos+78;
-        }
-        sb.append( value.substring(pos,end));
+        String dump = MBeanDumper.dumpBeans(mBeanServer, names);
+        writer.print(dump);
     }
 
     /**
@@ -277,5 +181,49 @@ public class JMXProxyServlet extends HttpServlet  {
      */
     public boolean isSupported(String type) {
         return true;
+    }
+
+
+    private void invokeOperation(PrintWriter writer, String onameStr, String op,
+            String[] valuesStr) {
+        try {
+            ObjectName oname=new ObjectName( onameStr );
+            MBeanOperationInfo methodInfo = registry.getMethodInfo(oname,op);
+            MBeanParameterInfo[] signature = methodInfo.getSignature();
+            String[] signatureTypes = new String[signature.length];
+            Object[] values = new Object[signature.length];
+            for (int i = 0; i < signature.length; i++) {
+               MBeanParameterInfo pi = signature[i];
+               signatureTypes[i] = pi.getType();
+               values[i] = registry.convertValue(pi.getType(), valuesStr[i] );
+           }
+
+            Object retVal = mBeanServer.invoke(oname,op,values,signatureTypes);
+            if (retVal != null) {
+                writer.println("OK - Operation " + op + " returned:");
+                output("", writer, retVal);
+            } else {
+                writer.println("OK - Operation " + op + " without return value");
+            }
+        } catch( Exception ex ) {
+            writer.println("Error - " + ex.toString());
+            ex.printStackTrace(writer);
+        }
+    }
+
+    private void output(String indent, PrintWriter writer, Object result) {
+        if (result instanceof Object[]) {
+            for (Object obj : (Object[]) result) {
+                output("  " + indent, writer, obj);
+            }
+        } else {
+            String strValue;
+            if (result != null) {
+                strValue = result.toString();
+            } else {
+                strValue = "<null>";
+            }
+            writer.println(indent + strValue);
+        }
     }
 }

@@ -46,7 +46,7 @@ import org.apache.catalina.tribes.util.ExecutorFactory;
  * Need to fix this, could use java.nio and only need one thread to send and receive, or
  * just use a timeout on the receive
  * @author Filip Hanik
- * @version $Id: McastServiceImpl.java 1059366 2011-01-15 16:33:05Z markt $
+ * @version $Id: McastServiceImpl.java 1233431 2012-01-19 15:25:50Z markt $
  */
 public class McastServiceImpl
 {
@@ -449,7 +449,7 @@ public class McastServiceImpl
             for (int i = 0; i < expired.length; i++) {
                 final MemberImpl member = expired[i];
                 if (log.isDebugEnabled())
-                    log.debug("Mcast exipre  member " + expired[i]);
+                    log.debug("Mcast expire  member " + expired[i]);
                 try {
                     Runnable t = new Runnable() {
                         @Override

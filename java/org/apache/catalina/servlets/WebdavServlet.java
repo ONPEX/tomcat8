@@ -52,12 +52,12 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.catalina.util.DOMWriter;
 import org.apache.catalina.util.MD5Encoder;
-import org.apache.catalina.util.RequestUtil;
 import org.apache.catalina.util.XMLWriter;
 import org.apache.naming.resources.CacheEntry;
 import org.apache.naming.resources.Resource;
 import org.apache.naming.resources.ResourceAttributes;
 import org.apache.tomcat.util.http.FastHttpDateFormat;
+import org.apache.tomcat.util.http.RequestUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -128,7 +128,7 @@ import org.xml.sax.SAXException;
  * http://host:port/context/webdavedit/content
  *
  * @author Remy Maucherat
- * @version $Id: WebdavServlet.java 1200163 2011-11-10 05:40:04Z kkolinko $
+ * @version $Id: WebdavServlet.java 1239053 2012-02-01 10:52:00Z markt $
  */
 
 public class WebdavServlet
@@ -1581,7 +1581,8 @@ public class WebdavServlet
         }
 
         // Remove url encoding from destination
-        destinationPath = RequestUtil.URLDecode(destinationPath, "UTF8");
+        destinationPath = org.apache.catalina.util.RequestUtil.URLDecode(
+                destinationPath, "UTF8");
 
         int protocolIndex = destinationPath.indexOf("://");
         if (protocolIndex >= 0) {

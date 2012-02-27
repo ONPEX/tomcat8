@@ -70,7 +70,6 @@ import org.apache.catalina.Wrapper;
 import org.apache.catalina.core.ApplicationPart;
 import org.apache.catalina.core.ApplicationSessionCookieConfig;
 import org.apache.catalina.core.AsyncContextImpl;
-import org.apache.catalina.deploy.LoginConfig;
 import org.apache.catalina.realm.GenericPrincipal;
 import org.apache.catalina.util.ParameterMap;
 import org.apache.catalina.util.StringParser;
@@ -100,7 +99,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: Request.java 1200224 2011-11-10 08:53:39Z kkolinko $
+ * @version $Id: Request.java 1241170 2012-02-06 20:45:52Z markt $
  */
 
 public class Request
@@ -2591,13 +2590,7 @@ public class Request
                     sm.getString("coyoteRequest.authenticate.ise"));
         }
 
-        LoginConfig config = context.getLoginConfig();
-
-        if (config == null) {
-            throw new ServletException(
-                    sm.getString("coyoteRequest.noLoginConfig"));
-        }
-        return context.getAuthenticator().authenticate(this, response, config);
+        return context.getAuthenticator().authenticate(this, response);
     }
 
     /**
@@ -2680,10 +2673,17 @@ public class Request
                 location = ((File) context.getServletContext().getAttribute(
                         ServletContext.TEMPDIR));
             } else {
+                // If relative, it is relative to TEMPDIR
                 location = new File(locationStr);
+                if (!location.isAbsolute()) {
+                    location = new File(
+                            (File) context.getServletContext().getAttribute(
+                                        ServletContext.TEMPDIR),
+                                        locationStr).getAbsoluteFile();
+                }
             }
 
-            if (!location.isAbsolute() || !location.isDirectory()) {
+            if (!location.isDirectory()) {
                 partsParseException = new IOException(
                         sm.getString("coyoteRequest.uploadLocationInvalid",
                                 location));
@@ -3064,7 +3064,7 @@ public class Request
                 try {
                     formData = readChunkedPostBody();
                 } catch (IOException e) {
-                    // Client disconnect
+                    // Client disconnect or chunkedPostTooLarge error
                     if (context.getLogger().isDebugEnabled()) {
                         context.getLogger().debug(
                                 sm.getString("coyoteRequest.parseParameters"), e);
@@ -3119,7 +3119,7 @@ public class Request
                     (body.getLength() + len) > connector.getMaxPostSize()) {
                 // Too much data
                 checkSwallowInput();
-                throw new IllegalArgumentException(
+                throw new IOException(
                         sm.getString("coyoteRequest.chunkedPostTooLarge"));
             }
             if (len > 0) {

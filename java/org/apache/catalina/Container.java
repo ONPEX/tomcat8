@@ -80,7 +80,7 @@ import org.apache.juli.logging.Log;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: Container.java 1200158 2011-11-10 05:32:22Z kkolinko $
+ * @version $Id: Container.java 1238006 2012-01-30 20:57:00Z markt $
  */
 
 public interface Container extends Lifecycle {
@@ -99,7 +99,9 @@ public interface Container extends Lifecycle {
     /**
      * The ContainerEvent event type sent when a Mapper is added
      * by <code>addMapper()</code>.
+     * @deprecated Unused. Will be removed in Tomcat 8.0.x.
      */
+    @Deprecated
     public static final String ADD_MAPPER_EVENT = "addMapper";
 
 
@@ -120,7 +122,9 @@ public interface Container extends Lifecycle {
     /**
      * The ContainerEvent event type sent when a Mapper is removed
      * by <code>removeMapper()</code>.
+     * @deprecated Unused. Will be removed in Tomcat 8.0.x.
      */
+    @Deprecated
     public static final String REMOVE_MAPPER_EVENT = "removeMapper";
 
 
@@ -415,7 +419,10 @@ public interface Container extends Lifecycle {
      *  processing
      * @exception ServletException if a ServletException was thrown
      *  while processing this request
+     *
+     * @deprecated Unused. Will be removed in Tomcat 8.0.x.
      */
+    @Deprecated
     public void invoke(Request request, Response response)
         throws IOException, ServletException;
 

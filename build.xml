@@ -154,6 +154,13 @@
   <property name="test.name" value="**/Test*.java"/>
   <property name="test.formatter" value="-Dorg.apache.juli.formatter=java.util.logging.SimpleFormatter"/>
   
+  <!-- Include .gitignore in src distributions. -->
+  <!-- .git and .gitignore are in defaultexcludes since Ant 1.8.2 -->
+  <defaultexcludes add="**/.git" />
+  <defaultexcludes add="**/.git/**" />
+  <defaultexcludes remove="**/.gitignore" />
+  <!--<defaultexcludes echo="true" />-->
+
   <!-- Classpaths -->
   <path id="compile.classpath">
     <pathelement location="${jdt.jar}"/>
@@ -203,6 +210,7 @@
     <include name="**/LICENSE"/>
     <include name="**/NOTICE"/>
     <include name="**/RELEASE-NOTES"/>
+    <include name="**/.gitignore"/>
     <include name="**/*.classpath"/>
     <include name="**/*.css"/>
     <include name="**/*.dtd"/>
@@ -459,6 +467,9 @@
         <exclude name="**/org/apache/tomcat/dbcp/**"/>
         <exclude name="**/tomcat-deps/**"/>
       </fileset>
+      <fileset dir="modules/jdbc-pool" >
+        <patternset refid="text.files" />
+      </fileset>
     </checkstyle>
     <!-- javax package checks -->
     <checkstyle config="res/checkstyle/javax-checkstyle.xml">
@@ -474,11 +485,42 @@
     </checkstyle>
   </target>
 
+  <target name="validate-eoln" depends="compile"
+    description="Validate that the source files have correct line ends">
+    <taskdef name="checkeol"
+             classname="org.apache.tomcat.buildutil.CheckEol"
+             classpath="${tomcat.classes}" />
+
+    <checkeol>
+      <fileset dir="." >
+        <patternset refid="text.files" />
+        <include name="**/*.bat"/>
+        <include name="**/*.sh"/>
+        <exclude name=".*/**"/>
+        <exclude name="output/**"/>
+        <exclude name="modules/**"/>
+        <!-- Exclude these else Gump runs validate on them -->
+        <exclude name="**/org/apache/tomcat/dbcp/**"/>
+        <exclude name="**/tomcat-deps/**"/>
+      </fileset>
+      <fileset dir="modules/jdbc-pool" >
+        <patternset refid="text.files" />
+      </fileset>
+    </checkeol>
+  </target>
+
   <target name="compile-prepare">
     <!-- Add the builtin catalina.properties -->
     <copy todir="java/org/apache/catalina/startup"
           file="conf/catalina.properties" encoding="ISO-8859-1">
       <filterset refid="version.filters"/>
+    </copy>
+    <!-- Copy jdbc-pool documentation -->
+    <copy tofile="webapps/docs/jdbc-pool.xml"
+          file="${tomcat.jdbc.dir}/doc/jdbc-pool.xml" encoding="ISO-8859-1">
+      <filterset>
+        <filter token="TOMCAT_PROJECT_DEST" value="project.xml"/>
+      </filterset>
     </copy>
   </target>
 
@@ -656,7 +698,7 @@
 
   </target>
 
-  <target name="build-docs" description="Builds all documentation from XML sources">
+  <target name="build-docs" depends="compile-prepare" description="Builds all documentation from XML sources">
 
     <copy todir="${tomcat.build}/webapps">
       <fileset dir="webapps">
@@ -693,12 +735,6 @@
     <mkdir dir="${tomcat.build}/webapps/docs/funcspecs" />
 
     <!-- XSL processing -->
-    <copy tofile="webapps/docs/jdbc-pool.xml" file="${tomcat.jdbc.dir}/doc/jdbc-pool.xml">
-      <!-- jdbc-pool documentation -->
-      <filterset>
-        <filter token="TOMCAT_PROJECT_DEST" value="project.xml"/>
-      </filterset>
-    </copy>
     <xslt basedir="webapps/docs"
            destdir="${tomcat.build}/webapps/docs"
          extension=".html"
@@ -1058,6 +1094,11 @@
     </javac>
   </target>
 
+  <!-- Default JUnit log output formatter -->
+  <property name="junit.formatter.type" value="plain" />
+  <property name="junit.formatter.usefile" value="true" />
+  <property name="junit.formatter.extension" value=".txt" />
+
   <target name="test" description="Runs the JUnit test cases"
           depends="test-bio,test-nio,test-apr" >
     <fail if="test.result.error" message='Some tests completed with an Error. See ${tomcat.build}/logs for details, search for "FAILED".' />
@@ -1067,20 +1108,20 @@
   <target name="test-bio" description="Runs the JUnit test cases for BIO. Does not stop on errors."
           depends="test-compile,deploy" if="${execute.test.bio}">
     <runtests protocol="org.apache.coyote.http11.Http11Protocol"
-              extension=".BIO.txt" />
+              extension=".BIO" />
   </target>
   
   <target name="test-nio" description="Runs the JUnit test cases for NIO. Does not stop on errors."
           depends="test-compile,deploy" if="${execute.test.nio}">
     <runtests protocol="org.apache.coyote.http11.Http11NioProtocol"
-              extension=".NIO.txt" />
+              extension=".NIO" />
   </target>
   
   <target name="test-apr" description="Runs the JUnit test cases for APR. Does not stop on errors."
           depends="test-compile,deploy,test-apr-exists"
           if="${apr.exists}">
     <runtests protocol="org.apache.coyote.http11.Http11AprProtocol"
-              extension=".APR.txt" />
+              extension=".APR" />
   </target>
   
   <target name="test-apr-exists" description="Checks for APR lib"
@@ -1113,7 +1154,9 @@
         <sysproperty key="tomcat.test.protocol" value="@{protocol}" />
         <sysproperty key="tomcat.test.accesslog" value="${test.accesslog}" />
 
-        <formatter type="plain" usefile="true" extension="@{extension}"/>
+        <formatter type="${junit.formatter.type}"
+                   usefile="${junit.formatter.usefile}"
+                   extension="@{extension}${junit.formatter.extension}" />
 
         <!-- If test.entry is defined, run a single test, otherwise run all valid tests -->
         <test todir="${tomcat.build}/logs" name="${test.entry}" if="test.entry"/>
@@ -1562,9 +1605,9 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
       <link href="../servletapi"/>
       <link href="../jspapi"/>
       <link href="../elapi"/>
-      <link href="http://download.oracle.com/javase/6/docs/api/"/>
+      <link href="http://docs.oracle.com/javase/6/docs/api/"/>
       <link href="http://commons.apache.org/io/api-release/"/>
-      <link href="http://download-llnw.oracle.com/javaee/6/api/"/>
+      <link href="http://docs.oracle.com/javaee/6/api/"/>
       <sourcepath>
         <path location="${tomcat.dist}/src/java"/>
         <!--jdbc-pool src files for javadoc-->
@@ -1630,48 +1673,67 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
     <!-- Tomcat source -->
     <copy todir="${tomcat.dist}/src">
       <fileset dir="${basedir}" defaultexcludes="true">
-        <exclude name=".settings/**"/>
-        <exclude name=".classpath"/>
-        <exclude name=".project"/>
-        <exclude name="*.launch"/>
-        <exclude name="modules/**"/>
-        <exclude name="output/**"/>
-        <exclude name="build.properties"/>
-        <exclude name=".git/**"/>
-      </fileset>
-    </copy>
-    <!--jdbc-pool sources --> 
-    <copy todir="${tomcat.dist}/src">
-      <fileset dir="${basedir}" defaultexcludes="true">
-        <include name="modules/jdbc-pool/LICENSE"/>
-        <include name="modules/jdbc-pool/NOTICE"/>
-        <include name="modules/jdbc-pool/src/**"/>
-        <include name="modules/jdbc-pool/build.*"/>
-        <include name="modules/jdbc-pool/doc/**"/>
-        <include name="modules/jdbc-pool/resources/**"/>
-        <include name="modules/jdbc-pool/pom.xml"/>
+        <not>
+          <or>
+            <filename name="**/.settings/**" />
+            <filename name="**/.classpath"/>
+            <filename name="**/.project"/>
+            <filename name="**/output/**"/>
+            <!-- Commented out, because
+                 test/webapp-3.0-virtual-library and
+                 test/webapp-3.0-virtual-webapp use it:
+            <filename name="**/target/**"/>
+            -->
+            <filename name="**/build.properties"/>
+            <filename name="**/mvn.properties"/>
+            <filename name="**/*.iml" />
+            <filename name="**/*.asc" />
+            <filename name="**/*.tmp" />
+            <filename name="**/maven-ant-tasks-*.jar" />
+            <filename name="**/thumbs.db" />
+            <filename name="**/Thumbs.db" />
+            <filename name="*.launch"/>
+            <filename name="bin/setenv.*" />
+            <filename name="logs/**" />
+            <filename name="work/**" />
+            <filename name="modules/jdbc-pool/bin/**" />
+            <filename name="modules/jdbc-pool/includes/**" />
+            <and>
+              <!-- exclude all modules except jdbc-pool -->
+              <filename name="modules/**" />
+              <not>
+                <filename name="modules/jdbc-pool/**" />
+              </not>
+            </and>
+          </or>
+        </not>
       </fileset>
     </copy>
   </target>
 
   <target name="installer" description="Create Windows installer"
       unless="skip.installer" depends="dist-static">
+    <echo message="Builds a Windows installer based on Nullsoft Installer"/>
+    <copy todir="${tomcat.dist}">
+      <fileset dir="res">
+        <include name="INSTALLLICENSE" />
+        <include name="*.bmp" />
+        <include name="*.ico" />
+        <include name="confinstall/**" />
+      </fileset>
+    </copy>
+    <copy file="${nsis.installoptions.dll}" todir="${tomcat.dist}" />
+    <copy file="${nsis.nsexec.dll}" todir="${tomcat.dist}" />
+    <copy file="${nsis.nsisdl.dll}" todir="${tomcat.dist}" />
+    <copy file="res/tomcat.nsi" tofile="${tomcat.dist}/tomcat.nsi" overwrite="true" encoding="ISO-8859-1">
+      <filterset refid="version.filters"/>
+    </copy>
+
     <fixcrlf srcdir="${tomcat.dist}" eol="crlf"
         encoding="ISO-8859-1" fixlast="false" >
       <patternset refid="text.files" />
     </fixcrlf>
 
-    <echo message="Builds a Windows installer based on Nullsoft Installer"/>
-    <copy todir="${tomcat.dist}">
-      <fileset dir="res" />
-    </copy>
-    <copy file="${nsis.installoptions.dll}" todir="${tomcat.dist}" />
-    <copy file="${nsis.nsexec.dll}" todir="${tomcat.dist}" />
-    <copy file="${nsis.nsisdl.dll}" todir="${tomcat.dist}" />
-
-    <copy file="res/tomcat.nsi" tofile="${tomcat.dist}/tomcat.nsi" overwrite="true" encoding="ISO-8859-1">
-      <filterset refid="version.filters"/>
-    </copy>
     <exec dir="${tomcat.dist}" executable="${nsis.exe}" osfamily="windows">
       <arg value="/DNSISDIR=${nsis.home}" />
       <arg value="/V2" />
@@ -1692,7 +1754,7 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
   </target>
 
   <target name="release"
-    depends="clean,clean-depend,dist-deployer,installer,package-zip,package-winzip,package-tgz,package-deployer-zip,package-deployer-tgz,javadoc,package-docs-tgz,package-src-zip,package-src-tgz,package-src-jar"
+    depends="clean,clean-depend,release-init,dist-deployer,installer,package-zip,package-winzip,package-tgz,package-deployer-zip,package-deployer-tgz,javadoc,package-docs-tgz,package-src-zip,package-src-tgz,package-src-jar"
     description="Create a Tomcat 7 packaged distribution">
 
     <copy file="KEYS"
@@ -1726,9 +1788,23 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
         <include name="*.zip"/>
         <include name="*.tar.gz"/>
         <include name="*.md5"/>
+        <include name="*.asc"/>
       </fileset>
     </copy>
 
+  </target>
+
+  <!-- Sets properties only required for releases -->
+  <target name="release-init" depends="gpg-init-1,gpg-init-2" />
+
+  <target name="gpg-init-1">
+    <available file="${gpg.exec}" property="gpg.exec.available"/>
+  </target>
+
+  <target name="gpg-init-2" if="${gpg.exec.available}">
+    <input message="Enter GPG pass-phrase" addproperty="gpg.passphrase" >
+      <handler type="secure"/>
+    </input>
   </target>
 
   <!-- Packages the core zip distro -->
@@ -2211,10 +2287,14 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
       <param name="destfile" value="${commons-dbcp.home}/build.xml" />
     </antcall>
     <mkdir dir="${tomcat-dbcp.home}"/>
+    <!-- Rebuild dbcp only if built jars do not exist -->
+    <!-- or new versions of pool or dbcp have been downloaded. -->
     <condition property="no.build.dbcp">
       <and>
-        <available file="${tomcat-dbcp.jar}"/>
-        <available file="${tomcat-dbcp-src.jar}"/>
+        <uptodate srcfile="${commons-pool.home}" targetfile="${tomcat-dbcp.jar}" />
+        <uptodate srcfile="${commons-pool.home}" targetfile="${tomcat-dbcp-src.jar}" />
+        <uptodate srcfile="${commons-dbcp.home}" targetfile="${tomcat-dbcp.jar}" />
+        <uptodate srcfile="${commons-dbcp.home}" targetfile="${tomcat-dbcp-src.jar}" />
       </and>
     </condition>
     <antcall target="build-tomcat-dbcp" />
@@ -2492,6 +2572,26 @@ Read the Building page on the Apache Tomcat documentation site for details on ho
     <basename file="${file}" property="filename" />
     <checksum file="${file}" property="value" />
     <echo file="${file}.md5" message="${value}${md5sum.binary-prefix}${filename}" />
+    <!-- Anything that requires an md5 hash, also needs a signature -->
+    <antcall target="sign" >
+      <param name="file" value="${file}" />
+    </antcall>
+  </target>
+
+  <!-- Helper target, used to create a detached ascii OpenPGP signature.     -->
+  <!-- Uses GPG with default key. Requires 'file' as a parameter. Only       -->
+  <!-- executes if gpg passphrase is set which is only set when using the    -->
+  <!-- release target.                                                       -->
+  <target name="sign" if="gpg.passphrase">
+    <fail unless="file" />
+    <exec executable="${gpg.exec}" failonerror="true"
+          inputstring="${gpg.passphrase}">
+      <arg value="--passphrase-fd"/>
+      <arg value="0"/>
+      <arg value="-a"/>
+      <arg value="-b"/>
+      <arg value="${file}"/>
+    </exec>
   </target>
 
 </project>

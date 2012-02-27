@@ -48,7 +48,7 @@ import org.xml.sax.SAXParseException;
  * use a separate class loader for the parser to be used.
  *
  * @author Craig R. McClanahan
- * @version $Id: ParserUtils.java 1044162 2010-12-09 23:29:15Z markt $
+ * @version $Id: ParserUtils.java 1229956 2012-01-11 11:04:12Z mturk $
  */
 
 public class ParserUtils {
@@ -133,6 +133,17 @@ public class ParserUtils {
         return (parseXMLDocument(uri, new InputSource(is)));
     }
 
+    /**
+     * Set the EntityResolver.
+     * This is needed when the dtds and Jasper itself are in different
+     * classloaders (e.g. OSGi environment).
+     *
+     * @param er EntityResolver to use.
+     */
+    public static void setEntityResolver(EntityResolver er) {
+
+        entityResolver = er;
+    }
 
     // ------------------------------------------------------ Protected Methods
 

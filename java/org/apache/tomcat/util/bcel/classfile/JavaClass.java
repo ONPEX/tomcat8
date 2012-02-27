@@ -32,7 +32,7 @@ import org.apache.tomcat.util.bcel.util.BCELComparator;
  * class file.  Those interested in programatically generating classes
  * should see the <a href="../generic/ClassGen.html">ClassGen</a> class.
 
- * @version $Id: JavaClass.java 1181133 2011-10-10 18:49:14Z markt $
+ * @version $Id: JavaClass.java 1237607 2012-01-30 11:34:30Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */
 public class JavaClass extends AccessFlags
@@ -176,6 +176,26 @@ public class JavaClass extends AccessFlags
      */
     public String getClassName() {
         return class_name;
+    }
+
+
+    /**
+     * @return Names of implemented interfaces.
+     */
+    public String[] getInterfaceNames() {
+        return interface_names;
+    }
+
+
+    /**
+     * returns the super class name of this class. In the case that this class is
+     * java.lang.Object, it will return itself (java.lang.Object). This is probably incorrect
+     * but isn't fixed at this time to not break existing clients.
+     *
+     * @return Superclass name.
+     */
+    public String getSuperclassName() {
+        return superclass_name;
     }
 
 

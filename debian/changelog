@@ -1,6 +1,17 @@
+tomcat7 (7.0.26-1) UNRELEASED; urgency=low
+
+  [ Jakub Adam ]
+  * New upstream release.
+  * Add Jakub Adam to Uploaders.
+  * Bump Standards-Version to 3.9.3.
+  * Don't Depend libservlet3.0-java-doc on package it documents, relax
+    to Suggests.
+
+ -- Jakub Adam <jakub.adam@ktknet.cz>  Sat, 25 Feb 2012 20:51:36 +0100
+
 tomcat7 (7.0.23-2) unstable; urgency=low
 
-  * Add nl.po debconf translation (Closes: #651162) 
+  * Add nl.po debconf translation (Closes: #651162)
     - Thanks to Jeroen Schot
   * Add java6-runtime-headless | java6-runtime to tomcat7-common Depends
     (Closes: #660757)
