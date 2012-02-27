@@ -1,9 +1,16 @@
-tomcat7 (7.0.23-2) UNRELEASED; urgency=low
+tomcat7 (7.0.23-2) unstable; urgency=low
 
   * Add nl.po debconf translation (Closes: #651162) 
     - Thanks to Jeroen Schot
+  * Add java6-runtime-headless | java6-runtime to tomcat7-common Depends.
+    (Closes: #660757)
+  * Remove java-5-runtime from tomcat7-common Depends; tomcat7 requires 
+    Java 1.6 according to http://tomcat.apache.org/whichversion.html.
+  * Apply patch to report build versions as a.b.c.d (Closes: #651492).
+    - Thanks to Jorge Barreiro González
+  * Bump Standards-Version to 3.9.3.
 
- -- tony mancill <tmancill@debian.org>  Tue, 06 Dec 2011 23:49:52 -0800
+ -- tony mancill <tmancill@debian.org>  Sun, 26 Feb 2012 22:18:53 -0800
 
 tomcat7 (7.0.23-1) unstable; urgency=low
 
