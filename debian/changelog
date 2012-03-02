@@ -7,7 +7,11 @@ tomcat7 (7.0.26-1) UNRELEASED; urgency=low
   * Don't Depend libservlet3.0-java-doc on package it documents, relax
     to Suggests.
 
- -- Jakub Adam <jakub.adam@ktknet.cz>  Sat, 25 Feb 2012 20:51:36 +0100
+  [ tony mancill ]
+  * Add Polish debconf translation. (Closes: #661644)
+    - Thanks to Michał Kułach.
+
+ -- tony mancill <tmancill@debian.org>  Thu, 01 Mar 2012 21:22:50 -0800
 
 tomcat7 (7.0.23-2) unstable; urgency=low
 

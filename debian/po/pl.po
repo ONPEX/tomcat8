@@ -1,0 +1,80 @@
+# Translation of tomcat7 debconf templates to Polish.
+# Copyright (C) 2010
+# This file is distributed under the same license as the tomcat7 package.
+#
+# Michał Kułach <michal.kulach@gmail.com>, 2012.
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: tomcat7@packages.debian.org\n"
+"POT-Creation-Date: 2010-08-06 04:08+0200\n"
+"PO-Revision-Date: 2012-02-28 21:15+0100\n"
+"Last-Translator: Michał Kułach <michal.kulach@gmail.com>\n"
+"Language-Team: Polish <debian-l10n-polish@lists.debian.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: pl\n"
+"X-Generator: Lokalize 1.2\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
+"|| n%100>=20) ? 1 : 2);\n"
+
+#. Type: string
+#. Description
+#: ../tomcat7.templates:1001
+msgid "Dedicated system account for the tomcat7 daemon:"
+msgstr "Oddzielne konto systemowe dla demona tomcat7:"
+
+#. Type: string
+#. Description
+#: ../tomcat7.templates:1001
+msgid ""
+"The tomcat7 server must use a dedicated account for its operation so that "
+"the system's security is not compromised by running it with superuser "
+"privileges."
+msgstr ""
+"Serwer tomcat7 musi używać wydzielonego konta, dzięki czemu bezpieczeństwo "
+"systemu nie zostanie naruszone przez działanie z uprawnieniami "
+"superużytkownika."
+
+#. Type: string
+#. Description
+#: ../tomcat7.templates:2001
+msgid "Dedicated system group for the tomcat7 daemon:"
+msgstr "Oddzielna grupa systemowa dla demona tomcat7:"
+
+#. Type: string
+#. Description
+#: ../tomcat7.templates:2001
+msgid ""
+"The tomcat7 server must use a dedicated group for its operation so that the "
+"system's security is not compromised by running it with superuser privileges."
+msgstr ""
+"Serwer tomcat7 musi używać wydzielonej grupy, dzięki czemu bezpieczeństwo "
+"systemu nie zostanie naruszone przez działanie z uprawnieniami "
+"superużytkownika."
+
+#. Type: string
+#. Description
+#: ../tomcat7.templates:3001
+msgid "Please choose the tomcat7 JVM Java options:"
+msgstr "Proszę wybrać opcje Java JVM tomcat7:"
+
+#. Type: string
+#. Description
+#: ../tomcat7.templates:3001
+msgid "Tomcat's JVM will be launched with a specific set of Java options."
+msgstr "JVM programu Tomcat będzie uruchamiany z podanymi opcjami Java."
+
+#. Type: string
+#. Description
+#: ../tomcat7.templates:3001
+msgid ""
+"Note that if you use -XX:+UseConcMarkSweepGC you should add the -XX:"
+"+CMSIncrementalMode option if you run Tomcat on a machine with exactly one "
+"CPU chip that contains one or two cores."
+msgstr ""
+"Proszę zauważyć, że jeśli używane jest -XX:+UseConcMarkSweepGC, to należy "
+"dodać opcję -XX:+CMSIncrementalMode, jeśli Tomcat jest uruchamiany na "
+"komputerze z jednym procesorem, zawierającym jeden lub dwa rdzenie."
+
