@@ -1,0 +1,49 @@
+usr/share/java/tomcat-api.jar:
+ Bundle-Vendor: Apache Software Foundation
+ Bundle-Localization: plugin
+ Bundle-Name: Apache Tomcat API
+ Bundle-SymbolicName: org.apache.tomcat.api
+ Export-Package: org.apache.tomcat;version="7.0.26";uses:="javax.naming,javax.servlet"
+ Bundle-Version: 7.0.26
+ Bundle-ManifestVersion: 2
+ Import-Package: javax.naming;version="0",javax.servlet;version="[2.6.0, 4.0.0)"
+ Unversioned-Imports: javax.naming.*
+
+usr/share/java/tomcat-jasper.jar:
+ Bundle-ManifestVersion: 2
+ Bundle-SymbolicName: org.apache.jasper
+ Bundle-Version: 7.0.26
+ Bundle-Name: Apache Jasper JSP Support
+ Bundle-Vendor: Apache Software Foundation
+ Bundle-Localization: plugin
+ Export-Package: org.apache.jasper;version="7.0.26";uses:="javax.servlet,javax.servlet.jsp.tagext,org.apache.jasper.compiler,org.apache.jasper.servlet,org.apache.tools.ant",org.apache.jasper.compiler;version="7.0.26";uses:="javax.el,javax.servlet,javax.servlet.jsp.tagext,javax.xml.parsers,org.apache.jasper,org.apache.jasper.compiler.tagplugin,org.apache.jasper.servlet,org.apache.jasper.util,org.apache.jasper.xmlparser,org.apache.juli.logging,org.apache.tomcat,org.apache.tools.ant,org.eclipse.jdt.internal.compiler,org.eclipse.jdt.internal.compiler.env,org.xml.sax,org.xml.sax.ext,org.xml.sax.helpers",org.apache.jasper.compiler.tagplugin;version="7.0.26",org.apache.jasper.el;version="7.0.26";uses:="javax.el,javax.servlet.jsp.el",org.apache.jasper.resources;version="7.0.26",org.apache.jasper.runtime;version="7.0.26";uses:="javax.el,javax.servlet,javax.servlet.http,javax.servlet.jsp,javax.servlet.jsp.el,javax.servlet.jsp.tagext,org.apache.jasper,org.apache.jasper.el,org.apache.tomcat",org.apache.jasper.security;version="7.0.26",org.apache.jasper.servlet;version="7.0.26";uses:="javax.servlet,javax.servlet.descriptor,javax.servlet.http,javax.servlet.jsp.tagext,org.apache.jasper,org.apache.jasper.compiler,org.apache.jasper.util,org.apache.tomcat",org.apache.jasper.tagplugins.jstl;version="7.0.26";uses:="javax.servlet,javax.servlet.http,javax.servlet.jsp",org.apache.jasper.tagplugins.jstl.core;version="7.0.26";uses:="org.apache.jasper.compiler.tagplugin",org.apache.jasper.util;version="7.0.26";uses:="org.xml.sax,org.xml.sax.helpers",org.apache.jasper.xmlparser;version="7.0.26";uses:="org.apache.jasper,org.apache.jasper.compiler,org.w3c.dom,org.xml.sax"
+ Import-Package: javax.el;version="[1.0.0, 3.0.0)",javax.servlet;version="[2.6.0, 4.0.0)",javax.servlet.descriptor;version="[2.6.0, 4.0.0)",javax.servlet.http;version="[2.6.0, 4.0.0)",javax.servlet.jsp;version="[2.2.0, 3.0.0)",javax.servlet.jsp.el;version="[2.2.0, 3.0.0)",javax.servlet.jsp.resources;version="[2.2.0, 3.0.0)",javax.servlet.jsp.tagext;version="[2.2.0, 3.0.0)",javax.servlet.resources;version="[2.6.0, 4.0.0)",javax.xml.parsers;version="0",org.apache.el;version="[7.0.26, 7.0.26]",org.apache.el.lang;version="[7.0.26, 7.0.26]",org.apache.juli.logging;version="[7.0.26, 7.0.26]",org.apache.tomcat;version="[7.0.26, 7.0.26]",org.apache.tomcat.util.scan;version="[7.0.26, 7.0.26]",org.apache.tools.ant;version="[1.7.0, 2.0.0)";resolution:="optional",org.apache.tools.ant.taskdefs;version="[1.7.0, 2.0.0)";resolution:="optional",org.apache.tools.ant.types;version="[1.7.0, 2.0.0)";resolution:="optional",org.apache.tools.ant.util;version="[1.7.0, 2.0.0)";resolution:="optional",org.eclipse.jdt.core.compiler;version="0",org.eclipse.jdt.internal.compiler;version="0",org.eclipse.jdt.internal.compiler.classfmt;version="0",org.eclipse.jdt.internal.compiler.env;version="0",org.eclipse.jdt.internal.compiler.impl;version="0",org.eclipse.jdt.internal.compiler.problem;version="0",org.w3c.dom;version="0",org.xml.sax;version="0",org.xml.sax.ext;version="0",org.xml.sax.helpers;version="0"
+ Unversioned-Imports: javax.xml.parsers.*,org.w3c.dom.*,org.xml.sax.*
+
+usr/share/java/tomcat-juli.jar:
+ Bundle-ManifestVersion: 2
+ Bundle-SymbolicName: org.apache.juli
+ Bundle-Version: 7.0.26
+ Bundle-Name: Apache Juli
+ Bundle-Vendor: Apache Software Foundation
+ Export-Package: org.apache.juli;version="7.0.26",org.apache.juli.logging;version="7.0.26"
+
+usr/share/java/tomcat-jasper-el.jar:
+ Bundle-ManifestVersion: 2
+ Bundle-Vendor: Apache Software Foundation
+ Bundle-Localization: plugin
+ Bundle-Name: Apache EL
+ Bundle-SymbolicName: org.apache.el
+ Export-Package: org.apache.el;version="7.0.26";uses:="javax.el,org.apache.el.parser",org.apache.el.lang;version="7.0.26";uses:="javax.el,org.apache.el.parser",org.apache.el.parser;version="7.0.26";uses:="javax.el,org.apache.el.lang",org.apache.el.util;version="7.0.26";uses:="javax.el"
+ Bundle-Version: 7.0.26
+ Import-Package: javax.el;version="[1.0.0, 3.0.0)"
+
+usr/share/java/tomcat-util.jar:
+ Bundle-ManifestVersion: 2
+ Bundle-Vendor: Apache Software Foundation
+ Bundle-Localization: plugin
+ Bundle-Name: Apache Tomcat Util
+ Bundle-SymbolicName: org.apache.tomcat.util
+ Export-Package: org.apache.tomcat.util.file;version="7.0.26",org.apache.tomcat.util.res;version="7.0.26",org.apache.tomcat.util.scan;version="7.0.26";uses:="javax.servlet,org.apache.tomcat"
+ Bundle-Version: 7.0.26
+ Import-Package: javax.servlet;version="[2.6.0, 4.0.0)",org.apache.juli.logging;version="[7.0.26, 7.0.26]",org.apache.tomcat;version="[7.0.26, 7.0.26]"

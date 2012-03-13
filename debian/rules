@@ -148,6 +148,7 @@ binary-indep: build install
 	chmod a+x debian/tomcat7-common/usr/share/tomcat7/bin/*.sh
 	chmod a+x debian/tomcat7-user/usr/bin/tomcat7-instance-create
 	chmod a+x debian/tomcat7-user/usr/share/tomcat7/skel/bin/*.sh
+	jh_manifest
 	dh_compress
 	dh_fixperms
 	dh_installdeb
