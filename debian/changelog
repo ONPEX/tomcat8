@@ -1,3 +1,10 @@
+tomcat7 (7.0.26-2) UNRELEASED; urgency=low
+
+  * Add Turkish debconf translation.  (Closes: #664683)
+    - Thanks to Atila KOÇ
+
+ -- tony mancill <tmancill@debian.org>  Wed, 21 Mar 2012 22:37:39 -0700
+
 tomcat7 (7.0.26-1) unstable; urgency=low
 
   [ Jakub Adam ]
