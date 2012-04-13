@@ -3,11 +3,13 @@ tomcat7 (7.0.26-2) UNRELEASED; urgency=low
   [ tony mancill ]
   * Add Turkish debconf translation.  (Closes: #664683)
     - Thanks to Atila KOÇ
+  * Add patch to tomcat7-instance-create to handle paths with spaces.
+    - Thanks to James Page.
 
   [ Jakub Adam ]
   * Update OSGi metadata, use jh_manifest for modifying MANIFEST.MF.
 
- -- tony mancill <tmancill@debian.org>  Wed, 21 Mar 2012 22:37:39 -0700
+ -- tony mancill <tmancill@debian.org>  Thu, 12 Apr 2012 20:03:23 -0700
 
 tomcat7 (7.0.26-1) unstable; urgency=low
 
