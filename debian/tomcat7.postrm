@@ -14,7 +14,7 @@ case "$1" in
         RWLOC="/var/lib/tomcat7/webapps/ROOT"
         RWFILES="$RWLOC/index.html $RWLOC/META-INF/context.xml"
         if [ "`(cat $RWFILES | md5sum -) 2>/dev/null | cut -d ' ' -f 1`" \
-                            = "570f093194741c60ee21adeaedca8af4" ] ; then
+                            = "5fd8a7021414f40e1b7ed98a6bd4478b" ] ; then
             rm $RWFILES
             rmdir --ignore-fail-on-non-empty \
                 /var/lib/tomcat7/webapps/ROOT/META-INF \
