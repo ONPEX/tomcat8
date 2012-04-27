@@ -14,7 +14,7 @@ case "$1" in
         RWLOC="/var/lib/tomcat7/webapps/ROOT"
         RWFILES="$RWLOC/index.html $RWLOC/META-INF/context.xml"
         if [ "`(cat $RWFILES | md5sum -) 2>/dev/null | cut -d ' ' -f 1`" \
-                            = "c05987dd6c6bcbd651889e9a0ec98ade" ] ; then
+                            = "570f093194741c60ee21adeaedca8af4" ] ; then
             rm $RWFILES
             rmdir --ignore-fail-on-non-empty \
                 /var/lib/tomcat7/webapps/ROOT/META-INF \
@@ -54,6 +54,8 @@ case "$1" in
         fi
         rmdir --ignore-fail-on-non-empty /etc/tomcat7/policy.d \
           /etc/tomcat7/Catalina/localhost /etc/tomcat7/Catalina /etc/tomcat7
+        # clean up /etc/authbind after conffiles have been removed
+        rmdir --ignore-fail-on-non-empty /etc/authbind/byuid /etc/authbind
         # Put all files owned by group tomcat7 back into root group before deleting
         # the tomcat7 user and group
         chown -Rhf root:root /etc/tomcat7/ || true

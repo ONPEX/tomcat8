@@ -1,15 +1,17 @@
 tomcat7 (7.0.26-2) UNRELEASED; urgency=low
 
   [ tony mancill ]
-  * Add Turkish debconf translation.  (Closes: #664683)
+  * Add Turkish debconf translation. (Closes: #664683)
     - Thanks to Atila KOÇ
   * Add patch to tomcat7-instance-create to handle paths with spaces.
     - Thanks to James Page.
+  * Remove /etc/authbind/byuid, /etc/authbind in postrm.
+    Update md5sum for default webapps root files. (Closes: #670440)
 
   [ Jakub Adam ]
   * Update OSGi metadata, use jh_manifest for modifying MANIFEST.MF.
 
- -- tony mancill <tmancill@debian.org>  Thu, 12 Apr 2012 20:03:23 -0700
+ -- tony mancill <tmancill@debian.org>  Thu, 26 Apr 2012 20:59:52 -0700
 
 tomcat7 (7.0.26-1) unstable; urgency=low
 
