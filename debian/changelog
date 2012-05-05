@@ -15,7 +15,7 @@ tomcat7 (7.0.26-2) unstable; urgency=low
   * Add Turkish debconf translation. (Closes: #664683)
     - Thanks to Atila KOÇ
   * Add patch to tomcat7-instance-create to handle paths with spaces.
-    - Thanks to James Page.
+    - Thanks to James Page.  (Closes: #668362)
   * Remove /etc/authbind/byuid, /etc/authbind in postrm.
     Update md5sum for default webapps root files. (Closes: #670440)
 
