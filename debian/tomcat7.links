@@ -1,4 +1,4 @@
 /etc/tomcat7 /var/lib/tomcat7/conf
 /var/cache/tomcat7 /var/lib/tomcat7/work
 /var/log/tomcat7 /var/lib/tomcat7/logs
-/usr/share/doc/tomcat7-common/README.Debian.gz /usr/share/doc/tomcat7/README.Debian.gz
+/usr/share/doc/tomcat7-common/README.Debian /usr/share/doc/tomcat7/README.Debian

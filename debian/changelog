@@ -1,4 +1,4 @@
-tomcat7 (7.0.26-3) UNRELEASED; urgency=low
+tomcat7 (7.0.26-3) unstable; urgency=low
 
   * Team upload.
   * Apply patches provided by James Page (Closes: #671370)
@@ -6,8 +6,9 @@ tomcat7 (7.0.26-3) UNRELEASED; urgency=low
       support compilation with openjdk-7 as default-jdk (LP: #889002).
     - d/default_root/index.html: Fixup instructions for enabling
       manager web application access (LP: #910368).
+  * Fix README.Debian symlink; file is not compressed. (Closes: #674119)
 
- -- tony mancill <tmancill@debian.org>  Fri, 04 May 2012 21:23:42 -0700
+ -- tony mancill <tmancill@debian.org>  Wed, 23 May 2012 22:13:23 -0700
 
 tomcat7 (7.0.26-2) unstable; urgency=low
 
