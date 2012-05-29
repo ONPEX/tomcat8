@@ -25,6 +25,10 @@ T_VER_MAJOR := $(shell echo $(T_VER) | cut -d'.' -f1)
 T_VER_MINOR := $(shell echo $(T_VER) | cut -d'.' -f2)
 T_VER_BUILD := $(shell echo $(T_VER) | cut -d'.' -f3)
 
+# root webapp file locations (during the build)
+RWLOC := debian/default_root
+RWFILES := $(RWLOC)/index.html $(RWLOC)/META-INF/context.xml
+
 ANT_ARGS := -Dcompile.debug=true \
 	-Dant.build.javac.source=1.5 \
 	-Dant.build.javac.target=1.5 \
@@ -54,7 +58,7 @@ build-stamp:
 	javadoc -subpackages "javax.servlet" -d "output/api" \
 		-sourcepath "java" -author -version -breakiterator \
 		-windowtitle "Tomcat API Documentation" -doctitle "Tomcat API" \
-		-bottom "Copyright &#169; 2000-2011 Apache Software Foundation. All Rights Reserved."
+		-bottom "Copyright &#169; 2000-2012 Apache Software Foundation. All Rights Reserved."
 	touch build-stamp
 
 clean:
@@ -148,6 +152,10 @@ binary-indep: build install
 	chmod a+x debian/tomcat7-common/usr/share/tomcat7/bin/*.sh
 	chmod a+x debian/tomcat7-user/usr/bin/tomcat7-instance-create
 	chmod a+x debian/tomcat7-user/usr/share/tomcat7/skel/bin/*.sh
+	# update the checksum for the root webapp
+	unset rwmd5sum \
+		&& rwmd5sum=`cat $(RWFILES) | md5sum - 2>/dev/null | cut -d " " -f1` \
+		&& sed -i "s/\@ROOT_WEBAPP_MD5SUM\@/$$rwmd5sum/" debian/tomcat7.postrm
 	jh_manifest
 	dh_compress
 	dh_fixperms
