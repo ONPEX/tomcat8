@@ -1,4 +1,4 @@
-tomcat7 (7.0.26-4) UNRELEASED; urgency=low
+tomcat7 (7.0.26-4) unstable; urgency=low
 
   * Address regression leaving ROOT webapp files after purge.  
     (Closes: #670440)
