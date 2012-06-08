@@ -56,7 +56,7 @@ import org.apache.tomcat.util.res.StringManager;
  * (but not required) when deploying and starting Catalina.
  *
  * @author Craig R. McClanahan
- * @version $Id: StandardServer.java 1242101 2012-02-08 21:19:36Z markt $
+ * @version $Id: StandardServer.java 1305949 2012-03-27 18:41:42Z markt $
  */
 public final class StandardServer extends LifecycleMBeanBase implements Server {
 
@@ -784,11 +784,10 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         // Populate the extension validator with JARs from common and shared
         // class loaders
         if (getCatalina() != null) {
-            ClassLoader cl =
-                    getCatalina().getParentClassLoader();
+            ClassLoader cl = getCatalina().getParentClassLoader();
             // Walk the class loader hierarchy. Stop at the system class loader.
             // This will add the shared (if present) and common class loaders
-            while (cl != ClassLoader.getSystemClassLoader()) {
+            while (cl != null && cl != ClassLoader.getSystemClassLoader()) {
                 if (cl instanceof URLClassLoader) {
                     URL[] urls = ((URLClassLoader) cl).getURLs();
                     for (URL url : urls) {

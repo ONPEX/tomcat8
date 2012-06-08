@@ -114,7 +114,7 @@ import org.apache.tomcat.util.res.StringManager;
  * </p>
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: DefaultServlet.java 1200163 2011-11-10 05:40:04Z kkolinko $
+ * @version $Id: DefaultServlet.java 1301255 2012-03-15 22:47:40Z markt $
  */
 
 public class DefaultServlet
@@ -158,7 +158,7 @@ public class DefaultServlet
     /**
      * Array containing the safe characters set.
      */
-    protected static URLEncoder urlEncoder;
+    protected static final URLEncoder urlEncoder;
 
 
     /**
@@ -211,7 +211,7 @@ public class DefaultServlet
     /**
      * Full range marker.
      */
-    protected static ArrayList<Range> FULL = new ArrayList<Range>();
+    protected static final ArrayList<Range> FULL = new ArrayList<Range>();
 
 
     // ----------------------------------------------------- Static Initializer
@@ -716,7 +716,10 @@ public class DefaultServlet
 
     /**
      * Display the size of a file.
+     * @deprecated Will be removed in Tomcat 8.0.x. Replaced by
+     *             {@link #renderSize(long)}
      */
+    @Deprecated
     protected void displaySize(StringBuilder buf, int filesize) {
 
         int leftside = filesize / 1024;
@@ -1641,16 +1644,16 @@ public class DefaultServlet
             && (entry.resource != null)
             && ((length > sendfileSize) || (entry.resource.getContent() == null))
             && (entry.attributes.getCanonicalPath() != null)
-            && (Boolean.TRUE == request.getAttribute("org.apache.tomcat.sendfile.support"))
+            && (Boolean.TRUE == request.getAttribute(Globals.SENDFILE_SUPPORTED_ATTR))
             && (request.getClass().getName().equals("org.apache.catalina.connector.RequestFacade"))
             && (response.getClass().getName().equals("org.apache.catalina.connector.ResponseFacade"))) {
-            request.setAttribute("org.apache.tomcat.sendfile.filename", entry.attributes.getCanonicalPath());
+            request.setAttribute(Globals.SENDFILE_FILENAME_ATTR, entry.attributes.getCanonicalPath());
             if (range == null) {
-                request.setAttribute("org.apache.tomcat.sendfile.start", Long.valueOf(0L));
-                request.setAttribute("org.apache.tomcat.sendfile.end", Long.valueOf(length));
+                request.setAttribute(Globals.SENDFILE_FILE_START_ATTR, Long.valueOf(0L));
+                request.setAttribute(Globals.SENDFILE_FILE_END_ATTR, Long.valueOf(length));
             } else {
-                request.setAttribute("org.apache.tomcat.sendfile.start", Long.valueOf(range.start));
-                request.setAttribute("org.apache.tomcat.sendfile.end", Long.valueOf(range.end + 1));
+                request.setAttribute(Globals.SENDFILE_FILE_START_ATTR, Long.valueOf(range.start));
+                request.setAttribute(Globals.SENDFILE_FILE_END_ATTR, Long.valueOf(range.end + 1));
             }
             return true;
         }

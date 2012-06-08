@@ -55,7 +55,7 @@ import org.apache.tomcat.util.res.StringManager;
  * be subclassed to create more sophisticated Manager implementations.
  *
  * @author Craig R. McClanahan
- * @version $Id: ManagerBase.java 1175277 2011-09-24 22:37:12Z kkolinko $
+ * @version $Id: ManagerBase.java 1301271 2012-03-15 23:40:44Z markt $
  */
 
 public abstract class ManagerBase extends LifecycleMBeanBase
@@ -145,16 +145,16 @@ public abstract class ManagerBase extends LifecycleMBeanBase
 
     protected static final int TIMING_STATS_CACHE_SIZE = 100;
 
-    protected Deque<SessionTiming> sessionCreationTiming =
+    protected final Deque<SessionTiming> sessionCreationTiming =
         new LinkedList<SessionTiming>();
 
-    protected Deque<SessionTiming> sessionExpirationTiming =
+    protected final Deque<SessionTiming> sessionExpirationTiming =
         new LinkedList<SessionTiming>();
 
     /**
      * Number of sessions that have expired.
      */
-    protected AtomicLong expiredSessions = new AtomicLong(0);
+    protected final AtomicLong expiredSessions = new AtomicLong(0);
 
 
     /**
@@ -211,7 +211,8 @@ public abstract class ManagerBase extends LifecycleMBeanBase
     /**
      * The property change support for this component.
      */
-    protected PropertyChangeSupport support = new PropertyChangeSupport(this);
+    protected final PropertyChangeSupport support =
+            new PropertyChangeSupport(this);
     
 
     // ------------------------------------------------------------- Properties
@@ -796,6 +797,9 @@ public abstract class ManagerBase extends LifecycleMBeanBase
 
         do {
             if (result != null) {
+                // Not thread-safe but if one of multiple increments is lost
+                // that is not a big deal since the fact that there was any
+                // duplicate is a much bigger issue.
                 duplicates++;
             }
 
@@ -1308,8 +1312,8 @@ public abstract class ManagerBase extends LifecycleMBeanBase
     // ----------------------------------------------------------- Inner classes
     
     protected static final class SessionTiming {
-        private long timestamp;
-        private int duration;
+        private final long timestamp;
+        private final int duration;
         
         public SessionTiming(long timestamp, int duration) {
             this.timestamp = timestamp;

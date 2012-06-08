@@ -56,7 +56,7 @@ import org.apache.naming.NamingEntry;
  *
  *
  * @author Fabrizio Giustina
- * @version $Id: VirtualDirContext.java 1226396 2012-01-02 11:49:28Z markt $
+ * @version $Id: VirtualDirContext.java 1307600 2012-03-30 20:33:27Z kkolinko $
  */
 public class VirtualDirContext extends FileDirContext {
     private String extraResourcePaths = "";
@@ -114,9 +114,6 @@ public class VirtualDirContext extends FileDirContext {
                     mappedResourcePaths.put(path, resourcePaths);
                 }
                 resourcePaths.add(dir);
-
-                // Set allowLinking since there can be no canonical path
-                setAllowLinking(true);
             }
         }
         if (mappedResourcePaths.isEmpty()) {

@@ -107,7 +107,7 @@ import org.xml.sax.SAXParseException;
  *
  * @author Craig R. McClanahan
  * @author Jean-Francois Arcand
- * @version $Id: ContextConfig.java 1245452 2012-02-17 13:58:02Z markt $
+ * @version $Id: ContextConfig.java 1301227 2012-03-15 21:59:06Z markt $
  */
 public class ContextConfig implements LifecycleListener {
 
@@ -209,14 +209,14 @@ public class ContextConfig implements LifecycleListener {
     /**
      * Map of ServletContainerInitializer to classes they expressed interest in.
      */
-    protected Map<ServletContainerInitializer, Set<Class<?>>> initializerClassMap =
+    protected final Map<ServletContainerInitializer, Set<Class<?>>> initializerClassMap =
             new LinkedHashMap<ServletContainerInitializer, Set<Class<?>>>();
     
     /**
      * Map of Types to ServletContainerInitializer that are interested in those
      * types.
      */
-    protected Map<Class<?>, Set<ServletContainerInitializer>> typeInitializerMap =
+    protected final Map<Class<?>, Set<ServletContainerInitializer>> typeInitializerMap =
             new HashMap<Class<?>, Set<ServletContainerInitializer>>();
 
     /**

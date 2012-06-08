@@ -43,7 +43,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * @author <a href="mailto:nicolaken@supereva.it">Nicola Ken Barozzi</a> Aisa
  * @author <a href="mailto:stefano@apache.org">Stefano Mazzocchi</a>
  * @author Yoav Shapira
- * @version $Id: ErrorReportValve.java 1187022 2011-10-20 19:55:37Z markt $
+ * @version $Id: ErrorReportValve.java 1297028 2012-03-05 12:24:13Z markt $
  */
 
 public class ErrorReportValve extends ValveBase {
@@ -101,12 +101,13 @@ public class ErrorReportValve extends ValveBase {
             return;
         }
 
-        if (request.isAsyncStarted()) {
+        Throwable throwable =
+                (Throwable) request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
+
+        if (request.isAsyncStarted() && response.getStatus() < 400 &&
+                throwable == null) {
             return;
         }
-
-        Throwable throwable =
-            (Throwable) request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
 
         if (throwable != null) {
 
@@ -133,6 +134,9 @@ public class ErrorReportValve extends ValveBase {
             ExceptionUtils.handleThrowable(tt);
         }
 
+        if (request.isAsyncStarted()) {
+            request.getAsyncContext().complete();
+        }
     }
 
 

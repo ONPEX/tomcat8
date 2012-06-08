@@ -57,7 +57,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  *
  * @author Craig R. McClanahan
  * @author Jean-Francois Arcand
- * @version $Id: StandardManager.java 1044944 2010-12-12 22:33:09Z kkolinko $
+ * @version $Id: StandardManager.java 1301272 2012-03-15 23:41:08Z markt $
  */
 
 public class StandardManager extends ManagerBase {
@@ -107,7 +107,7 @@ public class StandardManager extends ManagerBase {
     /**
      * The descriptive name of this Manager implementation (for logging).
      */
-    protected static String name = "StandardManager";
+    protected static final String name = "StandardManager";
 
 
     /**
@@ -379,20 +379,41 @@ public class StandardManager extends ManagerBase {
         if (log.isDebugEnabled())
             log.debug(sm.getString("standardManager.unloading", pathname));
         FileOutputStream fos = null;
+        BufferedOutputStream bos = null;
         ObjectOutputStream oos = null;
+        boolean error = false;
         try {
             fos = new FileOutputStream(file.getAbsolutePath());
-            oos = new ObjectOutputStream(new BufferedOutputStream(fos));
+            bos = new BufferedOutputStream(fos);
+            oos = new ObjectOutputStream(bos);
         } catch (IOException e) {
+            error = true;
             log.error(sm.getString("standardManager.unloading.ioe", e), e);
-            if (fos != null) {
-                try {
-                    fos.close();
-                } catch (IOException f) {
-                    // Ignore
+            throw e;
+        } finally {
+            if (error) {
+                if (oos != null) {
+                    try {
+                        oos.close();
+                    } catch (IOException ioe) {
+                        // Ignore
+                    }
+                }
+                if (bos != null) {
+                    try {
+                        bos.close();
+                    } catch (IOException ioe) {
+                        // Ignore
+                    }
+                }
+                if (fos != null) {
+                    try {
+                        fos.close();
+                    } catch (IOException ioe) {
+                        // Ignore
+                    }
                 }
             }
-            throw e;
         }
 
         // Write the number of active sessions, followed by the details

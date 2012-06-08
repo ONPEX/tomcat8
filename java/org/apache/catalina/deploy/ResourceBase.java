@@ -27,7 +27,7 @@ import java.util.List;
  * Representation of an Context element
  *
  * @author Peter Rossbach (pero@apache.org)
- * @version $Id: ResourceBase.java 1226539 2012-01-02 20:18:01Z markt $
+ * @version $Id: ResourceBase.java 1301210 2012-03-15 21:22:10Z markt $
  */
 public class ResourceBase implements Serializable, Injectable {
 
@@ -83,7 +83,8 @@ public class ResourceBase implements Serializable, Injectable {
     /**
      * Holder for our configured properties.
      */
-    private HashMap<String, Object> properties = new HashMap<String, Object>();
+    private final HashMap<String, Object> properties =
+            new HashMap<String, Object>();
 
     /**
      * Return a configured property.
@@ -113,7 +114,7 @@ public class ResourceBase implements Serializable, Injectable {
         return properties.keySet().iterator();
     }
 
-    private List<InjectionTarget> injectionTargets = new ArrayList<InjectionTarget>();
+    private final List<InjectionTarget> injectionTargets = new ArrayList<InjectionTarget>();
 
     @Override
     public void addInjectionTarget(String injectionTargetName, String jndiName) {

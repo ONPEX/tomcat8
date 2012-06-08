@@ -126,7 +126,7 @@ import org.apache.tomcat.util.scan.StandardJarScanner;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardContext.java 1230771 2012-01-12 20:41:17Z markt $
+ * @version $Id: StandardContext.java 1302614 2012-03-19 19:35:45Z markt $
  */
 
 public class StandardContext extends ContainerBase
@@ -5585,7 +5585,9 @@ public class StandardContext extends ContainerBase
         // Don't reset anything that is read from a <Context.../> element since
         // <Context .../> elements are read at initialisation will not be read
         // again for this object
-        children = new HashMap<String, Container>();
+        for (Container child : findChildren()) {
+            removeChild(child);
+        }
         startupTime = 0;
         startTime = 0;
         tldScanTime = 0;
