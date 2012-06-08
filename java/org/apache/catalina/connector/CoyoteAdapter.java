@@ -55,7 +55,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: CoyoteAdapter.java 1240861 2012-02-05 23:30:20Z markt $
+ * @version $Id: CoyoteAdapter.java 1297024 2012-03-05 12:15:21Z markt $
  */
 public class CoyoteAdapter implements Adapter {
 
@@ -283,7 +283,7 @@ public class CoyoteAdapter implements Adapter {
                     ctxt.fireRequestDestroyEvent(request);
                 }
                 // Lift any suspension (e.g. if sendError() was used by an async
-                // request
+                // request) to allow the response to be written to the client
                 response.setSuspended(false);
             }
 

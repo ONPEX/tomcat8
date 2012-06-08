@@ -95,7 +95,7 @@ import org.apache.juli.logging.LogFactory;
  *          &lt;param-value&gt;access plus 10 minutes&lt;/param-value&gt;
  *       &lt;/init-param&gt;
  *       &lt;init-param&gt;
- *          &lt;param-name&gt;ExpiresByType text/javascript&lt;/param-name&gt;
+ *          &lt;param-name&gt;ExpiresByType application/javascript&lt;/param-name&gt;
  *          &lt;param-value&gt;access plus 10 minutes&lt;/param-value&gt;
  *       &lt;/init-param&gt;
  *    &lt;/filter&gt;
@@ -380,7 +380,7 @@ import org.apache.juli.logging.LogFactory;
  *    byType={
  *       image=ExpiresConfiguration[startingPoint=ACCESS_TIME, duration=[10 MINUTE]], 
  *       text/css=ExpiresConfiguration[startingPoint=ACCESS_TIME, duration=[10 MINUTE]], 
- *       text/javascript=ExpiresConfiguration[startingPoint=ACCESS_TIME, duration=[10 MINUTE]]}]
+ *       application/javascript=ExpiresConfiguration[startingPoint=ACCESS_TIME, duration=[10 MINUTE]]}]
  * </pre></code>
  * <p>
  * Sample of per-request log message where <tt>ExpiresFilter</tt> adds an
@@ -464,12 +464,12 @@ public class ExpiresFilter extends FilterBase {
         /**
          * List of duration elements.
          */
-        private List<Duration> durations;
+        private final List<Duration> durations;
 
         /**
          * Starting point of the elaspse to set in the response.
          */
-        private StartingPoint startingPoint;
+        private final StartingPoint startingPoint;
 
         public ExpiresConfiguration(StartingPoint startingPoint,
                 List<Duration> durations) {
@@ -533,7 +533,7 @@ public class ExpiresFilter extends FilterBase {
 
         private PrintWriter printWriter;
 
-        private HttpServletRequest request;
+        private final HttpServletRequest request;
 
         private ServletOutputStream servletOutputStream;
 
@@ -636,11 +636,11 @@ public class ExpiresFilter extends FilterBase {
      * "Start Write Response Body" event.
      */
     public class XPrintWriter extends PrintWriter {
-        private PrintWriter out;
+        private final PrintWriter out;
 
-        private HttpServletRequest request;
+        private final HttpServletRequest request;
 
-        private XHttpServletResponse response;
+        private final XHttpServletResponse response;
 
         public XPrintWriter(PrintWriter out, HttpServletRequest request,
                 XHttpServletResponse response) {
@@ -851,11 +851,11 @@ public class ExpiresFilter extends FilterBase {
      */
     public class XServletOutputStream extends ServletOutputStream {
 
-        private HttpServletRequest request;
+        private final HttpServletRequest request;
 
-        private XHttpServletResponse response;
+        private final XHttpServletResponse response;
 
-        private ServletOutputStream servletOutputStream;
+        private final ServletOutputStream servletOutputStream;
 
         public XServletOutputStream(ServletOutputStream servletOutputStream,
                 HttpServletRequest request, XHttpServletResponse response) {

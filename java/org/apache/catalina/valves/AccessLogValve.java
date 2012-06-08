@@ -153,7 +153,7 @@ import org.apache.tomcat.util.buf.B2CConverter;
  * @author Takayuki Kaneko
  * @author Peter Rossbach
  *
- * @version $Id: AccessLogValve.java 1241091 2012-02-06 17:37:45Z rjung $
+ * @version $Id: AccessLogValve.java 1301255 2012-03-15 22:47:40Z markt $
  */
 
 public class AccessLogValve extends ValveBase implements AccessLog {
@@ -1638,10 +1638,10 @@ public class AccessLogValve extends ValveBase implements AccessLog {
                 // Protect against nulls and unexpected types as these values
                 // may be set by untrusted applications
                 Object start = request.getAttribute(
-                        "org.apache.tomcat.sendfile.start");
+                        Globals.SENDFILE_FILE_START_ATTR);
                 if (start instanceof Long) {
                     Object end = request.getAttribute(
-                            "org.apache.tomcat.sendfile.end");
+                            Globals.SENDFILE_FILE_END_ATTR);
                     if (end instanceof Long) {
                         length = ((Long) end).longValue() -
                                 ((Long) start).longValue();

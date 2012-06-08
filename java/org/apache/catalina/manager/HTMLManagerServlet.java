@@ -78,7 +78,7 @@ import org.apache.tomcat.util.res.StringManager;
 * @author Bip Thelin
 * @author Malcolm Edgar
 * @author Glenn L. Nielsen
-* @version $Id: HTMLManagerServlet.java 1226774 2012-01-03 13:23:35Z rjung $
+* @version $Id: HTMLManagerServlet.java 1301210 2012-03-15 21:22:10Z markt $
 * @see ManagerServlet
 */
 
@@ -808,8 +808,8 @@ public final class HTMLManagerServlet extends ManagerServlet {
     @Override
     public String getServletInfo() {
         return "HTMLManagerServlet, Copyright (c) 1999-2012, The Apache Software Foundation";
-    }   
-    
+    }
+
     /**
      * @see javax.servlet.GenericServlet#init()
      */

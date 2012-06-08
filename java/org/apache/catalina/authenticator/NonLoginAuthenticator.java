@@ -35,7 +35,7 @@ import org.apache.catalina.deploy.LoginConfig;
  * only security constraints not involving user authentication.
  *
  * @author Craig R. McClanahan
- * @version $Id: NonLoginAuthenticator.java 1225469 2011-12-29 08:09:40Z markt $
+ * @version $Id: NonLoginAuthenticator.java 1297906 2012-03-07 09:22:09Z kfujino $
  */
 
 public final class NonLoginAuthenticator
@@ -116,7 +116,7 @@ public final class NonLoginAuthenticator
                                 LoginConfig config)
         throws IOException {
 
-        Principal principal = request.getUserPrincipal();
+        Principal principal = request.getPrincipal();
         if (principal != null) {
             // excellent... we have already authenticated the client somehow,
             // probably from another container that has a login-config

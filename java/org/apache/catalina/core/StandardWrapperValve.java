@@ -29,6 +29,7 @@ import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.catalina.Context;
+import org.apache.catalina.Globals;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.comet.CometEvent;
 import org.apache.catalina.comet.CometProcessor;
@@ -46,7 +47,7 @@ import org.apache.tomcat.util.res.StringManager;
  * <code>StandardWrapper</code> container implementation.
  *
  * @author Craig R. McClanahan
- * @version $Id: StandardWrapperValve.java 1177979 2011-10-01 13:51:13Z markt $
+ * @version $Id: StandardWrapperValve.java 1301255 2012-03-15 22:47:40Z markt $
  */
 
 final class StandardWrapperValve
@@ -165,8 +166,8 @@ final class StandardWrapperValve
 
         // Identify if the request is Comet related now that the servlet has been allocated
         boolean comet = false;
-        if (servlet instanceof CometProcessor 
-                && request.getAttribute("org.apache.tomcat.comet.support") == Boolean.TRUE) {
+        if (servlet instanceof CometProcessor && request.getAttribute(
+                Globals.COMET_SUPPORTED_ATTR) == Boolean.TRUE) {
             comet = true;
             request.setComet(true);
         }

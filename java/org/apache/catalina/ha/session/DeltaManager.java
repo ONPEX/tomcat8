@@ -62,7 +62,7 @@ import org.apache.tomcat.util.res.StringManager;
  * @author Craig R. McClanahan
  * @author Jean-Francois Arcand
  * @author Peter Rossbach
- * @version $Id: DeltaManager.java 1233431 2012-01-19 15:25:50Z markt $
+ * @version $Id: DeltaManager.java 1300907 2012-03-15 10:57:17Z markt $
  */
 
 public class DeltaManager extends ClusterManagerBase{
@@ -1491,7 +1491,7 @@ public class DeltaManager extends ClusterManagerBase{
      */
     protected void handleALL_SESSION_NOCONTEXTMANAGER(SessionMessage msg, Member sender) {
         counterReceive_EVT_ALL_SESSION_NOCONTEXTMANAGER++ ;
-        if (log.isDebugEnabled()) 
+        if (log.isDebugEnabled())
             log.debug(sm.getString("deltaManager.receiveMessage.noContextManager",getName(), sender.getHost(), Integer.valueOf(sender.getPort())));
         noContextManagerReceived = true ;
     }

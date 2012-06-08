@@ -48,7 +48,7 @@ import org.xml.sax.SAXParseException;
  * use a separate class loader for the parser to be used.
  *
  * @author Craig R. McClanahan
- * @version $Id: ParserUtils.java 1229956 2012-01-11 11:04:12Z mturk $
+ * @version $Id: ParserUtils.java 1301227 2012-03-15 21:59:06Z markt $
  */
 
 public class ParserUtils {

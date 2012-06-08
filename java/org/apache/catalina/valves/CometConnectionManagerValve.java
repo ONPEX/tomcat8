@@ -48,7 +48,7 @@ import org.apache.catalina.connector.Response;
  * <p>This Valve should be attached to a Context.</p>
  *
  * @author Remy Maucherat
- * @version $Id: CometConnectionManagerValve.java 1187022 2011-10-20 19:55:37Z markt $
+ * @version $Id: CometConnectionManagerValve.java 1301272 2012-03-15 23:41:08Z markt $
  */
 
 public class CometConnectionManagerValve extends ValveBase
@@ -73,14 +73,14 @@ public class CometConnectionManagerValve extends ValveBase
     /**
      * List of current Comet connections.
      */
-    protected List<Request> cometRequests =
+    protected final List<Request> cometRequests =
         Collections.synchronizedList(new ArrayList<Request>());
 
 
     /**
      * Name of session attribute used to store list of comet connections.
      */
-    protected String cometRequestsAttribute =
+    protected final String cometRequestsAttribute =
         "org.apache.tomcat.comet.connectionList";
 
 
@@ -134,17 +134,23 @@ public class CometConnectionManagerValve extends ValveBase
                     session.removeAttribute(cometRequestsAttribute);
                 }
                 // Close the comet connection
+                CometEventImpl cometEvent = request.getEvent();
                 try {
-                    CometEventImpl cometEvent = request.getEvent();
                     cometEvent.setEventType(CometEvent.EventType.END);
                     cometEvent.setEventSubType(
                             CometEvent.EventSubType.WEBAPP_RELOAD);
                     getNext().event(request, request.getResponse(), cometEvent);
-                    cometEvent.close();
                 } catch (Exception e) {
                     container.getLogger().warn(
                             sm.getString("cometConnectionManagerValve.event"),
                             e);
+                } finally {
+                    try {
+                        cometEvent.close();
+                    } catch (IOException e) {
+                        container.getLogger().warn(sm.getString(
+                                "cometConnectionManagerValve.event"), e);
+                    }
                 }
             }
             cometRequests.clear();
