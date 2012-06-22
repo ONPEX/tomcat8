@@ -1,4 +1,4 @@
 # Convert tomcat version of the standard apis to the javax apis
-s/org.apache.tomcat/javax.servlet/ servlet-api jar s/.*/3.0/
-s/org.apache.tomcat/javax.servlet/ jsp-api jar s/.*/2.2/
-s/org.apache.tomcat/javax.el/ el-api jar s/.*/2.2/
+s/org.apache.tomcat/javax.servlet/ s/tomcat-servlet-api/servlet-api/ jar s/.*/3.0/
+s/org.apache.tomcat/javax.servlet/ s/tomcat-jsp-api/jsp-api/ jar s/.*/2.2/
+s/org.apache.tomcat/javax.el/ s/tomcat-el-api/el-api/ jar s/.*/2.2/

@@ -1,4 +1,4 @@
-usr/share/java/tomcat-el-api-2.2.jar:
+usr/share/java/el-api-2.2.jar:
  Bundle-ManifestVersion: 2 
  Bundle-Vendor: Apache Software Foundation
  Bundle-Version: 2.2.0
@@ -9,7 +9,7 @@ usr/share/java/tomcat-el-api-2.2.jar:
  Export-Package: javax.el;version="2.2.0"
  Import-Package: javax.servlet;version="2.6.0",javax.servlet.http;version="2.6.0"
 
-usr/share/java/tomcat-jsp-api-2.2.jar:
+usr/share/java/jsp-api-2.2.jar:
  Import-Package: javax.servlet;version="2.6.0",javax.servlet.http;version="2.6.0",javax.servlet.resources;version="2.6.0",javax.el;version="2.2.0"
  Bundle-ManifestVersion: 2
  Export-Package: javax.servlet.jsp; version=2.2,javax.servlet.jsp.el; version=2.2,javax.servlet.jsp.resources; version=2.2,javax.servlet.jsp.tagext; version=2.2
@@ -20,7 +20,7 @@ usr/share/java/tomcat-jsp-api-2.2.jar:
  Bundle-Localization: plugin
  Bundle-Vendor: Apache Software Foundation
 
-usr/share/java/tomcat-servlet-api-3.0.jar:
+usr/share/java/servlet-api-3.0.jar:
  Bundle-ManifestVersion: 2
  Export-Package: javax.servlet;version="2.6.0",javax.servlet.annotation;version="2.6.0",javax.servlet.descriptor;version="2.6.0",javax.servlet.http;version="2.6.0",javax.servlet.resources;version="2.6.0"
  Bundle-Version: 3.0.0.v201103241327

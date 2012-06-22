@@ -6,8 +6,32 @@ tomcat7 (7.0.28-1) UNRELEASED; urgency=low
 
   [ James Page ]
   * New upstream release.
+  * Enable test suite during package build:
+    - d/control: Add junit4, libjstl1.1-java and
+      libjakarta-taglibs-standard-java to BDI's.
+    - d/rules:
+      + Add ant/junit4 jars files to build classpath.
+      + Target java 1.6 to support test suite exection.
+      + Specify location of junit jar file.
+      + Install jstl jar files to example webapp during build.
+      + Conditionally execute test target if required.
+      + Purge jar files from example webapp during clean.
+  * Fix JSTL examples in examples web application:
+    - d/control: Add dependencies on libjstl1.1-java and
+      libjakarta-taglibs-standard-java for tomcat7-examples.
+    - d/tomcat7-examples.links: Add links to jstl and standard jar
+      files for examples web application.
+    - d/context/examples.xml: Allow linking to jar files in examples
+      webapp.
+  * Fix mapping to javax packages for API jar files:
+    - d/maven.[rules,publishedRules]: Ensure all javax.[servlet|el] jar files
+      are published to the correct locations in /usr/share/[maven-repo|java].
+    - d/libservlet3.0-java.manifest: Update jar file locations for javax
+      remapping.
+    - d/libservlet3.0-java.links: Provide backwards compatible links for
+      deprecated tomcat-*.jar files in /usr/share/java.
 
- -- James Page <james.page@ubuntu.com>  Fri, 22 Jun 2012 08:55:14 +0100
+ -- James Page <james.page@ubuntu.com>  Fri, 22 Jun 2012 08:57:38 +0100
 
 tomcat7 (7.0.27-1) unstable; urgency=low
 

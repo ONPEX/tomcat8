@@ -1,0 +1,3 @@
+/usr/share/java/servlet-api-3.0.jar /usr/share/java/tomcat-servlet-api-3.0.jar
+/usr/share/java/jsp-api-2.2.jar     /usr/share/java/tomcat-jsp-api-2.2.jar
+/usr/share/java/el-api-2.2.jar      /usr/share/java/tomcat-el-api-2.2.jar

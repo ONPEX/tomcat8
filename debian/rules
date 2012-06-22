@@ -5,7 +5,7 @@ JAVA_CMD := $(JAVA_HOME)/bin/java
 BLDLIB := output/build/lib
 BLDBIN := output/build/bin
 DEB_JARS_BASE := /usr/share/java
-DEB_JARS := ant ant-launcher ant-trax ant-nodeps
+DEB_JARS := ant ant-launcher ant-trax ant-nodeps ant-junit4 ant-junit junit4
 DEB_CLASSPATH = $(shell for jar in $(DEB_JARS); do \
 	if [ -f "$$jar" ]; then echo -n "$${jar}:"; fi; \
 	if [ -f "$$jar".jar ]; then echo -n "$${jar}.jar:"; fi; \
@@ -30,9 +30,10 @@ RWLOC := debian/default_root
 RWFILES := $(RWLOC)/index.html $(RWLOC)/META-INF/context.xml
 
 ANT_ARGS := -Dcompile.debug=true \
-	-Dant.build.javac.source=1.5 \
-	-Dant.build.javac.target=1.5 \
+	-Dant.build.javac.source=1.6 \
+	-Dant.build.javac.target=1.6 \
 	-Djdt.jar=/usr/share/java/ecj.jar \
+	-Djunit.jar=/usr/share/java/junit4.jar \
 	-Dversion=$(T_VER) \
     -Dversion.major="$(T_VER_MAJOR)" \
     -Dversion.minor="$(T_VER_MINOR)" \
@@ -54,7 +55,13 @@ build-arch: build-stamp
 build-indep: build-stamp
 build-stamp:
 	dh_testdir
+ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))
+	cp /usr/share/java/jstl1.1.jar webapps/examples/WEB-INF/lib/jstl.jar
+	cp /usr/share/java/standard.jar webapps/examples/WEB-INF/lib/standard.jar
+	$(ANT_INVOKE) deploy test
+else
 	$(ANT_INVOKE) deploy
+endif
 	javadoc -subpackages "javax.servlet" -d "output/api" \
 		-sourcepath "java" -author -version -breakiterator \
 		-windowtitle "Tomcat API Documentation" -doctitle "Tomcat API" \
@@ -66,6 +73,7 @@ clean:
 	dh_testroot
 	-$(ANT_INVOKE) clean
 	rm -rf "output/"
+	rm -rf webapps/examples/WEB-INF/lib/*.jar
 	rm -f build-stamp modules/jdbc-pool/output/resources/MANIFEST.MF
 	dh_clean
 	mh_clean

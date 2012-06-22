@@ -6,7 +6,8 @@ Uploaders: James Page <james.page@ubuntu.com>,
  Miguel Landaeta <miguel@miguel.cc>, tony mancill <tmancill@debian.org>,
  Jakub Adam <jakub.adam@ktknet.cz>
 Build-Depends: default-jdk, ant-optional, debhelper (>= 7), po-debconf
-Build-Depends-Indep: maven-repo-helper (>> 1.0.1), libecj-java, javahelper
+Build-Depends-Indep: maven-repo-helper (>> 1.0.1), libecj-java, javahelper,
+ junit4, libjstl1.1-java, libjakarta-taglibs-standard-java
 Standards-Version: 3.9.3
 Vcs-Git: git://git.debian.org/git/pkg-java/tomcat7.git
 Vcs-Browser: http://git.debian.org/?p=pkg-java/tomcat7.git
@@ -112,7 +113,8 @@ Description: Servlet and JSP engine -- admin web applications
 
 Package: tomcat7-examples
 Architecture: all
-Depends: tomcat7-common (>= ${source:Version}), ${misc:Depends}
+Depends: tomcat7-common (>= ${source:Version}), ${misc:Depends},
+ libjstl1.1-java, libjakarta-taglibs-standard-java
 Description: Servlet and JSP engine -- example web applications
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Sun Microsystems, and provides a "pure Java" HTTP web
