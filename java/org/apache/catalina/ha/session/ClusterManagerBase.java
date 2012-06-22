@@ -31,7 +31,7 @@ import org.apache.catalina.tribes.io.ReplicationStream;
 /**
  * 
  * @author Filip Hanik
- * @version $Id: ClusterManagerBase.java 1200634 2011-11-10 23:48:52Z rjung $
+ * @version $Id: ClusterManagerBase.java 1346795 2012-06-06 09:08:36Z kfujino $
  */
 
 public abstract class ClusterManagerBase extends ManagerBase
@@ -189,6 +189,9 @@ public abstract class ClusterManagerBase extends ManagerBase
         copy.setProcessExpiresFrequency(getProcessExpiresFrequency());
         copy.setNotifyListenersOnReplication(isNotifyListenersOnReplication());
         copy.setSessionAttributeFilter(getSessionAttributeFilter());
+        copy.setSecureRandomClass(getSecureRandomClass());
+        copy.setSecureRandomProvider(getSecureRandomProvider());
+        copy.setSecureRandomAlgorithm(getSecureRandomAlgorithm());
     }
 
 }

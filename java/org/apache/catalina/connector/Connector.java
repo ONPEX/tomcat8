@@ -43,7 +43,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: Connector.java 1229558 2012-01-10 14:36:06Z rjung $
+ * @version $Id: Connector.java 1350306 2012-06-14 15:59:15Z kkolinko $
  */
 
 
@@ -410,6 +410,24 @@ public class Connector extends LifecycleMBeanBase  {
         return (mapper);
     }
 
+
+    /**
+     * Return the maximum number of headers that are allowed by the container. A
+     * value of less than 0 means no limit.
+     */
+    public int getMaxHeaderCount() {
+        return ((Integer) getProperty("maxHeaderCount")).intValue();
+    }
+
+    /**
+     * Set the maximum number of headers in a request that are allowed by the
+     * container. A value of less than 0 means no limit.
+     *
+     * @param maxHeaderCount The new setting
+     */
+    public void setMaxHeaderCount(int maxHeaderCount) {
+        setProperty("maxHeaderCount", String.valueOf(maxHeaderCount));
+    }
 
     /**
      * Return the maximum number of parameters (GET plus POST) that will be

@@ -52,7 +52,7 @@ import org.apache.juli.logging.LogFactory;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: Bootstrap.java 1201569 2011-11-14 01:36:07Z kkolinko $
+ * @version $Id: Bootstrap.java 1311213 2012-04-09 12:43:16Z markt $
  */
 
 public final class Bootstrap {
@@ -412,7 +412,8 @@ public final class Bootstrap {
 
 
     /**
-     * Main method, used for testing only.
+     * Main method and entry point when starting Tomcat via the provided
+     * scripts.
      *
      * @param args Command line arguments to be processed
      */

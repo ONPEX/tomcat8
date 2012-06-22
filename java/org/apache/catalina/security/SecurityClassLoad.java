@@ -25,7 +25,7 @@ package org.apache.catalina.security;
  *
  * @author Glenn L. Nielsen
  * @author Jean-Francois Arcand
- * @version $Id: SecurityClassLoad.java 1200161 2011-11-10 05:36:35Z kkolinko $
+ * @version $Id: SecurityClassLoad.java 1347036 2012-06-06 18:32:43Z markt $
  */
 
 public final class SecurityClassLoad {
@@ -239,16 +239,36 @@ public final class SecurityClassLoad {
     private static final void loadTomcatPackage(ClassLoader loader)
         throws Exception {
         final String basePackage = "org.apache.tomcat.";
+        // buf
         loader.loadClass(basePackage + "util.buf.HexUtils");
         loader.loadClass(basePackage + "util.buf.StringCache");
         loader.loadClass(basePackage + "util.buf.StringCache$ByteEntry");
         loader.loadClass(basePackage + "util.buf.StringCache$CharEntry");
+        // http
         loader.loadClass(basePackage + "util.http.HttpMessages");
         // Make sure system property is read at this point
         Class<?> clazz = loader.loadClass(
                 basePackage + "util.http.FastHttpDateFormat");
         clazz.newInstance();
         loader.loadClass(basePackage + "util.http.HttpMessages");
+        loader.loadClass(basePackage + "util.http.parser.AstAttribute");
+        loader.loadClass(basePackage + "util.http.parser.AstMediaType");
+        loader.loadClass(basePackage + "util.http.parser.AstParameter");
+        loader.loadClass(basePackage + "util.http.parser.AstSubType");
+        loader.loadClass(basePackage + "util.http.parser.AstType");
+        loader.loadClass(basePackage + "util.http.parser.AstValue");
+        loader.loadClass(basePackage + "util.http.parser.HttpParser");
+        loader.loadClass(basePackage + "util.http.parser.HttpParserConstants");
+        loader.loadClass(basePackage + "util.http.parser.HttpParserTokenManager");
+        loader.loadClass(basePackage + "util.http.parser.HttpParserTreeConstants");
+        loader.loadClass(basePackage + "util.http.parser.JJTHttpParserState");
+        loader.loadClass(basePackage + "util.http.parser.Node");
+        loader.loadClass(basePackage + "util.http.parser.ParseException");
+        loader.loadClass(basePackage + "util.http.parser.SimpleCharStream");
+        loader.loadClass(basePackage + "util.http.parser.SimpleNode");
+        loader.loadClass(basePackage + "util.http.parser.Token");
+        loader.loadClass(basePackage + "util.http.parser.TokenMgrError");
+        // net
         loader.loadClass(basePackage + "util.net.Constants");
         loader.loadClass(basePackage +
                 "util.net.NioBlockingSelector$BlockPoller$1");

@@ -68,7 +68,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: HostConfig.java 1297723 2012-03-06 21:16:44Z markt $
+ * @version $Id: HostConfig.java 1343337 2012-05-28 17:50:14Z kkolinko $
  */
 public class HostConfig
     implements LifecycleListener {
@@ -129,8 +129,9 @@ public class HostConfig
 
 
     /**
-     * Should XML files be copied to $CATALINA_BASE/conf/<engine>/<host> by
-     * default when a web application is deployed?
+     * Should XML files be copied to
+     * $CATALINA_BASE/conf/&lt;engine&gt;/&lt;host&gt; by default when
+     * a web application is deployed?
      */
     protected boolean copyXML = false;
     
@@ -1350,23 +1351,19 @@ public class HostConfig
                 // Reload application
                 if(log.isInfoEnabled())
                     log.info(sm.getString("hostConfig.reload", app.name));
-                Container context = host.findChild(app.name);
-                try {
-                    // Might not have started if start failed last time
-                    if (context.getState().isAvailable()) {
-                        context.stop();
+                Context context = (Context) host.findChild(app.name);
+                if (context.getState().isAvailable()) {
+                    // Reload catches and logs exceptions
+                    context.reload();
+                } else {
+                    // If the context was not started (for example an error
+                    // in web.xml) we'll still get to try to start
+                    try {
+                        context.start();
+                    } catch (Exception e) {
+                        log.warn(sm.getString
+                                 ("hostConfig.context.restart", app.name), e);
                     }
-                } catch (Exception e) {
-                    log.warn(sm.getString
-                             ("hostConfig.context.restart", app.name), e);
-                }
-                // If the context was not started (for example an error 
-                // in web.xml) we'll still get to try to start
-                try {
-                    context.start();
-                } catch (Exception e) {
-                    log.warn(sm.getString
-                             ("hostConfig.context.restart", app.name), e);
                 }
                 // Update times
                 app.reloadResources.put(resources[i],

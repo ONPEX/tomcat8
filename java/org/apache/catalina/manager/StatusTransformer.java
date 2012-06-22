@@ -41,7 +41,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * use XSLT, that is unnecessarily complex.
  *
  * @author Peter Lin
- * @version $Id: StatusTransformer.java 1201569 2011-11-14 01:36:07Z kkolinko $
+ * @version $Id: StatusTransformer.java 1348992 2012-06-11 20:20:23Z markt $
  */
 
 public class StatusTransformer {
@@ -528,7 +528,7 @@ public class StatusTransformer {
             } else {
                 writer.write(" requestProcessingTime=\"0\"");
                 writer.write(" requestBytesSent=\"0\"");
-                writer.write(" requestBytesRecieved=\"0\"");
+                writer.write(" requestBytesReceived=\"0\"");
                 writer.write(" remoteAddr=\"&#63;\"");
                 writer.write(" virtualHost=\"&#63;\"");
                 writer.write(" method=\"&#63;\"");

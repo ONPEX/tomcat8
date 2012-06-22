@@ -33,6 +33,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
@@ -126,7 +127,7 @@ import org.apache.tomcat.util.scan.StandardJarScanner;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardContext.java 1302614 2012-03-19 19:35:45Z markt $
+ * @version $Id: StandardContext.java 1350247 2012-06-14 14:04:20Z markt $
  */
 
 public class StandardContext extends ContainerBase
@@ -1480,6 +1481,13 @@ public class StandardContext extends ContainerBase
                                    this.charsetMapper);
 
     }
+
+
+    @Override
+    public String getCharset(Locale locale) {
+        return getCharsetMapper().getCharset(locale);
+    }
+
 
     /**
      * Return the URL of the XML descriptor for this context.
@@ -3875,9 +3883,12 @@ public class StandardContext extends ContainerBase
      * <p>
      * <b>IMPLEMENTATION NOTE</b>:  This method is designed to deal with
      * reloads required by changes to classes in the underlying repositories
-     * of our class loader.  It does not handle changes to the web application
-     * deployment descriptor.  If that has occurred, you should stop this
-     * Context and create (and start) a new Context instance instead.
+     * of our class loader and changes to the web.xml file. It does not handle
+     * changes to any context.xml file. If the context.xml has changed, you
+     * should stop this Context and create (and start) a new Context instance
+     * instead. Note that there is additional code in
+     * <code>CoyoteAdapter#postParseRequest()</code> to handle mapping requests
+     * to paused Contexts.
      *
      * @exception IllegalStateException if the <code>reloadable</code>
      *  property is set to <code>false</code>.
@@ -3894,7 +3905,7 @@ public class StandardContext extends ContainerBase
             log.info(sm.getString("standardContext.reloadingStarted",
                     getName()));
 
-        // Stop accepting requests temporarily
+        // Stop accepting requests temporarily.
         setPaused(true);
 
         try {
@@ -6078,6 +6089,9 @@ public class StandardContext extends ContainerBase
             return (false);
         if (urlPattern.indexOf('\n') >= 0 || urlPattern.indexOf('\r') >= 0) {
             return (false);
+        }
+        if (urlPattern.equals("")) {
+            return true;
         }
         if (urlPattern.startsWith("*.")) {
             if (urlPattern.indexOf('/') < 0) {

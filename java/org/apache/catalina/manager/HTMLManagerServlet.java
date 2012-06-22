@@ -35,7 +35,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
 import javax.servlet.ServletException;
@@ -78,7 +77,7 @@ import org.apache.tomcat.util.res.StringManager;
 * @author Bip Thelin
 * @author Malcolm Edgar
 * @author Glenn L. Nielsen
-* @version $Id: HTMLManagerServlet.java 1301210 2012-03-15 21:22:10Z markt $
+* @version $Id: HTMLManagerServlet.java 1349885 2012-06-13 14:43:14Z markt $
 * @see ManagerServlet
 */
 
@@ -98,8 +97,6 @@ public final class HTMLManagerServlet extends ManagerServlet {
         // '/' should not be encoded in context paths
         URL_ENCODER.addSafeCharacter('/');
     }
-    
-    private final Random randomSource = new Random();
     
     private boolean showProxySessions = false;
 
@@ -231,36 +228,6 @@ public final class HTMLManagerServlet extends ManagerServlet {
         }
 
         list(request, response, message, smClient);
-    }
-
-    /**
-     * Generate a once time token (nonce) for authenticating subsequent
-     * requests. This will also add the token to the session. The nonce
-     * generation is a simplified version of ManagerBase.generateSessionId().
-     * 
-     */
-    protected String generateNonce() {
-        byte random[] = new byte[16];
-
-        // Render the result as a String of hexadecimal digits
-        StringBuilder buffer = new StringBuilder();
-
-        randomSource.nextBytes(random);
-       
-        for (int j = 0; j < random.length; j++) {
-            byte b1 = (byte) ((random[j] & 0xf0) >> 4);
-            byte b2 = (byte) (random[j] & 0x0f);
-            if (b1 < 10)
-                buffer.append((char) ('0' + b1));
-            else
-                buffer.append((char) ('A' + (b1 - 10)));
-            if (b2 < 10)
-                buffer.append((char) ('0' + b2));
-            else
-                buffer.append((char) ('A' + (b2 - 10)));
-        }
-
-        return buffer.toString();
     }
 
     protected String upload(HttpServletRequest request, StringManager smClient)

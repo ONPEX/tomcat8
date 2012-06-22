@@ -59,7 +59,7 @@
   If still more simultaneous requests are received, they are stacked up
   inside the server socket created by the <strong>Connector</strong>, up to
   the configured maximum (the value of the <code>acceptCount</code>
-  attribute.  Any further simultaneous requests will receive "connection
+  attribute).  Any further simultaneous requests will receive "connection
   refused" errors, until resources are available to process them.</p>
 
 </section>
@@ -91,6 +91,13 @@
       to <code>false</code> to skip the DNS lookup and return the IP
       address in String form instead (thereby improving performance).
       By default, DNS lookups are disabled.</p>
+    </attribute>
+
+    <attribute name="maxHeaderCount" required="false">
+      <p>The maximum number of headers in a request that are allowed by the
+      container. A request that contains more headers than the specified limit
+      will be rejected. A value of less than 0 means no limit.
+      If not specified, a default of 100 is used.</p>
     </attribute>
 
     <attribute name="maxParameterCount" required="false">
@@ -380,11 +387,15 @@
       falls below this value. The operating system may still accept
       connections based on the <code>acceptCount</code> setting. Default value
       varies by connector type. For BIO the default is the value of
-      <strong>maxThreads</strong>. For NIO the default is <code>10000</code>.
+      <strong>maxThreads</strong> unless an <a href="executor.html">Executor</a>
+      is used in which case the default will be the value of maxThreads from the
+      executor. For NIO the default is <code>10000</code>.
       For APR/native, the default is <code>8192</code>.</p>
       <p>Note that for APR/native on Windows, the configured value will be
       reduced to the highest multiple of 1024 that is less than or equal to
-      maxConnections. This is done for performance reasons.</p>
+      maxConnections. This is done for performance reasons.<br/>
+      If set to a value of -1, the maxConnections feature is disabled 
+      and connections are not counted.</p>
     </attribute>
 
     <attribute name="maxHttpHeaderSize" required="false">
@@ -557,19 +568,19 @@
       </attribute>
       <attribute name="socket.performanceConnectionTime" required="false">
         <p>(int)The first value for the performance settings. See
-        <a href="http://download.oracle.com/javase/6/docs/api/java/net/Socket.html#setPerformancePreferences(int,%20int,%20int)">Socket Performance Options</a>
+        <a href="http://docs.oracle.com/javase/6/docs/api/java/net/Socket.html#setPerformancePreferences(int,%20int,%20int)">Socket Performance Options</a>
         All three performance attributes must be set else the JVM defaults will
         be used for all three.</p>
       </attribute>
       <attribute name="socket.performanceLatency" required="false">
         <p>(int)The second value for the performance settings. See
-        <a href="http://download.oracle.com/javase/6/docs/api/java/net/Socket.html#setPerformancePreferences(int,%20int,%20int)">Socket Performance Options</a>
+        <a href="http://docs.oracle.com/javase/6/docs/api/java/net/Socket.html#setPerformancePreferences(int,%20int,%20int)">Socket Performance Options</a>
         All three performance attributes must be set else the JVM defaults will
         be used for all three.</p>
       </attribute>
       <attribute name="socket.performanceBandwidth" required="false">
         <p>(int)The third value for the performance settings. See
-        <a href="http://download.oracle.com/javase/6/docs/api/java/net/Socket.html#setPerformancePreferences(int,%20int,%20int)">Socket Performance Options</a>
+        <a href="http://docs.oracle.com/javase/6/docs/api/java/net/Socket.html#setPerformancePreferences(int,%20int,%20int)">Socket Performance Options</a>
         All three performance attributes must be set else the JVM defaults will
         be used for all three.</p>
       </attribute>
@@ -606,8 +617,15 @@
 
       <attribute name="pollerThreadCount" required="false">
         <p>(int)The number of threads to be used to run for the polling events.
-        Default value is <code>1</code> per processor. Can't see a reason to go
-        above that. But experiment and find your own results.</p>
+        Default value is <code>1</code> per processor up to and including version 7.0.27.
+        Default value as of version 7.0.28 is <code>1</code> per processor but not more than 2.<br/>
+        When accepting a socket, the operating system holds a global lock. So the benefit of 
+        going above 2 threads diminishes rapidly. Having more than one thread is for 
+        system that need to accept connections very rapidly. However usually just 
+        increasing <code>acceptCount</code> will solve that problem. 
+        Increasing this value may also be beneficial when a large amount of send file 
+        operations are going on.
+        </p>
       </attribute>
 
       <attribute name="pollerThreadPriority" required="false">
@@ -1165,12 +1183,11 @@
 
     <attribute name="SSLProtocol" required="false">
       <p>Protocol which may be used for communicating with clients. The default
-      value is <code>all</code>, with other acceptable values being <code>SSLv2</code>,
-      <code>SSLv3</code>, <code>TLSv1</code> and <code>SSLv2+SSLv3</code>.
-      Starting with version 1.1.21 of the Tomcat native
-      library any combination of the three protocols concatenated with a
-      plus sign will be supported. Note that the protocol <code>SSLv2</code>
-      is inherently unsafe.</p>
+      value is <code>all</code>, which is equivalent to <code>SSLv3+TLSv1</code>
+      with other acceptable values being <code>SSLv2</code>,
+      <code>SSLv3</code>, <code>TLSv1</code> and any combination of the three
+      protocols concatenated with a plus sign. Note that the protocol
+      <code>SSLv2</code> is inherently unsafe.</p>
     </attribute>
 
     <attribute name="SSLVerifyClient" required="false">

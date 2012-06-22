@@ -43,7 +43,7 @@ import org.xml.sax.Attributes;
  * deployment descriptor (<code>/WEB-INF/web.xml</code>) resource.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: WebRuleSet.java 1226197 2011-12-31 22:32:28Z markt $
+ * @version $Id: WebRuleSet.java 1345031 2012-06-01 09:43:15Z markt $
  */
 
 public class WebRuleSet extends RuleSetBase {
@@ -386,10 +386,15 @@ public class WebRuleSet extends RuleSetBase {
         digester.addCallMethod(fullPrefix + "/servlet/run-as/role-name",
                                "setRunAs", 0);
 
-        digester.addCallMethod(fullPrefix + "/servlet/security-role-ref",
-                               "addSecurityRoleRef", 2);
-        digester.addCallParam(fullPrefix + "/servlet/security-role-ref/role-link", 1);
-        digester.addCallParam(fullPrefix + "/servlet/security-role-ref/role-name", 0);
+        digester.addObjectCreate(fullPrefix + "/servlet/security-role-ref",
+                                 "org.apache.catalina.deploy.SecurityRoleRef");
+        digester.addSetNext(fullPrefix + "/servlet/security-role-ref",
+                            "addSecurityRoleRef",
+                            "org.apache.catalina.deploy.SecurityRoleRef");
+        digester.addCallMethod(fullPrefix + "/servlet/security-role-ref/role-link",
+                               "setLink", 0);
+        digester.addCallMethod(fullPrefix + "/servlet/security-role-ref/role-name",
+                               "setName", 0);
 
         digester.addCallMethod(fullPrefix + "/servlet/servlet-class",
                               "setServletClass", 0);

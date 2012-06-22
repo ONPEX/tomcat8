@@ -53,7 +53,7 @@ import org.apache.tomcat.util.res.StringManager;
  * track of deltas during a request.
  *
  * @author Filip Hanik
- * @version $Id: DeltaSession.java 1226162 2011-12-31 18:32:53Z markt $
+ * @version $Id: DeltaSession.java 1327623 2012-04-18 18:46:41Z kkolinko $
  */
 
 public class DeltaSession extends StandardSession implements Externalizable,ClusterSession,ReplicatedMapEntry {
@@ -112,116 +112,140 @@ public class DeltaSession extends StandardSession implements Externalizable,Clus
     // ----------------------------------------------------- ReplicatedMapEntry
 
     /**
-         * Has the object changed since last replication
-         * and is not in a locked state
-         * @return boolean
-         */
-        @Override
-        public boolean isDirty() {
-            return getDeltaRequest().getSize()>0;
-        }
+     * Has the object changed since last replication
+     * and is not in a locked state
+     * @return boolean
+     */
+    @Override
+    public boolean isDirty() {
+        return getDeltaRequest().getSize()>0;
+    }
 
-        /**
-         * If this returns true, the map will extract the diff using getDiff()
-         * Otherwise it will serialize the entire object.
-         * @return boolean
-         */
-        @Override
-        public boolean isDiffable() {
+    /**
+     * If this returns true, the map will extract the diff using getDiff()
+     * Otherwise it will serialize the entire object.
+     * @return boolean
+     */
+    @Override
+    public boolean isDiffable() {
+        return true;
+    }
+
+    /**
+     * Returns a diff and sets the dirty map to false
+     * @return byte[]
+     * @throws IOException
+     */
+    @Override
+    public byte[] getDiff() throws IOException {
+        try{
+            lock();
+            return getDeltaRequest().serialize();
+        }finally{
+            unlock();
+        }
+    }
+
+    public ClassLoader[] getClassLoaders() {
+        if ( manager instanceof BackupManager ) return ((BackupManager)manager).getClassLoaders();
+        else if ( manager instanceof ClusterManagerBase ) return ((ClusterManagerBase)manager).getClassLoaders();
+        else if ( manager instanceof StandardManager ) {
+            StandardManager sm = (StandardManager)manager;
+            return ClusterManagerBase.getClassLoaders(sm.getContainer());
+        } else if ( manager instanceof ManagerBase ) {
+            ManagerBase mb = (ManagerBase)manager;
+            return ClusterManagerBase.getClassLoaders(mb.getContainer());
+        }//end if
+        return null;
+    }
+
+    /**
+     * Applies a diff to an existing object.
+     * @param diff byte[]
+     * @param offset int
+     * @param length int
+     * @throws IOException
+     */
+    @Override
+    public void applyDiff(byte[] diff, int offset, int length) throws IOException, ClassNotFoundException {
+        try {
+            lock();
+            ReplicationStream stream = ( (ClusterManager) getManager()).getReplicationStream(diff, offset, length);
+            ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
+            try {
+                ClassLoader[] loaders = getClassLoaders();
+                if (loaders != null && loaders.length > 0)
+                    Thread.currentThread().setContextClassLoader(loaders[0]);
+                getDeltaRequest().readExternal(stream);
+                getDeltaRequest().execute(this, ((ClusterManager)getManager()).isNotifyListenersOnReplication());
+            } finally {
+                Thread.currentThread().setContextClassLoader(contextLoader);
+            }
+        }finally {
+            unlock();
+        }
+    }
+
+    /**
+     * Resets the current diff state and resets the dirty flag
+     */
+    @Override
+    public void resetDiff() {
+        resetDeltaRequest();
+    }
+
+    /**
+     * Lock during serialization
+     */
+    @Override
+    public void lock() {
+        diffLock.lock();
+    }
+
+    /**
+     * Unlock after serialization
+     */
+    @Override
+    public void unlock() {
+        diffLock.unlock();
+    }
+
+    @Override
+    public void setOwner(Object owner) {
+        if ( owner instanceof ClusterManager && getManager()==null) {
+            ClusterManager cm = (ClusterManager)owner;
+            this.setManager(cm);
+            this.setValid(true);
+            this.setPrimarySession(false);
+            this.access();
+            this.resetDeltaRequest();
+            this.endAccess();
+        }
+    }
+
+    /**
+     * If this returns true, to replicate that an object has been accessed
+     * @return boolean
+     */
+    @Override
+    public boolean isAccessReplicate() {
+        long replDelta = System.currentTimeMillis() - getLastTimeReplicated();
+        if (maxInactiveInterval >=0 && replDelta > (maxInactiveInterval * 1000)) {
             return true;
         }
+        return false;
+    }
 
-        /**
-         * Returns a diff and sets the dirty map to false
-         * @return byte[]
-         * @throws IOException
-         */
-        @Override
-        public byte[] getDiff() throws IOException {
-            try{
-                lock();
-                return getDeltaRequest().serialize();
-            }finally{
-                unlock();
-            }
-        }
+    /**
+     * Access to an existing object.
+     */
+    @Override
+    public void accessEntry() {
+        this.access();
+        this.setPrimarySession(false);
+        this.endAccess();
+    }
 
-        public ClassLoader[] getClassLoaders() {
-            if ( manager instanceof BackupManager ) return ((BackupManager)manager).getClassLoaders();
-            else if ( manager instanceof ClusterManagerBase ) return ((ClusterManagerBase)manager).getClassLoaders();
-            else if ( manager instanceof StandardManager ) {
-                StandardManager sm = (StandardManager)manager;
-                return ClusterManagerBase.getClassLoaders(sm.getContainer());
-            } else if ( manager instanceof ManagerBase ) {
-                ManagerBase mb = (ManagerBase)manager;
-                return ClusterManagerBase.getClassLoaders(mb.getContainer());
-            }//end if
-            return null;
-        }
-
-        /**
-         * Applies a diff to an existing object.
-         * @param diff byte[]
-         * @param offset int
-         * @param length int
-         * @throws IOException
-         */
-        @Override
-        public void applyDiff(byte[] diff, int offset, int length) throws IOException, ClassNotFoundException {
-            try {
-                lock();
-                ReplicationStream stream = ( (ClusterManager) getManager()).getReplicationStream(diff, offset, length);
-                ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
-                try {
-                    ClassLoader[] loaders = getClassLoaders();
-                    if (loaders != null && loaders.length > 0)
-                        Thread.currentThread().setContextClassLoader(loaders[0]);
-                    getDeltaRequest().readExternal(stream);
-                    getDeltaRequest().execute(this, ((ClusterManager)getManager()).isNotifyListenersOnReplication());
-                } finally {
-                    Thread.currentThread().setContextClassLoader(contextLoader);
-                }
-            }finally {
-                unlock();
-            }
-        }
-
-        /**
-         * Resets the current diff state and resets the dirty flag
-         */
-        @Override
-        public void resetDiff() {
-            resetDeltaRequest();
-        }
-
-        /**
-         * Lock during serialization
-         */
-        @Override
-        public void lock() {
-            diffLock.lock();
-        }
-
-        /**
-         * Unlock after serialization
-         */
-        @Override
-        public void unlock() {
-            diffLock.unlock();
-        }
-
-        @Override
-        public void setOwner(Object owner) {
-            if ( owner instanceof ClusterManager && getManager()==null) {
-                ClusterManager cm = (ClusterManager)owner;
-                this.setManager(cm);
-                this.setValid(true);
-                this.setPrimarySession(false);
-                this.access();
-                this.resetDeltaRequest();
-                this.endAccess();
-            }
-        }
     // ----------------------------------------------------- Session Properties
 
     /**
@@ -843,7 +867,8 @@ public class DeltaSession extends StandardSession implements Externalizable,Clus
         }
     }
 
-    protected long getLastTimeReplicated() {
+    @Override
+    public long getLastTimeReplicated() {
         return lastTimeReplicated;
     }
 
@@ -852,7 +877,8 @@ public class DeltaSession extends StandardSession implements Externalizable,Clus
         return version;
     }
 
-    protected void setLastTimeReplicated(long lastTimeReplicated) {
+    @Override
+    public void setLastTimeReplicated(long lastTimeReplicated) {
         this.lastTimeReplicated = lastTimeReplicated;
     }
 

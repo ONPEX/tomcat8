@@ -55,7 +55,7 @@ import org.apache.tomcat.util.res.StringManager;
  * be subclassed to create more sophisticated Manager implementations.
  *
  * @author Craig R. McClanahan
- * @version $Id: ManagerBase.java 1301271 2012-03-15 23:40:44Z markt $
+ * @version $Id: ManagerBase.java 1346675 2012-06-05 23:59:01Z schultz $
  */
 
 public abstract class ManagerBase extends LifecycleMBeanBase
@@ -635,8 +635,9 @@ public abstract class ManagerBase extends LifecycleMBeanBase
         if ((maxActiveSessions >= 0) &&
                 (getActiveSessions() >= maxActiveSessions)) {
             rejectedSessions++;
-            throw new IllegalStateException(
-                    sm.getString("managerBase.createSession.ise"));
+            throw new TooManyActiveSessionsException(
+                    sm.getString("managerBase.createSession.ise"),
+                    maxActiveSessions);
         }
         
         // Recycle or create a Session instance

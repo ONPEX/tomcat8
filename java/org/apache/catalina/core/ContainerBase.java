@@ -31,8 +31,10 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -176,7 +178,9 @@ public abstract class ContainerBase extends LifecycleMBeanBase
     /**
      * The container event listeners for this Container.
      */
-    protected ArrayList<ContainerListener> listeners = new ArrayList<ContainerListener>();
+    protected ArrayList<ContainerListener> listeners =
+            new ArrayList<ContainerListener>();
+    protected final ReadWriteLock listenersLock = new ReentrantReadWriteLock();
 
 
     /**
@@ -242,7 +246,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
     /**
      * Lock used to control access to the Realm.
      */
-    private ReadWriteLock realmLock = new ReentrantReadWriteLock();
+    private final ReadWriteLock realmLock = new ReentrantReadWriteLock();
 
     /**
      * The resources DirContext object with which this Container is associated.
@@ -912,10 +916,13 @@ public abstract class ContainerBase extends LifecycleMBeanBase
     @Override
     public void addContainerListener(ContainerListener listener) {
 
-        synchronized (listeners) {
+        Lock write = listenersLock.writeLock();
+        write.lock();
+        try {
             listeners.add(listener);
+        } finally {
+            write.unlock();
         }
-
     }
 
 
@@ -973,12 +980,15 @@ public abstract class ContainerBase extends LifecycleMBeanBase
     @Override
     public ContainerListener[] findContainerListeners() {
 
-        synchronized (listeners) {
+        Lock read = listenersLock.readLock();
+        read.lock();
+        try {
             ContainerListener[] results = 
                 new ContainerListener[listeners.size()];
             return listeners.toArray(results);
+        } finally {
+            read.unlock();
         }
-
     }
 
 
@@ -1057,10 +1067,13 @@ public abstract class ContainerBase extends LifecycleMBeanBase
     @Override
     public void removeContainerListener(ContainerListener listener) {
 
-        synchronized (listeners) {
+        Lock write = listenersLock.writeLock();
+        write.lock();
+        try {
             listeners.remove(listener);
+        } finally {
+            write.unlock();
         }
-
     }
 
 
@@ -1084,7 +1097,8 @@ public abstract class ContainerBase extends LifecycleMBeanBase
         startStopExecutor = new ThreadPoolExecutor(
                 getStartStopThreadsInternal(),
                 getStartStopThreadsInternal(), 10, TimeUnit.SECONDS,
-                startStopQueue);
+                startStopQueue,
+                new StartStopThreadFactory(getName() + "-startStop-"));
         startStopExecutor.allowCoreThreadTimeOut(true);
         super.initInternal();
     }
@@ -1394,16 +1408,31 @@ public abstract class ContainerBase extends LifecycleMBeanBase
     @Override
     public void fireContainerEvent(String type, Object data) {
 
-        if (listeners.size() < 1)
-            return;
-        ContainerEvent event = new ContainerEvent(this, type, data);
-        ContainerListener list[] = new ContainerListener[0];
-        synchronized (listeners) {
-            list = listeners.toArray(list);
+        /*
+         * Implementation note
+         * There are two options here.
+         * 1) Take a copy of listeners and fire the events outside of the read
+         *    lock
+         * 2) Don't take a copy and fire the events inside the read lock
+         *
+         * Approach 2 has been used here since holding the read lock only
+         * prevents writes and that is preferable to creating lots of array
+         * objects. Since writes occur on start / stop (unless an external
+         * management tool is used) then holding the read lock for a relatively
+         * long time should not be an issue.
+         */
+        Lock read = listenersLock.readLock();
+        read.lock();
+        try {
+            if (listeners.size() < 1)
+                return;
+            ContainerEvent event = new ContainerEvent(this, type, data);
+            for (ContainerListener listener : listeners) {
+                listener.containerEvent(event);
+            }
+        } finally {
+            read.unlock();
         }
-        for (int i = 0; i < list.length; i++)
-            list[i].containerEvent(event);
-
     }
 
 
@@ -1584,4 +1613,24 @@ public abstract class ContainerBase extends LifecycleMBeanBase
             return null;
         }
     }
+
+    private static class StartStopThreadFactory implements ThreadFactory {
+        private final ThreadGroup group;
+        private final AtomicInteger threadNumber = new AtomicInteger(1);
+        private final String namePrefix;
+
+        public StartStopThreadFactory(String namePrefix) {
+            SecurityManager s = System.getSecurityManager();
+            group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
+            this.namePrefix = namePrefix;
+        }
+
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread thread = new Thread(group, r, namePrefix + threadNumber.getAndIncrement());
+            thread.setDaemon(true);
+            return thread;
+        }
+    }
+
 }

@@ -163,11 +163,40 @@ public abstract class AbstractEndpoint {
         LimitLatch latch = this.connectionLimitLatch;
         if (latch != null) {
             // Update the latch that enforces this
-            latch.setLimit(maxCon);
+            if (maxCon == -1) {
+                releaseConnectionLatch();
+            } else {
+                latch.setLimit(maxCon);
+            }
+        } else if (maxCon > 0) {
+            initializeConnectionLatch();
         }
     }
 
     public int  getMaxConnections() { return this.maxConnections; }
+
+    /**
+     * Return the current count of connections handled by this endpoint, if the
+     * connections are counted (which happens when the maximum count of
+     * connections is limited), or <code>-1</code> if they are not. This
+     * property is added here so that this value can be inspected through JMX.
+     * It is visible on "ThreadPool" MBean.
+     *
+     * <p>The count is incremented by the Acceptor before it tries to accept a
+     * new connection. Until the limit is reached and thus the count cannot be
+     * incremented,  this value is more by 1 (the count of acceptors) than the
+     * actual count of connections that are being served.
+     *
+     * @return The count
+     */
+    public long getConnectionCount() {
+        LimitLatch latch = connectionLimitLatch;
+        if (latch != null) {
+            return latch.getCount();
+        }
+        return -1;
+    }
+
     /**
      * External Executor based thread pool.
      */
@@ -292,7 +321,10 @@ public abstract class AbstractEndpoint {
         }
     }
     public int getMaxThreads() {
-        if (running && executor!=null) {
+        return getMaxThreadsExecutor(running);
+    }
+    protected int getMaxThreadsExecutor(boolean useExecutor) {
+        if (useExecutor && executor != null) {
             if (executor instanceof java.util.concurrent.ThreadPoolExecutor) {
                 return ((java.util.concurrent.ThreadPoolExecutor)executor).getMaximumPoolSize();
             } else if (executor instanceof ResizableExecutor) {
@@ -314,6 +346,18 @@ public abstract class AbstractEndpoint {
     }
     public void setMaxKeepAliveRequests(int maxKeepAliveRequests) {
         this.maxKeepAliveRequests = maxKeepAliveRequests;
+    }
+
+    /**
+     * The maximum number of headers in a request that are allowed.
+     * 100 by default. A value of less than 0 means no limit.
+     */
+    private int maxHeaderCount = 100; // as in Apache HTTPD server
+    public int getMaxHeaderCount() {
+        return maxHeaderCount;
+    }
+    public void setMaxHeaderCount(int maxHeaderCount) {
+        this.maxHeaderCount = maxHeaderCount;
     }
 
     /**
@@ -655,6 +699,7 @@ public abstract class AbstractEndpoint {
     public abstract boolean getUsePolling();
 
     protected LimitLatch initializeConnectionLatch() {
+        if (maxConnections==-1) return null;
         if (connectionLimitLatch==null) {
             connectionLimitLatch = new LimitLatch(getMaxConnections());
         }
@@ -668,11 +713,13 @@ public abstract class AbstractEndpoint {
     }
 
     protected void countUpOrAwaitConnection() throws InterruptedException {
+        if (maxConnections==-1) return;
         LimitLatch latch = connectionLimitLatch;
         if (latch!=null) latch.countUpOrAwait();
     }
 
     protected long countDownConnection() {
+        if (maxConnections==-1) return -1;
         LimitLatch latch = connectionLimitLatch;
         if (latch!=null) {
             long result = latch.countDown();
