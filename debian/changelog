@@ -1,9 +1,13 @@
-tomcat7 (7.0.27-2) UNRELEASED; urgency=low
+tomcat7 (7.0.28-1) UNRELEASED; urgency=low
 
+  [ Miguel Landaeta ]
   * Add Slovak debconf translation (Closes: #677913).
     - Thanks to Ivan Masár.
 
- -- Miguel Landaeta <miguel@miguel.cc>  Sun, 17 Jun 2012 19:03:41 -0430
+  [ James Page ]
+  * New upstream release.
+
+ -- James Page <james.page@ubuntu.com>  Fri, 22 Jun 2012 08:55:14 +0100
 
 tomcat7 (7.0.27-1) unstable; urgency=low
 
