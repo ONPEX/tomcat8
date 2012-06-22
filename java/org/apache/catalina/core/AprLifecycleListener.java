@@ -39,7 +39,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Filip Hanik
- * @version $Id: AprLifecycleListener.java 1201569 2011-11-14 01:36:07Z kkolinko $
+ * @version $Id: AprLifecycleListener.java 1349932 2012-06-13 15:59:02Z markt $
  * @since 4.1
  */
 
@@ -60,9 +60,9 @@ public class AprLifecycleListener
 
     protected static final int TCN_REQUIRED_MAJOR = 1;
     protected static final int TCN_REQUIRED_MINOR = 1;
-    protected static final int TCN_REQUIRED_PATCH = 17;
+    protected static final int TCN_REQUIRED_PATCH = 24;
     protected static final int TCN_RECOMMENDED_MINOR = 1;
-    protected static final int TCN_RECOMMENDED_PV = 22;
+    protected static final int TCN_RECOMMENDED_PV = 24;
 
 
     // ---------------------------------------------- Properties
@@ -213,7 +213,10 @@ public class AprLifecycleListener
         }
 
         log.info(sm.getString("aprListener.tcnValid", major + "."
-                    + minor + "." + patch));
+                    + minor + "." + patch,
+                    Library.APR_MAJOR_VERSION + "."
+                    + Library.APR_MINOR_VERSION + "."
+                    + Library.APR_PATCH_VERSION));
 
         // Log APR flags
         log.info(sm.getString("aprListener.flags",
@@ -272,6 +275,8 @@ public class AprLifecycleListener
                 throw new IllegalStateException(message);
             }
         }
+
+        log.info(sm.getString("aprListener.initializedOpenSSL", SSL.versionString()));
 
         sslAvailable = true;
     }

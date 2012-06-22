@@ -21,13 +21,13 @@
 # modules that Tomcat depends on.  Copy this file to "build.properties"
 # in the top-level source directory, and customize it as needed.
 #
-# $Id: build.properties.default 1307817 2012-03-31 14:40:30Z markt $
+# $Id: build.properties.default 1350468 2012-06-15 06:11:47Z markt $
 # -----------------------------------------------------------------------------
 
 # ----- Version Control Flags -----
 version.major=7
 version.minor=0
-version.build=27
+version.build=28
 version.patch=0
 version.suffix=
 
@@ -132,7 +132,7 @@ jdt.loc.1=http://archive.eclipse.org/eclipse/downloads/drops/${jdt.release}/ecj-
 jdt.loc.2=http://download.eclipse.org/eclipse/downloads/drops/${jdt.release}/ecj-${jdt.version}.jar
 
 # ----- Tomcat native library -----
-tomcat-native.version=1.1.23
+tomcat-native.version=1.1.24
 tomcat-native.home=${base.path}/tomcat-native-${tomcat-native.version}
 tomcat-native.tar.gz=${tomcat-native.home}/tomcat-native.tar.gz
 tomcat-native.loc.1=${base-tomcat.loc.1}/tomcat-connectors/native/${tomcat-native.version}/source/tomcat-native-${tomcat-native.version}-src.tar.gz

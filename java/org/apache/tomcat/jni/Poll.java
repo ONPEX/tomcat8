@@ -20,7 +20,7 @@ package org.apache.tomcat.jni;
 /** Poll
  *
  * @author Mladen Turk
- * @version $Id: Poll.java 939309 2010-04-29 13:54:26Z kkolinko $
+ * @version $Id: Poll.java 1349932 2012-06-13 15:59:02Z markt $
  */
 
 public class Poll {
@@ -73,16 +73,23 @@ public class Poll {
     public static native int destroy(long pollset);
 
     /**
-     * Add a socket or to a pollset
-     * If you set client_data in the descriptor, that value
-     * will be returned in the client_data field whenever this
-     * descriptor is signaled in apr_pollset_poll().
-     * @param pollset The pollset to which to add the descriptor
+     * Add a socket to a pollset with the default timeout.
+     * @param pollset The pollset to which to add the socket
      * @param sock The sockets to add
      * @param reqevents requested events
      */
     public static native int add(long pollset, long sock,
                                  int reqevents);
+
+    /**
+     * Add a socket to a pollset with a specific timeout.
+     * @param pollset The pollset to which to add the socket
+     * @param sock The sockets to add
+     * @param reqevents requested events
+     * @param timeout requested timeout in microseconds (-1 for infinite)
+     */
+    public static native int addWithTimeout(long pollset, long sock,
+                                            int reqevents, long timeout);
 
     /**
      * Remove a descriptor from a pollset

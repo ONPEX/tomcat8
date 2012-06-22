@@ -100,7 +100,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: Request.java 1301262 2012-03-15 23:05:15Z markt $
+ * @version $Id: Request.java 1335733 2012-05-08 20:07:23Z markt $
  */
 
 public class Request
@@ -2665,6 +2665,7 @@ public class Request
         }
 
         Parameters parameters = coyoteRequest.getParameters();
+        parameters.setLimit(getConnector().getMaxParameterCount());
 
         boolean success = false;
         try {

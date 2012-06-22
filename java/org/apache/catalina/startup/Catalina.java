@@ -67,7 +67,7 @@ import org.xml.sax.SAXParseException;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: Catalina.java 1302650 2012-03-19 20:48:49Z markt $
+ * @version $Id: Catalina.java 1333829 2012-05-04 09:46:59Z markt $
  */
 public class Catalina {
 
@@ -454,7 +454,7 @@ public class Catalina {
             FileInputStream fis = null;
             try {
                 InputSource is =
-                    new InputSource("file://" + file.getAbsolutePath());
+                    new InputSource(file.toURI().toURL().toString());
                 fis = new FileInputStream(file);
                 is.setByteStream(fis);
                 digester.push(this);
@@ -542,7 +542,7 @@ public class Catalina {
         try {
             file = configFile();
             inputStream = new FileInputStream(file);
-            inputSource = new InputSource("file://" + file.getAbsolutePath());
+            inputSource = new InputSource(file.toURI().toURL().toString());
         } catch (Exception e) {
             if (log.isDebugEnabled()) {
                 log.debug(sm.getString("catalina.configFail", file), e);

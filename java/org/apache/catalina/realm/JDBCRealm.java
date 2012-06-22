@@ -47,7 +47,7 @@ import org.apache.tomcat.util.ExceptionUtils;
 * @author Craig R. McClanahan
 * @author Carson McDonald
 * @author Ignacio Ortega
-* @version $Id: JDBCRealm.java 1081987 2011-03-15 23:05:53Z markt $
+* @version $Id: JDBCRealm.java 1348499 2012-06-09 20:37:14Z markt $
 */
 
 public class JDBCRealm
@@ -615,6 +615,12 @@ public class JDBCRealm
      */
     protected ArrayList<String> getRoles(String username) {
         
+        if (allRolesMode != AllRolesMode.STRICT_MODE && !isRoleStoreDefined()) {
+            // Using an authentication only configuration and no role store has
+            // been defined so don't spend cycles looking
+            return null;
+        }
+
         PreparedStatement stmt = null;
         ResultSet rs = null;
 
@@ -674,8 +680,7 @@ public class JDBCRealm
             numberOfTries--;
         }
         
-        return (null);
-        
+        return null;
     }
     
     
@@ -762,8 +767,12 @@ public class JDBCRealm
     }
 
 
-    // ------------------------------------------------------ Lifecycle Methods
+    private boolean isRoleStoreDefined() {
+        return userRoleTable != null || roleNameCol != null;
+    }
 
+
+    // ------------------------------------------------------ Lifecycle Methods
 
     /**
      * Prepare for the beginning of active use of the public methods of this

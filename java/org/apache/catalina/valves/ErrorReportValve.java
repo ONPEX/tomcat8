@@ -43,7 +43,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * @author <a href="mailto:nicolaken@supereva.it">Nicola Ken Barozzi</a> Aisa
  * @author <a href="mailto:stefano@apache.org">Stefano Mazzocchi</a>
  * @author Yoav Shapira
- * @version $Id: ErrorReportValve.java 1297028 2012-03-05 12:24:13Z markt $
+ * @version $Id: ErrorReportValve.java 1348777 2012-06-11 09:50:03Z markt $
  */
 
 public class ErrorReportValve extends ValveBase {
@@ -165,7 +165,12 @@ public class ErrorReportValve extends ValveBase {
 
         String message = RequestUtil.filter(response.getMessage());
         if (message == null) {
-            message = "";
+            if (throwable != null) {
+                message = RequestUtil.filter(throwable.getMessage());
+            }
+            if (message == null) {
+                message = "";
+            }
         }
 
         // Do nothing if there is no report for the specified status code

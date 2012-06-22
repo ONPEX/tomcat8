@@ -45,12 +45,12 @@ import org.apache.tomcat.util.res.StringManager;
  * are met. This class builds a master list of extensions available to an
  * application and then validates those extensions.
  *
- * See http://download.oracle.com/javase/1.4.2/docs/guide/extensions/spec.html
+ * See http://docs.oracle.com/javase/1.4.2/docs/guide/extensions/spec.html
  * for a detailed explanation of the extension mechanism in Java.
  *
  * @author Greg Murray
  * @author Justyna Horwat
- * @version $Id: ExtensionValidator.java 1242101 2012-02-08 21:19:36Z markt $
+ * @version $Id: ExtensionValidator.java 1338160 2012-05-14 11:37:21Z kkolinko $
  *
  */
 public final class ExtensionValidator {

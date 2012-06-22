@@ -47,7 +47,7 @@ import org.apache.juli.logging.LogFactory;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: DigestAuthenticator.java 1189224 2011-10-26 14:02:40Z kkolinko $
+ * @version $Id: DigestAuthenticator.java 1349321 2012-06-12 13:26:10Z markt $
  */
 
 public class DigestAuthenticator extends AuthenticatorBase {
@@ -580,7 +580,23 @@ public class DigestAuthenticator extends AuthenticatorBase {
                     uriQuery = request.getRequestURI() + "?" + query;
                 }
                 if (!uri.equals(uriQuery)) {
-                    return false;
+                    // Some clients (older Android) use an absolute URI for
+                    // DIGEST but a relative URI in the request line.
+                    // request. 2.3.5 < fixed Android version <= 4.0.3
+                    String host = request.getHeader("host");
+                    String scheme = request.getScheme();
+                    if (host != null && !uriQuery.startsWith(scheme)) {
+                        StringBuilder absolute = new StringBuilder();
+                        absolute.append(scheme);
+                        absolute.append("://");
+                        absolute.append(host);
+                        absolute.append(uriQuery);
+                        if (!uri.equals(absolute.toString())) {
+                            return false;
+                        }
+                    } else {
+                        return false;
+                    }
                 }
             }
 
@@ -642,7 +658,9 @@ public class DigestAuthenticator extends AuthenticatorBase {
                 if (cnonce == null || nc == null) {
                     return false;
                 }
-                if (nc.length() != 8) {
+                // RFC 2617 says nc must be 8 digits long. Older Android clients
+                // use 6. 2.3.5 < fixed Android version <= 4.0.3
+                if (nc.length() < 6 || nc.length() > 8) {
                     return false;
                 }
                 long count;

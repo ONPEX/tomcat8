@@ -46,7 +46,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardHost.java 1190190 2011-10-28 07:59:16Z markt $
+ * @version $Id: StandardHost.java 1343337 2012-05-28 17:50:14Z kkolinko $
  */
 
 public class StandardHost extends ContainerBase implements Host {
@@ -124,8 +124,9 @@ public class StandardHost extends ContainerBase implements Host {
 
 
     /**
-     * Should XML files be copied to $CATALINA_BASE/conf/<engine>/<host> by
-     * default when a web application is deployed?
+     * Should XML files be copied to
+     * $CATALINA_BASE/conf/&lt;engine&gt;/&lt;host&gt; by default when
+     * a web application is deployed?
      */
     private boolean copyXML = false;
 
@@ -197,19 +198,6 @@ public class StandardHost extends ContainerBase implements Host {
 
 
     /**
-     * Return the XML root for this Host.  This can be an absolute
-     * pathname, a relative pathname, or a URL.
-     * If null, defaults to ${catalina.base}/conf/ directory
-     */
-    @Override
-    public String getXmlBase() {
-
-        return (this.xmlBase);
-
-    }
-
-
-    /**
      * Set the application root for this Host.  This can be an absolute
      * pathname, a relative pathname, or a URL.
      *
@@ -223,12 +211,27 @@ public class StandardHost extends ContainerBase implements Host {
         support.firePropertyChange("appBase", oldAppBase, this.appBase);
 
     }
+
+
+    /**
+     * Return the XML root for this Host.  This can be an absolute
+     * pathname, a relative pathname, or a URL.
+     * If null, defaults to
+     * ${catalina.base}/conf/&lt;engine name&gt;/&lt;host name&gt; directory
+     */
+    @Override
+    public String getXmlBase() {
+
+        return (this.xmlBase);
+
+    }
     
 
     /**
      * Set the Xml root for this Host.  This can be an absolute
      * pathname, a relative pathname, or a URL.
-     * If null, defaults to ${catalina.base}/conf/ directory
+     * If null, defaults to
+     * ${catalina.base}/conf/&lt;engine name&gt;/&lt;host name&gt; directory
      *
      * @param xmlBase The new XML root
      */

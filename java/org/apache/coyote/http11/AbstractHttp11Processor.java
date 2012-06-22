@@ -936,6 +936,8 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
                 } else {
                     request.setStartTime(System.currentTimeMillis());
                     keptAlive = true;
+                    // Set this every time in case limit has been changed via JMX
+                    request.getMimeHeaders().setLimit(endpoint.getMaxHeaderCount());
                     // Currently only NIO will ever return false here
                     if (!getInputBuffer().parseHeaders()) {
                         // We've read part of the request, don't recycle it
@@ -1135,7 +1137,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         MimeHeaders headers = request.getMimeHeaders();
 
         // Check connection header
-        MessageBytes connectionValueMB = headers.getValue("connection");
+        MessageBytes connectionValueMB = headers.getValue(Constants.CONNECTION);
         if (connectionValueMB != null) {
             ByteChunk connectionValueBC = connectionValueMB.getByteChunk();
             if (findBytes(connectionValueBC, Constants.CLOSE_BYTES) != -1) {
@@ -1374,13 +1376,17 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         }
 
         long contentLength = response.getContentLengthLong();
+        boolean connectionClosePresent = false;
         if (contentLength != -1) {
             headers.setValue("Content-Length").setLong(contentLength);
             getOutputBuffer().addActiveFilter
                 (outputFilters[Constants.IDENTITY_FILTER]);
             contentDelimitation = true;
         } else {
-            if (entityBody && http11) {
+            // If the response code supports an entity body and we're on
+            // HTTP 1.1 then we chunk unless we have a Connection: close header
+            connectionClosePresent = isConnectionClose(headers);
+            if (entityBody && http11 && !connectionClosePresent) {
                 getOutputBuffer().addActiveFilter
                     (outputFilters[Constants.CHUNKED_FILTER]);
                 contentDelimitation = true;
@@ -1426,7 +1432,11 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         // Connection: close header.
         keepAlive = keepAlive && !statusDropsConnection(statusCode);
         if (!keepAlive) {
-            headers.addValue(Constants.CONNECTION).setString(Constants.CLOSE);
+            // Avoid adding the close header twice
+            if (!connectionClosePresent) {
+                headers.addValue(Constants.CONNECTION).setString(
+                        Constants.CLOSE);
+            }
         } else if (!http11 && !error) {
             headers.addValue(Constants.CONNECTION).setString(Constants.KEEPALIVE);
         }
@@ -1449,6 +1459,14 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         }
         getOutputBuffer().endHeaders();
 
+    }
+
+    private boolean isConnectionClose(MimeHeaders headers) {
+        MessageBytes connection = headers.getValue(Constants.CONNECTION);
+        if (connection == null) {
+            return false;
+        }
+        return connection.equals(Constants.CLOSE);
     }
 
     abstract boolean prepareSendfile(OutputFilter[] outputFilters);

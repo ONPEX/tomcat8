@@ -61,7 +61,7 @@ import org.apache.tomcat.util.res.StringManager;
  * <code>javax.servlet.ServletResponseWrapper</code>.
  *
  * @author Craig R. McClanahan
- * @version $Id: ApplicationDispatcher.java 1071565 2011-02-17 10:32:07Z markt $
+ * @version $Id: ApplicationDispatcher.java 1345689 2012-06-03 15:54:28Z markt $
  */
 
 final class ApplicationDispatcher
@@ -400,6 +400,12 @@ final class ApplicationDispatcher
             }
 
             processRequest(request,response,state);
+        }
+
+        if (request.getAsyncContext() != null) {
+            // An async request was started during the forward, don't close the
+            // response as it may be written to during the async handling
+            return;
         }
 
         // This is not a real close in order to support error processing

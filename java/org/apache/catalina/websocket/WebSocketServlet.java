@@ -23,8 +23,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletRequestWrapper;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -32,6 +36,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.catalina.connector.RequestFacade;
 import org.apache.catalina.util.Base64;
 import org.apache.tomcat.util.buf.B2CConverter;
+import org.apache.tomcat.util.res.StringManager;
 
 /**
  * Provides the base implementation of a Servlet for processing WebSocket
@@ -44,20 +49,11 @@ public abstract class WebSocketServlet extends HttpServlet {
     private static final byte[] WS_ACCEPT =
             "258EAFA5-E914-47DA-95CA-C5AB0DC85B11".getBytes(
                     B2CConverter.ISO_8859_1);
+    private static final StringManager sm =
+            StringManager.getManager(Constants.Package);
 
-    private MessageDigest sha1Helper;
-
-
-    @Override
-    public void init() throws ServletException {
-        super.init();
-
-        try {
-            sha1Helper = MessageDigest.getInstance("SHA1");
-        } catch (NoSuchAlgorithmException e) {
-            throw new ServletException(e);
-        }
-    }
+    private Queue<MessageDigest> sha1Helpers =
+            new ConcurrentLinkedQueue<MessageDigest>();
 
 
     @Override
@@ -111,8 +107,8 @@ public abstract class WebSocketServlet extends HttpServlet {
         //      data present when the frame is fragmented.
 
         // If we got this far, all is good. Accept the connection.
-        resp.setHeader("upgrade", "websocket");
-        resp.setHeader("connection", "upgrade");
+        resp.setHeader("Upgrade", "websocket");
+        resp.setHeader("Connection", "upgrade");
         resp.setHeader("Sec-WebSocket-Accept", getWebSocketAccept(key));
         if (subProtocol != null) {
             resp.setHeader("Sec-WebSocket-Protocol", subProtocol);
@@ -121,9 +117,20 @@ public abstract class WebSocketServlet extends HttpServlet {
             // TODO
         }
 
-        // Small hack until the Servlet API provides a way to do this.
         StreamInbound inbound = createWebSocketInbound(subProtocol);
-        ((RequestFacade) req).doUpgrade(inbound);
+
+        // Small hack until the Servlet API provides a way to do this.
+        ServletRequest inner = req;
+        // Unwrap the request
+        while (inner instanceof ServletRequestWrapper) {
+            inner = ((ServletRequestWrapper) inner).getRequest();
+        }
+        if (inner instanceof RequestFacade) {
+            ((RequestFacade) inner).doUpgrade(inbound);
+        } else {
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    sm.getString("servlet.reqUpgradeFail"));
+        }
     }
 
 
@@ -143,7 +150,7 @@ public abstract class WebSocketServlet extends HttpServlet {
                 }
             }
         }
-        return true;
+        return false;
     }
 
 
@@ -167,12 +174,24 @@ public abstract class WebSocketServlet extends HttpServlet {
     }
 
 
-    private String getWebSocketAccept(String key) {
-        synchronized (sha1Helper) {
-            sha1Helper.reset();
-            sha1Helper.update(key.getBytes(B2CConverter.ISO_8859_1));
-            return Base64.encode(sha1Helper.digest(WS_ACCEPT));
+    private String getWebSocketAccept(String key) throws ServletException {
+
+        MessageDigest sha1Helper = sha1Helpers.poll();
+        if (sha1Helper == null) {
+            try {
+                sha1Helper = MessageDigest.getInstance("SHA1");
+            } catch (NoSuchAlgorithmException e) {
+                throw new ServletException(e);
+            }
         }
+
+        sha1Helper.reset();
+        sha1Helper.update(key.getBytes(B2CConverter.ISO_8859_1));
+        String result = Base64.encode(sha1Helper.digest(WS_ACCEPT));
+
+        sha1Helpers.add(sha1Helper);
+
+        return result;
     }
 
 
