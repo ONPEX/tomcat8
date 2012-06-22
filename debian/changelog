@@ -1,4 +1,4 @@
-tomcat7 (7.0.28-1) UNRELEASED; urgency=low
+tomcat7 (7.0.28-1) unstable; urgency=low
 
   [ Miguel Landaeta ]
   * Add Slovak debconf translation (Closes: #677913).
@@ -31,7 +31,10 @@ tomcat7 (7.0.28-1) UNRELEASED; urgency=low
     - d/libservlet3.0-java.links: Provide backwards compatible links for
       deprecated tomcat-*.jar files in /usr/share/java.
 
- -- James Page <james.page@ubuntu.com>  Fri, 22 Jun 2012 08:57:38 +0100
+  [ tony mancill ]
+  * Set DMUA flag.
+
+ -- tony mancill <tmancill@debian.org>  Fri, 22 Jun 2012 07:06:46 -0700
 
 tomcat7 (7.0.27-1) unstable; urgency=low
 
