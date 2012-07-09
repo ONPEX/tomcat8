@@ -56,6 +56,7 @@ build-indep: build-stamp
 build-stamp:
 	dh_testdir
 ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))
+	mkdir -p webapps/examples/WEB-INF/lib
 	cp /usr/share/java/jstl1.1.jar webapps/examples/WEB-INF/lib/jstl.jar
 	cp /usr/share/java/standard.jar webapps/examples/WEB-INF/lib/standard.jar
 	$(ANT_INVOKE) deploy test

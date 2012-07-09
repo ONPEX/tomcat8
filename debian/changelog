@@ -1,3 +1,10 @@
+tomcat7 (7.0.28-2) UNRELEASED; urgency=low
+
+  * Ensure webapps/examples/WEB-INF/lib exists before files are
+    copied there.
+
+ -- Jakub Adam <jakub.adam@ktknet.cz>  Tue, 10 Jul 2012 20:37:49 +0200
+
 tomcat7 (7.0.28-1) unstable; urgency=low
 
   [ Miguel Landaeta ]
