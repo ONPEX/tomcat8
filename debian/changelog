@@ -2,6 +2,7 @@ tomcat7 (7.0.28-2) UNRELEASED; urgency=low
 
   * Ensure webapps/examples/WEB-INF/lib exists before files are
     copied there.
+  * Fix FTBFS when user home dir doesn't exist (Closes: #680844).
 
  -- Jakub Adam <jakub.adam@ktknet.cz>  Tue, 10 Jul 2012 20:37:49 +0200
 

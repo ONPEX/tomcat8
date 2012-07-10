@@ -8,3 +8,4 @@
 0010-debianize-build-xml.patch
 0011-fix-classpath-lintian-warnings.patch
 0012-java7-compat.patch
+0013-dont-crash-without-user-home.patch
