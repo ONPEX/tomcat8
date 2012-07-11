@@ -1,10 +1,14 @@
 tomcat7 (7.0.28-2) UNRELEASED; urgency=low
 
+  [ Jakub Adam ]
   * Ensure webapps/examples/WEB-INF/lib exists before files are
     copied there.
   * Fix FTBFS when user home dir doesn't exist (Closes: #680844).
 
- -- Jakub Adam <jakub.adam@ktknet.cz>  Tue, 10 Jul 2012 20:37:49 +0200
+  [ tony mancill ]
+  * Fix build to generate postrm from postrm.in (Closes: #681160)
+
+ -- tony mancill <tmancill@debian.org>  Tue, 10 Jul 2012 17:29:30 -0700
 
 tomcat7 (7.0.28-1) unstable; urgency=low
 
