@@ -1,3 +1,9 @@
+tomcat7 (7.0.28-3) UNRELEASED; urgency=low
+
+  * Fix small typo in README.Debian.
+
+ -- Miguel Landaeta <miguel@miguel.cc>  Tue, 18 Sep 2012 18:57:45 -0430
+
 tomcat7 (7.0.28-2) unstable; urgency=low
 
   [ Jakub Adam ]
