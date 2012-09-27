@@ -1,4 +1,4 @@
-tomcat7 (7.0.28-3) UNRELEASED; urgency=low
+tomcat7 (7.0.28-3) unstable; urgency=low
 
   [ Miguel Landaeta ]
   * Fix small typo in README.Debian.
