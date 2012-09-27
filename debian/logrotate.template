@@ -4,5 +4,5 @@
   rotate 52
   compress
   missingok
-  create 640 @@@TOMCAT7USER@@@ adm
+  create 640 tomcat7 adm
 }

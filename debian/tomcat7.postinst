@@ -4,6 +4,8 @@ set -e
 . /usr/share/debconf/confmodule
 TEMPLATE="/usr/share/tomcat7/defaults.template"
 CONFFILE="/etc/default/tomcat7"
+LR_TEMPLATE="/usr/share/tomcat7/logrotate.template"
+LR_CONFFILE="/etc/logrotate.d/tomcat7"
 JAVA_OPTS="-Djava.awt.headless=true -Xmx128m -XX:+UseConcMarkSweepGC"
 
 case "$1" in
@@ -36,11 +38,12 @@ case "$1" in
 	chown -R $TOMCAT7_USER:adm /var/log/tomcat7 /var/cache/tomcat7
 	chmod 750 /var/log/tomcat7 /var/cache/tomcat7
 
-	# replace the TOMCAT7USER token in /etc/logrotate.d/tomcat7
-	LOGROTATE_TOKEN="@@@TOMCAT7USER@@@"
-	if grep -q "$LOGROTATE_TOKEN" /etc/logrotate.d/tomcat7 ; then
-		sed --in-place "s/$LOGROTATE_TOKEN/$TOMCAT7_USER/" /etc/logrotate.d/tomcat7
-	fi
+	# populate /etc/logrotate.d/tomcat7
+	tmpfile=`mktemp /tmp/tomcat7.XXXXXXXXXX`
+	chmod 644 $tmpfile
+	cat $LR_TEMPLATE | sed "s%create 640 tomcat7 adm%create 640 $TOMCAT7_USER adm%" >> $tmpfile
+	ucf --debconf-ok --sum-file /usr/share/tomcat7/logrotate.md5sum $tmpfile $LR_CONFFILE
+	rm -f $tmpfile
 
 	# configuration files should not be modifiable by tomcat7 user, as this can be a security issue
 	# (an attacker may insert code in a webapp and have access to all tomcat configuration)

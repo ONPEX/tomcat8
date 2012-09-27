@@ -5,3 +5,5 @@ debian/policy/*.policy /etc/tomcat7/policy.d/
 debian/default_root /usr/share/tomcat7-root/
 debian/defaults.template /usr/share/tomcat7/
 debian/defaults.md5sum /usr/share/tomcat7/
+debian/logrotate.template /usr/share/tomcat7/
+debian/logrotate.md5sum /usr/share/tomcat7/

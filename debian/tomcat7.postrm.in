@@ -4,6 +4,7 @@ set -e
 #DEBHELPER#
 
 CONFFILE=/etc/default/tomcat7
+LR_CONFFILE=/etc/logrotate.d/tomcat7
 
 # Remove cached files and auto-generated catalina.policy
 rm -rf /var/cache/tomcat7/*
@@ -47,8 +48,9 @@ case "$1" in
         set +e
         if [ -x "/usr/bin/ucf" ]; then
             ucf --purge $CONFFILE
+            ucf --purge $LR_CONFFILE
         fi
-        rm -rf /var/log/tomcat7 /var/lib/tomcat7/temp $CONFFILE
+        rm -rf /var/log/tomcat7 /var/lib/tomcat7/temp $CONFFILE $LR_CONFFILE
         if [ -d "/var/lib/tomcat7" ] ; then
             rmdir --ignore-fail-on-non-empty /var/lib/tomcat7
         fi
