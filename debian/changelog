@@ -1,3 +1,11 @@
+tomcat7 (7.0.28-3+nmu1) unstable; urgency=high
+
+  * Non-maintainer upload.
+  * Fix cve-2012-3439: multiple replay attack issues in digest authentication.
+    (closes: #692440)
+
+ -- Michael Gilbert <mgilbert@debian.org>  Sun, 18 Nov 2012 01:40:30 +0000
+
 tomcat7 (7.0.28-3) unstable; urgency=low
 
   [ Miguel Landaeta ]
