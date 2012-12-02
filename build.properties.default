@@ -21,13 +21,13 @@
 # modules that Tomcat depends on.  Copy this file to "build.properties"
 # in the top-level source directory, and customize it as needed.
 #
-# $Id: build.properties.default 1350468 2012-06-15 06:11:47Z markt $
+# $Id: build.properties.default 1410718 2012-11-17 10:16:22Z markt $
 # -----------------------------------------------------------------------------
 
 # ----- Version Control Flags -----
 version.major=7
 version.minor=0
-version.build=28
+version.build=33
 version.patch=0
 version.suffix=
 
@@ -182,7 +182,7 @@ junit.jar=${junit.lib}/junit-4.8.2.jar
 junit.loc=http://cloud.github.com/downloads/KentBeck/junit/junit4.8.2.zip
 
 # ----- Checkstyle, version 5.1 or later -----
-checkstyle.version=5.5
+checkstyle.version=5.6
 checkstyle.home=${base.path}/checkstyle-${checkstyle.version}
 checkstyle.loc=${base-sf.loc}/checkstyle/checkstyle-${checkstyle.version}-bin.zip
 checkstyle.jar=${checkstyle.home}/checkstyle-${checkstyle.version}-all.jar

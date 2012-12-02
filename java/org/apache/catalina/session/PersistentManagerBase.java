@@ -23,8 +23,11 @@ import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.catalina.DistributedManager;
 import org.apache.catalina.Lifecycle;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleState;
@@ -44,10 +47,11 @@ import org.apache.juli.logging.LogFactory;
  *
  * @author Craig R. McClanahan
  * @author Jean-Francois Arcand
- * @version $Id: PersistentManagerBase.java 1058571 2011-01-13 14:08:24Z markt $
+ * @version $Id: PersistentManagerBase.java 1402025 2012-10-25 08:47:08Z kfujino $
  */
 
-public abstract class PersistentManagerBase extends ManagerBase {
+public abstract class PersistentManagerBase extends ManagerBase
+        implements DistributedManager {
 
     private static final Log log = LogFactory.getLog(PersistentManagerBase.class);
 
@@ -646,8 +650,40 @@ public abstract class PersistentManagerBase extends ManagerBase {
     }
 
 
-    // ------------------------------------------------------ Protected Methods
+    @Override
+    public int getActiveSessionsFull() {
+        // In memory session count
+        int result = getActiveSessions();
+        try {
+            // Store session count
+            result += getStore().getSize();
+        } catch (IOException ioe) {
+            log.warn(sm.getString("persistentManager.storeSizeException"));
+        }
+        return result;
+    }
 
+
+    @Override
+    public Set<String> getSessionIdsFull() {
+        Set<String> sessionIds = new HashSet<String>();
+        // In memory session ID list
+        sessionIds.addAll(sessions.keySet());
+        // Store session ID list
+        String[] storeKeys;
+        try {
+            storeKeys = getStore().keys();
+            for (String storeKey : storeKeys) {
+                sessionIds.add(storeKey);
+            }
+        } catch (IOException e) {
+            log.warn(sm.getString("persistentManager.storeKeysException"));
+        }
+        return sessionIds;
+    }
+
+
+    // ------------------------------------------------------ Protected Methods
 
     /**
      * Look for a session in the Store and, if found, restore
@@ -884,8 +920,12 @@ public abstract class PersistentManagerBase extends ManagerBase {
                 synchronized (session) {
                     if (!session.isValid())
                         continue;
-                    int timeIdle = // Truncate, do not round up
-                        (int) ((timeNow - session.getThisAccessedTime()) / 1000L);
+                    int timeIdle;
+                    if (StandardSession.LAST_ACCESS_AT_START) {
+                        timeIdle = (int) ((timeNow - session.getLastAccessedTime()) / 1000L);
+                    } else {
+                        timeIdle = (int) ((timeNow - session.getThisAccessedTime()) / 1000L);
+                    }
                     if (timeIdle > maxIdleSwap && timeIdle > minIdleSwap) {
                         if (session.accessCount != null &&
                                 session.accessCount.get() > 0) {
@@ -935,8 +975,12 @@ public abstract class PersistentManagerBase extends ManagerBase {
         for (int i = 0; i < sessions.length && toswap > 0; i++) {
             StandardSession session =  (StandardSession) sessions[i];
             synchronized (session) {
-                int timeIdle = // Truncate, do not round up
-                    (int) ((timeNow - session.getThisAccessedTime()) / 1000L);
+                int timeIdle;
+                if (StandardSession.LAST_ACCESS_AT_START) {
+                    timeIdle = (int) ((timeNow - session.getLastAccessedTime()) / 1000L);
+                } else {
+                    timeIdle = (int) ((timeNow - session.getThisAccessedTime()) / 1000L);
+                }
                 if (timeIdle > minIdleSwap) {
                     if (session.accessCount != null &&
                             session.accessCount.get() > 0) {
@@ -979,8 +1023,12 @@ public abstract class PersistentManagerBase extends ManagerBase {
                 synchronized (session) {
                     if (!session.isValid())
                         continue;
-                    int timeIdle = // Truncate, do not round up
-                        (int) ((timeNow - session.getThisAccessedTime()) / 1000L);
+                    int timeIdle;
+                    if (StandardSession.LAST_ACCESS_AT_START) {
+                        timeIdle = (int) ((timeNow - session.getLastAccessedTime()) / 1000L);
+                    } else {
+                        timeIdle = (int) ((timeNow - session.getThisAccessedTime()) / 1000L);
+                    }
                     if (timeIdle > maxIdleBackup) {
                         if (log.isDebugEnabled())
                             log.debug(sm.getString

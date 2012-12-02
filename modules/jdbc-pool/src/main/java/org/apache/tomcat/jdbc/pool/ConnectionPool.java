@@ -54,10 +54,15 @@ import org.apache.juli.logging.LogFactory;
  */
 
 public class ConnectionPool {
+
+    /**
+     * Default domain for objects registering with an mbean server
+     */
+    public static final String POOL_JMX_DOMAIN = "tomcat.jdbc";
     /**
      * Prefix type for JMX registration
      */
-    public static final String POOL_JMX_TYPE_PREFIX = "tomcat.jdbc:type=";
+    public static final String POOL_JMX_TYPE_PREFIX = POOL_JMX_DOMAIN+":type=";
 
     /**
      * Logger
@@ -829,7 +834,7 @@ public class ConnectionPool {
      */
     protected boolean terminateTransaction(PooledConnection con) {
         try {
-            if (con.getPoolProperties().getDefaultAutoCommit()==Boolean.FALSE) {
+            if (Boolean.FALSE.equals(con.getPoolProperties().getDefaultAutoCommit())) {
                 if (this.getPoolProperties().getRollbackOnReturn()) {
                     boolean autocommit = con.getConnection().getAutoCommit();
                     if (!autocommit) con.getConnection().rollback();

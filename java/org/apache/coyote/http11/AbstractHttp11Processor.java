@@ -767,6 +767,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
                 // Set error flag
                 error = true;
             }
+
         } else if (actionCode == ActionCode.ACK) {
             // Acknowledge request
             // Send a 100 status back if it makes sense (response not committed
@@ -838,6 +839,8 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             ((AtomicBoolean) param).set(asyncStateMachine.isAsync());
         } else if (actionCode == ActionCode.ASYNC_IS_TIMINGOUT) {
             ((AtomicBoolean) param).set(asyncStateMachine.isAsyncTimingOut());
+        } else if (actionCode == ActionCode.ASYNC_IS_ERROR) {
+            ((AtomicBoolean) param).set(asyncStateMachine.isAsyncError());
         } else if (actionCode == ActionCode.UPGRADE) {
             upgradeInbound = (UpgradeInbound) param;
             // Stop further HTTP output
@@ -1012,6 +1015,15 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
                     setCometTimeouts(socketWrapper);
                 } catch (InterruptedIOException e) {
                     error = true;
+                } catch (HeadersTooLargeException e) {
+                    error = true;
+                    // The response should not have been committed but check it
+                    // anyway to be safe
+                    if (!response.isCommitted()) {
+                        response.reset();
+                        response.setStatus(500);
+                        response.setHeader("Connection", "close");
+                    }
                 } catch (Throwable t) {
                     ExceptionUtils.handleThrowable(t);
                     getLog().error(sm.getString(
@@ -1323,8 +1335,8 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         }
 
         int statusCode = response.getStatus();
-        if ((statusCode == 204) || (statusCode == 205)
-            || (statusCode == 304)) {
+        if (statusCode < 200 || statusCode == 204 || statusCode == 205 ||
+                statusCode == 304) {
             // No entity body
             getOutputBuffer().addActiveFilter
                 (outputFilters[Constants.VOID_FILTER]);
@@ -1681,6 +1693,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         localName = null;
         remotePort = -1;
         localPort = -1;
+        comet = false;
         recycleInternal();
     }
 

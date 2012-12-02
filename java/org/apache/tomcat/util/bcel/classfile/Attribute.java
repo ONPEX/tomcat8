@@ -18,7 +18,6 @@
 package org.apache.tomcat.util.bcel.classfile;
 
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -34,7 +33,7 @@ import org.apache.tomcat.util.bcel.Constants;
  * <em>Synthetic</em> attributes are supported. The <em>Unknown</em>
  * attribute stands for non-standard-attributes.
  * 
- * @version $Id: Attribute.java 992416 2010-09-03 18:50:57Z markt $
+ * @version $Id: Attribute.java 1377533 2012-08-26 22:22:59Z markt $
  * @author <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see ConstantValue
  * @see SourceFile
@@ -67,19 +66,6 @@ public abstract class Attribute implements Cloneable, Serializable
         this.name_index = name_index;
         this.length = length;
         this.constant_pool = constant_pool;
-    }
-
-    /**
-     * Dump attribute to file stream in binary format.
-     * 
-     * @param file
-     *            Output file stream
-     * @throws IOException
-     */
-    public void dump(DataOutputStream file) throws IOException
-    {
-        file.writeShort(name_index);
-        file.writeInt(length);
     }
 
     private static final Map<String,AttributeReader> readers =

@@ -30,7 +30,6 @@ import java.util.Hashtable;
 import java.util.List;
 
 import javax.naming.NameAlreadyBoundException;
-import javax.naming.NameClassPair;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -41,7 +40,6 @@ import javax.naming.directory.ModificationItem;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
-import org.apache.naming.NamingContextEnumeration;
 import org.apache.naming.NamingEntry;
 import org.apache.tomcat.util.http.RequestUtil;
 
@@ -49,7 +47,7 @@ import org.apache.tomcat.util.http.RequestUtil;
  * Filesystem Directory Context implementation helper class.
  *
  * @author Remy Maucherat
- * @version $Id: FileDirContext.java 1239053 2012-02-01 10:52:00Z markt $
+ * @version $Id: FileDirContext.java 1392099 2012-09-30 19:48:36Z markt $
  */
 
 public class FileDirContext extends BaseDirContext {
@@ -274,34 +272,6 @@ public class FileDirContext extends BaseDirContext {
             throw new NamingException(sm.getString("resources.renameFail",
                     oldName, newName));
         }
-
-    }
-
-
-    /**
-     * Enumerates the names bound in the named context, along with the class
-     * names of objects bound to them. The contents of any subcontexts are
-     * not included.
-     * <p>
-     * If a binding is added to or removed from this context, its effect on
-     * an enumeration previously returned is undefined.
-     *
-     * @param name the name of the context to list
-     * @return an enumeration of the names and class names of the bindings in
-     * this context. Each element of the enumeration is of type NameClassPair.
-     * @exception NamingException if a naming exception is encountered
-     */
-    @Override
-    public NamingEnumeration<NameClassPair> list(String name)
-        throws NamingException {
-
-        File file = file(name);
-
-        if (file == null)
-            throw new NameNotFoundException
-                (sm.getString("resources.notFound", name));
-
-        return new NamingContextEnumeration(list(file).iterator());
 
     }
 
@@ -872,7 +842,7 @@ public class FileDirContext extends BaseDirContext {
             Object object = null;
             if (currentFile.isDirectory()) {
                 FileDirContext tempContext = new FileDirContext(env);
-                tempContext.setDocBase(file.getPath());
+                tempContext.setDocBase(currentFile.getPath());
                 tempContext.setAllowLinking(getAllowLinking());
                 object = tempContext;
             } else {

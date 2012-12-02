@@ -233,7 +233,7 @@ import org.apache.catalina.util.IOTools;
  *
  * @author Martin T Dengler [root@martindengler.com]
  * @author Amy Roh
- * @version $Id: CGIServlet.java 1200163 2011-11-10 05:40:04Z kkolinko $
+ * @version $Id: CGIServlet.java 1402644 2012-10-26 20:02:24Z markt $
  * @since Tomcat 4.0
  *
  */
@@ -276,7 +276,7 @@ public final class CGIServlet extends HttpServlet {
     static Object expandFileLock = new Object();
 
     /** the shell environment variables to be passed to the CGI script */
-    static Hashtable<String,String> shellEnv = new Hashtable<String,String>();
+    Hashtable<String,String> shellEnv = new Hashtable<String,String>();
 
     /**
      * Sets instance variables.
@@ -646,7 +646,7 @@ public final class CGIServlet extends HttpServlet {
      * <p>
      * </p>
      *
-     * @version  $Id: CGIServlet.java 1200163 2011-11-10 05:40:04Z kkolinko $
+     * @version  $Id: CGIServlet.java 1402644 2012-10-26 20:02:24Z markt $
      * @since    Tomcat 4.0
      *
      */
@@ -1378,7 +1378,7 @@ public final class CGIServlet extends HttpServlet {
      * and <code>setResponse</code> methods, respectively.
      * </p>
      *
-     * @version $Id: CGIServlet.java 1200163 2011-11-10 05:40:04Z kkolinko $
+     * @version $Id: CGIServlet.java 1402644 2012-10-26 20:02:24Z markt $
      */
 
     protected class CGIRunner {

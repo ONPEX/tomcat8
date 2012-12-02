@@ -268,24 +268,24 @@
     </p>
 
     <p>All formats supported by SimpleDateFormat are allowed in <code>%{xxx}t</code>.
-    In addition the following extensions have been added:
+    In addition the following extensions have been added:</p>
     <ul>
     <li><b><code>sec</code></b> - number of seconds since the epoch</li>
     <li><b><code>msec</code></b> - number of milliseconds since the epoch</li>
     <li><b><code>msec_frac</code></b> - millisecond fraction</li>
     </ul>
-    These formats can not be mixed with SimpleDateFormat formats in the same format
+    <p>These formats can not be mixed with SimpleDateFormat formats in the same format
     token.</p>
 
     <p>Furthermore one can define whether to log the timestamp for the request start
-    time or the response finish time:
+    time or the response finish time:</p>
     <ul>
     <li><b><code>begin</code></b> or prefix <b><code>begin:</code></b> chooses
     the request start time</li>
     <li><b><code>end</code></b> or prefix <b><code>end:</code></b> chooses
     the response finish time</li>
     </ul>
-    By adding multiple <code>%{xxx}t</code> tokens to the pattern, one can
+    <p>By adding multiple <code>%{xxx}t</code> tokens to the pattern, one can
     also log both timestamps.</p>
 
     <p>The shorthand pattern <code>pattern=&quot;common&quot;</code>
@@ -831,7 +831,7 @@
 
       <attribute name="cache" required="false">
         <p>Should we cache authenticated Principals if the request is part of an
-        HTTP session? If not specified, the default value of <code>true</code>
+        HTTP session? If not specified, the default value of <code>false</code>
         will be used.</p>
       </attribute>
 
@@ -845,12 +845,6 @@
       <attribute name="className" required="true">
         <p>Java class name of the implementation to use.  This MUST be set to
         <strong>org.apache.catalina.authenticator.DigestAuthenticator</strong>.</p>
-      </attribute>
-
-      <attribute name="cnonceCacheSize" required="false">
-        <p>To protect against replay attacks, the DIGEST authenticator tracks
-        client nonce and nonce count values. This attribute controls the size
-        of that cache. If not specified, the default value of 1000 is used.</p>
       </attribute>
 
       <attribute name="disableProxyCaching" required="false">
@@ -868,6 +862,21 @@
         random value is generated. This should normally only be set when it is
         necessary to keep key values constant either across server restarts
         and/or across a cluster.</p>
+      </attribute>
+
+      <attribute name="nonceCacheSize" required="false">
+        <p>To protect against replay attacks, the DIGEST authenticator tracks
+        server nonce and nonce count values. This attribute controls the size
+        of that cache. If not specified, the default value of 1000 is used.</p>
+      </attribute>
+
+      <attribute name="nonceCountWindowSize" required="false">
+        <p>Client requests may be processed out of order which in turn means
+        that the nonce count values may be processed out of order. To prevent
+        authentication failures when nonce counts are presented out of order
+        the authenticator tracks a window of nonce count values. This attribute
+        controls how big that window is. If not specified, the default value of
+        100 is used.</p>
       </attribute>
 
       <attribute name="nonceValidity" required="false">
@@ -1152,6 +1161,18 @@
 
     <attributes>
 
+      <attribute name="alwaysUseSession" required="false">
+        <p>Should a session always be used once a user is authenticated? This
+        may offer some performance benefits since the session can then be used
+        to cache the authenticated Principal, hence removing the need to
+        authenticate the user on every request. This will also help with clients
+        that assume that the server will cache the authenticated user. However
+        there will also be the performance cost of creating and GC'ing the
+        session. For an alternative solution see
+        <code>noKeepAliveUserAgents</code>. If not set, the default value of
+        <code>false</code> will be used.</p>
+      </attribute>
+
       <attribute name="cache" required="false">
         <p>Should we cache authenticated Principals if the request is part of an
         HTTP session? If not specified, the default value of <code>true</code>
@@ -1185,6 +1206,25 @@
         <p>The name of the JAAS login configuration to be used to login as the
         service. If not specified, the default of
         <code>com.sun.security.jgss.krb5.accept</code> is used.</p>
+      </attribute>
+
+      <attribute name="noKeepAliveUserAgents" required="false">
+        <p>Some clients (not most browsers) expect the server to cache the
+        authenticated user information for a connection and do not resend the
+        credentials with every request. Tomcat will not do this unless an HTTP
+        session is available. A session will be availble if either the
+        application creates one or if <code>alwaysUseSession</code> is enabled
+        for this Authenticator.</p>
+        <p>As an alternative to creating a session, this attribute may be used
+        to define the user agents for which HTTP keep-alive is disabled. This
+        means that a connection will only used for a single request and hence
+        there is no ability to cache authenticated user information per
+        connection. There will be a performance cost in disabling HTTP
+        keep-alive.</p>
+        <p>The attribute should be a regular expression that matches the entire
+        user-agent string, e.g. <code>.*Chrome.*</code>. If not specified, no
+        regular expression will be defined and no user agents will have HTTP
+        keep-alive disabled.</p>
       </attribute>
 
       <attribute name="securePagesWithPragma" required="false">
@@ -1444,9 +1484,11 @@
     indicate that the thread that is processing it is stuck.</p>
     <p>When such a request is detected, the current stack trace of its thread is written
     to Tomcat log with a WARN level.</p>
-    <p>The IDs of the stuck threads are available through JMX in the
-    <code>stuckThreadIds</code> attribute. The JVM Thread MBean can then be used to
-    retrieve other information about each stuck thread (name, stack trace...).</p>
+    <p>The IDs and names of the stuck threads are available through JMX in the
+    <code>stuckThreadIds</code> and <code>stuckThreadNames</code> attributes.
+    The IDs can be used with the standard Threading JVM MBean
+    (<code>java.lang:type=Threading</code>) to retrieve other information
+    about each stuck thread.</p>
 
   </subsection>
 

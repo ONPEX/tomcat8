@@ -14,31 +14,29 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.apache.tomcat.util.http.parser;
+
+package org.apache.tomcat.util.buf;
+
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
 
 /**
- * Represents a parameter as per section 3.6 of RFC 2616. Originally generated
- * by <a href="http://javacc.java.net/doc/JJTree.html"> JJTree</a>.
+ * Test cases for {@link HexUtils}.
  */
-public class AstParameter extends SimpleNode {
-    public AstParameter(int id) {
-        super(id);
-    }
+public class TestHexUtils {
 
-    public AstParameter(HttpParser p, int id) {
-        super(p, id);
-    }
-
-    @Override
-    public String toString() {
-        if (children.length != 2) {
-            // Invalid input - swallow it.
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        sb.append(children[0].toString());
-        sb.append("=");
-        sb.append(children[1].toString());
-        return sb.toString();
+    @Test
+    public void testGetDec() {
+        assertEquals(0, HexUtils.getDec('0'));
+        assertEquals(9, HexUtils.getDec('9'));
+        assertEquals(10, HexUtils.getDec('a'));
+        assertEquals(15, HexUtils.getDec('f'));
+        assertEquals(10, HexUtils.getDec('A'));
+        assertEquals(15, HexUtils.getDec('F'));
+        assertEquals(-1, HexUtils.getDec(0));
+        assertEquals(-1, HexUtils.getDec('Z'));
+        assertEquals(-1, HexUtils.getDec(255));
+        assertEquals(-1, HexUtils.getDec(-60));
     }
 }

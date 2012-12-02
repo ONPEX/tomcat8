@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
  * of Context (representing an individual servlet context).
  *
  * @author Craig R. McClanahan
- * @version $Id: Host.java 1200159 2011-11-10 05:33:31Z kkolinko $
+ * @version $Id: Host.java 1382367 2012-09-08 21:11:46Z markt $
  */
 
 public interface Host extends Container {
@@ -178,6 +178,22 @@ public interface Host extends Container {
      * this in a multi-threaded manner.
      */
     public ExecutorService getStartStopExecutor();
+
+
+    /**
+     * Returns true of the Host is configured to automatically undeploy old
+     * versions of applications deployed using parallel deployment. This only
+     * takes effect is {@link #getAutoDeploy()} also returns true.
+     */
+    public boolean getUndeployOldVersions();
+
+
+    /**
+     * Set to true if the Host should automatically undeploy old versions of
+     * applications deployed using parallel deployment. This only takes effect
+     * if {@link #getAutoDeploy()} returns true.
+     */
+    public void setUndeployOldVersions(boolean undeployOldVersions);
 
 
     // --------------------------------------------------------- Public Methods

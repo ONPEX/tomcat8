@@ -18,7 +18,6 @@
 package org.apache.tomcat.util.bcel.classfile;
 
 import java.io.DataInput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 
 import org.apache.tomcat.util.bcel.Constants;
@@ -27,7 +26,7 @@ import org.apache.tomcat.util.bcel.Constants;
  * This class is derived from <em>Attribute</em> and represents a reference
  * to a GJ attribute.
  *
- * @version $Id: Signature.java 1057670 2011-01-11 14:52:05Z markt $
+ * @version $Id: Signature.java 1377533 2012-08-26 22:22:59Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Attribute
  */
@@ -60,19 +59,6 @@ public final class Signature extends Attribute {
     public Signature(int name_index, int length, int signature_index, ConstantPool constant_pool) {
         super(Constants.ATTR_SIGNATURE, name_index, length, constant_pool);
         this.signature_index = signature_index;
-    }
-
-
-    /**
-     * Dump source file attribute to file stream in binary format.
-     *
-     * @param file Output file stream
-     * @throws IOException
-     */
-    @Override
-    public final void dump( DataOutputStream file ) throws IOException {
-        super.dump(file);
-        file.writeShort(signature_index);
     }
 
 

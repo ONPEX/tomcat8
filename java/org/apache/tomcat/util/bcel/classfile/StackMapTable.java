@@ -18,7 +18,6 @@
 package org.apache.tomcat.util.bcel.classfile;
 
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 
 import org.apache.tomcat.util.bcel.Constants;
@@ -32,7 +31,7 @@ import org.apache.tomcat.util.bcel.Constants;
  * within the Code attribute of a method. See CLDC specification
  * &sect;5.3.1.2
  *
- * @version $Id: StackMapTable.java 1181133 2011-10-10 18:49:14Z markt $
+ * @version $Id: StackMapTable.java 1377533 2012-08-26 22:22:59Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Code
  * @see     StackMapEntry
@@ -72,22 +71,6 @@ public final class StackMapTable extends Attribute {
         map = new StackMapTableEntry[map_length];
         for (int i = 0; i < map_length; i++) {
             map[i] = new StackMapTableEntry(file, constant_pool);
-        }
-    }
-
-
-    /**
-     * Dump line number table attribute to file stream in binary format.
-     *
-     * @param file Output file stream
-     * @throws IOException
-     */
-    @Override
-    public final void dump( DataOutputStream file ) throws IOException {
-        super.dump(file);
-        file.writeShort(map_length);
-        for (int i = 0; i < map_length; i++) {
-            map[i].dump(file);
         }
     }
 

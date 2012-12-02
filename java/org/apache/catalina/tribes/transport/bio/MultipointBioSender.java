@@ -33,7 +33,7 @@ import org.apache.catalina.tribes.transport.MultiPointSender;
 /**
  *
  * @author Filip Hanik
- * @version $Id: MultipointBioSender.java 1033915 2010-11-11 12:40:15Z markt $
+ * @version $Id: MultipointBioSender.java 1370390 2012-08-07 17:45:38Z markt $
  *
  */
 public class MultipointBioSender extends AbstractSender implements MultiPointSender {
@@ -41,7 +41,11 @@ public class MultipointBioSender extends AbstractSender implements MultiPointSen
         // NO-OP
     }
     
-    protected long selectTimeout = 1000; 
+    /**
+     * @deprecated  Unused - will be removed in Tomcat 8.0.x
+     */
+    @Deprecated
+    protected final long selectTimeout = 1000;
     protected HashMap<Member, BioSender> bioSenders =
         new HashMap<Member, BioSender>();
 

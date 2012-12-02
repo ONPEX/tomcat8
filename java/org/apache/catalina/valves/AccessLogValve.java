@@ -44,6 +44,7 @@ import org.apache.catalina.AccessLog;
 import org.apache.catalina.Globals;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleState;
+import org.apache.catalina.Session;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.apache.coyote.RequestInfo;
@@ -110,6 +111,8 @@ import org.apache.tomcat.util.buf.B2CConverter;
  * <li><code>%{xxx}c</code> for a specific cookie
  * <li><code>%{xxx}r</code> xxx is an attribute in the ServletRequest
  * <li><code>%{xxx}s</code> xxx is an attribute in the HttpSession
+ * <li><code>%{xxx}t</code> xxx is an enhanced SimpleDateFormat pattern
+ * (see Configuration Reference document for details on supported time patterns)
  * </ul>
  *
  * <p>
@@ -153,7 +156,7 @@ import org.apache.tomcat.util.buf.B2CConverter;
  * @author Takayuki Kaneko
  * @author Peter Rossbach
  *
- * @version $Id: AccessLogValve.java 1301255 2012-03-15 22:47:40Z markt $
+ * @version $Id: AccessLogValve.java 1410500 2012-11-16 17:31:02Z markt $
  */
 
 public class AccessLogValve extends ValveBase implements AccessLog {
@@ -298,28 +301,28 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      * <p>This class uses a small thread local first level cache and a bigger
      * synchronized global second level cache.</p>
      */
-    private static class DateFormatCache {
+    protected static class DateFormatCache {
 
-        private class Cache {
+        protected class Cache {
 
             /* CLF log format */
             private static final String cLFFormat = "dd/MMM/yyyy:HH:mm:ss";
 
             /* Second used to retrieve CLF format in most recent invocation */
-            private long previousSeconds = 0L;
+            private long previousSeconds = Long.MIN_VALUE;
             /* Value of CLF format retrieved in most recent invocation */
             private String previousFormat = "";
 
             /* First second contained in cache */
-            private long first = 0L;
+            private long first = Long.MIN_VALUE;
             /* Last second contained in cache */
-            private long last = 0L;
+            private long last = Long.MIN_VALUE;
             /* Index of "first" in the cyclic cache */
             private int offset = 0;
             /* Helper object to be able to call SimpleDateFormat.format(). */
             private final Date currentDate = new Date();
 
-            private final String cache[];
+            protected final String cache[];
             private SimpleDateFormat formatter;
             private boolean isCLF = false;
 
@@ -388,14 +391,16 @@ public class AccessLogValve extends ValveBase implements AccessLog {
                     for (int i = 1; i < seconds - last; i++) {
                         cache[(index + cacheSize - i) % cacheSize] = null;
                     }
-                    first = seconds - cacheSize;
+                    first = seconds - (cacheSize - 1);
                     last = seconds;
+                    offset = (index + 1) % cacheSize;
                 } else if (seconds < first) {
                     for (int i = 1; i < first - seconds; i++) {
                         cache[(index + i) % cacheSize] = null;
                     }
                     first = seconds;
-                    last = seconds + cacheSize;
+                    last = seconds + (cacheSize - 1);
+                    offset = index;
                 }
 
                 /* Last step: format new timestamp either using
@@ -427,10 +432,10 @@ public class AccessLogValve extends ValveBase implements AccessLog {
 
         private final Locale cacheDefaultLocale;
         private final DateFormatCache parent;
-        private final Cache cLFCache;
+        protected final Cache cLFCache;
         private final HashMap<String, Cache> formatCache = new HashMap<String, Cache>();
 
-        private DateFormatCache(int size, Locale loc, DateFormatCache parent) {
+        protected DateFormatCache(int size, Locale loc, DateFormatCache parent) {
             cacheSize = size;
             cacheDefaultLocale = loc;
             this.parent = parent;
@@ -494,8 +499,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      * The system time when we last updated the Date that this valve
      * uses for log lines.
      */
-    private static final ThreadLocal<Date> localDate =
-            new ThreadLocal<Date>() {
+    private static final ThreadLocal<Date> localDate = new ThreadLocal<Date>() {
         @Override
         protected Date initialValue() {
             return new Date();
@@ -505,7 +509,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
     /**
      * The list of our format types.
      */
-    private static enum formatType {
+    private static enum FormatType {
         CLF, SEC, MSEC, MSEC_FRAC, SDF
     }
 
@@ -1125,11 +1129,8 @@ public class AccessLogValve extends ValveBase implements AccessLog {
     }
 
     /**
-     * This method returns a Date object that is accurate to within one second.
-     * If a thread calls this method to get a Date and it's been less than 1
-     * second since a new Date was created, this method simply gives out the
-     * same Date again so that the system doesn't spend time creating Date
-     * objects unnecessarily.
+     * This method returns a ThreadLocal Date object that is set to the
+     * specified time. This saves creating a new Date object for every request.
      *
      * @return Date
      */
@@ -1432,7 +1433,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         /* Whether to use begin of request or end of response as the timestamp */
         private boolean usesBegin = false;
         /* The format type */
-        private formatType type = formatType.CLF;
+        private FormatType type = FormatType.CLF;
         /* Whether we need to postprocess by adding milliseconds */
         private boolean usesMsecs = false;
 
@@ -1484,15 +1485,15 @@ public class AccessLogValve extends ValveBase implements AccessLog {
                     format = format.substring(4);
                 }
                 if (format.length() == 0) {
-                    type = formatType.CLF;
+                    type = FormatType.CLF;
                 } else if (format.equals(secFormat)) {
-                    type = formatType.SEC;
+                    type = FormatType.SEC;
                 } else if (format.equals(msecFormat)) {
-                    type = formatType.MSEC;
+                    type = FormatType.MSEC;
                 } else if (format.equals(msecFractionFormat)) {
-                    type = formatType.MSEC_FRAC;
+                    type = FormatType.MSEC_FRAC;
                 } else {
-                    type = formatType.SDF;
+                    type = FormatType.SDF;
                     format = tidyFormat(format);
                 }
             }
@@ -1726,15 +1727,15 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         @Override
         public void addElement(StringBuilder buf, Date date, Request request,
                 Response response, long time) {
-            if (request != null) {
-                if (request.getSession(false) != null) {
-                    buf.append(request.getSessionInternal(false)
-                            .getIdInternal());
-                } else {
-                    buf.append('-');
-                }
-            } else {
+            if (request == null) {
                 buf.append('-');
+            } else {
+                Session session = request.getSessionInternal(false);
+                if (session == null) {
+                    buf.append('-');
+                } else {
+                    buf.append(session.getIdInternal());
+                }
             }
         }
     }

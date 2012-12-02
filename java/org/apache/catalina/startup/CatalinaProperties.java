@@ -32,7 +32,7 @@ import org.apache.catalina.Globals;
  * Utility class to read the bootstrap Catalina configuration.
  *
  * @author Remy Maucherat
- * @version $Id: CatalinaProperties.java 1075058 2011-02-27 14:12:39Z markt $
+ * @version $Id: CatalinaProperties.java 1364150 2012-07-21 18:57:54Z markt $
  */
 
 public class CatalinaProperties {
@@ -68,7 +68,10 @@ public class CatalinaProperties {
 
     /**
      * Return specified property value.
+     *
+     * @deprecated  Unused - will be removed in 8.0.x
      */
+    @Deprecated
     public static String getProperty(String name, String defaultValue) {
 
         return properties.getProperty(name, defaultValue);

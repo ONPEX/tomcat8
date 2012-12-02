@@ -18,7 +18,6 @@
 package org.apache.tomcat.util.bcel.classfile;
 
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 
 import org.apache.tomcat.util.bcel.Constants;
@@ -28,7 +27,7 @@ import org.apache.tomcat.util.bcel.Constants;
  * purposes. This attribute is used by the <em>Code</em> attribute. It
  * contains pairs of PCs and line numbers.
  *
- * @version $Id: LineNumberTable.java 1181133 2011-10-10 18:49:14Z markt $
+ * @version $Id: LineNumberTable.java 1377533 2012-08-26 22:22:59Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Code
  * @see LineNumber
@@ -68,22 +67,6 @@ public final class LineNumberTable extends Attribute {
         line_number_table = new LineNumber[line_number_table_length];
         for (int i = 0; i < line_number_table_length; i++) {
             line_number_table[i] = new LineNumber(file);
-        }
-    }
-
-
-    /**
-     * Dump line number table attribute to file stream in binary format.
-     *
-     * @param file Output file stream
-     * @throws IOException
-     */
-    @Override
-    public final void dump( DataOutputStream file ) throws IOException {
-        super.dump(file);
-        file.writeShort(line_number_table_length);
-        for (int i = 0; i < line_number_table_length; i++) {
-            line_number_table[i].dump(file);
         }
     }
 

@@ -84,7 +84,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: ApplicationContext.java 1345359 2012-06-01 21:42:24Z kkolinko $
+ * @version $Id: ApplicationContext.java 1357410 2012-07-04 21:10:48Z markt $
  */
 
 public class ApplicationContext
@@ -169,7 +169,7 @@ public class ApplicationContext
     /**
      * The merged context initialization parameters for this Context.
      */
-    private Map<String,String> parameters =
+    private final ConcurrentHashMap<String,String> parameters =
         new ConcurrentHashMap<String,String>();
 
 
@@ -534,7 +534,8 @@ public class ApplicationContext
             String hostName = context.getParent().getName();
             try {
                 resources.lookup(normPath);
-                URI uri = new URI("jndi", getJNDIUri(hostName, fullPath), null);
+                URI uri = new URI("jndi", null, "", -1,
+                        getJNDIUri(hostName, fullPath), null, null);
                 return new URL(null, uri.toString(),
                         new DirContextURLStreamHandler(resources));
             } catch (NamingException e) {
@@ -752,17 +753,14 @@ public class ApplicationContext
     public void removeAttribute(String name) {
 
         Object value = null;
-        boolean found = false;
 
         // Remove the specified attribute
         // Check for read only attribute
-        if (readOnlyAttributes.containsKey(name))
+        if (readOnlyAttributes.containsKey(name)){
             return;
-        found = attributes.containsKey(name);
-        if (found) {
-            value = attributes.get(name);
-            attributes.remove(name);
-        } else {
+        }
+        value = attributes.remove(name);
+        if (value == null) {
             return;
         }
 
@@ -1259,12 +1257,7 @@ public class ApplicationContext
 
     @Override
     public boolean setInitParameter(String name, String value) {
-        if (parameters.containsKey(name)) {
-            return false;
-        }
-        
-        parameters.put(name, value);
-        return true;
+        return parameters.putIfAbsent(name, value) == null;
     }
     
     

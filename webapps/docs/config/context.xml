@@ -82,6 +82,9 @@
   <li>If session information is present in the request but no matching session
   can be found, use the latest version.</li>
   </ul>
+  <p>The <a href="host.html">Host</a> may be configured (via the
+  <code>undeployOldVersions</code>) to remove old versions deployed in this way
+  once they are no longer in use.</p>
   </subsection>
 
   <subsection name="Naming">
@@ -955,13 +958,9 @@
 
       <attribute name="type" required="true">
         <p>The fully qualified Java class name expected by the web application
-        for this environment entry.  Must be one of the legal values for
+        for this environment entry.  Must be a legal value for
         <code>&lt;env-entry-type&gt;</code> in the web application deployment
-        descriptor:  <code>java.lang.Boolean</code>,
-        <code>java.lang.Byte</code>, <code>java.lang.Character</code>,
-        <code>java.lang.Double</code>, <code>java.lang.Float</code>,
-        <code>java.lang.Integer</code>, <code>java.lang.Long</code>,
-        <code>java.lang.Short</code>, or <code>java.lang.String</code>.</p>
+        descriptor.</p>
       </attribute>
 
       <attribute name="value" required="true">
@@ -1339,18 +1338,25 @@ mywebapp/
                 classes/
 </source>
     <p>The configuration is:</p>
-<source>
+
+<source wrapped="true">
 &lt;Context path="/mywebapp" docBase="/Users/theuser/mywebapp/src/main/webapp" >
+<indent>
   &lt;Resources className="org.apache.naming.resources.VirtualDirContext"
-    extraResourcePaths=
-    "/WEB-INF/classes=/Users/theuser/mywebapp/target/classes,/pictures=/Users/theuser/mypictures,/movies=/Users/theuser/mymovies" />
+    <indent><outdent>extraResourcePaths="/WEB-INF/classes=/Users/theuser/mywebapp/target/classes,/pictures=/Users/theuser/mypictures,/movies=/Users/theuser/mymovies"</outdent></indent>
+    <indent>/></indent>
+</indent>
+<indent>
   &lt;Loader className="org.apache.catalina.loader.VirtualWebappLoader"
-    virtualClasspath="/Users/theuser/mywebapp/target/classes;
-      /Users/theuser/mylib/target/classes;
-      /Users/theuser/.m2/repository/log4j/log4j/1.2.15/log4j-1.2.15.jar" />
+    <indent><outdent>virtualClasspath="/Users/theuser/mywebapp/target/classes;/Users/theuser/mylib/target/classes;/Users/theuser/.m2/repository/log4j/log4j/1.2.15/log4j-1.2.15.jar"</outdent></indent>
+    <indent>/></indent>
+</indent>
+<indent>
   &lt;JarScanner scanAllDirectories="true" />
+</indent>
 &lt;/Context>
 </source>
+
     <p>Note that resources in mylib/target/classes/META-INF/resources/ are mapped to / as
     required by servlet 3 specification.</p>
   </subsection>

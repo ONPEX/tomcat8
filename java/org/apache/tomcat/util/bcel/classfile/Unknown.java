@@ -18,7 +18,6 @@
 package org.apache.tomcat.util.bcel.classfile;
 
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,7 +35,7 @@ import org.apache.tomcat.util.bcel.Constants;
  * org.apache.tomcat.util.bcel.classfile.AttributeReader)">Attribute.addAttributeReader</a>.
 
  *
- * @version $Id: Unknown.java 1057670 2011-01-11 14:52:05Z markt $
+ * @version $Id: Unknown.java 1377533 2012-08-26 22:22:59Z markt $
  * @see org.apache.tomcat.util.bcel.classfile.Attribute
  * @see org.apache.tomcat.util.bcel.classfile.AttributeReader
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
@@ -81,21 +80,6 @@ public final class Unknown extends Attribute {
         if (length > 0) {
             bytes = new byte[length];
             file.readFully(bytes);
-        }
-    }
-
-
-    /**
-     * Dump unknown bytes to file stream.
-     *
-     * @param file Output file stream
-     * @throws IOException
-     */
-    @Override
-    public final void dump( DataOutputStream file ) throws IOException {
-        super.dump(file);
-        if (length > 0) {
-            file.write(bytes, 0, length);
         }
     }
 

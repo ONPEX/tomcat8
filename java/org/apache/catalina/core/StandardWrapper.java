@@ -77,7 +77,7 @@ import org.apache.tomcat.util.modeler.Registry;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardWrapper.java 1241892 2012-02-08 13:28:05Z markt $
+ * @version $Id: StandardWrapper.java 1360943 2012-07-12 21:07:48Z markt $
  */
 @SuppressWarnings("deprecation") // SingleThreadModel
 public class StandardWrapper extends ContainerBase
@@ -1655,7 +1655,7 @@ public class StandardWrapper extends ContainerBase
      */
     @Override
     public void incrementErrorCount(){
-        swValve.setErrorCount(swValve.getErrorCount() + 1);
+        swValve.incrementErrorCount();
     }
 
     public long getLoadTime() {

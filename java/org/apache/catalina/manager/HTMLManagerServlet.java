@@ -77,7 +77,7 @@ import org.apache.tomcat.util.res.StringManager;
 * @author Bip Thelin
 * @author Malcolm Edgar
 * @author Glenn L. Nielsen
-* @version $Id: HTMLManagerServlet.java 1349885 2012-06-13 14:43:14Z markt $
+* @version $Id: HTMLManagerServlet.java 1390886 2012-09-27 08:24:49Z markt $
 * @see ManagerServlet
 */
 
@@ -492,7 +492,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
                 }
                 
                 args = new Object[7];
-                args[0] = "<a href=\"" + URL_ENCODER.encode(displayPath)
+                args[0] = "<a href=\"" + URL_ENCODER.encode(contextPath + "/")
                         + "\">" + RequestUtil.filter(displayPath) + "</a>";
                 if ("".equals(ctxt.getWebappVersion())) {
                     args[1] = noVersion;
@@ -504,7 +504,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
                 } else {
                     args[2] = RequestUtil.filter(ctxt.getDisplayName());
                 }
-                args[3] = Boolean.valueOf(ctxt.getAvailable());
+                args[3] = Boolean.valueOf(ctxt.getState().isAvailable());
                 args[4] = RequestUtil.filter(response.encodeURL(request.getContextPath() +
                      "/html/sessions?" + pathVersion));
                 Manager manager = ctxt.getManager(); 
@@ -553,13 +553,13 @@ public final class HTMLManagerServlet extends ManagerServlet {
                 if (ctxt.getName().equals(this.context.getName())) {
                     writer.print(MessageFormat.format(
                         MANAGER_APP_ROW_BUTTON_SECTION, args));
-                } else if (ctxt.getAvailable() && isDeployed) {
+                } else if (ctxt.getState().isAvailable() && isDeployed) {
                     writer.print(MessageFormat.format(
                         STARTED_DEPLOYED_APPS_ROW_BUTTON_SECTION, args));
-                } else if (ctxt.getAvailable() && !isDeployed) {
+                } else if (ctxt.getState().isAvailable() && !isDeployed) {
                     writer.print(MessageFormat.format(
                         STARTED_NONDEPLOYED_APPS_ROW_BUTTON_SECTION, args));
-                } else if (!ctxt.getAvailable() && isDeployed) {
+                } else if (!ctxt.getState().isAvailable() && isDeployed) {
                     writer.print(MessageFormat.format(
                         STOPPED_DEPLOYED_APPS_ROW_BUTTON_SECTION, args));
                 } else {

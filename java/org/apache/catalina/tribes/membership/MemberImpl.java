@@ -32,7 +32,7 @@ import org.apache.catalina.tribes.transport.SenderState;
  * Carries the host, and port of the this or other cluster nodes.
  *
  * @author Filip Hanik
- * @version $Id: MemberImpl.java 1142670 2011-07-04 13:59:53Z kkolinko $
+ * @version $Id: MemberImpl.java 1380072 2012-09-02 22:26:09Z markt $
  */
 public class MemberImpl implements Member, java.io.Externalizable {
 
@@ -41,11 +41,21 @@ public class MemberImpl implements Member, java.io.Externalizable {
      * default is false
      */
     public static final boolean DO_DNS_LOOKUPS = Boolean.parseBoolean(System.getProperty("org.apache.catalina.tribes.dns_lookups","false"));
+
     /**
-     * Public properties specific to this implementation
+     * @deprecated  Unused - will be removed in Tomcat 8.0.x
      */
+    @Deprecated
     public static final transient String TCP_LISTEN_PORT = "tcpListenPort";
+    /**
+     * @deprecated  Unused - will be removed in Tomcat 8.0.x
+     */
+    @Deprecated
     public static final transient String TCP_LISTEN_HOST = "tcpListenHost";
+    /**
+     * @deprecated  Unused - will be removed in Tomcat 8.0.x
+     */
+    @Deprecated
     public static final transient String MEMBER_NAME = "memberName";
 
     public static final transient byte[] TRIBES_MBR_BEGIN = new byte[] {84, 82, 73, 66, 69, 83, 45, 66, 1, 0};
@@ -462,6 +472,10 @@ public class MemberImpl implements Member, java.io.Externalizable {
                 throw new RuntimeException("Unable to parse hostname.",x);
             }
         }
+    }
+
+    public int getMsgCount() {
+        return this.msgCount;
     }
 
     /**

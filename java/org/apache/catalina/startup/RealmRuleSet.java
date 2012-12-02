@@ -28,11 +28,15 @@ import org.apache.tomcat.util.digester.RuleSetBase;
  * element.  This <code>RuleSet</code> supports Realms such as the
  * <code>CombinedRealm</code> that used nested Realms.</p>
  *
- * @version $Id: RealmRuleSet.java 939305 2010-04-29 13:43:39Z kkolinko $
+ * @version $Id: RealmRuleSet.java 1408741 2012-11-13 14:20:16Z markt $
  */
 
 public class RealmRuleSet extends RuleSetBase {
 
+
+    private static final int MAX_NESTED_REALM_LEVELS = Integer.getInteger(
+            "org.apache.catalina.startup.RealmRuleSet.MAX_NESTED_REALM_LEVELS",
+            3).intValue();
 
     // ----------------------------------------------------- Instance Variables
 
@@ -88,23 +92,28 @@ public class RealmRuleSet extends RuleSetBase {
     @Override
     public void addRuleInstances(Digester digester) {
 
-        digester.addObjectCreate(prefix + "Realm",
-                                 null, // MUST be specified in the element,
-                                 "className");
-        digester.addSetProperties(prefix + "Realm");
-        digester.addSetNext(prefix + "Realm",
-                            "setRealm",
-                            "org.apache.catalina.Realm");
+        String pattern = prefix;
 
-        digester.addObjectCreate(prefix + "Realm/Realm",
-                                 null, // MUST be specified in the element
-                                 "className");
-        digester.addSetProperties(prefix + "Realm/Realm");
-        digester.addSetNext(prefix + "Realm/Realm",
-                            "addRealm",
-                            "org.apache.catalina.Realm");
+        for (int i = 0; i < MAX_NESTED_REALM_LEVELS; i++) {
 
+            if (i > 0) {
+                pattern += "/";
+            }
+            pattern += "Realm";
+
+            digester.addObjectCreate(pattern,
+                                     null, // MUST be specified in the element,
+                                     "className");
+            digester.addSetProperties(pattern);
+            if (i == 0) {
+                digester.addSetNext(pattern,
+                                    "setRealm",
+                                    "org.apache.catalina.Realm");
+            } else {
+                digester.addSetNext(pattern,
+                                    "addRealm",
+                                    "org.apache.catalina.Realm");
+            }
+        }
     }
-
-
 }

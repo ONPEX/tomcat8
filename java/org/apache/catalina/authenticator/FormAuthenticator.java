@@ -31,6 +31,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.catalina.Manager;
 import org.apache.catalina.Realm;
 import org.apache.catalina.Session;
 import org.apache.catalina.connector.Request;
@@ -51,7 +52,7 @@ import org.apache.tomcat.util.http.MimeHeaders;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: FormAuthenticator.java 1189224 2011-10-26 14:02:40Z kkolinko $
+ * @version $Id: FormAuthenticator.java 1408044 2012-11-11 16:42:02Z kkolinko $
  */
 
 public class FormAuthenticator
@@ -320,6 +321,7 @@ public class FormAuthenticator
                 SavedRequest saved = new SavedRequest();
                 saved.setMethod("GET");
                 saved.setRequestURI(uri);
+                saved.setDecodedRequestURI(uri);
                 request.getSessionInternal(true).setNote(
                         Constants.FORM_REQUEST_NOTE, saved);
                 response.sendRedirect(response.encodeRedirectURL(uri));
@@ -351,6 +353,7 @@ public class FormAuthenticator
                 SavedRequest saved = new SavedRequest();
                 saved.setMethod("GET");
                 saved.setRequestURI(uri);
+                saved.setDecodedRequestURI(uri);
                 session.setNote(Constants.FORM_REQUEST_NOTE, saved);
                 response.sendRedirect(response.encodeRedirectURL(uri));
             }
@@ -400,6 +403,15 @@ public class FormAuthenticator
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                     msg);
             return;
+        }
+
+        if (getChangeSessionIdOnAuthentication()) {
+            Session session = request.getSessionInternal(false);
+            if (session != null) {
+                Manager manager = request.getContext().getManager();
+                manager.changeSessionId(session);
+                request.changeSessionId(session.getId());
+            }
         }
 
         // Always use GET for the login page, regardless of the method used
@@ -498,12 +510,11 @@ public class FormAuthenticator
     }
 
       // Does the request URI match?
-      String requestURI = request.getRequestURI();
-      if (requestURI == null) {
+      String decodedRequestURI = request.getDecodedRequestURI();
+      if (decodedRequestURI == null) {
         return (false);
     }
-      return (requestURI.equals(sreq.getRequestURI()));
-
+      return (decodedRequestURI.equals(sreq.getDecodedRequestURI()));
     }
 
 
@@ -659,10 +670,10 @@ public class FormAuthenticator
         saved.setMethod(request.getMethod());
         saved.setQueryString(request.getQueryString());
         saved.setRequestURI(request.getRequestURI());
+        saved.setDecodedRequestURI(request.getDecodedRequestURI());
 
         // Stash the SavedRequest in our session for later use
         session.setNote(Constants.FORM_REQUEST_NOTE, saved);
-
     }
 
 

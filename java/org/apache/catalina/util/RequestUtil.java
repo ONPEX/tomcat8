@@ -31,7 +31,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Tim Tye
- * @version $Id: RequestUtil.java 1239053 2012-02-01 10:52:00Z markt $
+ * @version $Id: RequestUtil.java 1370978 2012-08-08 21:20:42Z markt $
  */
 public final class RequestUtil {
 
@@ -249,7 +249,10 @@ public final class RequestUtil {
      * @param enc The encoding to use; if null, the default encoding is used
      * @exception IllegalArgumentException if a '%' character is not followed
      * by a valid 2-digit hexadecimal number
+     *
+     * @deprecated  Unused - will be removed in 8.0.x
      */
+    @Deprecated
     public static String URLDecode(byte[] bytes, String enc) {
         return URLDecode(bytes, enc, false);
     }

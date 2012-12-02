@@ -149,6 +149,12 @@ public abstract class AbstractProtocol implements ProtocolHandler,
     public void setClientCertProvider(String s) { this.clientCertProvider = s; }
 
 
+    @Override
+    public boolean isAprRequired() {
+        return false;
+    }
+
+
     // ---------------------- Properties that are passed through to the EndPoint
 
     @Override
@@ -567,9 +573,13 @@ public abstract class AbstractProtocol implements ProtocolHandler,
 
                 SocketState state = SocketState.CLOSED;
                 do {
-                    if (status == SocketStatus.DISCONNECT) {
-                        //do nothing here, just wait for it to get recycled
-                    } else if (processor.isAsync() || state == SocketState.ASYNC_END) {
+                    if (status == SocketStatus.DISCONNECT &&
+                            !processor.isComet()) {
+                        // Do nothing here, just wait for it to get recycled
+                        // Don't do this for Comet we need to generate an end
+                        // event (see BZ 54022)
+                    } else if (processor.isAsync() ||
+                            state == SocketState.ASYNC_END) {
                         state = processor.asyncDispatch(status);
                     } else if (processor.isComet()) {
                         state = processor.event(status);
@@ -622,11 +632,11 @@ public abstract class AbstractProtocol implements ProtocolHandler,
             } catch(java.net.SocketException e) {
                 // SocketExceptions are normal
                 getLog().debug(sm.getString(
-                        "ajpprotocol.proto.socketexception.debug"), e);
+                        "abstractConnectionHandler.socketexception.debug"), e);
             } catch (java.io.IOException e) {
                 // IOExceptions are normal
                 getLog().debug(sm.getString(
-                        "ajpprotocol.proto.ioexception.debug"), e);
+                        "abstractConnectionHandler.ioexception.debug"), e);
             }
             // Future developers: if you discover any other
             // rare-but-nonfatal exceptions, catch them here, and log as
@@ -636,7 +646,8 @@ public abstract class AbstractProtocol implements ProtocolHandler,
                 // any other exception or error is odd. Here we log it
                 // with "ERROR" level, so it will show up even on
                 // less-than-verbose logs.
-                getLog().error(sm.getString("ajpprotocol.proto.error"), e);
+                getLog().error(
+                        sm.getString("abstractConnectionHandler.error"), e);
             }
             // Don't try to add upgrade processors back into the pool
             if (!(processor instanceof UpgradeProcessor)) {

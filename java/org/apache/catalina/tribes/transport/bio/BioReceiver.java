@@ -30,7 +30,7 @@ import org.apache.juli.logging.LogFactory;
 /**
  *
  * @author Filip Hanik
- * @version $Id: BioReceiver.java 1059560 2011-01-16 13:54:28Z markt $
+ * @version $Id: BioReceiver.java 1358615 2012-07-07 18:39:48Z markt $
  */
 public class BioReceiver extends ReceiverBase implements Runnable {
 
@@ -143,7 +143,6 @@ public class BioReceiver extends ReceiverBase implements Runnable {
             socket.setOOBInline(getOoBInline());
             socket.setReuseAddress(getSoReuseAddress());
             socket.setSoLinger(getSoLingerOn(),getSoLingerTime());
-            socket.setTrafficClass(getSoTrafficClass());
             socket.setSoTimeout(getTimeout());
             ObjectReader reader = new ObjectReader(socket);
             task.serviceSocket(socket,reader);

@@ -100,7 +100,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: Request.java 1335733 2012-05-08 20:07:23Z markt $
+ * @version $Id: Request.java 1356509 2012-07-02 22:43:32Z kkolinko $
  */
 
 public class Request
@@ -470,7 +470,16 @@ public class Request
         subject = null;
         sessionParsed = false;
         parametersParsed = false;
-        parts = null;
+        if (parts != null) {
+            for (Part part: parts) {
+                try {
+                    part.delete();
+                } catch (IOException ignored) {
+                    // ApplicationPart.delete() never throws an IOEx
+                }
+            }
+            parts = null;
+        }
         partsParseException = null;
         cookiesParsed = false;
         locales.clear();

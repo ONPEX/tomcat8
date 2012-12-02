@@ -59,7 +59,7 @@ import org.apache.tomcat.util.http.mapper.Mapper;
  * <p>
  *
  * @author Craig R. McClanahan
- * @version $Id: Context.java 1350247 2012-06-14 14:04:20Z markt $
+ * @version $Id: Context.java 1390886 2012-09-27 08:24:49Z markt $
  */
 
 public interface Context extends Container {
@@ -164,7 +164,12 @@ public interface Context extends Container {
 
     /**
      * Return the application available flag for this Context.
+     *
+     * @deprecated  This will be removed in Tomcat 8.0.x onwards. Use
+     *              {@link #getState()}.{@link LifecycleState#isAvailable()
+     *              isAvailable()} instead
      */
+    @Deprecated
     public boolean getAvailable();
 
 

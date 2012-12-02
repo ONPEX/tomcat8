@@ -30,7 +30,7 @@ import org.apache.catalina.util.RequestUtil;
  * deployment descriptor.
  *
  * @author Craig R. McClanahan
- * @version $Id: ErrorPage.java 1001915 2010-09-27 21:32:25Z markt $
+ * @version $Id: ErrorPage.java 1355734 2012-06-30 13:24:09Z markt $
  */
 
 public class ErrorPage implements Serializable {
@@ -41,7 +41,8 @@ public class ErrorPage implements Serializable {
 
 
     /**
-     * The error (status) code for which this error page is active.
+     * The error (status) code for which this error page is active. Note that
+     * status code 0 is used for the default error page.
      */
     private int errorCode = 0;
 

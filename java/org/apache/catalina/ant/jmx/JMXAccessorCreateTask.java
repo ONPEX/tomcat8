@@ -55,7 +55,7 @@ import org.apache.tools.ant.BuildException;
  * These tasks require Ant 1.6 or later interface.
  *
  * @author Peter Rossbach
- * @version $Revision: 881567 $
+ * @version $Revision: 1360850 $
  * @since 5.5.12
  */
 public class JMXAccessorCreateTask extends JMXAccessorTask {
@@ -173,8 +173,8 @@ public class JMXAccessorCreateTask extends JMXAccessorTask {
            sigA = new String[args.size()];
            for( int i=0; i<args.size(); i++ ) {
                Arg arg=args.get(i);
-               if( arg.type==null) {
-                   arg.type="java.lang.String";
+               if (arg.getType() == null) {
+                   arg.setType("java.lang.String");
                    sigA[i]=arg.getType();
                    argsA[i]=arg.getValue();
                } else {

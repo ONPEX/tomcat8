@@ -47,7 +47,7 @@ import org.apache.tomcat.util.ExceptionUtils;
 * @author Craig R. McClanahan
 * @author Carson McDonald
 * @author Ignacio Ortega
-* @version $Id: JDBCRealm.java 1348499 2012-06-09 20:37:14Z markt $
+* @version $Id: JDBCRealm.java 1361770 2012-07-15 19:38:51Z markt $
 */
 
 public class JDBCRealm
@@ -728,7 +728,10 @@ public class JDBCRealm
      * Release our use of this connection so that it can be recycled.
      *
      * @param dbConnection The connection to be released
+     *
+     * @deprecated  Unused
      */
+    @Deprecated
     protected void release(Connection dbConnection) {
 
         // NO-OP since we are not pooling anything
