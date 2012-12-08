@@ -1,4 +1,4 @@
-tomcat7 (7.0.28-4) UNRELEASED; urgency=high
+tomcat7 (7.0.28-4) unstable; urgency=high
 
   * Acknowledge NMU: 7.0.28-3+nmu1 (Closes: #692440)
     - Thank you to Michael Gilbert.
