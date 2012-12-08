@@ -11,3 +11,5 @@
 0013-dont-look-for-build-properties-in-user-home.patch
 cve-2012-3439.patch
 cve-2012-3439-tests.patch
+0016-CVE-2012-4431.patch
+0017-CVE-2012-3546.patch
