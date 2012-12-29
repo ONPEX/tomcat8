@@ -156,7 +156,7 @@ import org.apache.tomcat.util.buf.B2CConverter;
  * @author Takayuki Kaneko
  * @author Peter Rossbach
  *
- * @version $Id: AccessLogValve.java 1410500 2012-11-16 17:31:02Z markt $
+ * @version $Id: AccessLogValve.java 1416660 2012-12-03 20:47:57Z markt $
  */
 
 public class AccessLogValve extends ValveBase implements AccessLog {
@@ -213,6 +213,12 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      */
     protected boolean rotatable = true;
 
+    /**
+     * Should we defer inclusion of the date stamp in the file
+     * name until rotate time? Default is false.
+     */
+    protected boolean renameOnRotate = false;
+
 
     /**
      * Buffered logging.
@@ -238,25 +244,6 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      */
     protected SimpleDateFormat fileDateFormatter = null;
 
-
-    /**
-     * The system timezone.
-     */
-    private static final TimeZone timezone;
-
-
-    /**
-     * The time zone offset relative to GMT in text form when daylight saving
-     * is not in operation.
-     */
-    private static final String timeZoneNoDST;
-
-
-    /**
-     * The time zone offset relative to GMT in text form when daylight saving
-     * is in operation.
-     */
-    private static final String timeZoneDST;
 
     /**
      * The size of our global date format cache
@@ -306,7 +293,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         protected class Cache {
 
             /* CLF log format */
-            private static final String cLFFormat = "dd/MMM/yyyy:HH:mm:ss";
+            private static final String cLFFormat = "dd/MMM/yyyy:HH:mm:ss Z";
 
             /* Second used to retrieve CLF format in most recent invocation */
             private long previousSeconds = Long.MIN_VALUE;
@@ -416,8 +403,6 @@ public class AccessLogValve extends ValveBase implements AccessLog {
                         StringBuilder current = new StringBuilder(32);
                         current.append('[');
                         current.append(previousFormat);
-                        current.append(' ');
-                        current.append(getTimeZone(currentDate));
                         current.append(']');
                         previousFormat = current.toString();
                     }
@@ -725,6 +710,26 @@ public class AccessLogValve extends ValveBase implements AccessLog {
 
 
     /**
+     * Should we defer inclusion of the date stamp in the file
+     * name until rotate time
+     */
+    public boolean isRenameOnRotate() {
+        return renameOnRotate;
+    }
+
+
+    /**
+     * Set the value if we should defer inclusion of the date
+     * stamp in the file name until rotate time
+     *
+     * @param renameOnRotate true if defer inclusion of date stamp
+     */
+    public void setRenameOnRotate(boolean renameOnRotate) {
+        this.renameOnRotate = renameOnRotate;
+    }
+
+
+    /**
      * Is the logging buffered
      */
     public boolean isBuffered() {
@@ -974,7 +979,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
 
         if (currentLogFile != null) {
             File holder = currentLogFile;
-            close();
+            close(false);
             try {
                 holder.renameTo(new File(newFileName));
             } catch (Throwable e) {
@@ -998,14 +1003,87 @@ public class AccessLogValve extends ValveBase implements AccessLog {
 
 
     /**
-     * Close the currently open log file (if any)
+     * Create a File object based on the current log file name.
+     * Directories are created as needed but the underlying file
+     * is not created or opened.
+     *
+     * @param useDateStamp include the timestamp in the file name.
+     * @return the log file object
      */
-    private synchronized void close() {
+    private File getLogFile(boolean useDateStamp) {
+
+        // Create the directory if necessary
+        File dir = new File(directory);
+        if (!dir.isAbsolute()) {
+            dir = new File(System.getProperty(Globals.CATALINA_BASE_PROP), directory);
+        }
+        if (!dir.mkdirs() && !dir.isDirectory()) {
+            log.error(sm.getString("accessLogValve.openDirFail", dir));
+        }
+
+        // Calculate the current log file name
+        File pathname;
+        if (useDateStamp) {
+            pathname = new File(dir.getAbsoluteFile(), prefix + dateStamp
+                    + suffix);
+        } else {
+            pathname = new File(dir.getAbsoluteFile(), prefix + suffix);
+        }
+        File parent = pathname.getParentFile();
+        if (!parent.mkdirs() && !parent.isDirectory()) {
+            log.error(sm.getString("accessLogValve.openDirFail", parent));
+        }
+        return pathname;
+    }
+
+    /**
+     * Move a current but rotated log file back to the unrotated
+     * one. Needed if date stamp inclusion is deferred to rotation
+     * time.
+     */
+    private void restore() {
+        File newLogFile = getLogFile(false);
+        File rotatedLogFile = getLogFile(true);
+        if (rotatedLogFile.exists() && !newLogFile.exists() &&
+            !rotatedLogFile.equals(newLogFile)) {
+            try {
+                if (!rotatedLogFile.renameTo(newLogFile)) {
+                    log.error(sm.getString("accessLogValve.renameFail", rotatedLogFile, newLogFile));
+                }
+            } catch (Throwable e) {
+                ExceptionUtils.handleThrowable(e);
+                log.error(sm.getString("accessLogValve.renameFail", rotatedLogFile, newLogFile), e);
+            }
+        }
+    }
+
+
+    /**
+     * Close the currently open log file (if any)
+     *
+     * @param rename Rename file to final name after closing
+     */
+    private synchronized void close(boolean rename) {
         if (writer == null) {
             return;
         }
         writer.flush();
         writer.close();
+        if (rename && renameOnRotate) {
+            File newLogFile = getLogFile(true);
+            if (!newLogFile.exists()) {
+                try {
+                    if (!currentLogFile.renameTo(newLogFile)) {
+                        log.error(sm.getString("accessLogValve.renameFail", currentLogFile, newLogFile));
+                    }
+                } catch (Throwable e) {
+                    ExceptionUtils.handleThrowable(e);
+                    log.error(sm.getString("accessLogValve.renameFail", currentLogFile, newLogFile), e);
+                }
+            } else {
+                log.error(sm.getString("accessLogValve.alreadyExists", currentLogFile, newLogFile));
+            }
+        }
         writer = null;
         dateStamp = "";
         currentLogFile = null;
@@ -1033,7 +1111,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
 
                         // If the date has changed, switch log files
                         if (!dateStamp.equals(tsDate)) {
-                            close();
+                            close(true);
                             dateStamp = tsDate;
                             open();
                         }
@@ -1047,7 +1125,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
             synchronized (this) {
                 if (currentLogFile != null && !currentLogFile.exists()) {
                     try {
-                        close();
+                        close(false);
                     } catch (Throwable e) {
                         ExceptionUtils.handleThrowable(e);
                         log.info(sm.getString("accessLogValve.closeFail"), e);
@@ -1079,28 +1157,9 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      * Open the new log file for the date specified by <code>dateStamp</code>.
      */
     protected synchronized void open() {
-        // Create the directory if necessary
-        File dir = new File(directory);
-        if (!dir.isAbsolute()) {
-            dir = new File(System.getProperty(Globals.CATALINA_BASE_PROP), directory);
-        }
-        if (!dir.mkdirs() && !dir.isDirectory()) {
-            log.error(sm.getString("accessLogValve.openDirFail", dir));
-        }
-
         // Open the current log file
-        File pathname;
         // If no rotate - no need for dateStamp in fileName
-        if (rotatable) {
-            pathname = new File(dir.getAbsoluteFile(), prefix + dateStamp
-                    + suffix);
-        } else {
-            pathname = new File(dir.getAbsoluteFile(), prefix + suffix);
-        }
-        File parent = pathname.getParentFile();
-        if (!parent.mkdirs() && !parent.isDirectory()) {
-            log.error(sm.getString("accessLogValve.openDirFail", parent));
-        }
+        File pathname = getLogFile(rotatable && !renameOnRotate);
 
         Charset charset = null;
         if (encoding != null) {
@@ -1141,40 +1200,6 @@ public class AccessLogValve extends ValveBase implements AccessLog {
     }
 
 
-    private static String getTimeZone(Date date) {
-        if (timezone.inDaylightTime(date)) {
-            return timeZoneDST;
-        } else {
-            return timeZoneNoDST;
-        }
-    }
-
-
-    private static String calculateTimeZoneOffset(long offset) {
-        StringBuilder tz = new StringBuilder();
-        if ((offset < 0)) {
-            tz.append("-");
-            offset = -offset;
-        } else {
-            tz.append("+");
-        }
-
-        long hourOffset = offset / (1000 * 60 * 60);
-        long minuteOffset = (offset / (1000 * 60)) % 60;
-
-        if (hourOffset < 10) {
-            tz.append("0");
-        }
-        tz.append(hourOffset);
-
-        if (minuteOffset < 10) {
-            tz.append("0");
-        }
-        tz.append(minuteOffset);
-
-        return tz.toString();
-    }
-
     /**
      * Find a locale by name
      */
@@ -1190,14 +1215,6 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         }
         log.error(sm.getString("accessLogValve.invalidLocale", name));
         return fallback;
-    }
-
-    static {
-        // Initialize the timeZone
-        timezone = TimeZone.getDefault();
-        timeZoneNoDST = calculateTimeZoneOffset(timezone.getRawOffset());
-        int offset = timezone.getDSTSavings();
-        timeZoneDST = calculateTimeZoneOffset(timezone.getRawOffset() + offset);
     }
 
 
@@ -1218,8 +1235,11 @@ public class AccessLogValve extends ValveBase implements AccessLog {
             setFileDateFormat(format);
         }
         fileDateFormatter = new SimpleDateFormat(format, Locale.US);
-        fileDateFormatter.setTimeZone(timezone);
+        fileDateFormatter.setTimeZone(TimeZone.getDefault());
         dateStamp = fileDateFormatter.format(new Date(System.currentTimeMillis()));
+        if (rotatable && renameOnRotate) {
+            restore();
+        }
         open();
 
         setState(LifecycleState.STARTING);
@@ -1237,7 +1257,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
     protected synchronized void stopInternal() throws LifecycleException {
 
         setState(LifecycleState.STOPPING);
-        close();
+        close(false);
     }
 
     /**

@@ -44,7 +44,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * @author <a href="mailto:nicolaken@supereva.it">Nicola Ken Barozzi</a> Aisa
  * @author <a href="mailto:stefano@apache.org">Stefano Mazzocchi</a>
  * @author Yoav Shapira
- * @version $Id: ErrorReportValve.java 1372132 2012-08-12 15:42:33Z markt $
+ * @version $Id: ErrorReportValve.java 1416537 2012-12-03 14:21:12Z markt $
  */
 
 public class ErrorReportValve extends ValveBase {
@@ -160,7 +160,8 @@ public class ErrorReportValve extends ValveBase {
 
         // Do nothing on a 1xx, 2xx and 3xx status
         // Do nothing if anything has been written already
-        if ((statusCode < 400) || (response.getContentWritten() > 0)) {
+        if (statusCode < 400 || response.getContentWritten() > 0 ||
+                !response.isError()) {
             return;
         }
 

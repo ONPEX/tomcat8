@@ -37,16 +37,16 @@ import org.apache.naming.SelectorContext;
  * prefix, which can be done by either :
  * <ul>
  * <li>Adding a 
- * java.naming.factory.url.pkgs=org.apache.catalina.util.naming property
+ * java.naming.factory.url.pkgs=org.apache.naming property
  * to the JNDI properties file</li>
- * <li>Setting an environment variable named Context.URL_PKG_PREFIXES with 
- * its value including the org.apache.catalina.util.naming package name. 
- * More detail about this can be found in the JNDI documentation : 
+ * <li>Setting an environment variable named Context.URL_PKG_PREFIXES with
+ * its value including the org.apache.naming package name.
+ * More detail about this can be found in the JNDI documentation :
  * {@link javax.naming.spi.NamingManager#getURLContext(java.lang.String, java.util.Hashtable)}.</li>
  * </ul>
  * 
  * @author Remy Maucherat
- * @version $Id: javaURLContextFactory.java 1056244 2011-01-07 10:31:59Z markt $
+ * @version $Id: javaURLContextFactory.java 1413563 2012-11-26 11:45:43Z markt $
  */
 
 public class javaURLContextFactory

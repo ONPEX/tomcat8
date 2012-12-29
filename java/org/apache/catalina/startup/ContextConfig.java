@@ -109,7 +109,7 @@ import org.xml.sax.SAXParseException;
  *
  * @author Craig R. McClanahan
  * @author Jean-Francois Arcand
- * @version $Id: ContextConfig.java 1408166 2012-11-12 01:26:59Z markt $
+ * @version $Id: ContextConfig.java 1416502 2012-12-03 13:21:57Z markt $
  */
 public class ContextConfig implements LifecycleListener {
 
@@ -2102,8 +2102,13 @@ public class ContextConfig implements LifecycleListener {
 
         ClassParser parser = new ClassParser(is, null);
         JavaClass clazz = parser.parse();
-
-        checkHandlesTypes(clazz);
+        try {
+            checkHandlesTypes(clazz);
+        } catch (StackOverflowError soe) {
+            throw new IllegalStateException(sm.getString(
+                    "contextConfig.annotationsStackOverflow",
+                    context.getName()), soe);
+        }
 
         if (handlesTypesOnly) {
             return;

@@ -53,7 +53,79 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues to not "pop up" wrt. others).
 -->
-<section name="Tomcat 7.0.33 (markt)">
+<section name="Tomcat 7.0.34 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        <bug>53871</bug>: Improve error message if annotation scanning fails
+        during web application start due to poor configuration or illegal
+        cyclic inheritance with the application&apos;s classes. (markt) 
+      </fix>
+      <fix>
+        Fix unit test for AccessLogValve when using non-GMT time zone. (rjung)
+      </fix>
+      <fix>
+        <bug>54170</bug>: Ensure correct registration of Filters and Servlets in
+        the JMX registry if the Filter or Servlet name includes a character that
+        must be quoted if used in an ObjectName value. (markt)
+      </fix>
+      <add>
+        Add new attribute <code>renameOnRotate</code> to the AccessLogValve.
+        (rjung)
+      </add>
+      <fix>
+        <bug>54190</bug>: Correct unit tests for BASIC authentication so that
+        session timeout is correctly tested. Also refactor unit test to make it
+        easier to add additional tests. Patch by Brian Burch. (markt)
+      </fix>
+      <fix>
+        <bug>54220</bug>: Ensure the ErrorReportValve only generates an error
+        report if the error flag on the response has been set. (markt)
+      </fix>
+      <fix>
+        Simplify time zone handling in the access log valve and correctly handle
+        various edge cases for non-standard DST changes. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <fix>
+        <bug>54198</bug>: Clarify that
+        <code>HttpServletResponse.sendError(int)</code> results in an HTML
+        response by default. (markt)
+      </fix>
+      <fix>
+        <bug>54207</bug>: Correct JNDI factory package name in Javadoc for
+        <code>org.apache.naming.java.javaURLContextFactory</code>. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="jdbc-pool">
+    <changelog>
+      <scode>
+        Fix a handful of Eclipse warnings in the JDBC pool source code including
+        the warnings reported in <bug>53565</bug>. (markt)
+      </scode>
+      <fix>
+        <bug>54150</bug>: Make sure that SlowQueryReportJmx mbean deregistered
+        during webapp shutdown. Reported by Alex Franken. (kfujino)
+      </fix>
+      <fix>
+        <bug>54194</bug>: Make sure that connection pool mbean is not registered
+        when jmxEnabled is false. Patch provided by tobias.gierke. (kfujino)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <update>
+        Update to Eclipse JDT Compiler 4.2.1. (markt)
+      </update>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 7.0.33 (markt)" rtext="2012-11-21">
   <subsection name="Catalina">
     <changelog>
       <add>
