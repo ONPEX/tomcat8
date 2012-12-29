@@ -19,6 +19,7 @@ package org.apache.catalina.valves;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Scanner;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -43,7 +44,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * @author <a href="mailto:nicolaken@supereva.it">Nicola Ken Barozzi</a> Aisa
  * @author <a href="mailto:stefano@apache.org">Stefano Mazzocchi</a>
  * @author Yoav Shapira
- * @version $Id: ErrorReportValve.java 1348777 2012-06-11 09:50:03Z markt $
+ * @version $Id: ErrorReportValve.java 1416537 2012-12-03 14:21:12Z markt $
  */
 
 public class ErrorReportValve extends ValveBase {
@@ -159,14 +160,19 @@ public class ErrorReportValve extends ValveBase {
 
         // Do nothing on a 1xx, 2xx and 3xx status
         // Do nothing if anything has been written already
-        if ((statusCode < 400) || (response.getContentWritten() > 0)) {
+        if (statusCode < 400 || response.getContentWritten() > 0 ||
+                !response.isError()) {
             return;
         }
 
         String message = RequestUtil.filter(response.getMessage());
         if (message == null) {
             if (throwable != null) {
-                message = RequestUtil.filter(throwable.getMessage());
+                String exceptionMessage = throwable.getMessage();
+                if (exceptionMessage != null && exceptionMessage.length() > 0) {
+                    message = RequestUtil.filter(
+                            (new Scanner(exceptionMessage)).nextLine());
+                }
             }
             if (message == null) {
                 message = "";
@@ -176,7 +182,7 @@ public class ErrorReportValve extends ValveBase {
         // Do nothing if there is no report for the specified status code
         String report = null;
         try {
-            report = sm.getString("http." + statusCode, message);
+            report = sm.getString("http." + statusCode);
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
         }

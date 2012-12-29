@@ -14,23 +14,10 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.apache.tomcat.util.http.parser;
+package org.apache.tomcat.unittest.tags;
 
-/**
- * Represents an attribute as per section 3.6 of RFC 2616. Originally generated
- * by <a href="http://javacc.java.net/doc/JJTree.html"> JJTree</a>.
- */
-public class AstAttribute extends SimpleNode {
-    public AstAttribute(int id) {
-        super(id);
-    }
+import javax.servlet.jsp.tagext.BodyTagSupport;
 
-    public AstAttribute(HttpParser p, int id) {
-        super(p, id);
-    }
-
-    @Override
-    public String toString() {
-        return value.toString();
-    }
+public class Bug53545 extends BodyTagSupport {
+    private static final long serialVersionUID = 1L;
 }

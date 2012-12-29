@@ -49,8 +49,15 @@ public class AjpAprProtocol extends AbstractAjpProtocol {
     }
 
 
-    // ------------------------------------------------------------ Constructor
+    @Override
+    public boolean isAprRequired() {
+        // Override since this protocol implementation requires the APR/native
+        // library
+        return true;
+    }
 
+
+    // ------------------------------------------------------------ Constructor
 
     public AjpAprProtocol() {
         endpoint = new AprEndpoint();
@@ -128,7 +135,8 @@ public class AjpAprProtocol extends AbstractAjpProtocol {
             if (addToPoller) {
                 ((AprEndpoint)proto.endpoint).getPoller().add(
                         socket.getSocket().longValue(),
-                        proto.endpoint.getKeepAliveTimeout());
+                        proto.endpoint.getKeepAliveTimeout(),
+                        AprEndpoint.Poller.FLAGS_READ);
             }
         }
 

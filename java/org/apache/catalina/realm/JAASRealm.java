@@ -122,7 +122,7 @@ org.foobar.auth.DatabaseLoginModule REQUIRED
 *
 * @author Craig R. McClanahan
 * @author Yoav Shapira
- * @version $Id: JAASRealm.java 1189224 2011-10-26 14:02:40Z kkolinko $
+ * @version $Id: JAASRealm.java 1361770 2012-07-15 19:38:51Z markt $
  */
 
 public class JAASRealm
@@ -178,9 +178,7 @@ public class JAASRealm
     
     /**
      * setter for the <code>appName</code> member variable
-     * @deprecated JAAS should use the <code>Engine</code> (domain) name and webpp/host overrides
      */
-    @Deprecated
     public void setAppName(String name) {
         appName = name;
     }

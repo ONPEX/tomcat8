@@ -14,31 +14,22 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.apache.tomcat.util.http.parser;
+package org.apache.tomcat.util.modeler;
 
-/**
- * Represents a parameter as per section 3.6 of RFC 2616. Originally generated
- * by <a href="http://javacc.java.net/doc/JJTree.html"> JJTree</a>.
- */
-public class AstParameter extends SimpleNode {
-    public AstParameter(int id) {
-        super(id);
+public class Util {
+
+    private Util() {
+        // Utility class. Hide default constructor.
     }
 
-    public AstParameter(HttpParser p, int id) {
-        super(p, id);
-    }
-
-    @Override
-    public String toString() {
-        if (children.length != 2) {
-            // Invalid input - swallow it.
-            return "";
+    public static boolean objectNameValueNeedsQuote(String input) {
+        char[] chars = input.toCharArray();
+        for (int i = 0; i < input.length(); i++) {
+            char ch = chars[i];
+            if (ch == ',' || ch == '=' || ch == ':' || ch == '*' || ch == '?') {
+                return true;
+            }
         }
-        StringBuilder sb = new StringBuilder();
-        sb.append(children[0].toString());
-        sb.append("=");
-        sb.append(children[1].toString());
-        return sb.toString();
+        return false;
     }
 }

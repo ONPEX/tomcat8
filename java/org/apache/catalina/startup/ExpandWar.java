@@ -45,7 +45,7 @@ import org.apache.tomcat.util.res.StringManager;
  * @author Craig R. McClanahan
  * @author Remy Maucherat
  * @author Glenn L. Nielsen
- * @version $Revision: 1173343 $
+ * @version $Revision: 1359986 $
  */
 
 public class ExpandWar {
@@ -96,7 +96,8 @@ public class ExpandWar {
         }
 
         // Create the new document base directory
-        docBase.mkdir();
+        if(!docBase.mkdir() && !docBase.isDirectory())
+            throw new IOException(sm.getString("expandWar.createFailed", docBase));
 
         // Expand the WAR into the new document base directory
         String canonicalDocBasePrefix = docBase.getCanonicalPath();

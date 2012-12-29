@@ -55,7 +55,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: CoyoteAdapter.java 1335700 2012-05-08 19:07:09Z markt $
+ * @version $Id: CoyoteAdapter.java 1409036 2012-11-13 23:55:26Z markt $
  */
 public class CoyoteAdapter implements Adapter {
 
@@ -290,7 +290,7 @@ public class CoyoteAdapter implements Adapter {
             if (status==SocketStatus.TIMEOUT) {
                 success = true;
                 if (!asyncConImpl.timeout()) {
-                    asyncConImpl.setErrorState(null);
+                    asyncConImpl.setErrorState(null, false);
                 }
             }
             if (request.isAsyncDispatching()) {
@@ -299,7 +299,7 @@ public class CoyoteAdapter implements Adapter {
                 Throwable t = (Throwable) request.getAttribute(
                         RequestDispatcher.ERROR_EXCEPTION);
                 if (t != null) {
-                    asyncConImpl.setErrorState(t);
+                    asyncConImpl.setErrorState(t, true);
                 }
             }
 

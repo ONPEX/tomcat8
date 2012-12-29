@@ -20,7 +20,6 @@ package org.apache.catalina.connector;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -28,6 +27,7 @@ import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
@@ -53,9 +53,7 @@ import org.apache.tomcat.util.buf.UEncoder;
 import org.apache.tomcat.util.http.FastHttpDateFormat;
 import org.apache.tomcat.util.http.MimeHeaders;
 import org.apache.tomcat.util.http.ServerCookie;
-import org.apache.tomcat.util.http.parser.AstMediaType;
-import org.apache.tomcat.util.http.parser.HttpParser;
-import org.apache.tomcat.util.http.parser.ParseException;
+import org.apache.tomcat.util.http.parser.MediaTypeCache;
 import org.apache.tomcat.util.net.URL;
 import org.apache.tomcat.util.res.StringManager;
 
@@ -64,7 +62,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: Response.java 1350247 2012-06-14 14:04:20Z markt $
+ * @version $Id: Response.java 1405416 2012-11-03 20:55:42Z markt $
  */
 
 public class Response
@@ -72,6 +70,9 @@ public class Response
 
 
     // ----------------------------------------------------------- Constructors
+
+    private static final MediaTypeCache MEDIA_TYPE_CACHE =
+            new MediaTypeCache(100);
 
     /**
      * Compliance with SRV.15.2.22.1. A call to Response.getWriter() if no
@@ -125,7 +126,9 @@ public class Response
 
     /**
      * Associated Catalina connector.
+     * @deprecated  Unused
      */
+    @Deprecated
     protected Connector connector;
 
     /**
@@ -800,24 +803,20 @@ public class Response
             return;
         }
 
-        AstMediaType m = null;
-        HttpParser hp = new HttpParser(new StringReader(type));
-        try {
-             m = hp.MediaType();
-        } catch (ParseException e) {
+        String[] m = MEDIA_TYPE_CACHE.parse(type);
+        if (m == null) {
             // Invalid - Assume no charset and just pass through whatever
             // the user provided.
             coyoteResponse.setContentTypeNoCharset(type);
             return;
         }
 
-        coyoteResponse.setContentTypeNoCharset(m.toStringNoCharset());
+        coyoteResponse.setContentTypeNoCharset(m[0]);
 
-        String charset = m.getCharset();
-        if (charset != null) {
+        if (m[1] != null) {
             // Ignore charset if getWriter() has already been called
             if (!usingWriter) {
-                coyoteResponse.setCharacterEncoding(charset);
+                coyoteResponse.setCharacterEncoding(m[1]);
                 isCharacterEncodingSet = true;
             }
         }
@@ -894,23 +893,12 @@ public class Response
     // --------------------------------------------------- HttpResponse Methods
 
 
-    /**
-     * Return the value for the specified header, or <code>null</code> if this
-     * header has not been set.  If more than one value was added for this
-     * name, only the first is returned; use {@link #getHeaders(String)} to
-     * retrieve all of them.
-     *
-     * @param name Header name to look up
-     */
     @Override
     public String getHeader(String name) {
         return coyoteResponse.getMimeHeaders().getHeader(name);
     }
 
 
-    /**
-     * Return an Iterable of all the header names set for this response.
-     */
     @Override
     public Collection<String> getHeaderNames() {
 
@@ -925,12 +913,6 @@ public class Response
     }
 
 
-    /**
-     * Return a Collection of all the header values associated with the
-     * specified header name.
-     *
-     * @param name Header name to look up
-     */
     @Override
     public Collection<String> getHeaders(String name) {
 
@@ -953,9 +935,6 @@ public class Response
     }
 
 
-    /**
-     * Return the HTTP status code associated with this Response.
-     */
     @Override
     public int getStatus() {
         return coyoteResponse.getStatus();
@@ -1239,7 +1218,14 @@ public class Response
     @Override
     public String encodeURL(String url) {
 
-        String absolute = toAbsolute(url);
+        String absolute;
+        try {
+            absolute = toAbsolute(url);
+        } catch (IllegalArgumentException iae) {
+            // Relative URL
+            return url;
+        }
+
         if (isEncodeable(absolute)) {
             // W3c spec clearly said
             if (url.equalsIgnoreCase("")) {
@@ -1752,6 +1738,19 @@ public class Response
      * Code borrowed heavily from CoyoteAdapter.normalize()
      */
     private void normalize(CharChunk cc) {
+        // Strip query string and/or fragment first as doing it this way makes
+        // the normalization logic a lot simpler
+        int truncate = cc.indexOf('?');
+        if (truncate == -1) {
+            truncate = cc.indexOf('#');
+        }
+        char[] truncateCC = null;
+        if (truncate > -1) {
+            truncateCC = Arrays.copyOfRange(cc.getBuffer(),
+                    cc.getStart() + truncate, cc.getEnd());
+            cc.setEnd(cc.getStart() + truncate);
+        }
+
         if (cc.endsWith("/.") || cc.endsWith("/..")) {
             try {
                 cc.append('/');
@@ -1794,7 +1793,7 @@ public class Response
             if (index < 0) {
                 break;
             }
-            // Prevent from going outside our context
+            // Can't go above the server root
             if (index == startIndex) {
                 throw new IllegalArgumentException();
             }
@@ -1809,6 +1808,15 @@ public class Response
             end = end + index2 - index - 3;
             cc.setEnd(end);
             index = index2;
+        }
+
+        // Add the query string and/or fragment (if present) back in
+        if (truncateCC != null) {
+            try {
+                cc.append(truncateCC, 0, truncateCC.length);
+            } catch (IOException ioe) {
+                throw new IllegalArgumentException(ioe);
+            }
         }
     }
 

@@ -27,6 +27,7 @@ import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.net.AbstractEndpoint;
 import org.apache.tomcat.util.net.AprEndpoint;
 import org.apache.tomcat.util.net.AprEndpoint.Handler;
+import org.apache.tomcat.util.net.SocketStatus;
 import org.apache.tomcat.util.net.SocketWrapper;
 
 
@@ -50,6 +51,14 @@ public class Http11AprProtocol extends AbstractHttp11Protocol {
     @Override
     protected AbstractEndpoint.Handler getHandler() {
         return cHandler;
+    }
+
+
+    @Override
+    public boolean isAprRequired() {
+        // Override since this protocol implementation requires the APR/native
+        // library
+        return true;
     }
 
 
@@ -107,6 +116,17 @@ public class Http11AprProtocol extends AbstractHttp11Protocol {
      */
     public String getSSLCipherSuite() { return ((AprEndpoint)endpoint).getSSLCipherSuite(); }
     public void setSSLCipherSuite(String SSLCipherSuite) { ((AprEndpoint)endpoint).setSSLCipherSuite(SSLCipherSuite); }
+
+
+    /**
+     * SSL honor cipher order.
+     *
+     * Set to <code>true</code> to enforce the <i>server's</i> cipher order
+     * instead of the default which is to allow the client to choose a
+     * preferred cipher.
+     */
+    public boolean getSSLHonorCipherOrder() { return ((AprEndpoint)endpoint).getSSLHonorCipherOrder(); }
+    public void setSSLHonorCipherOrder(boolean SSLHonorCipherOrder) { ((AprEndpoint)endpoint).setSSLHonorCipherOrder(SSLHonorCipherOrder); }
 
 
     /**
@@ -223,7 +243,8 @@ public class Http11AprProtocol extends AbstractHttp11Protocol {
             if (addToPoller && proto.endpoint.isRunning()) {
                 ((AprEndpoint)proto.endpoint).getPoller().add(
                         socket.getSocket().longValue(),
-                        proto.endpoint.getKeepAliveTimeout());
+                        proto.endpoint.getKeepAliveTimeout(),
+                        AprEndpoint.Poller.FLAGS_READ);
             }
         }
 
@@ -241,16 +262,25 @@ public class Http11AprProtocol extends AbstractHttp11Protocol {
             if (processor.isAsync()) {
                 // Async
                 socket.setAsync(true);
-            } else if (processor.isComet() && proto.endpoint.isRunning()) {
+            } else if (processor.isComet()) {
                 // Comet
-                ((AprEndpoint) proto.endpoint).getCometPoller().add(
-                        socket.getSocket().longValue(),
-                        proto.endpoint.getSoTimeout());
+                if (proto.endpoint.isRunning()) {
+                    ((AprEndpoint) proto.endpoint).getCometPoller().add(
+                            socket.getSocket().longValue(),
+                            proto.endpoint.getSoTimeout(),
+                            AprEndpoint.Poller.FLAGS_READ);
+                } else {
+                    // Process a STOP directly
+                    ((AprEndpoint) proto.endpoint).processSocket(
+                            socket.getSocket().longValue(),
+                            SocketStatus.STOP);
+                }
             } else {
                 // Upgraded
                 ((AprEndpoint) proto.endpoint).getPoller().add(
                         socket.getSocket().longValue(),
-                        (processor.getUpgradeInbound().getReadTimeout()));
+                        processor.getUpgradeInbound().getReadTimeout(),
+                        AprEndpoint.Poller.FLAGS_READ);
             }
         }
 

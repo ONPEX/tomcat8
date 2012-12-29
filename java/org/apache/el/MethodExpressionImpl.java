@@ -72,7 +72,7 @@ import org.apache.el.util.ReflectionUtil;
  * @see javax.el.MethodExpression
  * 
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: MethodExpressionImpl.java 1026769 2010-10-24 11:55:10Z markt $
+ * @version $Id: MethodExpressionImpl.java 1379214 2012-08-30 23:13:32Z markt $
  */
 public final class MethodExpressionImpl extends MethodExpression implements
         Externalizable {
@@ -206,10 +206,6 @@ public final class MethodExpressionImpl extends MethodExpression implements
         return n.getMethodInfo(ctx, this.paramTypes);
     }
 
-    /**
-     * @return
-     * @throws ELException
-     */
     private Node getNode() throws ELException {
         if (this.node == null) {
             this.node = ExpressionBuilder.createNode(this.expr);

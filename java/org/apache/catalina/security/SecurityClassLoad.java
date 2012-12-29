@@ -25,7 +25,7 @@ package org.apache.catalina.security;
  *
  * @author Glenn L. Nielsen
  * @author Jean-Francois Arcand
- * @version $Id: SecurityClassLoad.java 1347036 2012-06-06 18:32:43Z markt $
+ * @version $Id: SecurityClassLoad.java 1410548 2012-11-16 19:38:51Z markt $
  */
 
 public final class SecurityClassLoad {
@@ -43,6 +43,7 @@ public final class SecurityClassLoad {
         loadRealmPackage(loader);
         loadSessionPackage(loader);
         loadUtilPackage(loader);
+        loadValvesPackage(loader);
         loadJavaxPackage(loader);
         loadConnectorPackage(loader);
         loadTomcatPackage(loader);
@@ -52,6 +53,9 @@ public final class SecurityClassLoad {
     private static final void loadCorePackage(ClassLoader loader)
         throws Exception {
         final String basePackage = "org.apache.catalina.core.";
+        loader.loadClass
+            (basePackage +
+             "AccessLogAdapter");
         loader.loadClass
             (basePackage +
              "ApplicationContextFacade$1");
@@ -70,6 +74,12 @@ public final class SecurityClassLoad {
         loader.loadClass
             (basePackage +
             "AsyncContextImpl$1");
+        loader.loadClass
+            (basePackage +
+            "AsyncContextImpl$PrivilegedGetTccl");
+        loader.loadClass
+            (basePackage +
+            "AsyncContextImpl$PrivilegedSetTccl");
         loader.loadClass
             (basePackage +
             "AsyncListenerWrapper");
@@ -134,6 +144,13 @@ public final class SecurityClassLoad {
         loader.loadClass(basePackage + "Enumerator");
         loader.loadClass(basePackage + "ParameterMap");
     }
+
+
+    private static final void loadValvesPackage(ClassLoader loader)
+            throws Exception {
+            final String basePackage = "org.apache.catalina.valves.";
+            loader.loadClass(basePackage + "AccessLogValve$3");
+        }
 
 
     private static final void loadCoyotePackage(ClassLoader loader)
@@ -251,23 +268,9 @@ public final class SecurityClassLoad {
                 basePackage + "util.http.FastHttpDateFormat");
         clazz.newInstance();
         loader.loadClass(basePackage + "util.http.HttpMessages");
-        loader.loadClass(basePackage + "util.http.parser.AstAttribute");
-        loader.loadClass(basePackage + "util.http.parser.AstMediaType");
-        loader.loadClass(basePackage + "util.http.parser.AstParameter");
-        loader.loadClass(basePackage + "util.http.parser.AstSubType");
-        loader.loadClass(basePackage + "util.http.parser.AstType");
-        loader.loadClass(basePackage + "util.http.parser.AstValue");
         loader.loadClass(basePackage + "util.http.parser.HttpParser");
-        loader.loadClass(basePackage + "util.http.parser.HttpParserConstants");
-        loader.loadClass(basePackage + "util.http.parser.HttpParserTokenManager");
-        loader.loadClass(basePackage + "util.http.parser.HttpParserTreeConstants");
-        loader.loadClass(basePackage + "util.http.parser.JJTHttpParserState");
-        loader.loadClass(basePackage + "util.http.parser.Node");
-        loader.loadClass(basePackage + "util.http.parser.ParseException");
-        loader.loadClass(basePackage + "util.http.parser.SimpleCharStream");
-        loader.loadClass(basePackage + "util.http.parser.SimpleNode");
-        loader.loadClass(basePackage + "util.http.parser.Token");
-        loader.loadClass(basePackage + "util.http.parser.TokenMgrError");
+        loader.loadClass(basePackage + "util.http.parser.MediaType");
+        loader.loadClass(basePackage + "util.http.parser.MediaTypeCache");
         // net
         loader.loadClass(basePackage + "util.net.Constants");
         loader.loadClass(basePackage +

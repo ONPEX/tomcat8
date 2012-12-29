@@ -34,8 +34,6 @@ import java.util.zip.ZipFile;
 import javax.naming.CompositeName;
 import javax.naming.InvalidNameException;
 import javax.naming.Name;
-import javax.naming.NameClassPair;
-import javax.naming.NameNotFoundException;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.OperationNotSupportedException;
@@ -45,14 +43,13 @@ import javax.naming.directory.ModificationItem;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
-import org.apache.naming.NamingContextEnumeration;
 import org.apache.naming.NamingEntry;
 
 /**
  * WAR Directory Context implementation.
  *
  * @author Remy Maucherat
- * @version $Id: WARDirContext.java 1081987 2011-03-15 23:05:53Z markt $
+ * @version $Id: WARDirContext.java 1392099 2012-09-30 19:48:36Z markt $
  */
 
 public class WARDirContext extends BaseDirContext {
@@ -267,52 +264,6 @@ public class WARDirContext extends BaseDirContext {
     public void rename(String oldName, String newName)
         throws NamingException {
         throw new OperationNotSupportedException();
-    }
-
-
-    /**
-     * Enumerates the names bound in the named context, along with the class 
-     * names of objects bound to them. The contents of any subcontexts are 
-     * not included.
-     * <p>
-     * If a binding is added to or removed from this context, its effect on 
-     * an enumeration previously returned is undefined.
-     * 
-     * @param name the name of the context to list
-     * @return an enumeration of the names and class names of the bindings in 
-     * this context. Each element of the enumeration is of type NameClassPair.
-     * @exception NamingException if a naming exception is encountered
-     */
-    @Override
-    public NamingEnumeration<NameClassPair> list(String name)
-        throws NamingException {
-        return list(getEscapedJndiName(name));
-    }
-
-
-    /**
-     * Enumerates the names bound in the named context, along with the class 
-     * names of objects bound to them. The contents of any subcontexts are 
-     * not included.
-     * <p>
-     * If a binding is added to or removed from this context, its effect on 
-     * an enumeration previously returned is undefined.
-     * 
-     * @param name the name of the context to list
-     * @return an enumeration of the names and class names of the bindings in 
-     * this context. Each element of the enumeration is of type NameClassPair.
-     * @exception NamingException if a naming exception is encountered
-     */
-    @Override
-    public NamingEnumeration<NameClassPair> list(Name name)
-        throws NamingException {
-        if (name.isEmpty())
-            return new NamingContextEnumeration(list(entries).iterator());
-        Entry entry = treeLookup(name);
-        if (entry == null)
-            throw new NameNotFoundException
-                (sm.getString("resources.notFound", name));
-        return new NamingContextEnumeration(list(entry).iterator());
     }
 
 

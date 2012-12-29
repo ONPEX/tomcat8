@@ -119,7 +119,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: WebappClassLoader.java 1348120 2012-06-08 15:39:09Z kkolinko $
+ * @version $Id: WebappClassLoader.java 1361987 2012-07-16 12:20:10Z rjung $
  */
 public class WebappClassLoader
     extends URLClassLoader
@@ -240,6 +240,9 @@ public class WebappClassLoader
     /**
      * Construct a new ClassLoader with no defined repositories and the given
      * parent ClassLoader.
+     * <p>
+     * Method is used via reflection -
+     * see {@link WebappLoader#createClassLoader()}
      *
      * @param parent Our parent class loader
      */
@@ -1775,11 +1778,11 @@ public class WebappClassLoader
                 off = externalsLength;
             }
             for (i = 0; i < filesLength; i++) {
-                urls[off + i] = getURL(files[i], true);
+                urls[off + i] = getURI(files[i]);
             }
             off += filesLength;
             for (i = 0; i < jarFilesLength; i++) {
-                urls[off + i] = getURL(jarRealFiles[i], true);
+                urls[off + i] = getURI(jarRealFiles[i]);
             }
             off += jarFilesLength;
             if (!searchExternalFirst) {
@@ -2928,7 +2931,7 @@ public class WebappClassLoader
         ResourceEntry entry = new ResourceEntry();
         try {
             entry.source = getURI(new File(file, path));
-            entry.codeBase = getURL(new File(file, path), false);
+            entry.codeBase = entry.source;
         } catch (MalformedURLException e) {
             return null;
         }
@@ -3062,8 +3065,8 @@ public class WebappClassLoader
 
                         entry = new ResourceEntry();
                         try {
-                            entry.codeBase = getURL(jarRealFiles[i], false);
-                            String jarFakeUrl = getURI(jarRealFiles[i]).toString();
+                            entry.codeBase = getURI(jarRealFiles[i]);
+                            String jarFakeUrl = entry.codeBase.toString();
                             jarFakeUrl = "jar:" + jarFakeUrl + "!/" + path;
                             entry.source = new URL(jarFakeUrl);
                             entry.lastModified = jarRealFiles[i].lastModified();
@@ -3449,7 +3452,9 @@ public class WebappClassLoader
 
     /**
      * Get URL.
+     * @deprecated Use {@link #getURI(File)} instead
      */
+    @Deprecated
     protected URL getURL(File file, boolean encoded)
         throws MalformedURLException {
 
@@ -3468,7 +3473,7 @@ public class WebappClassLoader
 
 
     /**
-     * Get URL.
+     * Get the URI for the given file.
      */
     protected URL getURI(File file)
         throws MalformedURLException {

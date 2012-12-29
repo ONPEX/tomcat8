@@ -18,7 +18,6 @@
 package org.apache.tomcat.util.bcel.classfile;
 
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 
 import org.apache.tomcat.util.bcel.Constants;
@@ -29,7 +28,7 @@ import org.apache.tomcat.util.bcel.Constants;
  * to the source file of this class.
  * It is instantiated from the <em>Attribute.readAttribute()</em> method.
  *
- * @version $Id: InnerClasses.java 1181133 2011-10-10 18:49:14Z markt $
+ * @version $Id: InnerClasses.java 1377533 2012-08-26 22:22:59Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Attribute
  */
@@ -69,22 +68,6 @@ public final class InnerClasses extends Attribute {
         inner_classes = new InnerClass[number_of_classes];
         for (int i = 0; i < number_of_classes; i++) {
             inner_classes[i] = new InnerClass(file);
-        }
-    }
-
-
-    /**
-     * Dump source file attribute to file stream in binary format.
-     *
-     * @param file Output file stream
-     * @throws IOException
-     */
-    @Override
-    public final void dump( DataOutputStream file ) throws IOException {
-        super.dump(file);
-        file.writeShort(number_of_classes);
-        for (int i = 0; i < number_of_classes; i++) {
-            inner_classes[i].dump(file);
         }
     }
 

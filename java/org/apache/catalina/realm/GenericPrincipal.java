@@ -33,7 +33,7 @@ import org.ietf.jgss.GSSCredential;
  * is available for use by <code>Realm</code> implementations.
  *
  * @author Craig R. McClanahan
- * @version $Id: GenericPrincipal.java 1186071 2011-10-19 10:21:28Z markt $
+ * @version $Id: GenericPrincipal.java 1361770 2012-07-15 19:38:51Z markt $
  */
 
 public class GenericPrincipal implements Principal {
@@ -48,7 +48,10 @@ public class GenericPrincipal implements Principal {
      *
      * @param name The username of the user represented by this Principal
      * @param password Credentials used to authenticate this user
+     *
+     * @deprecated  Unused
      */
+    @Deprecated
     public GenericPrincipal(String name, String password) {
 
         this(name, password, null);

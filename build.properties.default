@@ -21,13 +21,13 @@
 # modules that Tomcat depends on.  Copy this file to "build.properties"
 # in the top-level source directory, and customize it as needed.
 #
-# $Id: build.properties.default 1350468 2012-06-15 06:11:47Z markt $
+# $Id: build.properties.default 1416816 2012-12-04 08:46:27Z markt $
 # -----------------------------------------------------------------------------
 
 # ----- Version Control Flags -----
 version.major=7
 version.minor=0
-version.build=28
+version.build=34
 version.patch=0
 version.suffix=
 
@@ -122,14 +122,14 @@ wsdl4j-lib.home=${base.path}/wsdl4j-${wsdl4j-lib.version}
 wsdl4j-lib.loc=${base-maven.loc}/wsdl4j/wsdl4j/${wsdl4j-lib.version}/wsdl4j-${wsdl4j-lib.version}.jar
 wsdl4j-lib.jar=${wsdl4j-lib.home}/wsdl4j-${wsdl4j-lib.version}.jar
 
-# ----- Eclipse JDT, version 3.2 or later -----
-jdt.version=3.7.2
-jdt.release=R-3.7.2-201202080800
+# ----- Eclipse JDT, version 3.2 or later -----#
+jdt.version=4.2.1
+jdt.release=R-4.2.1-201209141800
 jdt.home=${base.path}/ecj-${jdt.version}
 jdt.jar=${jdt.home}/ecj-${jdt.version}.jar
 # The download will be moved to the archive area eventually. We are taking care of that in advance.
-jdt.loc.1=http://archive.eclipse.org/eclipse/downloads/drops/${jdt.release}/ecj-${jdt.version}.jar
-jdt.loc.2=http://download.eclipse.org/eclipse/downloads/drops/${jdt.release}/ecj-${jdt.version}.jar
+jdt.loc.1=http://archive.eclipse.org/eclipse/downloads/drops4/${jdt.release}/ecj-${jdt.version}.jar
+jdt.loc.2=http://download.eclipse.org/eclipse/downloads/drops4/${jdt.release}/ecj-${jdt.version}.jar
 
 # ----- Tomcat native library -----
 tomcat-native.version=1.1.24
@@ -182,7 +182,7 @@ junit.jar=${junit.lib}/junit-4.8.2.jar
 junit.loc=http://cloud.github.com/downloads/KentBeck/junit/junit4.8.2.zip
 
 # ----- Checkstyle, version 5.1 or later -----
-checkstyle.version=5.5
+checkstyle.version=5.6
 checkstyle.home=${base.path}/checkstyle-${checkstyle.version}
 checkstyle.loc=${base-sf.loc}/checkstyle/checkstyle-${checkstyle.version}-bin.zip
 checkstyle.jar=${checkstyle.home}/checkstyle-${checkstyle.version}-all.jar

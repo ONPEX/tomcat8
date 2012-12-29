@@ -88,7 +88,7 @@ public class RpcChannel implements ChannelListener{
             channelOptions & ~Channel.SEND_OPTIONS_SYNCHRONIZED_ACK;
         
         RpcCollectorKey key = new RpcCollectorKey(UUIDGenerator.randomUUID(false));
-        RpcCollector collector = new RpcCollector(key,rpcOptions,destination.length,timeout);
+        RpcCollector collector = new RpcCollector(key,rpcOptions,destination.length);
         try {
             synchronized (collector) {
                 if ( rpcOptions != NO_REPLY ) responseMap.put(key, collector);
@@ -230,15 +230,30 @@ public class RpcChannel implements ChannelListener{
         public RpcCollectorKey key;
         public int options;
         public int destcnt;
+        /**
+         * @deprecated  Unused - will be removed in Tomcat 8.0.x
+         */
+        @Deprecated
         public long timeout;
-        
-        public RpcCollector(RpcCollectorKey key, int options, int destcnt, long timeout) {
+
+        /**
+         * @deprecated  Use {@link
+         *              RpcChannel.RpcCollector#RpcChannel.RpcCollector(
+         *              RpcChannel.RpcCollectorKey, int, int)}
+         */
+        @Deprecated
+        public RpcCollector(RpcCollectorKey key, int options, int destcnt,
+                long timeout) {
             this.key = key;
             this.options = options;
             this.destcnt = destcnt;
             this.timeout = timeout;
         }
         
+        public RpcCollector(RpcCollectorKey key, int options, int destcnt) {
+            this(key, options, destcnt, 0);
+        }
+
         public void addResponse(Serializable message, Member sender){
             Response resp = new Response(sender,message);
             responses.add(resp);
@@ -300,6 +315,10 @@ public class RpcChannel implements ChannelListener{
         
     }
     
+    /**
+     * @deprecated  Unused - will be removed in Tomcat 8.0.x
+     */
+    @Deprecated
     protected static String bToS(byte[] data) {
         StringBuilder buf = new StringBuilder(4*16);
         buf.append("{");

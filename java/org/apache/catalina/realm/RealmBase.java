@@ -45,7 +45,6 @@ import org.apache.catalina.Service;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
-import org.apache.catalina.deploy.LoginConfig;
 import org.apache.catalina.deploy.SecurityCollection;
 import org.apache.catalina.deploy.SecurityConstraint;
 import org.apache.catalina.mbeans.MBeanUtils;
@@ -68,7 +67,7 @@ import org.ietf.jgss.GSSName;
  * location) are identical to those currently supported by Tomcat 3.X.
  *
  * @author Craig R. McClanahan
- * @version $Id: RealmBase.java 1303339 2012-03-21 10:03:18Z markt $
+ * @version $Id: RealmBase.java 1379208 2012-08-30 22:59:07Z markt $
  */
 
 public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
@@ -119,7 +118,10 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
 
     /**
      * The MD5 helper object for this class.
+     *
+     * @deprecated  Unused - will be removed in Tomcat 8.0.x
      */
+    @Deprecated
     protected static final MD5Encoder md5Encoder = new MD5Encoder();
 
 
@@ -426,7 +428,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
         String serverDigest = null;
         // Bugzilla 32137
         synchronized(md5Helper) {
-            serverDigest = md5Encoder.encode(md5Helper.digest(valueBytes));
+            serverDigest = MD5Encoder.encode(md5Helper.digest(valueBytes));
         }
 
         if (log.isDebugEnabled()) {
@@ -657,14 +659,15 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
                     }
                 }
                 if(matched) {
-                    found = true;
                     if(length > longest) {
+                        found = false;
                         if(results != null) {
                             results.clear();
                         }
                         longest = length;
                     }
                     if(collection[j].findMethod(method)) {
+                        found = true;
                         if(results == null) {
                             results = new ArrayList<SecurityConstraint>();
                         }
@@ -788,7 +791,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
      */
     private SecurityConstraint [] resultsToArray(
             ArrayList<SecurityConstraint> results) {
-        if(results == null) {
+        if(results == null || results.size() == 0) {
             return null;
         }
         SecurityConstraint [] array = new SecurityConstraint[results.size()];
@@ -818,31 +821,6 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
 
         if (constraints == null || constraints.length == 0)
             return (true);
-
-        // Specifically allow access to the form login and form error pages
-        // and the "j_security_check" action
-        LoginConfig config = context.getLoginConfig();
-        if ((config != null) &&
-            (Constants.FORM_METHOD.equals(config.getAuthMethod()))) {
-            String requestURI = request.getRequestPathMB().toString();
-            String loginPage = config.getLoginPage();
-            if (loginPage.equals(requestURI)) {
-                if (log.isDebugEnabled())
-                    log.debug(" Allow access to login page " + loginPage);
-                return (true);
-            }
-            String errorPage = config.getErrorPage();
-            if (errorPage.equals(requestURI)) {
-                if (log.isDebugEnabled())
-                    log.debug(" Allow access to error page " + errorPage);
-                return (true);
-            }
-            if (requestURI.endsWith(Constants.FORM_ACTION)) {
-                if (log.isDebugEnabled())
-                    log.debug(" Allow access to username/password submission");
-                return (true);
-            }
-        }
 
         // Which user principal have we already authenticated?
         Principal principal = request.getPrincipal();
@@ -1227,7 +1205,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
             digest = md5Helper.digest(valueBytes);
         }
 
-        return md5Encoder.encode(digest);
+        return MD5Encoder.encode(digest);
     }
 
 

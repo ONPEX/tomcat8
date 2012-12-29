@@ -16,6 +16,7 @@
  */
 package org.apache.tomcat.jdbc.pool;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
@@ -54,10 +55,15 @@ import org.apache.juli.logging.LogFactory;
  */
 
 public class ConnectionPool {
+
+    /**
+     * Default domain for objects registering with an mbean server
+     */
+    public static final String POOL_JMX_DOMAIN = "tomcat.jdbc";
     /**
      * Prefix type for JMX registration
      */
-    public static final String POOL_JMX_TYPE_PREFIX = "tomcat.jdbc:type=";
+    public static final String POOL_JMX_TYPE_PREFIX = POOL_JMX_DOMAIN+":type=";
 
     /**
      * Logger
@@ -396,7 +402,9 @@ public class ConnectionPool {
         PoolProperties.InterceptorDefinition[] proxies = getPoolProperties().getJdbcInterceptorsAsArray();
         for (int i=0; i<proxies.length; i++) {
             try {
-                proxies[i].getInterceptorClass().newInstance().poolClosed(this);
+                JdbcInterceptor interceptor = proxies[i].getInterceptorClass().newInstance();
+                interceptor.setProperties(proxies[i].getProperties());
+                interceptor.poolClosed(this);
             }catch (Exception x) {
                 log.debug("Unable to inform interceptor of pool closure.",x);
             }
@@ -829,7 +837,7 @@ public class ConnectionPool {
      */
     protected boolean terminateTransaction(PooledConnection con) {
         try {
-            if (con.getPoolProperties().getDefaultAutoCommit()==Boolean.FALSE) {
+            if (Boolean.FALSE.equals(con.getPoolProperties().getDefaultAutoCommit())) {
                 if (this.getPoolProperties().getRollbackOnReturn()) {
                     boolean autocommit = con.getConnection().getAutoCommit();
                     if (!autocommit) con.getConnection().rollback();
@@ -1310,14 +1318,13 @@ public class ConnectionPool {
         return poolCleanTimer;
     }
 
-    protected class PoolCleaner extends TimerTask {
-        protected ConnectionPool pool;
+    protected static class PoolCleaner extends TimerTask {
+        protected WeakReference<ConnectionPool> pool;
         protected long sleepTime;
-        protected volatile boolean run = true;
         protected volatile long lastRun = 0;
 
         PoolCleaner(ConnectionPool pool, long sleepTime) {
-            this.pool = pool;
+            this.pool = new WeakReference<ConnectionPool>(pool);
             this.sleepTime = sleepTime;
             if (sleepTime <= 0) {
                 log.warn("Database connection pool evicter thread interval is set to 0, defaulting to 30 seconds");
@@ -1329,11 +1336,11 @@ public class ConnectionPool {
 
         @Override
         public void run() {
-            if (pool.isClosed()) {
-                if (pool.getSize() <= 0) {
-                    run = false;
-                }
-            } else if ((System.currentTimeMillis() - lastRun) > sleepTime) {
+            ConnectionPool pool = this.pool.get();
+            if (pool == null) {
+                stopRunning();
+            } else if (!pool.isClosed() &&
+                    (System.currentTimeMillis() - lastRun) > sleepTime) {
                 lastRun = System.currentTimeMillis();
                 try {
                     if (pool.getPoolProperties().isRemoveAbandoned())
@@ -1345,9 +1352,9 @@ public class ConnectionPool {
                         pool.testAllIdle();
                 } catch (Exception x) {
                     log.error("", x);
-                } // catch
-            } // end if
-        } // run
+                }
+            }
+        }
 
         public void start() {
             registerCleaner(this);

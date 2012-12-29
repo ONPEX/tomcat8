@@ -14,17 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.catalina.ant.jmx;
 
 /**
  *
  * @author Peter Rossbach
- * @version $Id: Arg.java 939305 2010-04-29 13:43:39Z kkolinko $
+ * @version $Id: Arg.java 1360850 2012-07-12 18:35:57Z markt $
  * @since 5.5.10
  */
 public class Arg {
+    /**
+     * @deprecated  Use getter/setter
+     */
+    @Deprecated
     String type;
+    /**
+     * @deprecated  Use getter/setter
+     */
+    @Deprecated
     String value;
 
     public void setType( String type) {
@@ -33,6 +40,10 @@ public class Arg {
     public void setValue( String value ) {
         this.value=value;
     }
+    /**
+     * @deprecated  Use {@link #setValue(String)}
+     */
+    @Deprecated
     public void addText( String text ) {
         this.value=text;
     }

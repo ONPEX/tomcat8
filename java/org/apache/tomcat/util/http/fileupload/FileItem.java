@@ -30,7 +30,7 @@ import java.io.UnsupportedEncodingException;
  * <p> After retrieving an instance of this class from a {@link
  * org.apache.tomcat.util.http.fileupload.FileUpload FileUpload} instance (see
  * {@link org.apache.tomcat.util.http.fileupload.FileUpload
- * #parseRequest(javax.servlet.http.HttpServletRequest)}), you may
+ * #parseRequest(RequestContext)}), you may
  * either request all contents of the file at once using {@link #get()} or
  * request an {@link java.io.InputStream InputStream} with
  * {@link #getInputStream()} and process the file without attempting to load
@@ -48,7 +48,7 @@ import java.io.UnsupportedEncodingException;
  * @author <a href="mailto:jvanzyl@apache.org">Jason van Zyl</a>
  * @author <a href="mailto:martinc@apache.org">Martin Cooper</a>
  *
- * @version $Id: FileItem.java 981816 2010-08-03 10:44:58Z markt $
+ * @version $Id: FileItem.java 1373051 2012-08-14 19:47:38Z markt $
  */
 public interface FileItem extends Serializable {
 

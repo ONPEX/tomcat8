@@ -43,7 +43,7 @@ import org.apache.tomcat.util.digester.Digester;
  * synchronization is performed around accesses to the principals collection.
  *
  * @author Craig R. McClanahan
- * @version $Id: MemoryRealm.java 1026786 2010-10-24 13:08:26Z markt $
+ * @version $Id: MemoryRealm.java 1361770 2012-07-15 19:38:51Z markt $
  */
 
 public class MemoryRealm  extends RealmBase {
@@ -266,7 +266,10 @@ public class MemoryRealm  extends RealmBase {
      * Returns the principals for this realm.
      *
      * @return The principals, keyed by user name (a String)
+     *
+     * @deprecated  Unused
      */
+    @Deprecated
     protected Map<String,GenericPrincipal> getPrincipals() {
         return principals;
     }

@@ -39,7 +39,7 @@ import org.apache.tomcat.util.buf.ByteChunk;
  * internal collection classes is performed.
  *
  * @author Craig R. McClanahan
- * @version $Id: SavedRequest.java 1043272 2010-12-08 01:31:51Z markt $
+ * @version $Id: SavedRequest.java 1372394 2012-08-13 12:29:51Z markt $
  */
 
 public final class SavedRequest {
@@ -146,6 +146,21 @@ public final class SavedRequest {
     }
 
     
+    /**
+     * The decode request URI associated with this Request. Path parameters are
+     * also excluded
+     */
+    private String decodedRequestURI = null;
+
+    public String getDecodedRequestURI() {
+        return (this.decodedRequestURI);
+    }
+
+    public void setDecodedRequestURI(String decodedRequestURI) {
+        this.decodedRequestURI = decodedRequestURI;
+    }
+
+
     /**
      * The body of this request.
      */

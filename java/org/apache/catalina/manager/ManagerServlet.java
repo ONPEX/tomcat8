@@ -148,7 +148,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: ManagerServlet.java 1162172 2011-08-26 17:12:33Z markt $
+ * @version $Id: ManagerServlet.java 1390886 2012-09-27 08:24:49Z markt $
  */
 
 public class ManagerServlet extends HttpServlet implements ContainerServlet {
@@ -193,7 +193,9 @@ public class ManagerServlet extends HttpServlet implements ContainerServlet {
 
     /**
      * Path used to store context descriptors.
+     * @deprecated  Unused
      */
+    @Deprecated
     protected File contextDescriptors = null;
 
 
@@ -205,10 +207,12 @@ public class ManagerServlet extends HttpServlet implements ContainerServlet {
     
     /**
      * The host appBase.
+     * @deprecated  Unused
      */
+    @Deprecated
     protected File appBase = null;
-    
-    
+
+
     /**
      * MBean server.
      */
@@ -859,10 +863,11 @@ public class ManagerServlet extends HttpServlet implements ContainerServlet {
                 }
             }
             context = (Context) host.findChild(name);
-            if (context != null && context.getConfigured() && context.getAvailable()) {
+            if (context != null && context.getConfigured() &&
+                    context.getState().isAvailable()) {
                 writer.println(smClient.getString(
                         "managerServlet.deployed", displayPath));
-            } else if (context!=null && !context.getAvailable()) {
+            } else if (context!=null && !context.getState().isAvailable()) {
                 writer.println(smClient.getString(
                         "managerServlet.deployedButNotStarted", displayPath));
             } else {
@@ -900,7 +905,7 @@ public class ManagerServlet extends HttpServlet implements ContainerServlet {
                 String displayPath = context.getPath();
                 if( displayPath.equals("") )
                     displayPath = "/";
-                if (context.getAvailable()) {
+                if (context.getState().isAvailable()) {
                     writer.println(smClient.getString("managerServlet.listitem",
                             displayPath,
                             "running",
@@ -1191,7 +1196,11 @@ public class ManagerServlet extends HttpServlet implements ContainerServlet {
      *
      * @param writer Writer to render to
      * @param cn Name of the application to list session information for
+     *
+     * @deprecated  Use {@link #sessions(PrintWriter, ContextName, int,
+     *              StringManager)}
      */
+    @Deprecated
     protected void sessions(PrintWriter writer, ContextName cn,
             StringManager smClient) {
         sessions(writer, cn, -1, smClient);
@@ -1245,7 +1254,7 @@ public class ManagerServlet extends HttpServlet implements ContainerServlet {
                 return;
             }
             context.start();
-            if (context.getAvailable())
+            if (context.getState().isAvailable())
                 writer.println(smClient.getString("managerServlet.started",
                         displayPath));
             else

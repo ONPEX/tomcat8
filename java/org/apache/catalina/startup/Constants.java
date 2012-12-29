@@ -24,7 +24,7 @@ package org.apache.catalina.startup;
  *
  * @author Craig R. McClanahan
  * @author Jean-Francois Arcand
- * @version $Id: Constants.java 1138693 2011-06-22 23:39:58Z kkolinko $
+ * @version $Id: Constants.java 1377085 2012-08-24 20:21:07Z markt $
  */
 
 public final class Constants {
@@ -37,6 +37,13 @@ public final class Constants {
     public static final String DefaultWebXml = "conf/web.xml";
     public static final String HostContextXml = "context.xml.default";
     public static final String HostWebXml = "web.xml.default";
+
+    public static final String DEFAULT_JARS_TO_SKIP =
+            "tomcat.util.scan.DefaultJarScanner.jarsToSkip";
+    public static final String PLUGGABILITY_JARS_TO_SKIP =
+            "org.apache.catalina.startup.ContextConfig.jarsToSkip";
+    public static final String TLD_JARS_TO_SKIP =
+            "org.apache.catalina.startup.TldConfig.jarsToSkip";
 
     /**
      * A dummy value used to suppress loading the default web.xml file.

@@ -33,7 +33,7 @@ import java.lang.reflect.Proxy;
  * @author Craig R. McClanahan
  * @author Bip Thelin
  * @author Filip Hanik
- * @version $Id: ReplicationStream.java 939305 2010-04-29 13:43:39Z kkolinko $
+ * @version $Id: ReplicationStream.java 1366914 2012-07-29 19:32:20Z markt $
  */
 
 public final class ReplicationStream extends ObjectInputStream {
@@ -105,7 +105,12 @@ public final class ReplicationStream extends ObjectInputStream {
     protected Class<?> resolveProxyClass(String[] interfaces)
             throws IOException, ClassNotFoundException {
         
-        ClassLoader latestLoader = (classLoaders!=null && classLoaders.length==0)?null:classLoaders[0];
+        ClassLoader latestLoader;
+        if (classLoaders != null && classLoaders.length > 0) {
+            latestLoader = classLoaders[0];
+        } else {
+            latestLoader = null;
+        }
         ClassLoader nonPublicLoader = null;
         boolean hasNonPublicInterface = false;
 

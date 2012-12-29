@@ -56,7 +56,7 @@ import org.apache.naming.NamingEntry;
  *
  *
  * @author Fabrizio Giustina
- * @version $Id: VirtualDirContext.java 1307600 2012-03-30 20:33:27Z kkolinko $
+ * @version $Id: VirtualDirContext.java 1371816 2012-08-10 19:54:55Z markt $
  */
 public class VirtualDirContext extends FileDirContext {
     private String extraResourcePaths = "";
@@ -296,4 +296,13 @@ public class VirtualDirContext extends FileDirContext {
         return retSuper;
     }
 
+    @Override
+    protected String doGetRealPath(String path) {
+        File file = file(path);
+        if (null != file) {
+            return file.getAbsolutePath();
+        } else {
+            return null;
+        }
+    }
 }

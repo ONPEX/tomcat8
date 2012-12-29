@@ -27,11 +27,19 @@ package org.apache.catalina.util;
  * of the digest.
  *
  * @author Remy Maucherat
- * @version $Id: MD5Encoder.java 939305 2010-04-29 13:43:39Z kkolinko $
+ * @version $Id: MD5Encoder.java 1364451 2012-07-22 22:23:22Z markt $
  */
 
 public final class MD5Encoder {
 
+
+    /**
+     * @deprecated  Will be made private in Tomcat 8.0.x
+     */
+    @Deprecated
+    public MD5Encoder() {
+        // NOOP
+    }
 
     // ----------------------------------------------------- Instance Variables
 
@@ -50,7 +58,7 @@ public final class MD5Encoder {
      * @param binaryData Array containing the digest
      * @return Encoded MD5, or null if encoding failed
      */
-    public String encode( byte[] binaryData ) {
+    public static String encode( byte[] binaryData ) {
 
         if (binaryData.length != 16)
             return null;

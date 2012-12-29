@@ -47,7 +47,7 @@ import org.apache.catalina.LifecycleException;
  *
  *
  * @author Fabrizio Giustina
- * @version $Id: VirtualWebappLoader.java 1292342 2012-02-22 15:24:25Z kkolinko $
+ * @version $Id: VirtualWebappLoader.java 1401477 2012-10-23 21:04:54Z rjung $
  */
 public class VirtualWebappLoader extends WebappLoader {
 
@@ -57,7 +57,7 @@ public class VirtualWebappLoader extends WebappLoader {
     /**
      * <code>;</code> separated list of additional path elements.
      */
-    private String virtualClasspath;
+    private String virtualClasspath = "";
 
     /**
      * Construct a new WebappLoader with no defined parent class loader (so that

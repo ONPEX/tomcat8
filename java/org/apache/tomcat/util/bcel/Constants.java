@@ -20,7 +20,7 @@ package org.apache.tomcat.util.bcel;
 /**
  * Constants for the project, mostly defined in the JVM specification.
  *
- * @version $Id: Constants.java 1237336 2012-01-29 16:43:45Z markt $
+ * @version $Id: Constants.java 1377534 2012-08-26 22:26:10Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */
 public interface Constants {
@@ -94,13 +94,23 @@ public interface Constants {
   /** Marks a constant pool entry as a name and type.  */
   public static final byte CONSTANT_NameAndType        = 12;
 
+  /** Marks a constant pool entry as a Method Handle.  */
+  public static final byte CONSTANT_MethodHandle       = 15;
+
+  /** Marks a constant pool entry as a Method Type.    */
+  public static final byte CONSTANT_MethodType         = 16;
+
+  /** Marks a constant pool entry as an Invoke Dynamic */
+  public static final byte CONSTANT_InvokeDynamic      = 18;
+
   /** The names of the types of entries in a constant pool. */
   public static final String[] CONSTANT_NAMES = {
     "", "CONSTANT_Utf8", "", "CONSTANT_Integer",
     "CONSTANT_Float", "CONSTANT_Long", "CONSTANT_Double",
     "CONSTANT_Class", "CONSTANT_String", "CONSTANT_Fieldref",
     "CONSTANT_Methodref", "CONSTANT_InterfaceMethodref",
-    "CONSTANT_NameAndType" };
+    "CONSTANT_NameAndType", "CONSTANT_MethodHandle",
+    "CONSTANT_MethodType", "CONSTANT_InvokeDynamic" };
   
   /** Java VM opcode.
    * @see <a href="http://java.sun.com/docs/books/jvms/second_edition/html/Instructions2.doc.html">Opcode definitions in The Java Virtual Machine Specification</a> */

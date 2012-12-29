@@ -18,7 +18,6 @@
 package org.apache.tomcat.util.bcel.classfile;
 
 import java.io.DataInput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 
 import org.apache.tomcat.util.bcel.Constants;
@@ -29,7 +28,7 @@ import org.apache.tomcat.util.bcel.Constants;
  * should appear per classfile.  The intention of this class is that it is
  * instantiated from the <em>Attribute.readAttribute()</em> method.
  *
- * @version $Id: SourceFile.java 1057670 2011-01-11 14:52:05Z markt $
+ * @version $Id: SourceFile.java 1377533 2012-08-26 22:22:59Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Attribute
  */
@@ -69,19 +68,6 @@ public final class SourceFile extends Attribute {
     public SourceFile(int name_index, int length, int sourcefile_index, ConstantPool constant_pool) {
         super(Constants.ATTR_SOURCE_FILE, name_index, length, constant_pool);
         this.sourcefile_index = sourcefile_index;
-    }
-
-
-    /**
-     * Dump source file attribute to file stream in binary format.
-     *
-     * @param file Output file stream
-     * @throws IOException
-     */
-    @Override
-    public final void dump( DataOutputStream file ) throws IOException {
-        super.dump(file);
-        file.writeShort(sourcefile_index);
     }
 
 

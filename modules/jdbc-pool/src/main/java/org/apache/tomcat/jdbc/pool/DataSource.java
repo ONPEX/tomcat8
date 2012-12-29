@@ -98,8 +98,10 @@ public class DataSource extends DataSourceProxy implements javax.sql.DataSource,
     @Override
     public ObjectName preRegister(MBeanServer server, ObjectName name) throws Exception {
         try {
-            this.oname = createObjectName(name);
-            if (oname!=null) registerJmx();
+            if ( isJmxEnabled() ) { 
+                this.oname = createObjectName(name);
+                if (oname!=null) registerJmx();
+            }
         }catch (MalformedObjectNameException x) {
             log.error("Unable to create object name for JDBC pool.",x);
         }
@@ -113,12 +115,14 @@ public class DataSource extends DataSourceProxy implements javax.sql.DataSource,
      * @throws MalformedObjectNameException
      */
     public ObjectName createObjectName(ObjectName original) throws MalformedObjectNameException {
-        String domain = "tomcat.jdbc";
+        String domain = ConnectionPool.POOL_JMX_DOMAIN;
         Hashtable<String,String> properties = original.getKeyPropertyList();
         String origDomain = original.getDomain();
         properties.put("type", "ConnectionPool");
         properties.put("class", this.getClass().getName());
-        if (original.getKeyProperty("path")!=null) {
+        if (original.getKeyProperty("path")!=null || properties.get("context")!=null) {
+            //this ensures that if the registration came from tomcat, we're not losing
+            //the unique domain, but putting that into as an engine attribute
             properties.put("engine", origDomain);
         }
         ObjectName name = new ObjectName(domain,properties);

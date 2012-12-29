@@ -18,7 +18,6 @@
 package org.apache.tomcat.util.bcel.classfile;
 
 import java.io.DataInput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 
 import org.apache.tomcat.util.bcel.Constants;
@@ -28,7 +27,7 @@ import org.apache.tomcat.util.bcel.Constants;
  * <A HREF="org.apache.tomcat.util.bcel.classfile.Constant.html">Constant</A> class 
  * and represents a reference to an int object.
  *
- * @version $Id: ConstantInteger.java 1181135 2011-10-10 18:51:44Z markt $
+ * @version $Id: ConstantInteger.java 1377533 2012-08-26 22:22:59Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Constant
  */
@@ -55,19 +54,6 @@ public final class ConstantInteger extends Constant {
      */
     ConstantInteger(DataInput file) throws IOException {
         this(file.readInt());
-    }
-
-
-    /**
-     * Dump constant integer to file stream in binary format.
-     *
-     * @param file Output file stream
-     * @throws IOException
-     */
-    @Override
-    public final void dump( DataOutputStream file ) throws IOException {
-        file.writeByte(tag);
-        file.writeInt(bytes);
     }
 
 

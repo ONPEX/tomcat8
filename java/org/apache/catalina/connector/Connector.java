@@ -43,7 +43,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: Connector.java 1350306 2012-06-14 15:59:15Z kkolinko $
+ * @version $Id: Connector.java 1353509 2012-06-25 13:05:03Z markt $
  */
 
 
@@ -968,6 +968,13 @@ public class Connector extends LifecycleMBeanBase  {
         // Make sure parseBodyMethodsSet has a default
         if( null == parseBodyMethodsSet ) {
             setParseBodyMethods(getParseBodyMethods());
+        }
+
+        if (protocolHandler.isAprRequired() &&
+                !AprLifecycleListener.isAprAvailable()) {
+            throw new LifecycleException(
+                    sm.getString("coyoteConnector.protocolHandlerNoApr",
+                            getProtocolHandlerClassName()));
         }
 
         try {

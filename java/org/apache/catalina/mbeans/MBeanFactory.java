@@ -57,7 +57,7 @@ import org.apache.catalina.valves.ValveBase;
  * <code>org.apache.catalina.core.StandardServer</code> component.</p>
  *
  * @author Amy Roh
- * @version $Id: MBeanFactory.java 1240334 2012-02-03 20:17:37Z markt $
+ * @version $Id: MBeanFactory.java 1361764 2012-07-15 19:14:11Z markt $
  */
 
 public class MBeanFactory {
@@ -111,7 +111,10 @@ public class MBeanFactory {
      * Return the managed bean definition for the specified bean type
      *
      * @param type MBean type
+     *
+     * @deprecated  Unused
      */
+    @Deprecated
     public String findObjectName(String type) {
 
         if (type.equals("org.apache.catalina.core.StandardContext")) {

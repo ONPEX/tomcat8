@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 
 import org.apache.juli.logging.Log;
@@ -317,6 +318,15 @@ public class AprEndpoint extends AbstractEndpoint {
     public void setSSLInsecureRenegotiation(boolean SSLInsecureRenegotiation) { this.SSLInsecureRenegotiation = SSLInsecureRenegotiation; }
     public boolean getSSLInsecureRenegotiation() { return SSLInsecureRenegotiation; }
 
+    protected boolean SSLHonorCipherOrder = false;
+    /**
+     * Set to <code>true</code> to enforce the <i>server's</i> cipher order
+     * instead of the default which is to allow the client to choose a
+     * preferred cipher.
+     */
+    public void setSSLHonorCipherOrder(boolean SSLHonorCipherOrder) { this.SSLHonorCipherOrder = SSLHonorCipherOrder; }
+    public boolean getSSLHonorCipherOrder() { return SSLHonorCipherOrder; }
+
 
     /**
      * Port in use.
@@ -526,6 +536,24 @@ public class AprEndpoint extends AbstractEndpoint {
                                           SSL.versionString()));
                 }
             }
+
+            // Set cipher order: client (default) or server
+            if (SSLHonorCipherOrder) {
+                boolean orderCiphersSupported = false;
+                try {
+                    orderCiphersSupported = SSL.hasOp(SSL.SSL_OP_CIPHER_SERVER_PREFERENCE);
+                    if (orderCiphersSupported)
+                        SSLContext.setOptions(sslContext, SSL.SSL_OP_CIPHER_SERVER_PREFERENCE);
+                } catch (UnsatisfiedLinkError e) {
+                    // Ignore
+                }
+                if (!orderCiphersSupported) {
+                    // OpenSSL does not support ciphers ordering.
+                    log.warn(sm.getString("endpoint.warn.noHonorCipherOrder",
+                                          SSL.versionString()));
+                }
+            }
+
             // List the ciphers that the client is permitted to negotiate
             SSLContext.setCipherSuite(sslContext, SSLCipherSuite);
             // Load Server key and certificate
@@ -815,9 +843,15 @@ public class AprEndpoint extends AbstractEndpoint {
      */
     protected boolean processSocket(long socket) {
         try {
-            SocketWrapper<Long> wrapper =
-                new SocketWrapper<Long>(Long.valueOf(socket));
-            getExecutor().execute(new SocketProcessor(wrapper, null));
+            Executor executor = getExecutor();
+            if (executor == null) {
+                log.warn(sm.getString("endpoint.warn.noExector",
+                        Long.valueOf(socket), null));
+            } else {
+                SocketWrapper<Long> wrapper =
+                    new SocketWrapper<Long>(Long.valueOf(socket));
+                executor.execute(new SocketProcessor(wrapper, null));
+            }
         } catch (RejectedExecutionException x) {
             log.warn("Socket processing request was rejected for:"+socket,x);
             return false;
@@ -835,11 +869,17 @@ public class AprEndpoint extends AbstractEndpoint {
     /**
      * Process given socket for an event.
      */
-    protected boolean processSocket(long socket, SocketStatus status) {
+    public boolean processSocket(long socket, SocketStatus status) {
         try {
-            SocketWrapper<Long> wrapper =
-                    new SocketWrapper<Long>(Long.valueOf(socket));
-            getExecutor().execute(new SocketEventProcessor(wrapper, status));
+            Executor executor = getExecutor();
+            if (executor == null) {
+                log.warn(sm.getString("endpoint.warn.noExector",
+                        Long.valueOf(socket), status));
+            } else {
+                SocketWrapper<Long> wrapper =
+                        new SocketWrapper<Long>(Long.valueOf(socket));
+                executor.execute(new SocketEventProcessor(wrapper, status));
+            }
         } catch (RejectedExecutionException x) {
             log.warn("Socket processing request was rejected for:"+socket,x);
             return false;
@@ -870,11 +910,14 @@ public class AprEndpoint extends AbstractEndpoint {
                             Thread.currentThread().setContextClassLoader(
                                     getClass().getClassLoader());
                         }
-                        // During shutdown, executor may be null - avoid NPE
-                        if (!running) {
+                        Executor executor = getExecutor();
+                        if (executor == null) {
+                            log.warn(sm.getString("endpoint.warn.noExector",
+                                    socket, status));
                             return false;
+                        } else {
+                            executor.execute(proc);
                         }
-                        getExecutor().execute(proc);
                     } finally {
                         if (Constants.IS_SECURITY_ENABLED) {
                             PrivilegedAction<Void> pa = new PrivilegedSetTccl(loader);
@@ -1067,6 +1110,9 @@ public class AprEndpoint extends AbstractEndpoint {
      */
     public class Poller extends Thread {
 
+        public static final int FLAGS_READ = Poll.APR_POLLIN;
+        public static final int FLAGS_WRITE  = Poll.APR_POLLOUT;
+
         // Need two pollsets since the socketTimeout and the keep-alive timeout
         // can have different values.
         private long connectionPollset = 0;
@@ -1075,6 +1121,7 @@ public class AprEndpoint extends AbstractEndpoint {
 
         private long[] addSocket;
         private int[] addSocketTimeout;
+        private int[] addSocketFlags;
 
         private volatile int addCount = 0;
 
@@ -1107,7 +1154,8 @@ public class AprEndpoint extends AbstractEndpoint {
             desc = new long[size * 2];
             keepAliveCount = 0;
             addSocket = new long[size];
-            addSocketTimeout= new int[size];
+            addSocketTimeout = new int[size];
+            addSocketFlags = new int[size];
             addCount = 0;
         }
 
@@ -1161,8 +1209,10 @@ public class AprEndpoint extends AbstractEndpoint {
          * @param socket    to add to the poller
          * @param timeout   read timeout (in milliseconds) to use with this
          *                  socket. Use -1 for infinite timeout
+         * @param flags     flags that define the events that are to be polled
+         *                  for
          */
-        public void add(long socket, int timeout) {
+        public void add(long socket, int timeout, int flags) {
             synchronized (this) {
                 // Add socket to the list. Newly added sockets will wait
                 // at most for pollTime before being polled
@@ -1177,6 +1227,7 @@ public class AprEndpoint extends AbstractEndpoint {
                 }
                 addSocket[addCount] = socket;
                 addSocketTimeout[addCount] = timeout;
+                addSocketFlags[addCount] = flags;
                 addCount++;
                 this.notify();
             }
@@ -1235,7 +1286,7 @@ public class AprEndpoint extends AbstractEndpoint {
                                     }
                                     int rv = Poll.addWithTimeout(
                                             connectionPollset, addSocket[i],
-                                            Poll.APR_POLLIN, timeout);
+                                            addSocketFlags[i], timeout);
                                     if (rv == Status.APR_SUCCESS) {
                                         successCount++;
                                     } else {
@@ -1618,7 +1669,8 @@ public class AprEndpoint extends AbstractEndpoint {
                                     // If all done put the socket back in the poller for
                                     // processing of further requests
                                     getPoller().add(state.socket,
-                                            getKeepAliveTimeout());
+                                            getKeepAliveTimeout(),
+                                            Poller.FLAGS_READ);
                                 } else {
                                     // Close the socket since this is
                                     // the end of not keep-alive request.
@@ -1710,7 +1762,7 @@ public class AprEndpoint extends AbstractEndpoint {
                 if (!deferAccept) {
                     if (setSocketOptions(socket.getSocket().longValue())) {
                         getPoller().add(socket.getSocket().longValue(),
-                                getSoTimeout());
+                                getSoTimeout(), Poller.FLAGS_READ);
                     } else {
                         // Close socket and pool
                         destroySocket(socket.getSocket().longValue());

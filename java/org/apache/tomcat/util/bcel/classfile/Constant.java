@@ -18,7 +18,6 @@
 package org.apache.tomcat.util.bcel.classfile;
 
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 
@@ -30,7 +29,7 @@ import org.apache.tomcat.util.bcel.util.BCELComparator;
  * in the constant pool of a class file. The classes keep closely to
  * the JVM specification.
  *
- * @version $Id: Constant.java 992409 2010-09-03 18:35:59Z markt $
+ * @version $Id: Constant.java 1377534 2012-08-26 22:26:10Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */
 public abstract class Constant implements Cloneable, Serializable {
@@ -66,9 +65,6 @@ public abstract class Constant implements Cloneable, Serializable {
     Constant(byte tag) {
         this.tag = tag;
     }
-
-
-    public abstract void dump( DataOutputStream file ) throws IOException;
 
 
     /**
@@ -127,6 +123,12 @@ public abstract class Constant implements Cloneable, Serializable {
                 return new ConstantNameAndType(file);
             case Constants.CONSTANT_Utf8:
                 return new ConstantUtf8(file);
+            case Constants.CONSTANT_MethodHandle:
+                return new ConstantMethodHandle(file);
+            case Constants.CONSTANT_MethodType:
+                return new ConstantMethodType(file);
+            case Constants.CONSTANT_InvokeDynamic:
+                return new ConstantInvokeDynamic(file);
             default:
                 throw new ClassFormatException("Invalid byte tag in constant pool: " + b);
         }

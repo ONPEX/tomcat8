@@ -24,9 +24,11 @@ package org.apache.catalina.tribes;
  *
  * @author Bip Thelin
  * @author Filip Hanik
- * @version $Id: Constants.java 939305 2010-04-29 13:43:39Z kkolinko $
+ * @version $Id: Constants.java 1370475 2012-08-07 19:54:29Z markt $
+ *
+ * @deprecated  Unused - will be removed in 8.0.x
  */
-
+@Deprecated
 public final class Constants {
     public static final String Package = "org.apache.catalina.tribes";
 }

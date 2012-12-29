@@ -18,13 +18,12 @@
 package org.apache.tomcat.util.bcel.classfile;
 
 import java.io.DataInput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 
 /** 
  * Abstract super class for Fieldref and Methodref constants.
  *
- * @version $Id: ConstantCP.java 992409 2010-09-03 18:35:59Z markt $
+ * @version $Id: ConstantCP.java 1377533 2012-08-26 22:22:59Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     ConstantFieldref
  * @see     ConstantMethodref
@@ -62,20 +61,6 @@ public abstract class ConstantCP extends Constant {
 
 
     /** 
-     * Dump constant field reference to file stream in binary format.
-     *
-     * @param file Output file stream
-     * @throws IOException
-     */
-    @Override
-    public final void dump( DataOutputStream file ) throws IOException {
-        file.writeByte(tag);
-        file.writeShort(class_index);
-        file.writeShort(name_and_type_index);
-    }
-
-
-    /**
      * @return Reference (index) to class this field or method belongs to.
      */
     public final int getClassIndex() {

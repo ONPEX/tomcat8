@@ -85,7 +85,7 @@ import org.apache.el.util.ReflectionUtil;
  * @see javax.el.ValueExpression
  * 
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: ValueExpressionImpl.java 1026769 2010-10-24 11:55:10Z markt $
+ * @version $Id: ValueExpressionImpl.java 1379214 2012-08-30 23:13:32Z markt $
  */
 public final class ValueExpressionImpl extends ValueExpression implements
         Externalizable {
@@ -152,10 +152,6 @@ public final class ValueExpressionImpl extends ValueExpression implements
         return this.expr;
     }
 
-    /**
-     * @return
-     * @throws ELException
-     */
     private Node getNode() throws ELException {
         if (this.node == null) {
             this.node = ExpressionBuilder.createNode(this.expr);

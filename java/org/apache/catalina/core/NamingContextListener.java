@@ -21,6 +21,7 @@ package org.apache.catalina.core;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.lang.reflect.Constructor;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
@@ -76,7 +77,7 @@ import org.apache.tomcat.util.res.StringManager;
  * with each context and server.
  *
  * @author Remy Maucherat
- * @version $Id: NamingContextListener.java 1190357 2011-10-28 14:32:44Z markt $
+ * @version $Id: NamingContextListener.java 1407596 2012-11-09 19:33:44Z markt $
  */
 
 public class NamingContextListener
@@ -863,7 +864,11 @@ public class NamingContextListener
                     }
                 }
             } else {
-                logger.error(sm.getString("naming.invalidEnvEntryType", env.getName()));
+                value = constructEnvEntry(env.getType(), env.getValue());
+                if (value == null) {
+                    logger.error(sm.getString(
+                            "naming.invalidEnvEntryType", env.getName()));
+                }
             }
         } catch (NumberFormatException e) {
             logger.error(sm.getString("naming.invalidEnvEntryValue", env.getName()));
@@ -885,6 +890,33 @@ public class NamingContextListener
 
     }
 
+
+    private Object constructEnvEntry(String type, String value) {
+        try {
+            Class<?> clazz = Class.forName(type);
+            Constructor<?> c = null;
+            try {
+                 c = clazz.getConstructor(String.class);
+                 return c.newInstance(value);
+            } catch (NoSuchMethodException e) {
+                // Ignore
+            }
+
+            if (value.length() != 1) {
+                return null;
+            }
+
+            try {
+                c = clazz.getConstructor(char.class);
+                return c.newInstance(Character.valueOf(value.charAt(0)));
+            } catch (NoSuchMethodException e) {
+                // Ignore
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+        return null;
+    }
 
     /**
      * Set the specified local EJBs in the naming context.

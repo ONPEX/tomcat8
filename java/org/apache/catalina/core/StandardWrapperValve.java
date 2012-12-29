@@ -47,7 +47,7 @@ import org.apache.tomcat.util.res.StringManager;
  * <code>StandardWrapper</code> container implementation.
  *
  * @author Craig R. McClanahan
- * @version $Id: StandardWrapperValve.java 1301255 2012-03-15 22:47:40Z markt $
+ * @version $Id: StandardWrapperValve.java 1390886 2012-09-27 08:24:49Z markt $
  */
 
 final class StandardWrapperValve
@@ -106,7 +106,7 @@ final class StandardWrapperValve
         Context context = (Context) wrapper.getParent();
         
         // Check for the application being marked unavailable
-        if (!context.getAvailable()) {
+        if (!context.getState().isAvailable()) {
             response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE,
                            sm.getString("standardContext.isUnavailable"));
             unavailable = true;
@@ -175,12 +175,9 @@ final class StandardWrapperValve
         MessageBytes requestPathMB = request.getRequestPathMB();
         DispatcherType dispatcherType = DispatcherType.REQUEST;
         if (request.getDispatcherType()==DispatcherType.ASYNC) dispatcherType = DispatcherType.ASYNC; 
-        request.setAttribute
-            (ApplicationFilterFactory.DISPATCHER_TYPE_ATTR,
-             dispatcherType);
-        request.setAttribute
-            (ApplicationFilterFactory.DISPATCHER_REQUEST_PATH_ATTR,
-             requestPathMB);
+        request.setAttribute(Globals.DISPATCHER_TYPE_ATTR,dispatcherType);
+        request.setAttribute(Globals.DISPATCHER_REQUEST_PATH_ATTR,
+                requestPathMB);
         // Create the filter chain for this request
         ApplicationFilterFactory factory =
             ApplicationFilterFactory.getInstance();
@@ -361,7 +358,8 @@ final class StandardWrapperValve
         Context context = (Context) wrapper.getParent();
 
         // Check for the application being marked unavailable
-        boolean unavailable = !context.getAvailable() || wrapper.isUnavailable();
+        boolean unavailable = !context.getState().isAvailable() ||
+                wrapper.isUnavailable();
         
         // Allocate a servlet instance to process this request
         try {
@@ -385,12 +383,10 @@ final class StandardWrapperValve
         }
 
         MessageBytes requestPathMB = request.getRequestPathMB();
-        request.setAttribute
-            (ApplicationFilterFactory.DISPATCHER_TYPE_ATTR,
-             DispatcherType.REQUEST);
-        request.setAttribute
-            (ApplicationFilterFactory.DISPATCHER_REQUEST_PATH_ATTR,
-             requestPathMB);
+        request.setAttribute(Globals.DISPATCHER_TYPE_ATTR,
+                DispatcherType.REQUEST);
+        request.setAttribute(Globals.DISPATCHER_REQUEST_PATH_ATTR,
+                requestPathMB);
         // Get the current (unchanged) filter chain for this request
         ApplicationFilterChain filterChain = 
             (ApplicationFilterChain) request.getFilterChain();
@@ -522,6 +518,10 @@ final class StandardWrapperValve
         return processingTime;
     }
 
+    /**
+     * Deprecated   unused
+     */
+    @Deprecated
     public void setProcessingTime(long processingTime) {
         this.processingTime = processingTime;
     }
@@ -530,6 +530,10 @@ final class StandardWrapperValve
         return maxTime;
     }
 
+    /**
+     * Deprecated   unused
+     */
+    @Deprecated
     public void setMaxTime(long maxTime) {
         this.maxTime = maxTime;
     }
@@ -538,6 +542,10 @@ final class StandardWrapperValve
         return minTime;
     }
 
+    /**
+     * Deprecated   unused
+     */
+    @Deprecated
     public void setMinTime(long minTime) {
         this.minTime = minTime;
     }
@@ -546,6 +554,10 @@ final class StandardWrapperValve
         return requestCount;
     }
 
+    /**
+     * Deprecated   unused
+     */
+    @Deprecated
     public void setRequestCount(int requestCount) {
         this.requestCount = requestCount;
     }
@@ -554,6 +566,14 @@ final class StandardWrapperValve
         return errorCount;
     }
 
+    public void incrementErrorCount() {
+        errorCount++;
+    }
+
+    /**
+     * Deprecated   unused
+     */
+    @Deprecated
     public void setErrorCount(int errorCount) {
         this.errorCount = errorCount;
     }

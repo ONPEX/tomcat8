@@ -48,6 +48,7 @@ import javax.naming.directory.SearchResult;
 
 import org.apache.naming.NameParserImpl;
 import org.apache.naming.NamingContextBindingsEnumeration;
+import org.apache.naming.NamingContextEnumeration;
 import org.apache.naming.NamingEntry;
 import org.apache.naming.StringManager;
 
@@ -55,7 +56,7 @@ import org.apache.naming.StringManager;
  * Directory Context implementation helper class.
  *
  * @author Remy Maucherat
- * @version $Id: BaseDirContext.java 1347095 2012-06-06 20:17:43Z schultz $
+ * @version $Id: BaseDirContext.java 1409127 2012-11-14 09:53:04Z kkolinko $
  */
 
 public abstract class BaseDirContext implements DirContext {
@@ -674,8 +675,44 @@ public abstract class BaseDirContext implements DirContext {
      * @exception NamingException if a naming exception is encountered
      */
     @Override
-    public abstract NamingEnumeration<NameClassPair> list(String name)
-        throws NamingException;
+    public NamingEnumeration<NameClassPair> list(String name)
+        throws NamingException {
+
+        if (!aliases.isEmpty()) {
+            AliasResult result = findAlias(name);
+            if (result.dirContext != null) {
+                return result.dirContext.list(result.aliasName);
+            }
+        }
+
+        // Next do a standard lookup
+        List<NamingEntry> bindings = doListBindings(name);
+
+        // Check the alternate locations
+        List<NamingEntry> altBindings = null;
+
+        for (DirContext altDirContext : altDirContexts) {
+            if (altDirContext instanceof BaseDirContext) {
+                altBindings = ((BaseDirContext) altDirContext).doListBindings(
+                        "/META-INF/resources" + name);
+            }
+            if (altBindings != null) {
+                if (bindings == null) {
+                    bindings = altBindings;
+                } else {
+                    bindings.addAll(altBindings);
+                }
+            }
+        }
+
+        if (bindings != null) {
+            return new NamingContextEnumeration(bindings.iterator());
+        }
+
+        // Really not found
+        throw new NameNotFoundException(
+                sm.getString("resources.notFound", name));
+    }
 
 
     /**

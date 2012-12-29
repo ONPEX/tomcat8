@@ -200,6 +200,11 @@ public abstract class TomcatBaseTest extends LoggingBaseTest {
         return getUrl(path, out, null, resHead);
     }
 
+    public static int headUrl(String path, ByteChunk out,
+            Map<String, List<String>> resHead) throws IOException {
+        return methodUrl(path, out, 1000000, null, resHead, "HEAD");
+    }
+
     public static int getUrl(String path, ByteChunk out,
             Map<String, List<String>> reqHead,
             Map<String, List<String>> resHead) throws IOException {
@@ -209,12 +214,20 @@ public abstract class TomcatBaseTest extends LoggingBaseTest {
     public static int getUrl(String path, ByteChunk out, int readTimeout,
             Map<String, List<String>> reqHead,
             Map<String, List<String>> resHead) throws IOException {
+        return methodUrl(path, out, readTimeout, reqHead, resHead, "GET");
+    }
+
+    public static int methodUrl(String path, ByteChunk out, int readTimeout,
+            Map<String, List<String>> reqHead,
+            Map<String, List<String>> resHead,
+            String method) throws IOException {
 
         URL url = new URL(path);
         HttpURLConnection connection =
             (HttpURLConnection) url.openConnection();
         connection.setUseCaches(false);
         connection.setReadTimeout(readTimeout);
+        connection.setRequestMethod(method);
         if (reqHead != null) {
             for (Map.Entry<String, List<String>> entry : reqHead.entrySet()) {
                 StringBuilder valueList = new StringBuilder();
@@ -240,20 +253,22 @@ public abstract class TomcatBaseTest extends LoggingBaseTest {
         } else {
             is = connection.getErrorStream();
         }
-        BufferedInputStream bis = null;
-        try {
-            bis = new BufferedInputStream(is);
-            byte[] buf = new byte[2048];
-            int rd = 0;
-            while((rd = bis.read(buf)) > 0) {
-                out.append(buf, 0, rd);
-            }
-        } finally {
-            if (bis != null) {
-                try {
-                    bis.close();
-                } catch (IOException e) {
-                    // Ignore
+        if (is != null) {
+            BufferedInputStream bis = null;
+            try {
+                bis = new BufferedInputStream(is);
+                byte[] buf = new byte[2048];
+                int rd = 0;
+                while((rd = bis.read(buf)) > 0) {
+                    out.append(buf, 0, rd);
+                }
+            } finally {
+                if (bis != null) {
+                    try {
+                        bis.close();
+                    } catch (IOException e) {
+                        // Ignore
+                    }
                 }
             }
         }

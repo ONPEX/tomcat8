@@ -19,6 +19,7 @@ package org.apache.naming.resources;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 
 import javax.naming.Binding;
@@ -156,7 +157,13 @@ public class TestNamingContext extends TomcatBaseTest {
         byte[] buffer = new byte[4096];
         Resource res = (Resource)file;
 
-        int len = res.streamContent().read(buffer);
+        InputStream is = res.streamContent();
+        int len;
+        try {
+            len = is.read(buffer);
+        } finally {
+            is.close();
+        }
         String contents = new String(buffer, 0, len, "UTF-8");
 
         assertEquals(foxText, contents);
@@ -168,7 +175,12 @@ public class TestNamingContext extends TomcatBaseTest {
         Assert.assertTrue(file instanceof Resource);
 
         res = (Resource)file;
-        len = res.streamContent().read(buffer);
+        is = res.streamContent();
+        try {
+            len = is.read(buffer);
+        } finally {
+            is.close();
+        }
         contents = new String(buffer, 0, len, "UTF-8");
 
         assertEquals(loremIpsum, contents);
@@ -186,7 +198,12 @@ public class TestNamingContext extends TomcatBaseTest {
         Assert.assertTrue(file instanceof Resource);
 
         res = (Resource)file;
-        len = res.streamContent().read(buffer);
+        is = res.streamContent();
+        try {
+            len = is.read(buffer);
+        } finally {
+            is.close();
+        }
         contents = new String(buffer, 0, len, "UTF-8");
 
         assertEquals(foxText, contents);
@@ -198,7 +215,12 @@ public class TestNamingContext extends TomcatBaseTest {
         Assert.assertTrue(file instanceof Resource);
 
         res = (Resource)file;
-        len = res.streamContent().read(buffer);
+        is = res.streamContent();
+        try {
+            len = is.read(buffer);
+        } finally {
+            is.close();
+        }
         contents = new String(buffer, 0, len, "UTF-8");
 
         assertEquals(loremIpsum, contents);
@@ -457,5 +479,30 @@ public class TestNamingContext extends TomcatBaseTest {
                 throw new ServletException(ne);
             }
         }
+    }
+
+    @Test
+    public void testBug53465() throws Exception {
+        Tomcat tomcat = getTomcatInstance();
+        tomcat.enableNaming();
+
+        File appDir =
+            new File("test/webapp-3.0");
+        // app dir is relative to server home
+        org.apache.catalina.Context ctxt =
+                tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+
+        tomcat.start();
+
+        ByteChunk bc = new ByteChunk();
+        int rc = getUrl("http://localhost:" + getPort() +
+                "/test/bug53465.jsp", bc, null);
+
+        Assert.assertEquals(HttpServletResponse.SC_OK, rc);
+        Assert.assertTrue(bc.toString().contains("<p>10</p>"));
+
+        ContextEnvironment ce =
+                ctxt.getNamingResources().findEnvironment("bug53465");
+        Assert.assertEquals("Bug53465MappedName", ce.getProperty("mappedName"));
     }
 }

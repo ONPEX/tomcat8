@@ -127,7 +127,7 @@ import org.apache.tomcat.util.scan.StandardJarScanner;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardContext.java 1350247 2012-06-14 14:04:20Z markt $
+ * @version $Id: StandardContext.java 1355734 2012-06-30 13:24:09Z markt $
  */
 
 public class StandardContext extends ContainerBase
@@ -574,7 +574,8 @@ public class StandardContext extends ContainerBase
     
     /**
      * The status code error pages for this web application, keyed by
-     * HTTP status code (as an Integer).
+     * HTTP status code (as an Integer). Note status code zero is used for the
+     * default error page.
      */
     private HashMap<Integer, ErrorPage> statusPages =
         new HashMap<Integer, ErrorPage>();
