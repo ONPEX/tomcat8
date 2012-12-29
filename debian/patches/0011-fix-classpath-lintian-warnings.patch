@@ -3,9 +3,9 @@ Author: Miguel Landaeta <miguel@miguel.cc>
 Forwarded: no
 Last-Update: 2011-05-16
 
---- tomcat7-7.0.14.orig/build.xml
-+++ tomcat7-7.0.14/build.xml
-@@ -597,7 +597,8 @@
+--- a/build.xml
++++ b/build.xml
+@@ -685,7 +685,8 @@
      <!-- Jasper Implementation JAR File -->
      <jarIt jarfile="${jasper.jar}"
        filesDir="${tomcat.classes}"
@@ -15,7 +15,7 @@ Last-Update: 2011-05-16
  
      <!-- Jasper EL Implementation JAR File -->
      <jarIt jarfile="${jasper-el.jar}"
-@@ -605,8 +606,7 @@
+@@ -693,8 +694,7 @@
        filesId="files.jasper-el" />
  
      <!-- i18n JARs -->
@@ -25,7 +25,7 @@ Last-Update: 2011-05-16
        <fileset dir="${tomcat.classes}">
          <include name="**/LocalStrings_es.properties" />
        </fileset>
-@@ -614,9 +614,8 @@
+@@ -702,9 +702,8 @@
          fullpath="META-INF/NOTICE" />
        <zipfileset file="${tomcat.manifests}/default.license"
          fullpath="META-INF/LICENSE" />
@@ -37,7 +37,7 @@ Last-Update: 2011-05-16
        <fileset dir="${tomcat.classes}">
          <include name="**/LocalStrings_fr.properties" />
        </fileset>
-@@ -624,9 +623,8 @@
+@@ -712,9 +711,8 @@
          fullpath="META-INF/NOTICE" />
        <zipfileset file="${tomcat.manifests}/default.license"
          fullpath="META-INF/LICENSE" />
@@ -49,7 +49,7 @@ Last-Update: 2011-05-16
        <fileset dir="${tomcat.classes}">
          <include name="**/LocalStrings_ja.properties" />
        </fileset>
-@@ -634,7 +632,7 @@
+@@ -722,7 +720,7 @@
          fullpath="META-INF/NOTICE" />
        <zipfileset file="${tomcat.manifests}/default.license"
          fullpath="META-INF/LICENSE" />
@@ -59,7 +59,7 @@ Last-Update: 2011-05-16
    </target>
  
 --- /dev/null
-+++ tomcat7-7.0.14/res/META-INF/jasper.jar.manifest
++++ b/res/META-INF/jasper.jar.manifest
 @@ -0,0 +1,10 @@
 +Manifest-Version: 1.0
 +Specification-Title: Apache Tomcat

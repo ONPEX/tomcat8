@@ -3,10 +3,8 @@ Description: Compatibility patch to support compilation of tomcat7
 Author: James Page <james.page@ubuntu.com>
 Forwarded: not-needed
 
-Index: tomcat7-7.0.26/modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/DataSource.java
-===================================================================
---- tomcat7-7.0.26.orig/modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/DataSource.java	2012-05-03 14:41:45.741927187 +0100
-+++ tomcat7-7.0.26/modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/DataSource.java	2012-05-03 14:42:25.730122612 +0100
+--- a/modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/DataSource.java
++++ b/modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/DataSource.java
 @@ -28,6 +28,8 @@
  import org.apache.juli.logging.Log;
  import org.apache.juli.logging.LogFactory;
@@ -16,7 +14,7 @@ Index: tomcat7-7.0.26/modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/poo
  
  /**
   * A DataSource that can be instantiated through IoC and implements the DataSource interface
-@@ -153,5 +155,7 @@
+@@ -157,5 +159,7 @@
          }
      }
  

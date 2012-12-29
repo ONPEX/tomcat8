@@ -6,11 +6,9 @@ Subject: 0013-dont-look-for-build-properties-in-user-home
  build.xml |    1 -
  1 file changed, 1 deletion(-)
 
-diff --git a/build.xml b/build.xml
-index 14340db..ae86842 100644
 --- a/build.xml
 +++ b/build.xml
-@@ -425,7 +425,6 @@
+@@ -426,7 +426,6 @@
      <!-- Property that determines if manifests need updating -->
      <uptodate property="manifests.uptodate"
          targetfile="${tomcat.manifests}/default.manifest" >
