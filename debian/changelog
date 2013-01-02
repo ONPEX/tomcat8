@@ -1,3 +1,25 @@
+tomcat7 (7.0.34-1~exp1) experimental; urgency=low
+
+  * Upload to experimental (Vcs-Git branch is exp/master.)
+  * New upstream version 7.0.34
+  * remove patches included in the upstream release
+    - cve-2012-3439.patch
+    - cve-2012-3439-tests.patch
+    - 0016-CVE-2012-4431.patch
+    - 0017-CVE-2012-3546.patch
+  * refresh patches
+  * add /usr/lib/jvm/java-7-oracle to JDK search path
+    - Thanks to Nuno Afonso. (Closes: #679012)
+  * add log compression to logrotate cronjob via defaults file
+    - Thanks to Thijs Kinkhorst. (Closes: #696944)
+  * add distinct javax poms to install JARs using both Tomcat and javax
+    coordinates (Closes: #691773)
+  * update catalina.properties to expand ${catalina.home} instead of
+    referencing /var/lib/tomcat7 explicitly.
+    - Thanks to H.-Dirk Schmidt (Closes: #691865)
+
+ -- tony mancill <tmancill@debian.org>  Tue, 01 Jan 2013 19:01:12 -0800
+
 tomcat7 (7.0.28-4) unstable; urgency=high
 
   * Acknowledge NMU: 7.0.28-3+nmu1 (Closes: #692440)
