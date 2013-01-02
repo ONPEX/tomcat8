@@ -1,0 +1,13 @@
+diff --git a/java/org/apache/jasper/compiler/JDTCompiler.java b/java/org/apache/jasper/compiler/JDTCompiler.java
+index 2ee9e95..75f3c67 100644
+--- a/java/org/apache/jasper/compiler/JDTCompiler.java
++++ b/java/org/apache/jasper/compiler/JDTCompiler.java
+@@ -166,7 +166,7 @@ public class JDTCompiler extends org.apache.jasper.compiler.Compiler {
+                 return result;
+             }
+ 
+-            @Override
++            //@Override
+             public boolean ignoreOptionalProblems() {
+                 return false;
+             }
