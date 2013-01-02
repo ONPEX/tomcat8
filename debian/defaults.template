@@ -33,6 +33,8 @@ JAVA_OPTS="-Djava.awt.headless=true -Xmx128m -XX:+UseConcMarkSweepGC"
 
 # Number of days to keep logfiles in /var/log/tomcat7. Default is 14 days.
 #LOGFILE_DAYS=14
+# Whether to compress logfiles older than today's
+#LOGFILE_COMPRESS=1
 
 # Location of the JVM temporary directory
 # WARNING: This directory will be destroyed and recreated at every startup !
