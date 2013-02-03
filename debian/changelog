@@ -1,3 +1,9 @@
+tomcat7 (7.0.35-1~exp1) experimental; urgency=low
+
+  * New upstream version 7.0.35
+
+ -- tony mancill <tmancill@debian.org>  Sun, 03 Feb 2013 14:57:15 -0800
+
 tomcat7 (7.0.34-1~exp1) experimental; urgency=low
 
   * Upload to experimental (Vcs-Git branch is exp/master.)
