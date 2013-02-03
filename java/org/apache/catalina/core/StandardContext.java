@@ -127,7 +127,7 @@ import org.apache.tomcat.util.scan.StandardJarScanner;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardContext.java 1355734 2012-06-30 13:24:09Z markt $
+ * @version $Id: StandardContext.java 1431321 2013-01-10 12:36:17Z markt $
  */
 
 public class StandardContext extends ContainerBase
@@ -863,6 +863,12 @@ public class StandardContext extends ContainerBase
     private boolean sendRedirectBody = false;
 
     private boolean jndiExceptionOnFailedWrite = true;
+
+    private Map<String, String> postConstructMethods =
+            new HashMap<String, String>();
+    private Map<String, String> preDestroyMethods =
+            new HashMap<String, String>();
+
 
     // ----------------------------------------------------- Context Properties
     
@@ -5616,6 +5622,9 @@ public class StandardContext extends ContainerBase
         
         createdServlets.clear();
 
+        postConstructMethods.clear();
+        preDestroyMethods.clear();
+
         if(log.isDebugEnabled())
             log.debug("resetContext " + getObjectName());
     }
@@ -5991,6 +6000,72 @@ public class StandardContext extends ContainerBase
             }
         }
         return true;
+    }
+
+
+    @Override
+    public void addPostConstructMethod(String clazz, String method) {
+        if (clazz == null || method == null)
+            throw new IllegalArgumentException(
+                    sm.getString("standardContext.postconstruct.required"));
+        if (postConstructMethods.get(clazz) != null)
+            throw new IllegalArgumentException(sm.getString(
+                    "standardContext.postconstruct.duplicate", clazz));
+
+        postConstructMethods.put(clazz, method);
+        fireContainerEvent("addPostConstructMethod", clazz);
+    }
+
+
+    @Override
+    public void removePostConstructMethod(String clazz) {
+        postConstructMethods.remove(clazz);
+        fireContainerEvent("removePostConstructMethod", clazz);
+    }
+
+
+    @Override
+    public void addPreDestroyMethod(String clazz, String method) {
+        if (clazz == null || method == null)
+            throw new IllegalArgumentException(
+                    sm.getString("standardContext.predestroy.required"));
+        if (preDestroyMethods.get(clazz) != null)
+            throw new IllegalArgumentException(sm.getString(
+                    "standardContext.predestroy.duplicate", clazz));
+
+        preDestroyMethods.put(clazz, method);
+        fireContainerEvent("addPreDestroyMethod", clazz);
+    }
+
+
+    @Override
+    public void removePreDestroyMethod(String clazz) {
+        preDestroyMethods.remove(clazz);
+        fireContainerEvent("removePreDestroyMethod", clazz);
+    }
+
+
+    @Override
+    public String findPostConstructMethod(String clazz) {
+        return postConstructMethods.get(clazz);
+    }
+
+
+    @Override
+    public String findPreDestroyMethod(String clazz) {
+        return preDestroyMethods.get(clazz);
+    }
+
+
+    @Override
+    public Map<String, String> findPostConstructMethods() {
+        return postConstructMethods;
+    }
+
+
+    @Override
+    public Map<String, String> findPreDestroyMethods() {
+        return preDestroyMethods;
     }
 
 

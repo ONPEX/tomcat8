@@ -30,6 +30,7 @@
     <menu name="Links">
         <item name="Docs Home"             href="index.html"/>
         <item name="FAQ"                   href="http://wiki.apache.org/tomcat/FAQ" />
+        <item name="User Comments"         href="#comments_section"/>
     </menu>
 
     <menu name="User Guide">
@@ -93,6 +94,7 @@
         <item name="Developers"            href="developers.html"/>
         <item name="Architecture"          href="architecture/index.html" />
         <item name="Functional Specs."     href="funcspecs/index.html"/>
+        <item name="Tribes"                href="tribes/index.html"/>
     </menu>
 
     </body>

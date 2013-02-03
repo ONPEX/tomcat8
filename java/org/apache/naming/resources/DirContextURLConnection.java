@@ -53,7 +53,7 @@ import org.apache.tomcat.util.http.FastHttpDateFormat;
  * content is directly returned.
  * 
  * @author <a href="mailto:remm@apache.org">Remy Maucherat</a>
- * @version $Revision: 1344902 $
+ * @version $Revision: 1429991 $
  */
 public class DirContextURLConnection extends URLConnection {
 
@@ -141,7 +141,7 @@ public class DirContextURLConnection extends URLConnection {
             
             try {
                 date = System.currentTimeMillis();
-                String path = getURL().getFile();
+                String path = URL_DECODER.convert(getURL().getFile(), false);
                 if (context instanceof ProxyDirContext) {
                     ProxyDirContext proxyDirContext = 
                         (ProxyDirContext) context;
@@ -159,7 +159,6 @@ public class DirContextURLConnection extends URLConnection {
                         path = path.substring(contextPath.length());
                     }
                 }
-                path = URL_DECODER.convert(path, false);
                 object = context.lookup(path);
                 attributes = context.getAttributes(path);
                 if (object instanceof Resource)
@@ -436,27 +435,8 @@ public class DirContextURLConnection extends URLConnection {
         
         if (collection != null) {
             try {
-                String file = getURL().getFile();
-                // This will be of the form /<hostname>/<contextpath>/file name
-                // if <contextpath> is not empty otherwise this will be of the
-                // form /<hostname>/file name
-                // Strip off the hostname and the contextpath (note that context
-                // path may contain '/'
-                int start;
-                if (context instanceof ProxyDirContext) {
-                    String cp = ((ProxyDirContext)context).getContextPath();
-                    String h = ((ProxyDirContext)context).getHostName();
-                    if ("".equals(cp)) {
-                        start = h.length() + 2;
-                    } else {
-                        start = h.length() + cp.length() + 2;
-                    }
-                } else {
-                    start = file.indexOf('/', file.indexOf('/', 1) + 1);
-                }
-                
                 NamingEnumeration<NameClassPair> enumeration =
-                    context.list(file.substring(start));
+                    collection.list("/");
                 while (enumeration.hasMoreElements()) {
                     NameClassPair ncp = enumeration.nextElement();
                     result.addElement(URL_ENCODER.encodeURL(ncp.getName()));

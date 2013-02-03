@@ -53,7 +53,176 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues to not "pop up" wrt. others).
 -->
-<section name="Tomcat 7.0.34 (markt)">
+<section name="Tomcat 7.0.35 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        <bug>54247</bug>: Prevent <code>ClassNotFoundException</code>s on stop
+        when running as a service. (markt)
+      </fix>
+      <fix>
+        <bug>54249</bug>: Ensure resource properties are available when the
+        context path contains encoded characters such as a space. This triggered
+        compilation issues in Jasper. Patch provided by Polina Genova. (markt)
+      </fix>
+      <fix>
+        <bug>54256</bug>: Improve error reporting when a JAR file fails
+        extension validation by including the name of the JAR file in the
+        exception. (markt)
+      </fix>
+      <fix>
+        Allow web applications to be stopped cleanly even if filters throw
+        exceptions when their destroy() method is called. (markt/kkolinko)
+      </fix>
+      <fix>
+        Fix memory leak of servlet instances when running with a
+        SecurityManager and either init() or destroy() methods fail
+        or the servlet is a SingleThreadModel one. (kkolinko)
+      </fix>
+      <scode>
+        Cleanup method cache lookup code in <code>SecurityUtil</code> class.
+        (kkolinko)
+      </scode>
+      <add>
+        Make the Tomcat 7 non-JSR356 WebSocket implementation non-blocking
+        (where supported by the connector) between the HTTP upgrade and the
+        first WebSocket message from the client to the server. (markt)
+      </add>
+      <fix>
+        <bug>54262</bug>: Ensure that an empty
+        <code>&lt;absolute-ordering /&gt;</code> element in the main web.xml
+        file disables scanning for web fragments. Based on a patch by  Violeta
+        Georgieva. (markt) 
+      </fix>
+      <fix>
+        <bug>54284</bug>: As per clarification from the Servlet EG, anonymous
+        Filters and Servlets are not permitted. Patch by Violeta Georgieva.
+        (markt)
+      </fix>
+      <fix>
+        <bug>54371</bug>: Prevent exceptions when processing web fragments for
+        unexpanded WAR files when the context path contains characters that
+        need to be encoded in URLs such as spaces. Based on a patch by Polina
+        Genova. (markt)
+      </fix>
+      <add>
+        <bug>54372</bug>: Make HTTP Digest authentication header parsing
+        tolerant of invalid headers sent by known buggy clients. (markt)
+      </add>
+      <fix>
+        <bug>54377</bug>: Correctly set request attributes for AccessLog in
+        RemoteIpFilter. Patch by Violeta Georgieva. (markt)
+      </fix>
+      <fix>
+        <bug>54379</bug>: Implement support for post-construct and pre-destroy
+        elements in web.xml. Patch by Violeta Georgieva. (markt)
+      </fix>
+      <fix>
+        <bug>54380</bug>: Do not try to register servlets or contexts into the
+        mapper too early (which just caused a warning to be logged). (kkolinko)
+      </fix>
+      <fix>
+        Fix NPE in <code>WebappLoader.stopInternal</code> when stop is called
+        after a failed start. (kkolinko)
+      </fix>
+      <add>
+        <bug>54381</bug>: Add support for receiving WebSocket pong messages.
+        (markt)
+      </add>
+      <fix>
+        <bug>54382</bug>: Fix NPE when SSI processing is enabled and an empty
+        SSI directive is present. (markt)
+      </fix>
+      <fix>
+        Fix <code>ArrayIndexOutOfBoundsException</code> in
+        <code>HttpParser</code> when parsing incorrect HTTP headers. (kkolinko)
+      </fix>
+      <fix>
+        <bug>54387</bug>: Deployment must fail when multiple servlets are mapped
+        to the same url-pattern. (markt)  
+      </fix>
+      <fix>
+        <bug>54391</bug>: Provide a value for the
+        <code>javax.servlet.context.orderedLibs</code> attribute. (markt) 
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        <bug>54248</bug>: Ensure that byte order marks are swallowed when using
+        a Reader to read a request body with a BOM for those encodings that
+        require byte order marks. (markt)
+      </fix>
+      <fix>
+        Fix release of processors in <code>AjpNioProtocol</code>. Wrong object
+        was used as a key in the connections map. (kkolinko)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <add>
+        <bug>54240</bug>: Add support for auto-detection and configuration of
+        JARs on the classpath that provide tag plug-in implementations. Based on
+        a patch by Sheldon Shao. (markt)
+      </add>
+      <fix>
+        <bug>54241</bug>: Revert the fix for <bug>35410</bug> as it was not
+        compliant with the JSP specification, specifically that
+        <code>&lt;%= obj %&gt;</code> must be translated to
+        <code>out.print(obj)</code> which in turn becomes
+        <code>out.write(String.valueOf(obj))</code>. This will trigger a
+        <code>NullPointerException</code> if <code>obj.toString()</code> returns
+        <code>null</code>. The fix for <bug>35410</bug> incorrectly suppressed
+        the <code>NullPointerException</code> in this case. (markt)
+      </fix>
+      <fix>
+        <bug>54242</bug>: Correct handle null iterations with in the JSTL
+        ForEach tag plug-in implementation. Patch provided by Sheldon Shao.
+        (markt)
+      </fix>
+      <fix>
+        <bug>54260</bug>: Avoid <code>NullPointerException</code> when using
+        JSP unloading and tag files. (markt)  
+      </fix>
+      <fix>
+        <bug>54370</bug>: Improve handling of nulls when trying to match sets of
+        parameters to a method in EL. (markt)
+      </fix>
+      <fix>
+        <bug>54338</bug>: Correctly coerce the value to the expected type when
+        using the tag plug-in for the JSTL set tag. Patch provided by Sheldon
+        Shao. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <fix>
+        <bug>54244</bug>: Clarify the documentation for the BIO and NIO SSL
+        configuration attributes <code>sslEnabledProtocols</code> and
+        <code>sslProtocol</code> within the documentation web application.
+        (markt)
+      </fix>
+      <add>
+        Integrate documentation of Tomcat 7 with Apache Comments System.
+        People can leave their comments when reading documentation online
+        at the <a href="http://tomcat.apache.org/">tomcat.apache.org</a>
+        site. (rjung)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <fix>
+        <bug>54390</bug>: Use 'java_home' on Mac OS X to auto-detect JAVA_HOME.
+        (schultz)
+      </fix>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 7.0.34 (markt)" rtext="2012-12-12">
   <subsection name="Catalina">
     <changelog>
       <fix>
@@ -336,7 +505,8 @@
         pending further discussion. (schultz)
       </fix>
       <fix>
-        Improve session management in <code>CsrfPreventionFilter</code>.
+        CVE-2012-4431: Fix bypass of <code>CsrfPreventionFilter</code> when
+        there is no session. Improve session management in the filter.
         (kkolinko)
       </fix>
     </changelog>
@@ -570,7 +740,9 @@
         (markt)
       </fix>
       <fix>
-        Remove unneeded handling of FORM authentication in RealmBase. (kkolinko)
+        CVE-2012-3546: Fix bypass of security constraint checks with FORM
+        authentication. Remove unneeded processing in <code>RealmBase</code>.
+        (kkolinko)
       </fix>
       <fix>
         <bug>53800</bug>: <code>FileDirContext.list()</code> did not provide
@@ -1082,7 +1254,7 @@
   <subsection name="Coyote">
     <changelog>
       <fix>
-        <bug>52858</bug>: Correct fix for high CPU load
+        <bug>52858</bug>, CVE-2012-4534: Correct fix for high CPU load.
         (fhanik)
       </fix>
       <fix>

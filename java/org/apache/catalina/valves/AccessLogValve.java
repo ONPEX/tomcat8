@@ -156,7 +156,7 @@ import org.apache.tomcat.util.buf.B2CConverter;
  * @author Takayuki Kaneko
  * @author Peter Rossbach
  *
- * @version $Id: AccessLogValve.java 1416660 2012-12-03 20:47:57Z markt $
+ * @version $Id: AccessLogValve.java 1417424 2012-12-05 14:00:15Z rjung $
  */
 
 public class AccessLogValve extends ValveBase implements AccessLog {
@@ -239,8 +239,8 @@ public class AccessLogValve extends ValveBase implements AccessLog {
 
 
     /**
-     * A date formatter to format a Date into a date in the format
-     * "yyyy-MM-dd".
+     * A date formatter to format a Date using the format
+     * given by <code>fileDateFormat</code>.
      */
     protected SimpleDateFormat fileDateFormatter = null;
 
@@ -529,9 +529,9 @@ public class AccessLogValve extends ValveBase implements AccessLog {
     protected String conditionIf = null;
 
     /**
-     * Date format to place in log file name. Use at your own risk!
+     * Date format to place in log file name.
      */
-    protected String fileDateFormat = null;
+    protected String fileDateFormat = "yyyy-MM-dd";
 
 
     /**
@@ -856,7 +856,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      *  Set the date format date based log rotation.
      */
     public void setFileDateFormat(String fileDateFormat) {
-        this.fileDateFormat =  fileDateFormat;
+        this.fileDateFormat = fileDateFormat;
     }
 
 

@@ -25,18 +25,23 @@ import java.util.Map;
 
 import javax.servlet.Filter;
 
+import org.apache.tomcat.util.res.StringManager;
+
 
 /**
  * Representation of a filter definition for a web application, as represented
  * in a <code>&lt;filter&gt;</code> element in the deployment descriptor.
  *
  * @author Craig R. McClanahan
- * @version $Id: FilterDef.java 1074911 2011-02-26 19:37:13Z markt $
+ * @version $Id: FilterDef.java 1429970 2013-01-07 19:10:28Z markt $
  */
 
 public class FilterDef implements Serializable {
 
     private static final long serialVersionUID = 1L;
+
+    private static final StringManager sm =
+        StringManager.getManager(Constants.Package);
 
     // ------------------------------------------------------------- Properties
 
@@ -108,6 +113,10 @@ public class FilterDef implements Serializable {
     }
 
     public void setFilterName(String filterName) {
+        if (filterName == null || filterName.equals("")) {
+            throw new IllegalArgumentException(
+                    sm.getString("filterDef.invalidFilterName", filterName));
+        }
         this.filterName = filterName;
     }
 

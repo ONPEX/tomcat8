@@ -32,6 +32,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.servlet.MultipartConfigElement;
+import javax.servlet.ServletContext;
 import javax.servlet.SessionCookieConfig;
 import javax.servlet.SessionTrackingMode;
 import javax.servlet.descriptor.JspPropertyGroupDescriptor;
@@ -76,16 +77,17 @@ public class WebXml {
     // web.xml only elements
     // Absolute Ordering
     private Set<String> absoluteOrdering = null;
-    public void addAbsoluteOrdering(String fragmentName) {
+    public void createAbsoluteOrdering() {
         if (absoluteOrdering == null) {
             absoluteOrdering = new LinkedHashSet<String>();
         }
+    }
+    public void addAbsoluteOrdering(String fragmentName) {
+        createAbsoluteOrdering();
         absoluteOrdering.add(fragmentName);
     }
     public void addAbsoluteOrderingOthers() {
-        if (absoluteOrdering == null) {
-            absoluteOrdering = new LinkedHashSet<String>();
-        }
+        createAbsoluteOrdering();
         absoluteOrdering.add(ORDER_OTHERS);
     }
     public Set<String> getAbsoluteOrdering() {
@@ -326,7 +328,14 @@ public class WebXml {
     private Map<String,String> servletMappings = new HashMap<String,String>();
     private Set<String> servletMappingNames = new HashSet<String>();
     public void addServletMapping(String urlPattern, String servletName) {
-        servletMappings.put(urlPattern, servletName);
+        String oldServletName = servletMappings.put(urlPattern, servletName);
+        if (oldServletName != null) {
+            // Duplicate mapping. As per clarification from the Servlet EG,
+            // deployment should fail.
+            throw new IllegalArgumentException(sm.getString(
+                    "webXml.duplicateServletMapping", oldServletName,
+                    servletName, urlPattern));
+        }
         servletMappingNames.add(servletName);
     }
     public Map<String,String> getServletMappings() { return servletMappings; }
@@ -566,6 +575,29 @@ public class WebXml {
         return localeEncodingMappings;
     }
 
+    // post-construct elements
+    private Map<String, String> postConstructMethods =
+            new HashMap<String, String>();
+    public void addPostConstructMethods(String clazz, String method) {
+        if (!postConstructMethods.containsKey(clazz)) {
+            postConstructMethods.put(clazz, method);
+        }
+    }
+    public Map<String, String> getPostConstructMethods() {
+        return postConstructMethods;
+    }
+
+    // pre-destroy elements
+    private Map<String, String> preDestroyMethods =
+            new HashMap<String, String>();
+    public void addPreDestroyMethods(String clazz, String method) {
+        if (!preDestroyMethods.containsKey(clazz)) {
+            preDestroyMethods.put(clazz, method);
+        }
+    }
+    public Map<String, String> getPreDestroyMethods() {
+        return preDestroyMethods;
+    }
 
     // Attributes not defined in web.xml or web-fragment.xml
 
@@ -574,6 +606,10 @@ public class WebXml {
     public void setURL(URL url) { this.uRL = url; }
     public URL getURL() { return uRL; }
 
+    // Name of jar file
+    private String jarName = null;
+    public void setJarName(String jarName) { this.jarName = jarName; }
+    public String getJarName() { return jarName; }
 
     @Override
     public String toString() {
@@ -1069,6 +1105,32 @@ public class WebXml {
         }
         sb.append('\n');
 
+        if (!postConstructMethods.isEmpty()) {
+            for (Entry<String, String> entry : postConstructMethods
+                    .entrySet()) {
+                sb.append("  <post-construct>\n");
+                appendElement(sb, INDENT4, "lifecycle-callback-class",
+                        entry.getKey());
+                appendElement(sb, INDENT4, "lifecycle-callback-method",
+                        entry.getValue());
+                sb.append("  </post-construct>\n");
+            }
+            sb.append('\n');
+        }
+
+        if (!preDestroyMethods.isEmpty()) {
+            for (Entry<String, String> entry : preDestroyMethods
+                    .entrySet()) {
+                sb.append("  <pre-destroy>\n");
+                appendElement(sb, INDENT4, "lifecycle-callback-class",
+                        entry.getKey());
+                appendElement(sb, INDENT4, "lifecycle-callback-method",
+                        entry.getValue());
+                sb.append("  </pre-destroy>\n");
+            }
+            sb.append('\n');
+        }
+
         for (MessageDestinationRef mdr : messageDestinationRefs.values()) {
             sb.append("  <message-destination-ref>\n");
             appendElement(sb, INDENT4, "description", mdr.getDescription());
@@ -1367,6 +1429,14 @@ public class WebXml {
                     }
                 }
             }
+        }
+
+        for (Entry<String, String> entry : postConstructMethods.entrySet()) {
+            context.addPostConstructMethod(entry.getKey(), entry.getValue());
+        }
+
+        for (Entry<String, String> entry : preDestroyMethods.entrySet()) {
+            context.addPreDestroyMethod(entry.getKey(), entry.getValue());
         }
     }
 
@@ -1864,6 +1934,28 @@ public class WebXml {
             }
         }
 
+        if (postConstructMethods.isEmpty()) {
+            for (WebXml fragment : fragments) {
+                if (!mergeLifecycleCallback(fragment.getPostConstructMethods(),
+                        temp.getPostConstructMethods(), fragment,
+                        "Post Construct Methods")) {
+                    return false;
+                }
+            }
+            postConstructMethods.putAll(temp.getPostConstructMethods());
+        }
+
+        if (preDestroyMethods.isEmpty()) {
+            for (WebXml fragment : fragments) {
+                if (!mergeLifecycleCallback(fragment.getPreDestroyMethods(),
+                        temp.getPreDestroyMethods(), fragment,
+                        "Pre Destroy Methods")) {
+                    return false;
+                }
+            }
+            preDestroyMethods.putAll(temp.getPreDestroyMethods());
+        }
+
         return true;
     }
 
@@ -2088,24 +2180,48 @@ public class WebXml {
     }
 
 
+    private static <T> boolean mergeLifecycleCallback(
+            Map<String, String> fragmentMap, Map<String, String> tempMap,
+            WebXml fragment, String mapName) {
+        for (Entry<String, String> entry : fragmentMap.entrySet()) {
+            final String key = entry.getKey();
+            final String value = entry.getValue();
+            if (tempMap.containsKey(key)) {
+                if (value != null && !value.equals(tempMap.get(key))) {
+                    log.error(sm.getString("webXml.mergeConflictString",
+                            mapName, key, fragment.getName(), fragment.getURL()));
+                    return false;
+                }
+            } else {
+                tempMap.put(key, value);
+            }
+        }
+        return true;
+    }
+
+
     /**
      * Generates the sub-set of the web-fragment.xml files to be processed in
      * the order that the fragments must be processed as per the rules in the
      * Servlet spec.
      *
-     * @param application   The application web.xml file
-     * @param fragments     The map of fragment names to web fragments
+     * @param application    The application web.xml file
+     * @param fragments      The map of fragment names to web fragments
+     * @param servletContext The servlet context the fragments are associated
+     *                       with
      * @return Ordered list of web-fragment.xml files to process
      */
     public static Set<WebXml> orderWebFragments(WebXml application,
-            Map<String,WebXml> fragments) {
+            Map<String,WebXml> fragments, ServletContext servletContext) {
 
         Set<WebXml> orderedFragments = new LinkedHashSet<WebXml>();
 
         boolean absoluteOrdering =
             (application.getAbsoluteOrdering() != null);
+        boolean orderingPresent = false;
 
         if (absoluteOrdering) {
+            orderingPresent = true;
             // Only those fragments listed should be processed
             Set<String> requestedOrder = application.getAbsoluteOrdering();
 
@@ -2136,6 +2252,7 @@ public class WebXml {
                 Iterator<String> before =
                         fragment.getBeforeOrdering().iterator();
                 while (before.hasNext()) {
+                    orderingPresent = true;
                     String beforeEntry = before.next();
                     if (!beforeEntry.equals(ORDER_OTHERS)) {
                         WebXml beforeFragment = fragments.get(beforeEntry);
@@ -2148,6 +2265,7 @@ public class WebXml {
                 }
                 Iterator<String> after = fragment.getAfterOrdering().iterator();
                 while (after.hasNext()) {
+                    orderingPresent = true;
                     String afterEntry = after.next();
                     if (!afterEntry.equals(ORDER_OTHERS)) {
                         WebXml afterFragment = fragments.get(afterEntry);
@@ -2205,6 +2323,20 @@ public class WebXml {
             orderFragments(orderedFragments, beforeSet);
             orderFragments(orderedFragments, othersSet);
             orderFragments(orderedFragments, afterSet);
+        }
+
+        // Avoid NPE when unit testing
+        if (servletContext != null) {
+            // Publish the ordered fragments
+            List<String> orderedJarFileNames = null;
+            if (orderingPresent) {
+                orderedJarFileNames = new ArrayList<String>();
+                for (WebXml fragment: orderedFragments) {
+                    orderedJarFileNames.add(fragment.getJarName());
+                }
+            }
+            servletContext.setAttribute(ServletContext.ORDERED_LIBS,
+                    orderedJarFileNames);
         }
 
         return orderedFragments;
