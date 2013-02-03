@@ -53,7 +53,7 @@ import org.apache.tomcat.util.res.StringManager;
  * is first started.
  *
  * @author Craig R. McClanahan
- * @version $Id: ApplicationFilterConfig.java 1412576 2012-11-22 15:02:31Z markt $
+ * @version $Id: ApplicationFilterConfig.java 1429172 2013-01-05 00:07:05Z kkolinko $
  */
 
 public final class ApplicationFilterConfig implements FilterConfig, Serializable {
@@ -101,8 +101,11 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
         super();
 
         this.context = context;
-        setFilterDef(filterDef);
-        if (filterDef.getFilter() != null) {
+        this.filterDef = filterDef;
+        // Allocate a new filter instance if necessary
+        if (filterDef.getFilter() == null) {
+            getFilter();
+        } else {
             this.filter = filterDef.getFilter();
             getInstanceManager().newInstance(filter);
             initFilter();
@@ -128,7 +131,7 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
     /**
      * The <code>FilterDef</code> that defines our associated Filter.
      */
-    private FilterDef filterDef = null;
+    private final FilterDef filterDef;
 
     /**
      * the InstanceManager used to create and destroy filter instances.
@@ -301,15 +304,22 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
         
         if (this.filter != null)
         {
-            if (Globals.IS_SECURITY_ENABLED) {
-                try {
-                    SecurityUtil.doAsPrivilege("destroy", filter);
-                } catch(java.lang.Exception ex){
-                    context.getLogger().error("ApplicationFilterConfig.doAsPrivilege", ex);
+            try {
+                if (Globals.IS_SECURITY_ENABLED) {
+                    try {
+                        SecurityUtil.doAsPrivilege("destroy", filter);
+                    } finally {
+                        SecurityUtil.remove(filter);
+                    }
+                } else {
+                    filter.destroy();
                 }
-                SecurityUtil.remove(filter);
-            } else {
-                filter.destroy();
+            } catch (Throwable t) {
+                ExceptionUtils.handleThrowable(t);
+                context.getLogger().error(sm.getString(
+                        "applicationFilterConfig.release",
+                        filterDef.getFilterName(),
+                        filterDef.getFilterClass()), t);
             }
             if (!context.getIgnoreAnnotations()) {
                 try {
@@ -325,66 +335,6 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
         this.filter = null;
 
      }
-
-
-    /**
-     * Set the filter definition we are configured for.  This has the side
-     * effect of instantiating an instance of the corresponding filter class.
-     *
-     * @param filterDef The new filter definition
-     *
-     * @exception ClassCastException if the specified class does not implement
-     *  the <code>javax.servlet.Filter</code> interface
-     * @exception ClassNotFoundException if the filter class cannot be found
-     * @exception IllegalAccessException if the filter class cannot be
-     *  publicly instantiated
-     * @exception InstantiationException if an exception occurs while
-     *  instantiating the filter object
-     * @exception ServletException if thrown by the filter's init() method
-     * @throws NamingException
-     * @throws InvocationTargetException
-     */
-    void setFilterDef(FilterDef filterDef)
-        throws ClassCastException, ClassNotFoundException,
-               IllegalAccessException, InstantiationException,
-               ServletException, InvocationTargetException, NamingException {
-
-        this.filterDef = filterDef;
-        if (filterDef == null) {
-
-            // Release any previously allocated filter instance
-            if (this.filter != null){
-                if (Globals.IS_SECURITY_ENABLED) {
-                    try{
-                        SecurityUtil.doAsPrivilege("destroy", filter);
-                    } catch(java.lang.Exception ex){
-                        context.getLogger().error("ApplicationFilterConfig.doAsPrivilege", ex);
-                    }
-                    SecurityUtil.remove(filter);
-                } else {
-                    filter.destroy();
-                }
-                if (!context.getIgnoreAnnotations()) {
-                    try {
-                        ((StandardContext) context).getInstanceManager().destroyInstance(this.filter);
-                    } catch (Exception e) {
-                        Throwable t = ExceptionUtils
-                                .unwrapInvocationTargetException(e);
-                        ExceptionUtils.handleThrowable(t);
-                        context.getLogger().error("ApplicationFilterConfig.preDestroy", t);
-                    }
-                }
-            }
-            this.filter = null;
-
-        } else {
-            // Allocate a new filter instance if necessary
-            if (filterDef.getFilter() == null) {
-                getFilter();
-            }
-        }
-
-    }
 
 
     // -------------------------------------------------------- Private Methods

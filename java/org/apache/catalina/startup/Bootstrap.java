@@ -52,7 +52,7 @@ import org.apache.juli.logging.LogFactory;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: Bootstrap.java 1311213 2012-04-09 12:43:16Z markt $
+ * @version $Id: Bootstrap.java 1428018 2013-01-02 20:41:24Z markt $
  */
 
 public final class Bootstrap {
@@ -430,6 +430,11 @@ public final class Bootstrap {
                 return;
             }
             daemon = bootstrap;
+        } else {
+            // When running as a service the call to stop will be on a new
+            // thread so make sure the correct class loader is used to prevent
+            // a range of class not found exceptions.
+            Thread.currentThread().setContextClassLoader(daemon.catalinaLoader);
         }
 
         try {

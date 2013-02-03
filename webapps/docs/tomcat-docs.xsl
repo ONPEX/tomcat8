@@ -17,7 +17,7 @@
 -->
 <!-- Content Stylesheet for "tomcat-docs" Documentation -->
 
-<!-- $Id: tomcat-docs.xsl 1371339 2012-08-09 17:48:18Z schultz $ -->
+<!-- $Id: tomcat-docs.xsl 1431211 2013-01-10 08:46:23Z kkolinko $ -->
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   version="1.0">
@@ -35,8 +35,10 @@
   <xsl:param    name="home-logo"        select="'/images/tomcat.gif'"/>
   <xsl:param    name="printer-logo"     select="'/images/printer.gif'"/>
   <xsl:param    name="apache-logo"      select="'/images/asf-logo.gif'"/>
+  <xsl:param    name="subdir"           select="''"/>
   <xsl:param    name="relative-path"    select="'.'"/>
   <xsl:param    name="version"          select="'7.0.x'"/>
+  <xsl:param    name="majorversion"     select="'7.0'"/>
   <xsl:param    name="build-date"       select="'MMM d yyyy'"/>
   <xsl:param    name="year"             select="'yyyy'"/>
   <xsl:param    name="void-image"       select="'/images/void.gif'"/>
@@ -44,6 +46,8 @@
   <xsl:param    name="standalone"       select="''"/>
   <xsl:param    name="buglink"          select="'http://issues.apache.org/bugzilla/show_bug.cgi?id='"/>
   <xsl:param    name="revlink"          select="'http://svn.apache.org/viewvc?view=rev&amp;rev='"/>
+  <xsl:param    name="sitedir"          select="''"/>
+  <xsl:param    name="filename"         select="'-'"/>
 
   <!-- Defined variables (non-overrideable) -->
   <xsl:variable name="body-bg"          select="'#ffffff'"/>
@@ -57,6 +61,7 @@
   <xsl:variable name="attributes-color" select="'#023264'"/>
   <xsl:variable name="table-th-bg"      select="'#039acc'"/>
   <xsl:variable name="table-td-bg"      select="'#a0ddf0'"/>
+  <xsl:variable name="commentslink">/<xsl:value-of select="$sitedir"/>comments.html</xsl:variable>
 
   <!-- Process an entire document into an HTML page -->
   <xsl:template match="document">
@@ -91,6 +96,15 @@
             .wrapped-source code { display: block; background-color: transparent; }
             .wrapped-source div { margin: 0 0 0 1.25em; }
             .wrapped-source p { margin: 0 0 0 1.25em; text-indent: -1.25em; }
+        </style>
+        <style type="text/css">
+            p.notice {
+                border: 1px solid rgb(255, 0, 0);
+                background-color: rgb(238, 238, 238);
+                color: rgb(0, 51, 102);
+                padding: 0.5em;
+                margin: 1em 2em 1em 1em;
+            }
         </style>
     </head>
 
@@ -157,6 +171,54 @@
           <xsl:apply-templates select="body/section"/>
         </td>
 
+      </tr>
+
+      <tr class="noPrint">
+
+        <td width="20%" valign="top" nowrap="nowrap" class="noPrint">
+        </td>
+        <td width="80%" valign="top" align="left">
+          <table border="0" cellspacing="0" cellpadding="2">
+            <!-- Comment heading -->
+            <tr><td bgcolor="{$banner-bg}">
+                <font color="{$banner-fg}" face="arial,helvetica.sanserif">
+                <a name="comments_section" id="comments_section"><strong>Comments</strong></a></font>
+              </td>
+            </tr>
+            <!-- Comment body -->
+            <tr><td>
+            <blockquote>
+            <p class="notice">
+              <strong>Notice: </strong>This is not a Q&amp;A section.
+              The Apache Comments System is explained
+              <a href="{$commentslink}">here</a>.
+              Comments should be pointed towards suggestions on improving the documentation
+              or server, and may be removed again by our moderators if they are either
+              implemented or considered invalid/off-topic.<br/><br/>
+              Questions on how to configure or use Apache Tomcat should be directed
+              to our <a href="http://tomcat.apache.org/lists.html">mailing lists</a>.
+              If you need help, ask on the users mailing list.</p>
+              <script type="text/javascript">
+              <xsl:text disable-output-escaping="yes"><![CDATA[<!--//--><![CDATA[//><!--
+              var comments_shortname = 'tomcat';
+              var comments_identifier = 'http://tomcat.apache.org/]]></xsl:text><xsl:value-of select="$sitedir"/><xsl:value-of select="$subdir"/><xsl:value-of select="substring($filename,1,string-length($filename)-4)"/><xsl:text disable-output-escaping="yes"><![CDATA[.html';
+              (function(w, d) {
+                  if (w.location.hostname.toLowerCase() == "tomcat.apache.org") {
+                      d.write('<div id="comments_thread"><\/div>');
+                      var s = d.createElement('script');
+                      s.type = 'text/javascript';
+                      s.async = true;
+                      s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
+                      (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
+                  }
+                  else {
+                      d.write('<div id="comments_thread"><strong>Comments are disabled for this page at the moment.</strong><\/div>');
+                  }
+              })(window, document);
+              //--><!]]]]>></xsl:text></script>
+            </blockquote></td></tr>
+          </table>
+        </td>
       </tr>
 
       <xsl:comment>FOOTER SEPARATOR</xsl:comment>

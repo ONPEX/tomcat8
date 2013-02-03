@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -34,6 +36,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import org.apache.catalina.Context;
 import org.apache.catalina.Lifecycle;
 import org.apache.catalina.LifecycleEvent;
 import org.apache.catalina.LifecycleListener;
@@ -66,7 +69,7 @@ public class TestStandardContextResources extends TomcatBaseTest {
 
         File appDir = new File("test/webapp-3.0-fragments");
         // app dir is relative to server home
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+        Context ctx = tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
         tomcat.start();
 
@@ -82,6 +85,18 @@ public class TestStandardContextResources extends TomcatBaseTest {
                 "<p>resourceE.jsp in the web application</p>");
         assertPageContains("/test/resourceG.jsp",
                 "<p>resourceG.jsp in WEB-INF/classes</p>", 404);
+
+        // For BZ 54391. Relative ordering is specified in resources2.jar.
+        // It is not absolute-ordering, so there may be other jars in the list
+        List<String> orderedLibs = (List<String>) ctx.getServletContext()
+                .getAttribute(ServletContext.ORDERED_LIBS);
+        if (orderedLibs.size() > 2) {
+            log.warn("testResources(): orderedLibs: " + orderedLibs);
+        }
+        int index = orderedLibs.indexOf("resources.jar");
+        int index2 = orderedLibs.indexOf("resources2.jar");
+        assertTrue(orderedLibs.toString(), index >= 0 && index2 >= 0
+                && index < index2);
     }
 
     @Test
@@ -144,6 +159,10 @@ public class TestStandardContextResources extends TomcatBaseTest {
         assertPageContains("/test/getresource?path=/resourceB.jsp",
         "<p>resourceB.jsp in resources.jar</p>");
 
+        // Check ordering, for BZ 54391
+        assertEquals(Arrays.asList("resources.jar", "resources2.jar"), ctx
+                .getServletContext().getAttribute(ServletContext.ORDERED_LIBS));
+
         ctx.stop();
 
         LifecycleListener[] listener1 = ctx.findLifecycleListeners();
@@ -173,6 +192,9 @@ public class TestStandardContextResources extends TomcatBaseTest {
         assertPageContains("/test/getresource?path=/resourceB.jsp",
         "<p>resourceB.jsp in resources2.jar</p>");
 
+        // Check ordering, for BZ 54391
+        assertEquals(Arrays.asList("resources2.jar", "resources.jar"), ctx
+                .getServletContext().getAttribute(ServletContext.ORDERED_LIBS));
     }
 
     @Test

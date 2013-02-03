@@ -33,7 +33,7 @@ import org.apache.catalina.util.IOTools;
  * 
  * @author Dan Sandberg
  * @author David Becker
- * @version $Id: SSIProcessor.java 1043105 2010-12-07 15:42:32Z markt $
+ * @version $Id: SSIProcessor.java 1430553 2013-01-08 21:43:23Z markt $
  */
 public class SSIProcessor {
     /** The start pattern */
@@ -309,11 +309,11 @@ public class SSIProcessor {
                 break;
             }
         }
-        String command = null;
-        if (firstLetter != -1) {
-            command = cmd.substring(firstLetter, lastLetter + 1);
+        if (firstLetter == -1) {
+            return "";
+        } else {
+            return cmd.substring(firstLetter, lastLetter + 1);
         }
-        return command;
     }
 
 

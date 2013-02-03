@@ -79,7 +79,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: WebappLoader.java 1232850 2012-01-18 12:05:43Z markt $
+ * @version $Id: WebappLoader.java 1430536 2013-01-08 21:07:06Z kkolinko $
  */
 
 public class WebappLoader extends LifecycleMBeanBase
@@ -658,8 +658,10 @@ public class WebappLoader extends LifecycleMBeanBase
         }
 
         // Throw away our current class loader
-        ((Lifecycle) classLoader).stop();
-        DirContextURLStreamHandler.unbind(classLoader);
+        if (classLoader != null) {
+            ((Lifecycle) classLoader).stop();
+            DirContextURLStreamHandler.unbind(classLoader);
+        }
 
         try {
             StandardContext ctx=(StandardContext)container;

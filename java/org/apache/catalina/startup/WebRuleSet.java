@@ -44,7 +44,7 @@ import org.xml.sax.Attributes;
  * deployment descriptor (<code>/WEB-INF/web.xml</code>) resource.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: WebRuleSet.java 1373621 2012-08-15 20:37:06Z markt $
+ * @version $Id: WebRuleSet.java 1431300 2013-01-10 11:47:49Z markt $
  */
 
 public class WebRuleSet extends RuleSetBase {
@@ -473,6 +473,15 @@ public class WebRuleSet extends RuleSetBase {
         digester.addCallParam(fullPrefix + "/locale-encoding-mapping-list/locale-encoding-mapping/locale", 0);
         digester.addCallParam(fullPrefix + "/locale-encoding-mapping-list/locale-encoding-mapping/encoding", 1);
 
+        digester.addRule(fullPrefix + "/post-construct",
+                new LifecycleCallbackRule("addPostConstructMethods", 2, true));
+        digester.addCallParam(fullPrefix + "/post-construct/lifecycle-callback-class", 0);
+        digester.addCallParam(fullPrefix + "/post-construct/lifecycle-callback-method", 1);
+
+        digester.addRule(fullPrefix + "/pre-destroy",
+                new LifecycleCallbackRule("addPreDestroyMethods", 2, false));
+        digester.addCallParam(fullPrefix + "/pre-destroy/lifecycle-callback-class", 0);
+        digester.addCallParam(fullPrefix + "/pre-destroy/lifecycle-callback-method", 1);
     }
 
     protected void configureNamingRules(Digester digester) {
@@ -1131,6 +1140,12 @@ final class AbsoluteOrderingRule extends Rule {
                     "webRuleSet.absoluteOrderingCount"));
         } else {
             isAbsoluteOrderingSet = true;
+            WebXml webXml = (WebXml) digester.peek();
+            webXml.createAbsoluteOrdering();
+            if (digester.getLogger().isDebugEnabled()) {
+                digester.getLogger().debug(
+                        webXml.getClass().getName() + ".setAbsoluteOrdering()");
+            }
         }
     }
 }
@@ -1286,5 +1301,40 @@ final class MappedNameRule extends Rule {
             throws Exception {
         ResourceBase resourceBase = (ResourceBase) digester.peek();
         resourceBase.setProperty("mappedName", text.trim());
+    }
+}
+
+/**
+ * A rule that fails if more than one post construct or pre destroy methods
+ * are configured per class.
+ */
+final class LifecycleCallbackRule extends CallMethodRule {
+
+    private final boolean postConstruct;
+
+    public LifecycleCallbackRule(String methodName, int paramCount,
+            boolean postConstruct) {
+        super(methodName, paramCount);
+        this.postConstruct = postConstruct;
+    }
+
+    @Override
+    public void end(String namespace, String name) throws Exception {
+        Object[] params = (Object[]) digester.peekParams();
+        if (params != null && params.length == 2) {
+            WebXml webXml = (WebXml) digester.peek();
+            if (postConstruct) {
+                if (webXml.getPostConstructMethods().containsKey(params[0])) {
+                    throw new IllegalArgumentException(WebRuleSet.sm.getString(
+                            "webRuleSet.postconstruct.duplicate", params[0]));
+                }
+            } else {
+                if (webXml.getPreDestroyMethods().containsKey(params[0])) {
+                    throw new IllegalArgumentException(WebRuleSet.sm.getString(
+                            "webRuleSet.predestroy.duplicate", params[0]));
+                }
+            }
+        }
+        super.end(namespace, name);
     }
 }

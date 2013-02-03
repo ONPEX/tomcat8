@@ -50,7 +50,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Greg Murray
  * @author Justyna Horwat
- * @version $Id: ExtensionValidator.java 1338160 2012-05-14 11:37:21Z kkolinko $
+ * @version $Id: ExtensionValidator.java 1428084 2013-01-02 21:57:27Z markt $
  *
  */
 public final class ExtensionValidator {
@@ -175,15 +175,18 @@ public final class ExtensionValidator {
 
         // Locate the Manifests for all bundled JARs
         NamingEnumeration<Binding> ne = null;
+        // Primarily used for error reporting
+        String jarName = null;
         try {
             ne = dirContext.listBindings("WEB-INF/lib/");
             while ((ne != null) && ne.hasMoreElements()) {
                 Binding binding = ne.nextElement();
-                if (!binding.getName().toLowerCase(Locale.ENGLISH).endsWith(".jar")) {
+                jarName = binding.getName();
+                if (!jarName.toLowerCase(Locale.ENGLISH).endsWith(".jar")) {
                     continue;
                 }
                 Object obj =
-                    dirContext.lookup("/WEB-INF/lib/" + binding.getName());
+                    dirContext.lookup("/WEB-INF/lib/" + jarName);
                 if (!(obj instanceof Resource)) {
                     // Probably a directory named xxx.jar - ignore it
                     continue;
@@ -192,16 +195,16 @@ public final class ExtensionValidator {
                 inputStream = resource.streamContent();
                 Manifest jmanifest = getManifest(inputStream);
                 if (jmanifest != null) {
-                    ManifestResource mre = new ManifestResource(
-                                                binding.getName(),
-                                                jmanifest, 
-                                                ManifestResource.APPLICATION);
+                    ManifestResource mre = new ManifestResource(jarName,
+                            jmanifest, ManifestResource.APPLICATION);
                     appManifestResources.add(mre);
                 }
             }
         } catch (NamingException nex) {
             // Jump out of the check for this application because it 
             // has no resources
+        } catch (IOException ioe) {
+            throw new IOException("Jar: " + jarName, ioe);
         } finally {
             if (inputStream != null) {
                 try {

@@ -17,7 +17,7 @@
 -->
 <!-- Content Stylesheet for "tomcat-docs" Documentation -->
 
-<!-- $Id: package.xsl 1232855 2012-01-18 12:33:47Z kkolinko $ -->
+<!-- $Id: package.xsl 1428969 2013-01-04 16:45:13Z kkolinko $ -->
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   version="1.0">
@@ -150,7 +150,7 @@ td#mainBody {width: 100%;}
       <xsl:comment>PAGE FOOTER</xsl:comment>
       <tr><td colspan="2">
         <div align="center"><font color="{$body-link}" size="-1"><em>
-        Copyright &#169; 1999-2012, Apache Software Foundation
+        Copyright &#169; 1999-2013, Apache Software Foundation
         </em></font></div>
       </td></tr>
 
