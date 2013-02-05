@@ -4,7 +4,7 @@
  import javax.servlet.http.HttpSession;
  
  import junit.framework.Assert;
-+import junit.framework.Ignore;
++import org.junit.Ignore;
  
  import static org.junit.Assert.assertEquals;
  import static org.junit.Assert.assertTrue;
