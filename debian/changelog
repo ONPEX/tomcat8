@@ -4,6 +4,7 @@ tomcat7 (7.0.35-1~exp1) experimental; urgency=low
   * Add patch to disable TestCometProcessor.testConnectionClose().
     This test fails consistently (although the Comet processor 
     appears to function correctly). 
+  * Add patch for upstream bug 54440 (JSP compilation)
 
  -- tony mancill <tmancill@debian.org>  Sun, 03 Feb 2013 14:57:15 -0800
 
