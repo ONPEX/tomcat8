@@ -2,7 +2,6 @@
 0002-do-not-load-AJP13-connector-by-default.patch
 0003-disable-APR-library-loading.patch
 0004-split-deploy-webapps-target-from-deploy-target.patch
-0005-change-default-DBCP-factory-class.patch
 0006-add-JARs-below-var-to-class-loader.patch
 0009-Use-java.security.policy-file-in-catalina.sh.patch
 0010-debianize-build-xml.patch
@@ -12,3 +11,4 @@
 0014-JDTCompiler.patch
 0015_disable_test_TestCometProcessor.patch
 0016_upstream_bug_54440.patch
+0017-use-jdbc-pool-default.patch

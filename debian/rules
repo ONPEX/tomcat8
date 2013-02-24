@@ -98,7 +98,6 @@ binary-indep: build install
 	dh_installcron
 	mkdir -p debian/poms
 	cp res/maven/*.pom debian/poms
-	rm -f debian/poms/tomcat-dbcp.pom
 	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.0/'      \
 	              debian/poms/tomcat-servlet-api.pom
 	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.0/'      \
@@ -140,6 +139,10 @@ binary-indep: build install
 	              debian/poms/tomcat-util.pom \
 	              $(BLDLIB)/tomcat-util.jar \
 	              usr/share/tomcat7/lib/tomcat-util.jar
+	mh_installjar -plibtomcat7-java -l --usj-name=tomcat-jdbc \
+				  debian/poms/tomcat-jdbc.pom \
+			  	  output/jdbc-pool/tomcat-jdbc.jar \
+				  usr/share/tomcat7/lib/tomcat-jdbc.jar
 	for i in $(T_JARS); do \
 		mv $(BLDLIB)/$$i.jar $(BLDLIB)/$$i-$(T_VER).jar && \
 		dh_install -plibtomcat7-java \

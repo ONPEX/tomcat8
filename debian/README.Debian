@@ -28,8 +28,10 @@ Getting started:
 Deviations from upstream's tomcat7:
 
   * In order to prevent library duplication, this version of tomcat
-    does not provide tomcat-dbcp.jar.  Instead, it uses commons-dbcp.jar 
-    from the libcommons-dbcp-java package.  This also means that
-    libtomcat7-java does not provide the tomcat-dbcp.pom for the 
-    local maven-repo.  For more information and rationale, see:  
+    does not provide tomcat-dbcp.jar.  Instead, it uses the lightweight,
+    scalable JDBC Pool implementation provided as part of tomcat7.
+    This also means that libtomcat7-java does not provide the
+    tomcat-dbcp.pom for the local maven-repo.  For more information
+    and rationale, see:  
       https://bugs.launchpad.net/ubuntu/+source/tomcat6/+bug/283852
+

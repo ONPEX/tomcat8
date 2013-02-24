@@ -8,4 +8,4 @@ debian/poms/tomcat-jasper-el.pom
 debian/poms/tomcat-juli.pom
 debian/poms/tomcat-tribes.pom
 debian/poms/tomcat-util.pom
-
+debian/poms/tomcat-jdbc.pom

@@ -1,3 +1,10 @@
+tomcat7 (7.0.35-1~exp2) UNRELEASED; urgency=low
+
+  * Switch from Commons DBCP to Tomcat JDBC Pool as default connection
+    pool implementation (Closes: #701023).
+
+ -- James Page <james.page@ubuntu.com>  Sun, 24 Feb 2013 22:08:22 +0000
+
 tomcat7 (7.0.35-1~exp1) experimental; urgency=low
 
   * New upstream version 7.0.35
