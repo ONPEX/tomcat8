@@ -1,4 +1,4 @@
-tomcat7 (7.0.35-1~exp2) UNRELEASED; urgency=low
+tomcat7 (7.0.35-1~exp2) experimental; urgency=low
 
   * Switch from Commons DBCP to Tomcat JDBC Pool as default connection
     pool implementation (Closes: #701023).
