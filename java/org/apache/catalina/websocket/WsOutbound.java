@@ -269,6 +269,10 @@ public class WsOutbound {
         if (closed) {
             return;
         }
+
+        // Send any partial data we have
+        doFlush(false);
+
         closed = true;
 
         upgradeOutbound.write(0x88);
@@ -329,7 +333,7 @@ public class WsOutbound {
             throw new IOException(sm.getString("outbound.closed"));
         }
 
-        doFlush(true);
+        doFlush(false);
 
         upgradeOutbound.write(0x80 | opcode);
         if (data == null) {
@@ -354,6 +358,10 @@ public class WsOutbound {
      */
     private void doWriteBytes(ByteBuffer buffer, boolean finalFragment)
             throws IOException {
+
+        if (closed) {
+            throw new IOException(sm.getString("outbound.closed"));
+        }
 
         // Work out the first byte
         int first = 0x00;
@@ -391,7 +399,8 @@ public class WsOutbound {
         }
 
         // Write the content
-        upgradeOutbound.write(buffer.array(), 0, buffer.limit());
+        upgradeOutbound.write(buffer.array(), buffer.arrayOffset(),
+                buffer.limit());
         upgradeOutbound.flush();
 
         // Reset

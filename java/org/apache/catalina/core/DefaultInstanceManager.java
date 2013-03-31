@@ -55,7 +55,7 @@ import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.res.StringManager;
 
 /**
- * @version $Id: DefaultInstanceManager.java 1431300 2013-01-10 11:47:49Z markt $
+ * @version $Id: DefaultInstanceManager.java 1437338 2013-01-23 11:02:35Z markt $
  */
 public class DefaultInstanceManager implements InstanceManager {
 
@@ -349,9 +349,9 @@ public class DefaultInstanceManager implements InstanceManager {
                                 annotations.add(new AnnotationCacheEntry(
                                         method.getName(),
                                         method.getParameterTypes(),
-                                        injections.get(method.getName()),
+                                        injections.get(fieldName),
                                         AnnotationCacheEntryType.SETTER));
-                                break;
+                                continue;
                             }
                         }
                         if (method.isAnnotationPresent(Resource.class)) {

@@ -26,9 +26,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.charset.Charset;
 
-import org.apache.catalina.util.Base64;
+import org.apache.tomcat.util.buf.B2CConverter;
+import org.apache.tomcat.util.codec.binary.Base64;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 
@@ -39,7 +39,7 @@ import org.apache.tools.ant.Project;
  * undeploying applications.  These tasks require Ant 1.4 or later.
  *
  * @author Craig R. McClanahan
- * @version $Id: AbstractCatalinaTask.java 1138019 2011-06-21 14:29:49Z markt $
+ * @version $Id: AbstractCatalinaTask.java 1459346 2013-03-21 15:05:54Z markt $
  * @since 4.1
  */
 
@@ -201,8 +201,8 @@ public abstract class AbstractCatalinaTask extends BaseRedirectorHelperTask {
 
             // Set up an authorization header with our credentials
             String input = username + ":" + password;
-            String output =
-                Base64.encode(input.getBytes(Charset.defaultCharset()));
+            String output = Base64.encodeBase64String(
+                    input.getBytes(B2CConverter.ISO_8859_1));
             hconn.setRequestProperty("Authorization",
                                      "Basic " + output);
 

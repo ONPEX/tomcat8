@@ -44,7 +44,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * @author <a href="mailto:nicolaken@supereva.it">Nicola Ken Barozzi</a> Aisa
  * @author <a href="mailto:stefano@apache.org">Stefano Mazzocchi</a>
  * @author Yoav Shapira
- * @version $Id: ErrorReportValve.java 1416537 2012-12-03 14:21:12Z markt $
+ * @version $Id: ErrorReportValve.java 1445329 2013-02-12 20:08:43Z markt $
  */
 
 public class ErrorReportValve extends ValveBase {
@@ -179,7 +179,8 @@ public class ErrorReportValve extends ValveBase {
             }
         }
 
-        // Do nothing if there is no report for the specified status code
+        // Do nothing if there is no report for the specified status code and
+        // no error message provided
         String report = null;
         try {
             report = sm.getString("http." + statusCode);
@@ -187,7 +188,11 @@ public class ErrorReportValve extends ValveBase {
             ExceptionUtils.handleThrowable(t);
         }
         if (report == null) {
-            return;
+            if (message.length() == 0) {
+                return;
+            } else {
+                report = sm.getString("errorReportValve.noDescription");
+            }
         }
 
         StringBuilder sb = new StringBuilder();

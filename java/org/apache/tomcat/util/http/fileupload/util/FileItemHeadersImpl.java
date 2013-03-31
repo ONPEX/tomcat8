@@ -19,8 +19,8 @@ package org.apache.tomcat.util.http.fileupload.util;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -31,10 +31,15 @@ import org.apache.tomcat.util.http.fileupload.FileItemHeaders;
 /**
  * Default implementation of the {@link FileItemHeaders} interface.
  *
- * @author Michael C. Macaluso
- * @since 1.3
+ * @since 1.2.1
+ *
+ * @version $Id: FileItemHeadersImpl.java 1458566 2013-03-19 23:14:59Z markt $
  */
 public class FileItemHeadersImpl implements FileItemHeaders, Serializable {
+
+    /**
+     * Serial version UID, being used, if serialized.
+     */
     private static final long serialVersionUID = -4455695752627032559L;
 
     /**
@@ -42,15 +47,11 @@ public class FileItemHeadersImpl implements FileItemHeaders, Serializable {
      * <code>String</code> instances.
      */
     private final Map<String,List<String>> headerNameToValueListMap =
-        new HashMap<String,List<String>>();
+            new LinkedHashMap<String,List<String>>();
 
     /**
-     * List to preserve order of headers as added.  This would not be
-     * needed if a <code>LinkedHashMap</code> could be used, but don't
-     * want to depend on 1.4.
+     * {@inheritDoc}
      */
-    private final List<String> headerNameList = new ArrayList<String>();
-
     @Override
     public String getHeader(String name) {
         String nameLower = name.toLowerCase(Locale.ENGLISH);
@@ -61,17 +62,23 @@ public class FileItemHeadersImpl implements FileItemHeaders, Serializable {
         return headerValueList.get(0);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Iterator<String> getHeaderNames() {
-        return headerNameList.iterator();
+        return headerNameToValueListMap.keySet().iterator();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Iterator<String> getHeaders(String name) {
         String nameLower = name.toLowerCase(Locale.ENGLISH);
         List<String> headerValueList = headerNameToValueListMap.get(nameLower);
         if (null == headerValueList) {
-            return Collections.<String>emptyList().iterator();
+            headerValueList = Collections.emptyList();
         }
         return headerValueList.iterator();
     }
@@ -88,8 +95,8 @@ public class FileItemHeadersImpl implements FileItemHeaders, Serializable {
         if (null == headerValueList) {
             headerValueList = new ArrayList<String>();
             headerNameToValueListMap.put(nameLower, headerValueList);
-            headerNameList.add(nameLower);
         }
         headerValueList.add(value);
     }
+
 }

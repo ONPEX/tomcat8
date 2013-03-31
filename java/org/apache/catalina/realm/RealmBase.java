@@ -67,7 +67,7 @@ import org.ietf.jgss.GSSName;
  * location) are identical to those currently supported by Tomcat 3.X.
  *
  * @author Craig R. McClanahan
- * @version $Id: RealmBase.java 1379208 2012-08-30 22:59:07Z markt $
+ * @version $Id: RealmBase.java 1434688 2013-01-17 14:33:29Z markt $
  */
 
 public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
@@ -406,9 +406,10 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
                                   String md5a2) {
 
         // In digest auth, digests are always lower case
-        String md5a1 = getDigest(username, realm).toLowerCase(Locale.ENGLISH);
+        String md5a1 = getDigest(username, realm);
         if (md5a1 == null)
             return null;
+        md5a1 = md5a1.toLowerCase(Locale.ENGLISH);
         String serverDigestValue;
         if (qop == null) {
             serverDigestValue = md5a1 + ":" + nonce + ":" + md5a2;

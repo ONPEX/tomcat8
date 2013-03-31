@@ -17,7 +17,7 @@
 -->
 <!-- Content Stylesheet for "tomcat-docs" Documentation -->
 
-<!-- $Id: tomcat-docs.xsl 1431211 2013-01-10 08:46:23Z kkolinko $ -->
+<!-- $Id: tomcat-docs.xsl 1451777 2013-03-01 23:38:03Z kkolinko $ -->
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   version="1.0">
@@ -173,6 +173,7 @@
 
       </tr>
 
+      <xsl:if test="not(properties/no-comments)">
       <tr class="noPrint">
 
         <td width="20%" valign="top" nowrap="nowrap" class="noPrint">
@@ -212,7 +213,7 @@
                       (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
                   }
                   else {
-                      d.write('<div id="comments_thread"><strong>Comments are disabled for this page at the moment.</strong><\/div>');
+                      d.write('<div id="comments_thread"><strong>Comments are disabled for this page at the moment.<\/strong><\/div>');
                   }
               })(window, document);
               //--><!]]]]>></xsl:text></script>
@@ -220,6 +221,7 @@
           </table>
         </td>
       </tr>
+      </xsl:if>
 
       <xsl:comment>FOOTER SEPARATOR</xsl:comment>
       <tr>

@@ -42,7 +42,7 @@ import org.apache.naming.ContextBindings;
 * @author Craig R. McClanahan
 * @author Carson McDonald
 * @author Ignacio Ortega
-* @version $Revision: 1348499 $
+* @version $Revision: 1437507 $
 */
 
 public class DataSourceRealm
@@ -455,7 +455,7 @@ public class DataSourceRealm
         } catch(SQLException e) {
             containerLog.error(
                     sm.getString("dataSourceRealm.getPassword.exception",
-                                 username));
+                                 username), e);
         } finally {
             try {
                 if (rs != null) {
@@ -467,7 +467,7 @@ public class DataSourceRealm
             } catch (SQLException e) {
                     containerLog.error(
                         sm.getString("dataSourceRealm.getPassword.exception",
-                             username));
+                             username), e);
                 
             }
         }
@@ -548,7 +548,7 @@ public class DataSourceRealm
             return list;
         } catch(SQLException e) {
             containerLog.error(
-                sm.getString("dataSourceRealm.getRoles.exception", username));
+                sm.getString("dataSourceRealm.getRoles.exception", username), e);
         }
         finally {
             try {
@@ -561,7 +561,7 @@ public class DataSourceRealm
             } catch (SQLException e) {
                     containerLog.error(
                         sm.getString("dataSourceRealm.getRoles.exception",
-                                     username));
+                                     username), e);
             }
         }
         

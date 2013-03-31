@@ -140,7 +140,7 @@ public final class Request {
 
     private int bytesRead=0;
     // Time of the request - useful to avoid repeated calls to System.currentTime
-    private long startTime = 0L;
+    private long startTime = -1;
     private int available = 0;
 
     private RequestInfo reqProcessorMX=new RequestInfo(this);
@@ -506,6 +506,8 @@ public final class Request {
         remoteUser.recycle();
         authType.recycle();
         attributes.clear();
+
+        startTime = -1;
     }
 
     // -------------------- Info  --------------------

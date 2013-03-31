@@ -34,9 +34,7 @@ import java.io.OutputStream;
  * is actually reached, since it triggers when a pending write operation would
  * cause the threshold to be exceeded.
  *
- * @author <a href="mailto:martinc@apache.org">Martin Cooper</a>
- *
- * @version $Id: ThresholdingOutputStream.java 881533 2009-11-17 21:21:41Z markt $
+ * @version $Id: ThresholdingOutputStream.java 1456969 2013-03-15 14:37:04Z markt $
  */
 public abstract class ThresholdingOutputStream
     extends OutputStream
@@ -48,7 +46,7 @@ public abstract class ThresholdingOutputStream
     /**
      * The threshold at which the event will be triggered.
      */
-    private int threshold;
+    private final int threshold;
 
 
     /**
@@ -171,37 +169,15 @@ public abstract class ThresholdingOutputStream
 
 
     /**
-     * Returns the threshold, in bytes, at which an event will be triggered.
-     *
-     * @return The threshold point, in bytes.
-     */
-    public int getThreshold()
-    {
-        return threshold;
-    }
-
-
-    /**
-     * Returns the number of bytes that have been written to this output stream.
-     *
-     * @return The number of bytes written.
-     */
-    public long getByteCount()
-    {
-        return written;
-    }
-
-
-    /**
      * Determines whether or not the configured threshold has been exceeded for
      * this output stream.
      *
-     * @return <code>true</code> if the threshold has been reached;
-     *         <code>false</code> otherwise.
+     * @return {@code true} if the threshold has been reached;
+     *         {@code false} otherwise.
      */
     public boolean isThresholdExceeded()
     {
-        return (written > threshold);
+        return written > threshold;
     }
 
 
@@ -220,21 +196,11 @@ public abstract class ThresholdingOutputStream
      */
     protected void checkThreshold(int count) throws IOException
     {
-        if (!thresholdExceeded && (written + count > threshold))
+        if (!thresholdExceeded && written + count > threshold)
         {
             thresholdExceeded = true;
             thresholdReached();
         }
-    }
-
-    /**
-     * Resets the byteCount to zero.  You can call this from 
-     * {@link #thresholdReached()} if you want the event to be triggered again. 
-     */
-    protected void resetByteCount() 
-    {
-        this.thresholdExceeded = false;
-        this.written = 0;
     }
 
     // ------------------------------------------------------- Abstract methods

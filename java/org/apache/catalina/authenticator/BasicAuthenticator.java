@@ -27,12 +27,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.deploy.LoginConfig;
-import org.apache.catalina.util.Base64;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
+import org.apache.tomcat.util.buf.B2CConverter;
 import org.apache.tomcat.util.buf.ByteChunk;
-import org.apache.tomcat.util.buf.CharChunk;
 import org.apache.tomcat.util.buf.MessageBytes;
+import org.apache.tomcat.util.codec.binary.Base64;
 
 
 
@@ -42,7 +42,7 @@ import org.apache.tomcat.util.buf.MessageBytes;
  * and Digest Access Authentication."
  *
  * @author Craig R. McClanahan
- * @version $Id: BasicAuthenticator.java 1189224 2011-10-26 14:02:40Z kkolinko $
+ * @version $Id: BasicAuthenticator.java 1459346 2013-03-21 15:05:54Z markt $
  */
 
 public class BasicAuthenticator
@@ -135,21 +135,29 @@ public class BasicAuthenticator
             ByteChunk authorizationBC = authorization.getByteChunk();
             if (authorizationBC.startsWithIgnoreCase("basic ", 0)) {
                 authorizationBC.setOffset(authorizationBC.getOffset() + 6);
-                // FIXME: Add trimming
-                // authorizationBC.trim();
                 
-                CharChunk authorizationCC = authorization.getCharChunk();
-                Base64.decode(authorizationBC, authorizationCC);
+                byte[] decoded = Base64.decodeBase64(
+                        authorizationBC.getBuffer(),
+                        authorizationBC.getOffset(),
+                        authorizationBC.getLength());
                 
                 // Get username and password
-                int colon = authorizationCC.indexOf(':');
+                int colon = -1;
+                for (int i = 0; i < decoded.length; i++) {
+                    if (decoded[i] == ':') {
+                        colon = i;
+                        break;
+                    }
+                }
+
                 if (colon < 0) {
-                    username = authorizationCC.toString();
+                    username = new String(decoded, B2CConverter.ISO_8859_1);
                 } else {
-                    char[] buf = authorizationCC.getBuffer();
-                    username = new String(buf, 0, colon);
-                    password = new String(buf, colon + 1, 
-                            authorizationCC.getEnd() - colon - 1);
+                    username = new String(
+                            decoded, 0, colon, B2CConverter.ISO_8859_1);
+                    password = new String(
+                            decoded, colon + 1, decoded.length - colon - 1,
+                            B2CConverter.ISO_8859_1);
                 }
                 
                 authorizationBC.setOffset(authorizationBC.getOffset() - 6);

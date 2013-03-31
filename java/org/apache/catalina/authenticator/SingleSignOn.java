@@ -55,7 +55,7 @@ import org.apache.tomcat.util.res.StringManager;
  * </ul>
  *
  * @author Craig R. McClanahan
- * @version $Id: SingleSignOn.java 1188401 2011-10-24 21:50:26Z markt $
+ * @version $Id: SingleSignOn.java 1439783 2013-01-29 08:29:57Z kfujino $
  */
 
 public class SingleSignOn extends ValveBase implements SessionListener {
@@ -214,6 +214,10 @@ public class SingleSignOn extends ValveBase implements SessionListener {
     @Override
     public void sessionEvent(SessionEvent event) {
 
+        if (!getState().isAvailable()) {
+            return;
+        }
+
         // We only care about session destroyed events
         if (!Session.SESSION_DESTROYED_EVENT.equals(event.getType())
                 && (!Session.SESSION_PASSIVATED_EVENT.equals(event.getType())))
@@ -238,7 +242,8 @@ public class SingleSignOn extends ValveBase implements SessionListener {
         if (((session.getMaxInactiveInterval() > 0)
             && (System.currentTimeMillis() - session.getThisAccessedTimeInternal() >=
                 session.getMaxInactiveInterval() * 1000)) 
-            || (Session.SESSION_PASSIVATED_EVENT.equals(event.getType()))) {
+            || (Session.SESSION_PASSIVATED_EVENT.equals(event.getType()))
+            || (!session.getManager().getContainer().getState().isAvailable())) {
             removeSession(ssoId, session);
         } else {
             // The session was logged out.

@@ -126,6 +126,39 @@ public class TestAuthorizationDigest {
     }
 
     @Test
+    public void testQuotedLhex() throws Exception {
+        String header = "Digest nc=\"09abcdef\"";
+
+        StringReader input = new StringReader(header);
+
+        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
+
+        Assert.assertEquals("09abcdef", result.get("nc"));
+    }
+
+    @Test
+    public void testQuotedLhexUppercase() throws Exception {
+        String header = "Digest nc=\"00ABCDEF\"";
+
+        StringReader input = new StringReader(header);
+
+        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
+
+        Assert.assertEquals("00abcdef", result.get("nc"));
+    }
+
+    @Test
+    public void testUnclosedQuotedLhex() throws Exception {
+        String header = "Digest nc=\"00000001";
+
+        StringReader input = new StringReader(header);
+
+        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
+
+        Assert.assertNull(result);
+    }
+
+    @Test
     public void testUnclosedQuotedString1() throws Exception {
         String header = "Digest username=\"test";
 
@@ -226,6 +259,16 @@ public class TestAuthorizationDigest {
     }
 
     @Test
+    public void testWrongCharacterInToken2() throws Exception {
+        String header = "Digest qop=\u044f";
+
+        StringReader input = new StringReader(header);
+
+        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
+        Assert.assertNull(result);
+    }
+
+    @Test
     public void testWrongCharacterInQuotedToken() throws Exception {
         String header = "Digest qop=\"\u044f\"";
 
@@ -238,6 +281,16 @@ public class TestAuthorizationDigest {
     @Test
     public void testWrongCharacterInHex() throws Exception {
         String header = "Digest nc=\u044f";
+
+        StringReader input = new StringReader(header);
+
+        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
+        Assert.assertNull(result);
+    }
+
+    @Test
+    public void testWrongCharacterInQuotedHex() throws Exception {
+        String header = "Digest nc=\"\u044f\"";
 
         StringReader input = new StringReader(header);
 

@@ -53,7 +53,7 @@ import org.apache.juli.logging.LogFactory;
  * The channel has an chain of interceptors that can modify the message or perform other logic.<br>
  * It manages a complete group, both membership and replication.
  * @author Filip Hanik
- * @version $Id: GroupChannel.java 1142678 2011-07-04 14:08:42Z kkolinko $
+ * @version $Id: GroupChannel.java 1437908 2013-01-24 08:57:41Z markt $
  */
 public class GroupChannel extends ChannelInterceptorBase implements ManagedChannel {
     private static final Log log = LogFactory.getLog(GroupChannel.class);
@@ -169,7 +169,7 @@ public class GroupChannel extends ChannelInterceptorBase implements ManagedChann
 
     /**
      * Send a message to the destinations specified
-     * @param destination Member[] - destination.length > 1
+     * @param destination Member[] - destination.length > 0
      * @param msg Serializable - the message to send
      * @param options int - sender options, options can trigger guarantee levels and different interceptors to
      * react to the message see class documentation for the <code>Channel</code> object.<br>
@@ -184,7 +184,7 @@ public class GroupChannel extends ChannelInterceptorBase implements ManagedChann
 
     /**
      *
-     * @param destination Member[] - destination.length > 1
+     * @param destination Member[] - destination.length > 0
      * @param msg Serializable - the message to send
      * @param options int - sender options, options can trigger guarantee levels and different interceptors to
      * react to the message see class documentation for the <code>Channel</code> object.<br>

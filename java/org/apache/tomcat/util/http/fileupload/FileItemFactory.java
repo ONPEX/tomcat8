@@ -16,15 +16,12 @@
  */
 package org.apache.tomcat.util.http.fileupload;
 
-
 /**
  * <p>A factory interface for creating {@link FileItem} instances. Factories
  * can provide their own custom configuration, over and above that provided
  * by the default file upload implementation.</p>
  *
- * @author <a href="mailto:martinc@apache.org">Martin Cooper</a>
- *
- * @version $Id: FileItemFactory.java 881493 2009-11-17 20:30:39Z markt $
+ * @version $Id: FileItemFactory.java 1456935 2013-03-15 12:47:29Z markt $
  */
 public interface FileItemFactory {
 
@@ -47,4 +44,5 @@ public interface FileItemFactory {
             boolean isFormField,
             String fileName
             );
+
 }

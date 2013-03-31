@@ -32,7 +32,7 @@ import org.apache.catalina.tribes.transport.SenderState;
  * Carries the host, and port of the this or other cluster nodes.
  *
  * @author Filip Hanik
- * @version $Id: MemberImpl.java 1380072 2012-09-02 22:26:09Z markt $
+ * @version $Id: MemberImpl.java 1439669 2013-01-28 22:10:44Z kkolinko $
  */
 public class MemberImpl implements Member, java.io.Externalizable {
 
@@ -534,7 +534,8 @@ public class MemberImpl implements Member, java.io.Externalizable {
      */
     @Override
     public String toString()  {
-        StringBuilder buf = new StringBuilder("org.apache.catalina.tribes.membership.MemberImpl[");
+        StringBuilder buf = new StringBuilder(getClass().getName());
+        buf.append("[");
         buf.append(getName()).append(",");
         buf.append(getHostname()).append(",");
         buf.append(port).append(", alive=");
