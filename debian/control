@@ -10,7 +10,7 @@ DM-Upload-Allowed: yes
 Build-Depends: default-jdk, ant-optional, debhelper (>= 7), po-debconf
 Build-Depends-Indep: maven-repo-helper (>> 1.0.1), libecj-java, javahelper,
  junit4, libjstl1.1-java, libjakarta-taglibs-standard-java
-Standards-Version: 3.9.3
+Standards-Version: 3.9.4
 Vcs-Git: git://git.debian.org/git/pkg-java/tomcat7.git
 Vcs-Browser: http://git.debian.org/?p=pkg-java/tomcat7.git
 Homepage: http://tomcat.apache.org
