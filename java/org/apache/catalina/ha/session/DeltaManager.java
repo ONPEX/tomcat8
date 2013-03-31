@@ -62,7 +62,7 @@ import org.apache.tomcat.util.res.StringManager;
  * @author Craig R. McClanahan
  * @author Jean-Francois Arcand
  * @author Peter Rossbach
- * @version $Id: DeltaManager.java 1300907 2012-03-15 10:57:17Z markt $
+ * @version $Id: DeltaManager.java 1436252 2013-01-21 10:06:33Z kfujino $
  */
 
 public class DeltaManager extends ClusterManagerBase{
@@ -542,7 +542,7 @@ public class DeltaManager extends ClusterManagerBase{
         // original sessionID
         String orgSessionID = session.getId();
         super.changeSessionId(session);
-        if (notify) {
+        if (notify && cluster.getMembers().length > 0) {
             // changed sessionID
             String newSessionID = session.getId();
             try {
@@ -1176,11 +1176,14 @@ public class DeltaManager extends ClusterManagerBase{
      *            session id
      */
     protected void sessionExpired(String id) {
-        counterSend_EVT_SESSION_EXPIRED++ ;
-        SessionMessage msg = new SessionMessageImpl(getName(),SessionMessage.EVT_SESSION_EXPIRED, null, id, id+ "-EXPIRED-MSG");
-        msg.setTimestamp(System.currentTimeMillis());
-        if (log.isDebugEnabled()) log.debug(sm.getString("deltaManager.createMessage.expire",getName(), id));
-        send(msg);
+        if(cluster.getMembers().length > 0 ) {
+            counterSend_EVT_SESSION_EXPIRED++ ;
+            SessionMessage msg = new SessionMessageImpl(getName(),
+                    SessionMessage.EVT_SESSION_EXPIRED, null, id, id+ "-EXPIRED-MSG");
+            msg.setTimestamp(System.currentTimeMillis());
+            if (log.isDebugEnabled()) log.debug(sm.getString("deltaManager.createMessage.expire",getName(), id));
+            send(msg);
+        }
     }
 
     /**

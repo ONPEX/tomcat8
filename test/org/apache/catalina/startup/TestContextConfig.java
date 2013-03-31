@@ -126,6 +126,26 @@ public class TestContextConfig extends TomcatBaseTest {
         assertPageContains("/test/testServlet", "postConstruct1()");
     }
 
+    @Test
+    public void testBug54448and54450() throws Exception {
+        Tomcat tomcat = getTomcatInstance();
+
+        File appDir = new File("test/webapp-3.0-fragments");
+        Context context = tomcat.addWebapp(null, "/test",
+                appDir.getAbsolutePath());
+
+        Tomcat.addServlet(context, "TestServlet",
+                "org.apache.catalina.startup.TesterServletWithAnnotations");
+        context.addServletMapping("/testServlet", "TestServlet");
+
+        tomcat.enableNaming();
+
+        tomcat.start();
+
+        assertPageContains("/test/testServlet",
+                "envEntry1: 1 envEntry2: 2 envEntry3: 33 envEntry4: 4");
+    }
+
     private static class CustomDefaultServletSCI
             implements ServletContainerInitializer {
 

@@ -46,7 +46,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * use XSLT, that is unnecessarily complex.
  *
  * @author Peter Lin
- * @version $Id: StatusTransformer.java 1409014 2012-11-13 22:58:01Z kkolinko $
+ * @version $Id: StatusTransformer.java 1453106 2013-03-06 00:48:45Z kkolinko $
  */
 
 public class StatusTransformer {
@@ -265,7 +265,7 @@ public class StatusTransformer {
                 writer.write(" usageInit='" + usage.getInit() + "'");
                 writer.write(" usageCommitted='" + usage.getCommitted() + "'");
                 writer.write(" usageMax='" + usage.getMax() + "'");
-                writer.write(" usageUsed='" + usage.getInit() + "'/>");
+                writer.write(" usageUsed='" + usage.getUsed() + "'/>");
             }
 
             writer.write("</jvm>");

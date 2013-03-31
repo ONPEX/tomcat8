@@ -32,11 +32,11 @@ import org.apache.catalina.LifecycleException;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.deploy.LoginConfig;
 import org.apache.catalina.startup.Bootstrap;
-import org.apache.catalina.util.Base64;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.buf.ByteChunk;
 import org.apache.tomcat.util.buf.MessageBytes;
+import org.apache.tomcat.util.codec.binary.Base64;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
@@ -190,13 +190,12 @@ public class SpnegoAuthenticator extends AuthenticatorBase {
         }
 
         authorizationBC.setOffset(authorizationBC.getOffset() + 10);
-        // FIXME: Add trimming
-        // authorizationBC.trim();
                 
-        ByteChunk decoded = new ByteChunk();
-        Base64.decode(authorizationBC, decoded);
+        byte[] decoded = Base64.decodeBase64(authorizationBC.getBuffer(),
+                authorizationBC.getOffset(),
+                authorizationBC.getLength());
 
-        if (decoded.getLength() == 0) {
+        if (decoded.length == 0) {
             if (log.isDebugEnabled()) {
                 log.debug(sm.getString(
                         "spnegoAuthenticator.authHeaderNoToken"));
@@ -235,8 +234,7 @@ public class SpnegoAuthenticator extends AuthenticatorBase {
                 };
             gssContext = manager.createContext(Subject.doAs(lc.getSubject(), action));
 
-            outToken = gssContext.acceptSecContext(decoded.getBytes(),
-                    decoded.getOffset(), decoded.getLength());
+            outToken = gssContext.acceptSecContext(decoded, 0, decoded.length);
 
             if (outToken == null) {
                 if (log.isDebugEnabled()) {
@@ -283,7 +281,7 @@ public class SpnegoAuthenticator extends AuthenticatorBase {
 
         // Send response token on success and failure
         response.setHeader("WWW-Authenticate", "Negotiate "
-                + Base64.encode(outToken));
+                + Base64.encodeBase64String(outToken));
 
         if (principal != null) {
             register(request, response, principal, Constants.SPNEGO_METHOD,

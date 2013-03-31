@@ -91,6 +91,7 @@ import org.apache.tomcat.util.http.fileupload.FileUploadBase.InvalidContentTypeE
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
+import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
 import org.apache.tomcat.util.http.mapper.MappingData;
 import org.apache.tomcat.util.res.StringManager;
 
@@ -100,7 +101,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: Request.java 1356509 2012-07-02 22:43:32Z kkolinko $
+ * @version $Id: Request.java 1456935 2013-03-15 12:47:29Z markt $
  */
 
 public class Request
@@ -737,7 +738,7 @@ public class Request
     }
 
     /**
-     * URI byte to char converter (not recycled).
+     * URI byte to char converter.
      */
     protected B2CConverter URIConverter = null;
 
@@ -1939,7 +1940,6 @@ public class Request
      *
      * @return the URL decoded request URI
      */
-    @Deprecated
     public MessageBytes getDecodedRequestURIMB() {
         return coyoteRequest.decodedURI();
     }
@@ -2719,7 +2719,8 @@ public class Request
 
             parts = new ArrayList<Part>();
             try {
-                List<FileItem> items = upload.parseRequest(this);
+                List<FileItem> items =
+                        upload.parseRequest(new ServletRequestContext(this));
                 int maxPostSize = getConnector().getMaxPostSize();
                 int postSize = 0;
                 String enc = getCharacterEncoding();
@@ -2734,7 +2735,7 @@ public class Request
                 for (FileItem item : items) {
                     ApplicationPart part = new ApplicationPart(item, mce);
                     parts.add(part);
-                    if (part.getFilename() == null) {
+                    if (part.getSubmittedFileName() == null) {
                         String name = part.getName();
                         String value = null;
                         try {

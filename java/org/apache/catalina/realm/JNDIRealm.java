@@ -17,7 +17,6 @@
 
 package org.apache.catalina.realm;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -54,9 +53,8 @@ import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
 import org.apache.catalina.LifecycleException;
-import org.apache.catalina.util.Base64;
-import org.apache.tomcat.util.buf.ByteChunk;
-import org.apache.tomcat.util.buf.CharChunk;
+import org.apache.tomcat.util.buf.B2CConverter;
+import org.apache.tomcat.util.codec.binary.Base64;
 import org.ietf.jgss.GSSCredential;
 
 /**
@@ -174,7 +172,7 @@ import org.ietf.jgss.GSSCredential;
  *
  * @author John Holman
  * @author Craig R. McClanahan
- * @version $Id: JNDIRealm.java 1361774 2012-07-15 19:43:28Z markt $
+ * @version $Id: JNDIRealm.java 1459346 2013-03-21 15:05:54Z markt $
  */
 
 public class JNDIRealm extends RealmBase {
@@ -1575,7 +1573,9 @@ public class JNDIRealm extends RealmBase {
                     password = password.substring(5);
                     md.reset();
                     md.update(credentials.getBytes(Charset.defaultCharset()));
-                    String digestedPassword = Base64.encode(md.digest());
+                    byte[] decoded = Base64.decodeBase64(md.digest());
+                    String digestedPassword =
+                            new String(decoded, B2CConverter.ISO_8859_1);
                     validated = password.equals(digestedPassword);
                 }
             } else if (password.startsWith("{SSHA}")) {
@@ -1588,31 +1588,15 @@ public class JNDIRealm extends RealmBase {
                     md.update(credentials.getBytes(Charset.defaultCharset()));
 
                     // Decode stored password.
-                    ByteChunk pwbc = new ByteChunk(password.length());
-                    try {
-                        pwbc.append(password.getBytes(Charset.defaultCharset()),
-                                0, password.length());
-                    } catch (IOException e) {
-                        // Should never happen
-                        containerLog.error("Could not append password bytes to chunk: ", e);
-                    }
-
-                    CharChunk decoded = new CharChunk();
-                    Base64.decode(pwbc, decoded);
-                    char[] pwarray = decoded.getBuffer();
+                    byte[] decoded = Base64.decodeBase64(password);
 
                     // Split decoded password into hash and salt.
                     final int saltpos = 20;
                     byte[] hash = new byte[saltpos];
-                    for (int i=0; i< hash.length; i++) {
-                        hash[i] = (byte) pwarray[i];
-                    }
+                    System.arraycopy(decoded, 0, hash, 0, saltpos);
 
-                    byte[] salt = new byte[pwarray.length - saltpos];
-                    for (int i=0; i< salt.length; i++)
-                        salt[i] = (byte)pwarray[i+saltpos];
+                    md.update(decoded, saltpos, decoded.length - saltpos);
 
-                    md.update(salt);
                     byte[] dp = md.digest();
 
                     validated = Arrays.equals(dp, hash);

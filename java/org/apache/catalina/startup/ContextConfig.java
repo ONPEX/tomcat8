@@ -109,7 +109,7 @@ import org.xml.sax.SAXParseException;
  *
  * @author Craig R. McClanahan
  * @author Jean-Francois Arcand
- * @version $Id: ContextConfig.java 1430808 2013-01-09 11:57:57Z markt $
+ * @version $Id: ContextConfig.java 1456982 2013-03-15 15:07:15Z violetagg $
  */
 public class ContextConfig implements LifecycleListener {
 
@@ -1850,6 +1850,17 @@ public class ContextConfig implements LifecycleListener {
     }
 
 
+    /**
+     * Parses the given source and stores the parsed data in the given web.xml
+     * representation. The byte stream will be closed at the end of the parse
+     * operation.
+     *
+     * @param source Input source containing the XML data to be parsed
+     * @param dest The object representation of common elements of web.xml and
+     *             web-fragment.xml
+     * @param fragment Specifies whether the source is web-fragment.xml or
+     *                 web.xml
+     */
     protected void parseWebXml(InputSource source, WebXml dest,
             boolean fragment) {
 
@@ -1897,6 +1908,15 @@ public class ContextConfig implements LifecycleListener {
         } finally {
             digester.reset();
             ruleSet.recycle();
+
+            InputStream is = source.getByteStream();
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (Throwable t) {
+                    ExceptionUtils.handleThrowable(t);
+                }
+            }
         }
     }
 
@@ -2103,13 +2123,7 @@ public class ContextConfig implements LifecycleListener {
 
         ClassParser parser = new ClassParser(is, null);
         JavaClass clazz = parser.parse();
-        try {
-            checkHandlesTypes(clazz);
-        } catch (StackOverflowError soe) {
-            throw new IllegalStateException(sm.getString(
-                    "contextConfig.annotationsStackOverflow",
-                    context.getName()), soe);
-        }
+        checkHandlesTypes(clazz);
 
         if (handlesTypesOnly) {
             return;
@@ -2159,7 +2173,14 @@ public class ContextConfig implements LifecycleListener {
             populateJavaClassCache(className, javaClass);
             JavaClassCacheEntry entry = javaClassCache.get(className);
             if (entry.getSciSet() == null) {
-                populateSCIsForCacheEntry(entry);
+                try {
+                    populateSCIsForCacheEntry(entry);
+                } catch (StackOverflowError soe) {
+                    throw new IllegalStateException(sm.getString(
+                            "contextConfig.annotationsStackOverflow",
+                            context.getName(),
+                            classHierarchyToString(className, entry)));
+                }
             }
             if (entry.getSciSet().size() > 0) {
                 // Need to try and load the class
@@ -2210,6 +2231,30 @@ public class ContextConfig implements LifecycleListener {
         }
     }
 
+
+    private String classHierarchyToString(String className,
+            JavaClassCacheEntry entry) {
+        JavaClassCacheEntry start = entry;
+        StringBuilder msg = new StringBuilder(className);
+        msg.append("->");
+
+        String parentName = entry.getSuperclassName();
+        JavaClassCacheEntry parent = javaClassCache.get(parentName);
+        int count = 0;
+
+        while (count < 100 && parent != null && parent != start) {
+            msg.append(parentName);
+            msg.append("->");
+
+            count ++;
+            parentName = parent.getSuperclassName();
+            parent = javaClassCache.get(parentName);
+        }
+
+        msg.append(parentName);
+
+        return msg.toString();
+    }
 
     private void populateJavaClassCache(String className, JavaClass javaClass) {
         if (javaClassCache.containsKey(className)) {
@@ -2637,13 +2682,6 @@ public class ContextConfig implements LifecycleListener {
                     parseWebXml(source, fragment, true);
                 }
             } finally {
-                if (is != null) {
-                    try {
-                        is.close();
-                    } catch (IOException ioe) {
-                        // Ignore
-                    }
-                }
                 if (jar != null) {
                     jar.close();
                 }
@@ -2683,13 +2721,6 @@ public class ContextConfig implements LifecycleListener {
                     parseWebXml(source, fragment, true);
                 }
             } finally {
-                if (stream != null) {
-                    try {
-                        stream.close();
-                    } catch (Throwable t) {
-                        ExceptionUtils.handleThrowable(t);
-                    }
-                }
                 fragment.setURL(file.toURI().toURL());
                 if (fragment.getName() == null) {
                     fragment.setName(fragment.getURL().toString());

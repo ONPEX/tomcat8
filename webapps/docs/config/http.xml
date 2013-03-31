@@ -454,7 +454,7 @@
     </attribute>
 
     <attribute name="restrictedUserAgents" required="false">
-      <p>The value is a regular expression (using <code>java.util.regex</code>) matching
+      <p>The value is a regular expression (using <code>java.util.regex</code>)
       matching the <code>user-agent</code> header of HTTP clients for which
       HTTP/1.1 or HTTP/1.0 keep alive should not be used, even if the clients
       advertise support for these features.
@@ -930,13 +930,15 @@
     </attribute>
 
     <attribute name="ciphers" required="false">
-      <p>The comma separated list of encryption ciphers that this socket is
-      allowed to use. By default, the default ciphers for the JVM will be used.
-      Note that this usually means that the weak export grade ciphers will be
-      included in the list of available ciphers. The ciphers are specified using
-      the JSSE cipher naming convention. The special value of <code>ALL</code>
-      will enable all supported ciphers. This will include many that are not
-      secure. <code>ALL</code> is intended for testing purposes only.</p>
+      <p>The comma separated list of encryption ciphers to support for HTTPS
+      connections. If specified, only the ciphers that are listed and supported
+      by the SSL implementation will be used. By default, the default ciphers
+      for the JVM will be used. Note that this usually means that the weak
+      export grade ciphers will be included in the list of available ciphers.
+      The ciphers are specified using the JSSE cipher naming convention. The
+      special value of <code>ALL</code> will enable all supported ciphers. This
+      will include many that are not secure. <code>ALL</code> is intended for
+      testing purposes only.</p>
     </attribute>
 
     <attribute name="clientAuth" required="false">
@@ -1019,9 +1021,10 @@
 
     <attribute name="sslEnabledProtocols" required="false">
       <p>The comma separated list of SSL protocols to support for HTTPS
-      connections. If specified, only the protocols listed will be supported. If
-      not specified, the JVM default is used. The permitted values may be
-      obtained from the JVM documentation for the allowed values for
+      connections. If specified, only the protocols that are listed and
+      supported by the SSL implementation will be enabled. If not specified,
+      the JVM default is used. The permitted values may be obtained from the
+      JVM documentation for the allowed values for 
       <code>SSLSocket.setEnabledProtocols()</code> e.g.
       <a href="http://docs.oracle.com/javase/6/docs/technotes/guides/security/StandardNames.html#jssenames">
       Oracle Java 6</a> and
@@ -1196,6 +1199,12 @@
       is "ALL", with other acceptable values being a list of ciphers, with ":"
       used as the delimiter (see OpenSSL documentation for the list of ciphers
       supported).</p>
+    </attribute>
+
+    <attribute name="SSLDisableCompression" required="false">
+      <p>Disables compression if set to <code>true</code> and OpenSSL supports
+      disabling comprssion. Default is <code>false</code> which inherits the
+      default compression setting in OpenSSL.</p>
     </attribute>
 
     <attribute name="SSLHonorCipherOrder" required="false">

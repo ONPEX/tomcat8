@@ -36,8 +36,9 @@ import org.apache.catalina.session.ManagerBase;
 import org.apache.catalina.startup.TesterServlet;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
-import org.apache.catalina.util.Base64;
+import org.apache.tomcat.util.buf.B2CConverter;
 import org.apache.tomcat.util.buf.ByteChunk;
+import org.apache.tomcat.util.codec.binary.Base64;
 
 /**
  * Test BasicAuthenticator and NonLoginAuthenticator when a
@@ -197,18 +198,20 @@ public class TestNonLoginAndBasicAuthenticator extends TomcatBaseTest {
      * This is the same as testAcceptProtectedBasic (above), except
      * using excess white space after the authentication method.
      *
-     * The request is rejected with 401 SC_UNAUTHORIZED status.
+     * The access will be challenged with 401 SC_UNAUTHORIZED, and then be
+     * permitted once authenticated.
      *
-     * TODO: RFC2617 does not define the separation syntax between the
-     *       auth-scheme and basic-credentials tokens. Tomcat should tolerate
-     *       any reasonable amount of white space and return SC_OK.
+     * RFC2617 does not define the separation syntax between the auth-scheme and
+     * basic-credentials tokens. Tomcat tolerates any amount of white space
+     * (within the limits of HTTP header sizes) and returns SC_OK.
      */
     @Test
     public void testAuthMethodExtraSpace() throws Exception {
         doTestBasic(CONTEXT_PATH_LOGIN + URI_PROTECTED, NO_CREDENTIALS,
                 NO_COOKIES, HttpServletResponse.SC_UNAUTHORIZED);
         doTestBasic(CONTEXT_PATH_LOGIN + URI_PROTECTED, SPACED_BASE64,
-                NO_COOKIES, HttpServletResponse.SC_UNAUTHORIZED);
+                NO_COOKIES, HttpServletResponse.SC_OK);
+
     }
 
     /*
@@ -611,8 +614,9 @@ public class TestNonLoginAndBasicAuthenticator extends TomcatBaseTest {
             username = aUsername;
             password = aPassword;
             String userCredentials = username + ":" + password;
-            byte[] credentialsBytes = ByteChunk.convertToBytes(userCredentials);
-            String base64auth = Base64.encode(credentialsBytes);
+            byte[] credentialsBytes =
+                    userCredentials.getBytes(B2CConverter.ISO_8859_1);
+            String base64auth = Base64.encodeBase64String(credentialsBytes);
             credentials= method + " " + base64auth;
         }
 

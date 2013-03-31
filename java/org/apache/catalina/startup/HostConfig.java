@@ -73,7 +73,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: HostConfig.java 1408166 2012-11-12 01:26:59Z markt $
+ * @version $Id: HostConfig.java 1441344 2013-02-01 08:47:40Z kkolinko $
  */
 public class HostConfig
     implements LifecycleListener {
@@ -612,7 +612,7 @@ public class HostConfig
                 } catch (Exception e) {
                     log.error(sm.getString(
                             "hostConfig.deployDescriptor.error",
-                            contextXml.getAbsolutePath()));
+                            contextXml.getAbsolutePath()), e);
                     context = new FailedContext();
                 } finally {
                     digester.reset();
@@ -906,7 +906,7 @@ public class HostConfig
                     } catch (Exception e) {
                         log.error(sm.getString(
                                 "hostConfig.deployDescriptor.error",
-                                war.getAbsolutePath()));
+                                war.getAbsolutePath()), e);
                         context = new FailedContext();
                     } finally {
                         digester.reset();
@@ -924,7 +924,7 @@ public class HostConfig
                     } catch (Exception e) {
                         log.error(sm.getString(
                                 "hostConfig.deployDescriptor.error",
-                                war.getAbsolutePath()));
+                                war.getAbsolutePath()), e);
                     } finally {
                         if (context == null) {
                             context = new FailedContext();
@@ -1067,7 +1067,7 @@ public class HostConfig
                     } catch (Exception e) {
                         log.error(sm.getString(
                                 "hostConfig.deployDescriptor.error",
-                                xml));
+                                xml), e);
                         context = new FailedContext();
                     } finally {
                         digester.reset();

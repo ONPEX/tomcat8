@@ -53,7 +53,7 @@ import org.apache.tomcat.util.http.FastHttpDateFormat;
  * content is directly returned.
  * 
  * @author <a href="mailto:remm@apache.org">Remy Maucherat</a>
- * @version $Revision: 1429991 $
+ * @version $Revision: 1452791 $
  */
 public class DirContextURLConnection extends URLConnection {
 
@@ -439,7 +439,9 @@ public class DirContextURLConnection extends URLConnection {
                     collection.list("/");
                 while (enumeration.hasMoreElements()) {
                     NameClassPair ncp = enumeration.nextElement();
-                    result.addElement(URL_ENCODER.encodeURL(ncp.getName()));
+                    String s = ncp.getName();
+                    result.addElement(
+                            URL_ENCODER.encodeURL(s, 0, s.length()).toString());
                 }
             } catch (NamingException e) {
                 // Unexpected exception

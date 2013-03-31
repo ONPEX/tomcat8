@@ -50,7 +50,7 @@ import org.apache.tomcat.util.http.parser.HttpParser;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: DigestAuthenticator.java 1405416 2012-11-03 20:55:42Z markt $
+ * @version $Id: DigestAuthenticator.java 1443407 2013-02-07 11:03:34Z markt $
  */
 
 public class DigestAuthenticator extends AuthenticatorBase {
@@ -111,6 +111,14 @@ public class DigestAuthenticator extends AuthenticatorBase {
      * List of server nonce values currently being tracked
      */
     protected Map<String,NonceInfo> nonces;
+
+
+    /**
+     * The last timestamp used to generate a nonce. Each nonce should get a
+     * unique timestamp.
+     */
+    protected long lastTimestamp = 0;
+    protected final Object lastTimestampLock = new Object();
 
 
     /**
@@ -399,6 +407,13 @@ public class DigestAuthenticator extends AuthenticatorBase {
 
         long currentTime = System.currentTimeMillis();
 
+        synchronized (lastTimestampLock) {
+            if (currentTime > lastTimestamp) {
+                lastTimestamp = currentTime;
+            } else {
+                currentTime = ++lastTimestamp;
+            }
+        }
 
         String ipTimeKey =
             request.getRemoteAddr() + ":" + currentTime + ":" + getKey();
