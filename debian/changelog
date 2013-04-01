@@ -6,8 +6,9 @@ tomcat7 (7.0.39-1~exp1) UNRELEASED; urgency=low
   * Remove patches included in the upstream release:
     - 0016_upstream_bug_54440.patch
   * Bump Standards-Version to 3.9.4. No changes were required.
+  * Remove obsolete DM-Upload-Allowed field.
 
- -- Miguel Landaeta <miguel@miguel.cc>  Sun, 31 Mar 2013 19:09:41 -0300
+ -- Miguel Landaeta <miguel@miguel.cc>  Sun, 31 Mar 2013 21:15:42 -0300
 
 tomcat7 (7.0.35-1~exp2) experimental; urgency=low
 

@@ -6,7 +6,6 @@ Uploaders: James Page <james.page@ubuntu.com>,
  Miguel Landaeta <miguel@miguel.cc>,
  tony mancill <tmancill@debian.org>,
  Jakub Adam <jakub.adam@ktknet.cz>
-DM-Upload-Allowed: yes
 Build-Depends: default-jdk, ant-optional, debhelper (>= 7), po-debconf
 Build-Depends-Indep: maven-repo-helper (>> 1.0.1), libecj-java, javahelper,
  junit4, libjstl1.1-java, libjakarta-taglibs-standard-java
