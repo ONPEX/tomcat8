@@ -1,4 +1,4 @@
-tomcat7 (7.0.39-1~exp1) UNRELEASED; urgency=low
+tomcat7 (7.0.39-1~exp1) experimental; urgency=low
 
   * New upstream release.
   * Refresh patches:
