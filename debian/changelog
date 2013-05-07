@@ -1,3 +1,9 @@
+tomcat7 (7.0.39-1) unstable; urgency=low
+
+  * Upload to unstable for jessie release cycle.
+
+ -- tony mancill <tmancill@debian.org>  Mon, 06 May 2013 17:41:19 -0700
+
 tomcat7 (7.0.39-1~exp1) experimental; urgency=low
 
   * New upstream release.
