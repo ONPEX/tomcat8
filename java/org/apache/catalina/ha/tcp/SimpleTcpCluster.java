@@ -73,7 +73,7 @@ import org.apache.tomcat.util.res.StringManager;
  * @author Filip Hanik
  * @author Remy Maucherat
  * @author Peter Rossbach
- * @version $Id: SimpleTcpCluster.java 1392624 2012-10-01 21:26:20Z markt $
+ * @version $Id: SimpleTcpCluster.java 1463105 2013-04-01 07:38:26Z kfujino $
  */
 public class SimpleTcpCluster extends LifecycleMBeanBase
         implements CatalinaCluster, LifecycleListener, IDynamicProperty,
@@ -170,7 +170,10 @@ public class SimpleTcpCluster extends LifecycleMBeanBase
 
     /**
      * dynamic sender <code>properties</code>
+     *
+     * @deprecated  Unused - will be removed in Tomcat 8.0.x
      */
+    @Deprecated
     private Map<String, Object> properties = new HashMap<String, Object>();
     
     private int channelSendOptions = Channel.SEND_OPTIONS_ASYNCHRONOUS;
@@ -406,7 +409,9 @@ public class SimpleTcpCluster extends LifecycleMBeanBase
      * 
      * @param name
      * @param value
+     * @deprecated  Unused - will be removed in Tomcat 8.0.x
      */
+    @Deprecated
     public boolean setProperty(String name, String value) {
         return setProperty(name, (Object) value);
     }
@@ -416,8 +421,10 @@ public class SimpleTcpCluster extends LifecycleMBeanBase
      * 
      * @param name
      * @param value
+     * @deprecated  Unused - will be removed in Tomcat 8.0.x
      */
     @Override
+    @Deprecated
     public boolean setProperty(String name, Object value) {
         if (log.isTraceEnabled())
             log.trace(sm.getString("SimpleTcpCluster.setProperty", name, value,properties.get(name)));
@@ -434,8 +441,11 @@ public class SimpleTcpCluster extends LifecycleMBeanBase
      * 
      * @param key
      * @return The property
+     *
+     * @deprecated  Unused - will be removed in Tomcat 8.0.x
      */
     @Override
+    @Deprecated
     public Object getProperty(String key) {
         if (log.isTraceEnabled())
             log.trace(sm.getString("SimpleTcpCluster.getProperty", key));
@@ -446,8 +456,10 @@ public class SimpleTcpCluster extends LifecycleMBeanBase
      * Get all properties keys
      * 
      * @return An iterator over the property names.
+     * @deprecated  Unused - will be removed in Tomcat 8.0.x
      */
     @Override
+    @Deprecated
     public Iterator<String> getPropertyNames() {
         return properties.keySet().iterator();
     }
@@ -456,8 +468,10 @@ public class SimpleTcpCluster extends LifecycleMBeanBase
      * remove a configured property.
      * 
      * @param key
+     * @deprecated  Unused - will be removed in Tomcat 8.0.x
      */
     @Override
+    @Deprecated
     public void removeProperty(String key) {
         properties.remove(key);
     }
@@ -466,7 +480,9 @@ public class SimpleTcpCluster extends LifecycleMBeanBase
      * transfer properties from cluster configuration to subelement bean.
      * @param prefix
      * @param bean
+     * @deprecated  Unused - will be removed in Tomcat 8.0.x
      */
+    @Deprecated
     protected void transferProperty(String prefix, Object bean) {
         if (prefix != null) {
             for (Iterator<String> iter = getPropertyNames(); iter.hasNext();) {

@@ -156,7 +156,7 @@ import org.apache.tomcat.util.buf.B2CConverter;
  * @author Takayuki Kaneko
  * @author Peter Rossbach
  *
- * @version $Id: AccessLogValve.java 1456499 2013-03-14 15:55:43Z markt $
+ * @version $Id: AccessLogValve.java 1460659 2013-03-25 13:49:19Z kkolinko $
  */
 
 public class AccessLogValve extends ValveBase implements AccessLog {
@@ -769,7 +769,10 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      * Set the resolve hosts flag.
      *
      * @param resolveHosts The new resolve hosts value
+     * @deprecated Unused, removed in Tomcat 8.
+     * See org.apache.catalina.connector.Connector.setEnableLookups(boolean).
      */
+    @Deprecated
     public void setResolveHosts(boolean resolveHosts) {
         this.resolveHosts = resolveHosts;
     }
@@ -777,7 +780,10 @@ public class AccessLogValve extends ValveBase implements AccessLog {
 
     /**
      * Get the value of the resolve hosts flag.
+     * @deprecated Unused, removed in Tomcat 8.
+     * See org.apache.catalina.connector.Connector.setEnableLookups(boolean).
      */
+    @Deprecated
     public boolean isResolveHosts() {
         return resolveHosts;
     }

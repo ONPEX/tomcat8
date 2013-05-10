@@ -73,7 +73,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: HostConfig.java 1441344 2013-02-01 08:47:40Z kkolinko $
+ * @version $Id: HostConfig.java 1471259 2013-04-24 05:54:52Z kfujino $
  */
 public class HostConfig
     implements LifecycleListener {
@@ -1458,9 +1458,8 @@ public class HostConfig
         DeployedApplication app = deployed.get(name);
         if (app != null) {
             checkResources(app);
-        } else {
-            deployApps(name);
         }
+        deployApps(name);
     }
 
     /**

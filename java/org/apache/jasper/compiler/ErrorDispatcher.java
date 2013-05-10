@@ -277,9 +277,35 @@ public class ErrorDispatcher {
      * @param arg Argument for parametric replacement
      * @param e Parsing exception
      */
-    public void jspError(String errCode, String arg, Exception e)
+    public void jspError(Exception e, String errCode, String arg)
                 throws JasperException {
         dispatch(null, errCode, new Object[] {arg}, e);
+    }
+
+    /**
+     * @deprecated Replaced by jspError(Exception, String, String)
+     */
+    @Deprecated
+    public void jspError(String errCode, String arg, Exception e)
+            throws JasperException {
+        jspError(e, errCode, arg);
+    }
+
+    /*
+     * Dispatches the given JSP parse error to the configured error handler.
+     *
+     * The given error code is localized. If it is not found in the
+     * resource bundle for localized error messages, it is used as the error
+     * message.
+     *
+     * @param where Error location
+     * @param errCode Error code
+     * @param args Arguments for parametric replacement
+     * @param e Parsing exception
+     */
+    public void jspError(Mark where, Exception e, String errCode, String... args)
+                throws JasperException {
+        dispatch(where, errCode, args, e);
     }
 
     /*
@@ -294,9 +320,18 @@ public class ErrorDispatcher {
      * @param arg Argument for parametric replacement
      * @param e Parsing exception
      */
-    public void jspError(Node n, String errCode, String arg, Exception e)
+    public void jspError(Node n, Exception e, String errCode, String arg)
                 throws JasperException {
         dispatch(n.getStart(), errCode, new Object[] {arg}, e);
+    }
+
+    /**
+     * @deprecated Replaced by jspError(Node, Exception, String, String)
+     */
+    @Deprecated
+    public void jspError(Node n, String errCode, String arg, Exception e)
+            throws JasperException {
+        jspError(n, e, errCode, arg);
     }
 
     /**

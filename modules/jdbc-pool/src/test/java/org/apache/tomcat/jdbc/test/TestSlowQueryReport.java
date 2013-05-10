@@ -23,10 +23,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.management.AttributeChangeNotification;
 import javax.management.Notification;
 import javax.management.NotificationListener;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 import org.apache.tomcat.jdbc.pool.ConnectionPool;
 import org.apache.tomcat.jdbc.pool.interceptor.SlowQueryReport;
@@ -34,10 +38,7 @@ import org.apache.tomcat.jdbc.pool.interceptor.SlowQueryReportJmx;
 
 public class TestSlowQueryReport extends DefaultTestCase {
 
-    public TestSlowQueryReport(String name) {
-        super(name);
-    }
-
+    @Test
     public void testSlowSql() throws Exception {
         int count = 3;
         this.init();
@@ -52,8 +53,8 @@ public class TestSlowQueryReport extends DefaultTestCase {
             st.close();
         }
         Map<String,SlowQueryReport.QueryStats> map = SlowQueryReport.getPoolStats(datasource.getPool().getName());
-        assertNotNull(map);
-        assertEquals(1,map.size());
+        Assert.assertNotNull(map);
+        Assert.assertEquals(1,map.size());
         String key = map.keySet().iterator().next();
         SlowQueryReport.QueryStats stats = map.get(key);
         System.out.println("Stats:"+stats);
@@ -77,9 +78,10 @@ public class TestSlowQueryReport extends DefaultTestCase {
         con.close();
         tearDown();
         //make sure we actually did clean up when the pool closed
-        assertNull(SlowQueryReport.getPoolStats(pool.getName()));
+        Assert.assertNull(SlowQueryReport.getPoolStats(pool.getName()));
     }
 
+    @Test
     public void testSlowSqlJmx() throws Exception {
         int count = 1;
         this.init();
@@ -94,8 +96,8 @@ public class TestSlowQueryReport extends DefaultTestCase {
             st.close();
         }
         Map<String,SlowQueryReport.QueryStats> map = SlowQueryReport.getPoolStats(datasource.getPool().getName());
-        assertNotNull(map);
-        assertEquals(1,map.size());
+        Assert.assertNotNull(map);
+        Assert.assertEquals(1,map.size());
         String key = map.keySet().iterator().next();
         SlowQueryReport.QueryStats stats = map.get(key);
         System.out.println("Stats:"+stats);
@@ -122,14 +124,14 @@ public class TestSlowQueryReport extends DefaultTestCase {
             st.close();
         }
         System.out.println("Stats:"+stats);
-        assertEquals("Expecting to have received "+(2*count)+" notifications.",2*count, listener.notificationCount);
+        Assert.assertEquals("Expecting to have received "+(2*count)+" notifications.",2*count, listener.notificationCount.get());
         con.close();
         tearDown();
         //make sure we actually did clean up when the pool closed
-        assertNull(SlowQueryReport.getPoolStats(pool.getName()));
+        Assert.assertNull(SlowQueryReport.getPoolStats(pool.getName()));
     }
 
-
+    @Test
     public void testFastSql() throws Exception {
         int count = 3;
         this.init();
@@ -144,14 +146,15 @@ public class TestSlowQueryReport extends DefaultTestCase {
             st.close();
         }
         Map<String,SlowQueryReport.QueryStats> map = SlowQueryReport.getPoolStats(datasource.getPool().getName());
-        assertNotNull(map);
-        assertEquals(0,map.size());
+        Assert.assertNotNull(map);
+        Assert.assertEquals(0,map.size());
         ConnectionPool pool = datasource.getPool();
         con.close();
         tearDown();
-        assertNull(SlowQueryReport.getPoolStats(pool.getName()));
+        Assert.assertNull(SlowQueryReport.getPoolStats(pool.getName()));
     }
 
+    @Test
     public void testFailedSql() throws Exception {
         int count = 3;
         this.init();
@@ -171,24 +174,24 @@ public class TestSlowQueryReport extends DefaultTestCase {
 
         }
         Map<String,SlowQueryReport.QueryStats> map = SlowQueryReport.getPoolStats(datasource.getPool().getName());
-        assertNotNull(map);
-        assertEquals(1,map.size());
+        Assert.assertNotNull(map);
+        Assert.assertEquals(1,map.size());
         ConnectionPool pool = datasource.getPool();
         String key = map.keySet().iterator().next();
         SlowQueryReport.QueryStats stats = map.get(key);
         System.out.println("Stats:"+stats);
         con.close();
         tearDown();
-        assertNull(SlowQueryReport.getPoolStats(pool.getName()));
+        Assert.assertNull(SlowQueryReport.getPoolStats(pool.getName()));
     }
 
 
     public class ClientListener implements NotificationListener {
-        volatile int notificationCount = 0;
+        AtomicInteger notificationCount = new AtomicInteger(0);
         @Override
         public void handleNotification(Notification notification,
                                        Object handback) {
-            notificationCount++;
+            notificationCount.incrementAndGet();
             System.out.println("\nReceived notification:");
             System.out.println("\tClassName: " + notification.getClass().getName());
             System.out.println("\tSource: " + notification.getSource());

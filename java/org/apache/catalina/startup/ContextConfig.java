@@ -109,7 +109,7 @@ import org.xml.sax.SAXParseException;
  *
  * @author Craig R. McClanahan
  * @author Jean-Francois Arcand
- * @version $Id: ContextConfig.java 1456982 2013-03-15 15:07:15Z violetagg $
+ * @version $Id: ContextConfig.java 1468594 2013-04-16 20:15:28Z violetagg $
  */
 public class ContextConfig implements LifecycleListener {
 
@@ -2719,6 +2719,10 @@ public class ContextConfig implements LifecycleListener {
                         new InputSource(fragmentFile.toURI().toURL().toString());
                     source.setByteStream(stream);
                     parseWebXml(source, fragment, true);
+                } else {
+                    // If there is no web.xml, normal folder no impact on
+                    // distributable
+                    fragment.setDistributable(true);
                 }
             } finally {
                 fragment.setURL(file.toURI().toURL());

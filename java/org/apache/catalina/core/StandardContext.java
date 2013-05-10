@@ -127,7 +127,7 @@ import org.apache.tomcat.util.scan.StandardJarScanner;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardContext.java 1454958 2013-03-10 23:31:03Z markt $
+ * @version $Id: StandardContext.java 1460681 2013-03-25 14:29:18Z markt $
  */
 
 public class StandardContext extends ContainerBase
@@ -6013,6 +6013,10 @@ public class StandardContext extends ContainerBase
     }
 
 
+    /**
+     * @deprecated  Unused. Will be removed in Tomcat 8.0.x.
+     */
+    @Deprecated
     public String getHostname() {
         Container parentHost = getParent();
         if (parentHost != null) {
