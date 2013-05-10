@@ -43,6 +43,7 @@ import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.ConcurrentModificationException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -118,7 +119,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: WebappClassLoader.java 1441430 2013-02-01 12:52:06Z markt $
+ * @version $Id: WebappClassLoader.java 1479177 2013-05-04 21:11:18Z markt $
  */
 public class WebappClassLoader
     extends URLClassLoader
@@ -2579,11 +2580,17 @@ public class WebappClassLoader
 
         if (o instanceof Collection<?>) {
             Iterator<?> iter = ((Collection<?>) o).iterator();
-            while (iter.hasNext()) {
-                Object entry = iter.next();
-                if (loadedByThisOrChild(entry)) {
-                    return true;
+            try {
+                while (iter.hasNext()) {
+                    Object entry = iter.next();
+                    if (loadedByThisOrChild(entry)) {
+                        return true;
+                    }
                 }
+            } catch (ConcurrentModificationException e) {
+                log.warn(sm.getString(
+                        "webappClassLoader", clazz.getName(), getContextName()),
+                        e);
             }
         }
         return false;

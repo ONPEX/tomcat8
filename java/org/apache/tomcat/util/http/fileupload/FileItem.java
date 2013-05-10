@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 
 /**
@@ -43,10 +42,10 @@ import java.io.UnsupportedEncodingException;
  * implementation of this interface to also implement
  * <code>javax.activation.DataSource</code> with minimal additional work.
  *
- * @version $Id: FileItem.java 1458206 2013-03-19 10:13:17Z markt $
+ * @version $Id: FileItem.java 1470437 2013-04-22 10:35:10Z markt $
  * @since 1.3 additionally implements FileItemHeadersSupport
  */
-public interface FileItem extends Serializable, FileItemHeadersSupport {
+public interface FileItem extends FileItemHeadersSupport {
 
     // ------------------------------- Methods from javax.activation.DataSource
 

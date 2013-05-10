@@ -24,8 +24,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
@@ -70,17 +68,12 @@ import org.apache.tomcat.util.http.fileupload.util.Streams;
  *
  * @since FileUpload 1.1
  *
- * @version $Id: DiskFileItem.java 1456935 2013-03-15 12:47:29Z markt $
+ * @version $Id: DiskFileItem.java 1470437 2013-04-22 10:35:10Z markt $
  */
 public class DiskFileItem
     implements FileItem {
 
     // ----------------------------------------------------- Manifest constants
-
-    /**
-     * The UID to use when serializing this instance.
-     */
-    private static final long serialVersionUID = 2237570099615271025L;
 
     /**
      * Default content charset to be used when no explicit charset
@@ -112,7 +105,7 @@ public class DiskFileItem
      * The content type passed by the browser, or <code>null</code> if
      * not defined.
      */
-    private String contentType;
+    private final String contentType;
 
     /**
      * Whether or not this item is a simple form field.
@@ -122,7 +115,7 @@ public class DiskFileItem
     /**
      * The original filename in the user's filesystem.
      */
-    private String fileName;
+    private final String fileName;
 
     /**
      * The size of the item, in bytes. This is used to cache the size when a
@@ -134,12 +127,12 @@ public class DiskFileItem
     /**
      * The threshold above which uploads will be stored on disk.
      */
-    private int sizeThreshold;
+    private final int sizeThreshold;
 
     /**
      * The directory in which uploaded files will be stored, if stored on disk.
      */
-    private File repository;
+    private final File repository;
 
     /**
      * Cached contents of the file.
@@ -155,11 +148,6 @@ public class DiskFileItem
      * The temporary file to use.
      */
     private transient File tempFile;
-
-    /**
-     * File to allow for serialization of the content of this item.
-     */
-    private File dfosFile;
 
     /**
      * The file items headers.
@@ -636,55 +624,6 @@ public class DiskFileItem
         return String.format("name=%s, StoreLocation=%s, size=%s bytes, isFormField=%s, FieldName=%s",
                       getName(), getStoreLocation(), Long.valueOf(getSize()),
                       Boolean.valueOf(isFormField()), getFieldName());
-    }
-
-    // -------------------------------------------------- Serialization methods
-
-    /**
-     * Writes the state of this object during serialization.
-     *
-     * @param out The stream to which the state should be written.
-     *
-     * @throws IOException if an error occurs.
-     */
-    private void writeObject(ObjectOutputStream out) throws IOException {
-        // Read the data
-        if (dfos.isInMemory()) {
-            cachedContent = get();
-        } else {
-            cachedContent = null;
-            dfosFile = dfos.getFile();
-        }
-
-        // write out values
-        out.defaultWriteObject();
-    }
-
-    /**
-     * Reads the state of this object during deserialization.
-     *
-     * @param in The stream from which the state should be read.
-     *
-     * @throws IOException if an error occurs.
-     * @throws ClassNotFoundException if class cannot be found.
-     */
-    private void readObject(ObjectInputStream in)
-            throws IOException, ClassNotFoundException {
-        // read values
-        in.defaultReadObject();
-
-        OutputStream output = getOutputStream();
-        if (cachedContent != null) {
-            output.write(cachedContent);
-        } else {
-            FileInputStream input = new FileInputStream(dfosFile);
-            IOUtils.copy(input, output);
-            dfosFile.delete();
-            dfosFile = null;
-        }
-        output.close();
-
-        cachedContent = null;
     }
 
     /**

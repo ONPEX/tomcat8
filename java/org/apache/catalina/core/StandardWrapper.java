@@ -78,7 +78,7 @@ import org.apache.tomcat.util.modeler.Util;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardWrapper.java 1443354 2013-02-07 08:47:59Z markt $
+ * @version $Id: StandardWrapper.java 1476846 2013-04-28 22:04:06Z markt $
  */
 @SuppressWarnings("deprecation") // SingleThreadModel
 public class StandardWrapper extends ContainerBase
@@ -1448,7 +1448,8 @@ public class StandardWrapper extends ContainerBase
             while ((nRetries < 21) && (countAllocated.get() > 0)) {
                 if ((nRetries % 10) == 0) {
                     log.info(sm.getString("standardWrapper.waiting",
-                                          countAllocated.toString()));
+                                          countAllocated.toString(),
+                                          getName()));
                 }
                 try {
                     Thread.sleep(delay);

@@ -28,7 +28,7 @@ import java.io.IOException;
  * <p>
  * This class captures the strategy to use and is designed for user subclassing.
  *
- * @version $Id: FileDeleteStrategy.java 1456969 2013-03-15 14:37:04Z markt $
+ * @version $Id: FileDeleteStrategy.java 1461342 2013-03-26 22:15:52Z markt $
  * @since 1.3
  */
 public class FileDeleteStrategy {
@@ -79,8 +79,8 @@ public class FileDeleteStrategy {
      * <p>
      * This method is designed for subclasses to override.
      * The implementation may return either false or an <code>IOException</code>
-     * when deletion fails. The {@link #delete(File)} and {@link #deleteQuietly(File)}
-     * methods will handle either response appropriately.
+     * when deletion fails. The {@link #deleteQuietly(File)} method will handle
+     * either response appropriately.
      * A check has been made to ensure that the file will exist.
      * <p>
      * This implementation uses {@link File#delete()}.

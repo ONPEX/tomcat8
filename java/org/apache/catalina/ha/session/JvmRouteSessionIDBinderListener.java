@@ -36,8 +36,10 @@ import org.apache.tomcat.util.res.StringManager;
  * node is failed.
  * 
  * @author Peter Rossbach
- * @version $Id: JvmRouteSessionIDBinderListener.java 1036882 2010-11-19 15:00:32Z markt $
+ * @version $Id: JvmRouteSessionIDBinderListener.java 1463105 2013-04-01 07:38:26Z kfujino $
+ * @deprecated Will be removed in Tomcat 8.0.x
  */
+@Deprecated
 public class JvmRouteSessionIDBinderListener extends ClusterListener {
 
     private static final Log log =
