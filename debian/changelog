@@ -1,6 +1,7 @@
-tomcat7 (7.0.40-1) UNRELEASED; urgency=low
+tomcat7 (7.0.40-1) unstable; urgency=low
 
   * New upstream release.
+    - Addresses security issue: CVE-2013-2071
   * Refresh patches:
     - 0015_disable_test_TestCometProcessor.patch
 
