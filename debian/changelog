@@ -1,3 +1,11 @@
+tomcat7 (7.0.40-2) UNRELEASED; urgency=low
+
+  * Fix deployment of POMs for libservlet-3.0-java JARs into javax
+    coordinates.
+    - JARs were deployed into maven-repo, but not POMs.
+
+ -- Jakub Adam <jakub.adam@ktknet.cz>  Thu, 16 May 2013 17:35:52 +0200
+
 tomcat7 (7.0.40-1) unstable; urgency=low
 
   * New upstream release.

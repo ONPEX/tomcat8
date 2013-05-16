@@ -1,3 +1,6 @@
 debian/poms/tomcat-servlet-api.pom --no-parent
 debian/poms/tomcat-jsp-api.pom --no-parent
 debian/poms/tomcat-el-api.pom --no-parent
+debian/javaxpoms/servlet-api.pom --no-rules
+debian/javaxpoms/jsp-api.pom --no-rules
+debian/javaxpoms/el-api.pom --no-rules
