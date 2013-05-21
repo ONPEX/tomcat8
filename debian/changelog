@@ -1,4 +1,4 @@
-tomcat7 (7.0.40-2) UNRELEASED; urgency=low
+tomcat7 (7.0.40-2) unstable; urgency=low
 
   * Fix deployment of POMs for libservlet-3.0-java JARs into javax
     coordinates.
