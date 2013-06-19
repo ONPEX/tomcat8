@@ -55,7 +55,162 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues to not "pop up" wrt. others).
 -->
-<section name="Tomcat 7.0.40 (markt)">
+<section name="Tomcat 7.0.41 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        <bug>54703</bug>: Make parsing of HTTP Content-Type headers tolerant of
+        any CR or LF characters that appear in the value passed by the
+        application. Also fix some whitespace parsing issues identified by the
+        additional test cases. (markt)
+      </fix>
+      <fix>
+        Prevent possible WAR file locking when reading a context.xml file from
+        an unexpanded WAR file. Note that in normal usage, the
+        <code>JreMemoryLeakPreventionListener</code> would protect against this.
+        (markt)
+      </fix>
+      <fix>
+        Ensure that when auto deployment runs for a Host, it uses the latest
+        values for copyXML, deployXML and unpackWARs. (markt)
+      </fix>
+      <fix>
+        <bug>54939</bug>: Provide logging (using a UserDataHelper) when HTTP
+        header parsing fails (e.g. when maxHeaderCount is exceeded). (markt)
+      </fix>
+      <add>
+        <bug>54944</bug>: Enhancements to the unit tests for FORM
+        authentication. Patch provided by Brian Burch. (markt)
+      </add>
+      <fix>
+        <bug>54955</bug>: When a reload of the application is performed ensure
+        that a subsequent request to the context root does not result in a 404
+        response. (violetagg)
+      </fix>
+      <fix>
+        <bug>54971</bug>: Ensure that the correct location is used when writing
+        files via <code>javax.servlet.http.Part.write(String)</code>. (markt)
+      </fix>
+      <fix>
+        <bug>54974</bug>: Ensure that 
+        <code>SessionCookieConfig#set&lt;methods&gt;</code>
+        will throw <code>IllegalStateException</code> if the
+        <code>ServletContext</code> from which this 
+        <code>SessionCookieConfig</code> was acquired has already been
+        initialized. (violetagg)
+      </fix>
+      <fix>
+        <bug>54981</bug>: Ensure that
+        <code>ServletContext#getJspConfigDescriptor()</code> will return
+        <code>null</code> when there is no jsp configuration provided by
+        web.xml/web-fragment.xml. (violetagg)
+      </fix>
+      <fix>
+        Ensure that when Tomcat&apos;s anti-resource locking features are used
+        that the temporary copy of the web application and not the original is
+        removed when the web application stops. (markt) 
+      </fix>
+      <fix>
+        <bug>54984</bug>: Use the correct encoding when processing a form data
+        posted as multipart/form-data even when the request parameters are not
+        parsed. (violetagg)
+      </fix>
+      <fix>
+        <bug>54999</bug>: The old JSESSIONIDSSO needs to be removed when SSO is
+        being used and logout() and login() occur within a single request. Patch
+        provided by Keith Mashinter. (markt) 
+      </fix>
+      <add>
+        <bug>55035</bug>: Add support for the version attribute to the deploy
+        command of the Ant tasks for interfacing with the text based Manager
+        application. Patch provided by  Sergey Tcherednichenko. (markt)
+      </add>
+      <add>
+        <bug>55046</bug>: Add a Servlet Filter that implements
+        <a href="http://www.w3.org/TR/cors/">CORS</a>. Patch provided by Mohit
+        Soni. (markt)
+      </add>
+      <add>
+        <bug>55052</bug>: JULI&apos;s LogManager now additionally looks for
+        logging properties without prefixes if the property cannot be found with
+        a prefix. (markt)
+      </add>
+      <fix>
+        Ensure that only the first asynchronous dispatch operation for a given
+        asynchronous cycle will be performed. Any subsequent asynchronous
+        dispatch operation for the same asynchronous cycle will be ignored and
+        <code>IllegalStateException</code> will be thrown. (violetagg)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        <bug>54947</bug>: Fix the HTTP NIO connector that incorrectly rejected a
+        request if the CRLF terminating the request line was split across
+        multiple packets. Patch by Konstantin Preißer. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        <bug>54964</bug>: Allow tag plug-ins to be packaged with a web
+        application. Patch provided by Sheldon Shao. (markt)
+      </fix>
+      <fix>
+        <bug>54968</bug>: Return the correct version number (2.2) of the JSP
+        specification that is supported by the JSP engine when
+        <code>javax.servlet.jsp.JspEngineInfo#getSpecificationVersion()</code>
+        is invoked. (violetagg) 
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Cluster">
+    <changelog>
+      <add>
+        Add <code>maxValidTime</code> attribute to prevent the leak of
+        <code>FileMessageFactory</code> in <code>FarmWarDeployer</code>.
+        (kfujino)
+      </add>
+      <scode>
+        Simplify the code of <code>ReplicationValve</code>: Rather than get
+        cluster instance from container on every request, use instance variable.
+        (kfujino)
+      </scode>
+      <add>
+        Add <code>maxWait</code> attribute that the senderPool will wait when
+        there are no available senders. (kfujino)
+      </add>
+      <add>
+        Improve error message by including specified timeout if failed to
+        retrieve a data sender. (kfujino)
+      </add>
+      <add>
+        Add <code>removeSuspectsTimeout</code> attribute in order to remove a
+        suspect node in TcpFailureDetector. (kfujino)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <fix>
+        <bug>54931</bug>: Add information to the Window Service how-to about
+        installing and running multiple instances. Based on a patch by Chris
+        Derham. (markt)
+      </fix>
+      <fix>
+        <bug>54932</bug>: Correct the link to Tribes documentation. (violetagg)
+      </fix>
+      <add>
+        Add document for
+        <code>o.a.c.tribes.group.interceptors.TcpFailureDetector</code>.
+        (kfujino)
+      </add>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 7.0.40 (markt)" rtext="2013-05-09">
   <subsection name="Catalina">
     <changelog>
       <update>

@@ -62,7 +62,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: Response.java 1452791 2013-03-05 13:41:19Z markt $
+ * @version $Id: Response.java 1489561 2013-06-04 18:54:24Z kkolinko $
  */
 
 public class Response
@@ -175,7 +175,6 @@ public class Response
     /**
      * Get the Coyote response.
      */
-    @Deprecated
     public org.apache.coyote.Response getCoyoteResponse() {
         return (coyoteResponse);
     }

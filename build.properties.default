@@ -21,13 +21,13 @@
 # modules that Tomcat depends on.  Copy this file to "build.properties"
 # in the top-level source directory, and customize it as needed.
 #
-# $Id: build.properties.default 1479250 2013-05-05 07:47:55Z markt $
+# $Id: build.properties.default 1490220 2013-06-06 09:56:30Z markt $
 # -----------------------------------------------------------------------------
 
 # ----- Version Control Flags -----
 version.major=7
 version.minor=0
-version.build=40
+version.build=41
 version.patch=0
 version.suffix=
 

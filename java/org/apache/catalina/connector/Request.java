@@ -101,7 +101,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: Request.java 1456935 2013-03-15 12:47:29Z markt $
+ * @version $Id: Request.java 1486942 2013-05-28 14:48:58Z markt $
  */
 
 public class Request
@@ -2733,7 +2733,7 @@ public class Request
                     }
                 }
                 for (FileItem item : items) {
-                    ApplicationPart part = new ApplicationPart(item, mce);
+                    ApplicationPart part = new ApplicationPart(item, location);
                     parts.add(part);
                     if (part.getSubmittedFileName() == null) {
                         String name = part.getName();
@@ -2741,7 +2741,11 @@ public class Request
                         try {
                             String encoding = parameters.getEncoding();
                             if (encoding == null) {
-                                encoding = Parameters.DEFAULT_ENCODING;
+                                if (enc == null) {
+                                    encoding = Parameters.DEFAULT_ENCODING;
+                                } else {
+                                    encoding = enc;
+                                }
                             }
                             value = part.getString(encoding);
                         } catch (UnsupportedEncodingException uee) {
