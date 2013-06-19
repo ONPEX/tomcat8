@@ -1,3 +1,10 @@
+tomcat7 (7.0.41-1) unstable; urgency=low
+
+  * New upstream release.
+  * Refresh patches.
+
+ -- Gianfranco Costamagna <costamagnagianfranco@yahoo.it>  Wed, 19 Jun 2013 18:06:49 +0200
+
 tomcat7 (7.0.40-2) unstable; urgency=low
 
   * Fix deployment of POMs for libservlet-3.0-java JARs into javax

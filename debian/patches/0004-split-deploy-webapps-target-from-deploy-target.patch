@@ -8,7 +8,7 @@ Subject: [PATCH] split deploy-webapps target from deploy target
 
 --- a/build.xml
 +++ b/build.xml
-@@ -832,7 +832,7 @@
+@@ -850,7 +850,7 @@
      </xslt>
    </target>
  
@@ -17,7 +17,7 @@ Subject: [PATCH] split deploy-webapps target from deploy target
            description="Default. Builds a working Tomcat instance">
  
      <copy tofile="${tomcat.build}/bin/tomcat-native.tar.gz"
-@@ -870,6 +870,10 @@
+@@ -888,6 +888,10 @@
        </fileset>
      </copy>
  
