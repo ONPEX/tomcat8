@@ -14,15 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.catalina.filters;
-
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 
 import javax.servlet.ServletOutputStream;
@@ -34,19 +34,68 @@ import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.connector.Request;
 
-
 /**
- * Dummy response object, used for JSP precompilation.
- *
- * @author Remy Maucherat
- * @version $Id: TesterResponse.java 1198555 2011-11-06 21:06:45Z kkolinko $
+ * Mock HttpServletResponse
  */
+public class TesterHttpServletResponse implements HttpServletResponse {
 
-public class TesterResponse
-    implements HttpServletResponse {
+    private PrintWriter pw;
+    private List<String> headerNames = new ArrayList<String>();
+    private List<String> headerValues = new ArrayList<String>();
+    private int status;
 
-    public TesterResponse() {
+    public TesterHttpServletResponse() {
         // NOOP
+    }
+
+
+    @Override
+    public PrintWriter getWriter() throws IOException {
+        if (pw == null) {
+            pw = new PrintWriter(new StringWriter());
+        }
+        return pw;
+    }
+
+
+    @Override
+    public String getHeader(String name) {
+        int index = headerNames.indexOf(name);
+        if (index != -1) {
+            return headerValues.get(index);
+        }
+        return null;
+    }
+
+
+    @Override
+    public void setHeader(String name, String value) {
+        int index = headerNames.indexOf(name);
+        if (index != -1) {
+            headerValues.set(index, value);
+        } else {
+            headerNames.add(name);
+            headerValues.add(value);
+        }
+    }
+
+
+    @Override
+    public void addHeader(String name, String value) {
+        headerNames.add(name);
+        headerValues.add(value);
+    }
+
+
+    @Override
+    public int getStatus() {
+        return status;
+    }
+
+
+    @Override
+    public void setStatus(int status) {
+        this.status = status;
     }
 
 
@@ -66,7 +115,6 @@ public class TesterResponse
     public void setIncluded(@SuppressWarnings("unused") boolean included) {
         // NOOP
     }
-    public String getInfo() { return null; }
     public Request getRequest() { return null; }
     public void setRequest(@SuppressWarnings("unused") Request request) {
         // NOOP
@@ -83,15 +131,12 @@ public class TesterResponse
     public void setError() {/* NOOP */}
     public boolean isError() { return false; }
     /**
-     *
-     * @return
      * @throws IOException
      */
     public ServletOutputStream createOutputStream() throws IOException {
         return null;
     }
     /**
-     *
      * @throws IOException
      */
     public void finishResponse() throws IOException {/* NOOP */}
@@ -101,7 +146,6 @@ public class TesterResponse
     public PrintWriter getReporter() { return null; }
     public void recycle() {/* NOOP */}
     /**
-     *
      * @param b
      * @throws IOException
      */
@@ -109,7 +153,6 @@ public class TesterResponse
         // NOOP
     }
     /**
-     *
      * @param b
      * @throws IOException
      */
@@ -117,7 +160,6 @@ public class TesterResponse
         // NOOP
     }
     /**
-     *
      * @param b
      * @param off
      * @param len
@@ -141,8 +183,6 @@ public class TesterResponse
     @Override
     public Locale getLocale() { return null; }
     @Override
-    public PrintWriter getWriter() throws IOException { return null; }
-    @Override
     public boolean isCommitted() { return false; }
     @Override
     public void reset() {/* NOOP */}
@@ -157,22 +197,16 @@ public class TesterResponse
     @Override
     public void setLocale(Locale locale) {/* NOOP */}
     @Override
-    public String getHeader(String name) { return null; }
-    @Override
     public Collection<String> getHeaderNames() { return null; }
     @Override
     public Collection<String> getHeaders(String name) { return null; }
     public String getMessage() { return null; }
-    @Override
-    public int getStatus() { return -1; }
     public void reset(@SuppressWarnings("unused") int status,
             @SuppressWarnings("unused") String message) {/* NOOP */}
     @Override
     public void addCookie(Cookie cookie) {/* NOOP */}
     @Override
     public void addDateHeader(String name, long value) {/* NOOP */}
-    @Override
-    public void addHeader(String name, String value) {/* NOOP */}
     @Override
     public void addIntHeader(String name, int value) {/* NOOP */}
     @Override
@@ -205,11 +239,7 @@ public class TesterResponse
     @Override
     public void setDateHeader(String name, long value) {/* NOOP */}
     @Override
-    public void setHeader(String name, String value) {/* NOOP */}
-    @Override
     public void setIntHeader(String name, int value) {/* NOOP */}
-    @Override
-    public void setStatus(int status) {/* NOOP */}
     /** @deprecated */
     @Override
     @Deprecated

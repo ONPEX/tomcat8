@@ -69,7 +69,7 @@ import org.apache.tomcat.util.res.StringManager;
  * requests.  Requests of any other type will simply be passed through.
  *
  * @author Craig R. McClanahan
- * @version $Id: AuthenticatorBase.java 1241170 2012-02-06 20:45:52Z markt $
+ * @version $Id: AuthenticatorBase.java 1487863 2013-05-30 13:53:31Z markt $
  */
 
 
@@ -775,6 +775,7 @@ public abstract class AuthenticatorBase extends ValveBase
             if (principal == null) {
                 // Registering a programmatic logout
                 sso.deregister(ssoId);
+                request.removeNote(Constants.REQ_SSOID_NOTE);
                 return;
             } else {
                 // Update the SSO session with the latest authentication data

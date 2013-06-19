@@ -84,7 +84,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: ApplicationContext.java 1429970 2013-01-07 19:10:28Z markt $
+ * @version $Id: ApplicationContext.java 1483385 2013-05-16 14:16:19Z violetagg $
  */
 
 public class ApplicationContext
@@ -120,7 +120,8 @@ public class ApplicationContext
     public ApplicationContext(StandardContext context) {
         super();
         this.context = context;
-        
+        this.sessionCookieConfig = new ApplicationSessionCookieConfig(context);
+
         // Populate session tracking modes
         populateSessionTrackingModes();
     }
@@ -190,9 +191,8 @@ public class ApplicationContext
     /**
      * Session Cookie config
      */
-    private SessionCookieConfig sessionCookieConfig =
-        new ApplicationSessionCookieConfig();
-    
+    private SessionCookieConfig sessionCookieConfig;
+
     /**
      * Session tracking modes
      */
@@ -1480,7 +1480,14 @@ public class ApplicationContext
 
     @Override
     public JspConfigDescriptor getJspConfigDescriptor() {
-        return context.getJspConfigDescriptor();
+        JspConfigDescriptor jspConfigDescriptor = context
+                .getJspConfigDescriptor();
+        if (jspConfigDescriptor.getJspPropertyGroups().isEmpty()
+                && jspConfigDescriptor.getTaglibs().isEmpty()) {
+            return null;
+        } else {
+            return jspConfigDescriptor;
+        }
     }
 
 
