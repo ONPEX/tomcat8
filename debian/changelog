@@ -1,6 +1,6 @@
 tomcat7 (7.0.41-1) unstable; urgency=low
 
-  * New upstream release.
+  * New upstream release (Closes: #712978).
   * Refresh patches.
 
  -- Gianfranco Costamagna <costamagnagianfranco@yahoo.it>  Wed, 19 Jun 2013 18:06:49 +0200
