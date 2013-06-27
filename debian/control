@@ -35,7 +35,7 @@ Suggests: tomcat7-docs (>= ${source:Version}),
 	tomcat7-admin (>= ${source:Version}),
 	tomcat7-examples (>= ${source:Version}),
 	tomcat7-user (>= ${source:Version}),
-	libtcnative-1
+	libtcnative-1 (>= 1.1.24)
 Description: Servlet and JSP engine
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Sun Microsystems, and provides a "pure Java" HTTP web
