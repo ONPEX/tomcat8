@@ -156,7 +156,7 @@ import org.apache.tomcat.util.buf.B2CConverter;
  * @author Takayuki Kaneko
  * @author Peter Rossbach
  *
- * @version $Id: AccessLogValve.java 1460659 2013-03-25 13:49:19Z kkolinko $
+ * @version $Id: AccessLogValve.java 1495888 2013-06-23 20:25:46Z markt $
  */
 
 public class AccessLogValve extends ValveBase implements AccessLog {
@@ -1744,6 +1744,24 @@ public class AccessLogValve extends ValveBase implements AccessLog {
     }
 
     /**
+     * write time until first byte is written (commit time) in millis - %F
+     */
+    protected static class FirstByteTimeElement implements AccessLogElement {
+        @Override
+        public void addElement(StringBuilder buf, Date date, Request request,
+                Response response, long time) {
+            long commitTime = response.getCoyoteResponse().getCommitTime();
+            if (commitTime == -1) {
+                buf.append('-');
+            } else {
+                long delta =
+                        commitTime - request.getCoyoteRequest().getStartTime();
+                buf.append(Long.toString(delta));
+            }
+        }
+    }
+
+    /**
      * write Query string (prepended with a '?' if it exists) - %q
      */
     protected static class QueryElement implements AccessLogElement {
@@ -2055,6 +2073,8 @@ public class AccessLogValve extends ValveBase implements AccessLog {
             return new ByteSentElement(false);
         case 'D':
             return new ElapsedTimeElement(true);
+        case 'F':
+            return new FirstByteTimeElement();
         case 'h':
             return new HostElement();
         case 'H':

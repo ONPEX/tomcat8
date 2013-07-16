@@ -41,7 +41,7 @@ import org.apache.tomcat.util.res.StringManager;
  * classes (<code>/WEB-INF/classes</code> and <code>/WEB-INF/lib</code>).</p>
  *
  * @author Fabien Carrion
- * @version $Id: WebAnnotationSet.java 1437321 2013-01-23 10:23:32Z markt $
+ * @version $Id: WebAnnotationSet.java 1492415 2013-06-12 20:41:33Z markt $
  */
 
 public class WebAnnotationSet {
@@ -78,7 +78,9 @@ public class WebAnnotationSet {
      */
     protected static void loadApplicationListenerAnnotations(Context context) {
         Class<?> classClass = null;
-        String[] applicationListeners = context.findApplicationListeners();
+        @SuppressWarnings("deprecation")
+        String[] applicationListeners =
+                context.findApplicationListeners();
         for (int i = 0; i < applicationListeners.length; i++) {
             classClass = Introspection.loadClass(context,
                     applicationListeners[i]);

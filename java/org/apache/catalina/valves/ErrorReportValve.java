@@ -44,7 +44,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * @author <a href="mailto:nicolaken@supereva.it">Nicola Ken Barozzi</a> Aisa
  * @author <a href="mailto:stefano@apache.org">Stefano Mazzocchi</a>
  * @author Yoav Shapira
- * @version $Id: ErrorReportValve.java 1445329 2013-02-12 20:08:43Z markt $
+ * @version $Id: ErrorReportValve.java 1498384 2013-07-01 11:18:54Z violetagg $
  */
 
 public class ErrorReportValve extends ValveBase {
@@ -296,11 +296,12 @@ public class ErrorReportValve extends ValveBase {
         trace.append(t.toString()).append('\n');
         StackTraceElement[] elements = t.getStackTrace();
         int pos = elements.length;
-        for (int i = 0; i < elements.length; i++) {
+        for (int i = elements.length - 1; i >= 0; i--) {
             if ((elements[i].getClassName().startsWith
                  ("org.apache.catalina.core.ApplicationFilterChain"))
                 && (elements[i].getMethodName().equals("internalDoFilter"))) {
                 pos = i;
+                break;
             }
         }
         for (int i = 0; i < pos; i++) {

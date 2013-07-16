@@ -31,6 +31,7 @@ import javax.servlet.ServletSecurityElement;
 import javax.servlet.descriptor.JspConfigDescriptor;
 
 import org.apache.catalina.core.ApplicationServletRegistration;
+import org.apache.catalina.deploy.ApplicationListener;
 import org.apache.catalina.deploy.ApplicationParameter;
 import org.apache.catalina.deploy.ErrorPage;
 import org.apache.catalina.deploy.FilterDef;
@@ -60,7 +61,7 @@ import org.apache.tomcat.util.http.mapper.Mapper;
  * <p>
  *
  * @author Craig R. McClanahan
- * @version $Id: Context.java 1431300 2013-01-10 11:47:49Z markt $
+ * @version $Id: Context.java 1492415 2013-06-12 20:41:33Z markt $
  */
 
 public interface Context extends Container {
@@ -720,6 +721,18 @@ public interface Context extends Container {
      *
      * @param listener Java class name of a listener class
      */
+    public void addApplicationListener(ApplicationListener listener);
+
+
+    /**
+     * Add a new Listener class name to the set of Listeners
+     * configured for this application.
+     *
+     * @param listener Java class name of a listener class
+     * 
+     * @deprecated Use {@link #addApplicationListener(ApplicationListener)}
+     */
+    @Deprecated
     public void addApplicationListener(String listener);
 
 
@@ -897,7 +910,11 @@ public interface Context extends Container {
     /**
      * Return the set of application listener class names configured
      * for this application.
+     * 
+     * @deprecated  The return type of this method will be changing to
+     *              {@link ApplicationListener}[] in Tomcat 8 
      */
+    @Deprecated
     public String[] findApplicationListeners();
 
 

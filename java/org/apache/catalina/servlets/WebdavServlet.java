@@ -128,7 +128,7 @@ import org.xml.sax.SAXException;
  * http://host:port/context/webdavedit/content
  *
  * @author Remy Maucherat
- * @version $Id: WebdavServlet.java 1364451 2012-07-22 22:23:22Z markt $
+ * @version $Id: WebdavServlet.java 1494050 2013-06-18 07:29:35Z markt $
  */
 
 public class WebdavServlet
@@ -1528,8 +1528,10 @@ public class WebdavServlet
             boolean tokenMatch = false;
             while (tokenList.hasMoreElements()) {
                 String token = tokenList.nextElement();
-                if (ifHeader.indexOf(token) != -1)
+                if (ifHeader.indexOf(token) != -1) {
                     tokenMatch = true;
+                    break;
+                }
             }
             if (!tokenMatch)
                 return true;
@@ -1549,8 +1551,10 @@ public class WebdavServlet
                 boolean tokenMatch = false;
                 while (tokenList.hasMoreElements()) {
                     String token = tokenList.nextElement();
-                    if (ifHeader.indexOf(token) != -1)
+                    if (ifHeader.indexOf(token) != -1) {
                         tokenMatch = true;
+                        break;
+                    }
                 }
                 if (!tokenMatch)
                     return true;

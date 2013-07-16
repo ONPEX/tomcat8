@@ -67,7 +67,7 @@ import org.apache.tomcat.util.modeler.Registry;
  *
  * @author Craig R. McClanahan
  * @author Amy Roh
- * @version $Id: MBeanUtils.java 1240168 2012-02-03 13:49:58Z markt $
+ * @version $Id: MBeanUtils.java 1496421 2013-06-25 11:26:48Z pero $
  */
 
 public class MBeanUtils {
@@ -1618,7 +1618,9 @@ public class MBeanUtils {
         // The database itself
         ObjectName db = new ObjectName(
                 "Users:type=UserDatabase,database=" + userDatabase);
-        mserver.unregisterMBean(db);
+        if(mserver.isRegistered(db)) {
+            mserver.unregisterMBean(db);
+        }
     }
 
 
