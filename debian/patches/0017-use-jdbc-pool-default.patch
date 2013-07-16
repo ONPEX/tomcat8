@@ -36,7 +36,7 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
      </property>
 --- a/webapps/docs/jndi-resources-howto.xml
 +++ b/webapps/docs/jndi-resources-howto.xml
-@@ -679,7 +679,7 @@ conn.close();
+@@ -684,7 +684,7 @@ conn.close();
  
      <p>The configuration properties for Tomcat's standard data source
      resource factory

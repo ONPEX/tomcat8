@@ -5,7 +5,7 @@ Last-Update: 2011-05-16
 
 --- a/build.xml
 +++ b/build.xml
-@@ -685,7 +685,8 @@
+@@ -686,7 +686,8 @@
      <!-- Jasper Implementation JAR File -->
      <jarIt jarfile="${jasper.jar}"
        filesDir="${tomcat.classes}"
@@ -15,7 +15,7 @@ Last-Update: 2011-05-16
  
      <!-- Jasper EL Implementation JAR File -->
      <jarIt jarfile="${jasper-el.jar}"
-@@ -693,8 +694,7 @@
+@@ -694,8 +695,7 @@
        filesId="files.jasper-el" />
  
      <!-- i18n JARs -->
@@ -25,7 +25,7 @@ Last-Update: 2011-05-16
        <fileset dir="${tomcat.classes}">
          <include name="**/LocalStrings_es.properties" />
        </fileset>
-@@ -702,9 +702,8 @@
+@@ -703,9 +703,8 @@
          fullpath="META-INF/NOTICE" />
        <zipfileset file="${tomcat.manifests}/default.license"
          fullpath="META-INF/LICENSE" />
@@ -37,7 +37,7 @@ Last-Update: 2011-05-16
        <fileset dir="${tomcat.classes}">
          <include name="**/LocalStrings_fr.properties" />
        </fileset>
-@@ -712,9 +711,8 @@
+@@ -713,9 +712,8 @@
          fullpath="META-INF/NOTICE" />
        <zipfileset file="${tomcat.manifests}/default.license"
          fullpath="META-INF/LICENSE" />
@@ -49,7 +49,7 @@ Last-Update: 2011-05-16
        <fileset dir="${tomcat.classes}">
          <include name="**/LocalStrings_ja.properties" />
        </fileset>
-@@ -722,7 +720,7 @@
+@@ -723,7 +721,7 @@
          fullpath="META-INF/NOTICE" />
        <zipfileset file="${tomcat.manifests}/default.license"
          fullpath="META-INF/LICENSE" />
