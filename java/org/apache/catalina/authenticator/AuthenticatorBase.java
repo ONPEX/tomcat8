@@ -69,7 +69,7 @@ import org.apache.tomcat.util.res.StringManager;
  * requests.  Requests of any other type will simply be passed through.
  *
  * @author Craig R. McClanahan
- * @version $Id: AuthenticatorBase.java 1487863 2013-05-30 13:53:31Z markt $
+ * @version $Id: AuthenticatorBase.java 1493918 2013-06-17 20:17:03Z markt $
  */
 
 
@@ -451,6 +451,36 @@ public abstract class AuthenticatorBase extends ValveBase
                 if (log.isDebugEnabled())
                     log.debug(" Failed authenticate() test ??" + requestURI );
                 return;
+            }
+        }
+
+        // Special handling for form-based logins to deal with the case where
+        // a resource is protected for some HTTP methods but not protected for
+        // GET which is used after authentication when redirecting to the
+        // protected resource.
+        // TODO: This is similar to the FormAuthenticator.matchRequest() logic
+        //       Is there a way to remove the duplication?
+        Session session = request.getSessionInternal(false);
+        if (session != null) {
+            SavedRequest savedRequest =
+                    (SavedRequest) session.getNote(Constants.FORM_REQUEST_NOTE);
+            if (savedRequest != null) {
+                String decodedRequestURI = request.getDecodedRequestURI();
+                if (decodedRequestURI != null &&
+                        decodedRequestURI.equals(
+                                savedRequest.getDecodedRequestURI())) {
+                    if (!authenticate(request, response)) {
+                        if (log.isDebugEnabled()) {
+                            log.debug(" Failed authenticate() test");
+                        }
+                        /*
+                         * ASSERT: Authenticator already set the appropriate
+                         * HTTP status code, so we do not have to do anything
+                         * special
+                         */
+                        return;
+                    }
+                }
             }
         }
 

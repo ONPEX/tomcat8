@@ -172,7 +172,7 @@ import org.ietf.jgss.GSSCredential;
  *
  * @author John Holman
  * @author Craig R. McClanahan
- * @version $Id: JNDIRealm.java 1459346 2013-03-21 15:05:54Z markt $
+ * @version $Id: JNDIRealm.java 1497545 2013-06-27 20:02:46Z markt $
  */
 
 public class JNDIRealm extends RealmBase {
@@ -1573,9 +1573,9 @@ public class JNDIRealm extends RealmBase {
                     password = password.substring(5);
                     md.reset();
                     md.update(credentials.getBytes(Charset.defaultCharset()));
-                    byte[] decoded = Base64.decodeBase64(md.digest());
+                    byte[] encoded = Base64.encodeBase64(md.digest());
                     String digestedPassword =
-                            new String(decoded, B2CConverter.ISO_8859_1);
+                            new String(encoded, B2CConverter.ISO_8859_1);
                     validated = password.equals(digestedPassword);
                 }
             } else if (password.startsWith("{SSHA}")) {

@@ -55,7 +55,7 @@ import org.apache.catalina.util.RequestUtil;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: ApplicationHttpRequest.java 1195962 2011-11-01 12:37:24Z markt $
+ * @version $Id: ApplicationHttpRequest.java 1498413 2013-07-01 12:40:25Z violetagg $
  */
 
 class ApplicationHttpRequest extends HttpServletRequestWrapper {
@@ -925,9 +925,10 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
 
         public AttributeNamesEnumerator() {
             parentEnumeration = getRequest().getAttributeNames();
-            for (int i = 0; i < specialAttributes.length; i++) {
+            for (int i = specialAttributes.length - 1; i >= 0; i--) {
                 if (getAttribute(specials[i]) != null) {
                     last = i;
+                    break;
                 }
             }
         }

@@ -84,7 +84,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: ApplicationContext.java 1483385 2013-05-16 14:16:19Z violetagg $
+ * @version $Id: ApplicationContext.java 1493015 2013-06-14 10:00:57Z markt $
  */
 
 public class ApplicationContext
@@ -956,13 +956,6 @@ public class ApplicationContext
                             getContextPath()));
         }
 
-        // TODO SERVLET3
-        // throw UnsupportedOperationException - if this context was passed to the
-        // {@link ServletContextListener#contextInitialized(javax.servlet.ServletContextEvent)}
-        // method of a {@link ServletContextListener} that was not declared
-        // in web.xml, a web-fragment or annotated with
-        // {@link javax.servlet.annotation.WebListener}.
-
         FilterDef filterDef = context.findFilterDef(filterName);
         
         // Assume a 'complete' FilterRegistration is one that has a class and
@@ -992,7 +985,6 @@ public class ApplicationContext
     public <T extends Filter> T createFilter(Class<T> c)
     throws ServletException {
         try {
-            @SuppressWarnings("unchecked")
             T filter = (T) context.getInstanceManager().newInstance(c.getName());
             return filter;
         } catch (IllegalAccessException e) {
@@ -1101,13 +1093,6 @@ public class ApplicationContext
                             getContextPath()));
         }
         
-        // TODO SERVLET3
-        // throw UnsupportedOperationException - if this context was passed to the
-        // {@link ServletContextListener#contextInitialized(javax.servlet.ServletContextEvent)}
-        // method of a {@link ServletContextListener} that was not declared
-        // in web.xml, a web-fragment or annotated with
-        // {@link javax.servlet.annotation.WebListener}.
-
         Wrapper wrapper = (Wrapper) context.findChild(servletName);
         
         // Assume a 'complete' ServletRegistration is one that has a class and
@@ -1142,7 +1127,6 @@ public class ApplicationContext
     public <T extends Servlet> T createServlet(Class<T> c)
     throws ServletException {
         try {
-            @SuppressWarnings("unchecked")
             T servlet = (T) context.getInstanceManager().newInstance(c.getName());
             context.dynamicServletCreated(servlet);
             return servlet;
@@ -1333,13 +1317,6 @@ public class ApplicationContext
                             getContextPath()));
         }
 
-        // TODO SERVLET3
-        // throw UnsupportedOperationException - if this context was passed to the
-        // {@link ServletContextListener#contextInitialized(javax.servlet.ServletContextEvent)}
-        // method of a {@link ServletContextListener} that was not declared
-        // in web.xml, a web-fragment or annotated with
-        // {@link javax.servlet.annotation.WebListener}.
-        
         boolean match = false;
         if (t instanceof ServletContextAttributeListener ||
                 t instanceof ServletRequestListener ||
@@ -1352,6 +1329,8 @@ public class ApplicationContext
         if (t instanceof HttpSessionListener
                 || (t instanceof ServletContextListener &&
                         newServletContextListenerAllowed)) {
+            // Add listener directly to the list of instances rather than to
+            // the list of class names.
             context.addApplicationLifecycleListener(t);
             match = true;
         }
@@ -1374,7 +1353,6 @@ public class ApplicationContext
     public <T extends EventListener> T createListener(Class<T> c)
             throws ServletException {
         try {
-            @SuppressWarnings("unchecked")
             T listener =
                 (T) context.getInstanceManager().newInstance(c.getName());
             if (listener instanceof ServletContextListener ||

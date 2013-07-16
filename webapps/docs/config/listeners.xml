@@ -177,9 +177,11 @@
         <p>Enables protection so that calls to
         <code>sun.awt.AppContext.getAppContext()</code> triggered by a web
         application do not result in a memory leak. Note that a call to this
-        method will be triggered as part of the web application stop process so
-        it is strongly recommended that this protection is enabled. The default
-        is <code>true</code>.</p>
+        method will be triggered as part of the web application stop process
+        when running on Java 6 and earlier. It is therefore strongly recommended
+        that this protection is enabled when running on Java 6 and earlier. The
+        default is <code>true</code> for Java 6 and earlier versions. The
+        default is <code>false</code> for Java 7 and later versions.</p>
       </attribute>
 
       <attribute name="AWTThreadProtection" required="false">
@@ -347,7 +349,7 @@
     and a username to a directory (commonly named public_html) in that user's 
     home directory on the server.</p>
 
-    <p>See the <a href="host.html#User Web Applications">User Web Applications</a>
+    <p>See the <a href="host.html#User_Web_Applications">User Web Applications</a>
     special feature on the <strong>Host</strong> element for more information.</p>
 
     <p>The following additional attributes are supported by the 
@@ -431,6 +433,13 @@
 
       <attribute name="rmiServerPortPlatform" required="true">
         <p>The port to be used by the Platform JMX/RMI server.</p>
+      </attribute>
+
+      <attribute name="rmiBindAddress" required="false">
+        <p>The address of the interface to be used by JMX/RMI server. Setting
+        this option to <code>true</code> is incompatible with setting the system
+        property <code>com.sun.management.jmxremote.ssl</code> to
+        <code>true</code>.</p>
       </attribute>
 
       <attribute name="useLocalPorts" required="false">

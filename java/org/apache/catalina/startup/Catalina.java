@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Constructor;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -67,7 +68,7 @@ import org.xml.sax.SAXParseException;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: Catalina.java 1364142 2012-07-21 18:29:12Z markt $
+ * @version $Id: Catalina.java 1495882 2013-06-23 19:56:10Z markt $
  */
 public class Catalina {
 
@@ -503,6 +504,12 @@ public class Catalina {
                     stream.write(shutdown.charAt(i));
                 }
                 stream.flush();
+            } catch (ConnectException ce) {
+                log.error(sm.getString("catalina.stopServer.connectException",
+                                       s.getAddress(),
+                                       String.valueOf(s.getPort())));
+                log.error("Catalina.stop: ", ce);
+                System.exit(1);
             } catch (IOException e) {
                 log.error("Catalina.stop: ", e);
                 System.exit(1);
@@ -683,7 +690,13 @@ public class Catalina {
         try {
             getServer().start();
         } catch (LifecycleException e) {
-            log.error("Catalina.start: ", e);
+            log.fatal(sm.getString("catalina.serverStartFail"), e);
+            try {
+                getServer().destroy();
+            } catch (LifecycleException e1) {
+                log.debug("destroy() failed for failed Server ", e1);
+            }
+            return;
         }
 
         long t2 = System.nanoTime();

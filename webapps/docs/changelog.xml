@@ -55,7 +55,188 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues to not "pop up" wrt. others).
 -->
-<section name="Tomcat 7.0.41 (markt)">
+<section name="Tomcat 7.0.42 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        Enforce the restriction described in section 4.4 of the Servlet 3.0
+        specification that requires the new pluggability methods only to be
+        available to <code>ServletContextListener</code>s defined in one of the
+        specified ways. (markt)
+      </fix>
+      <fix>
+        Better handle FORM authentication when requesting a resource as an
+        unauthenticated user that is only protected for a sub-set of HTTP
+        methods that does not include GET. (markt)
+      </fix>
+      <fix>
+        <bug>53777</bug>: Add support for a JAAS Realm instance to use a
+        dedicated configuration rather than the JVM global JAAS configuration.
+        This is most likely to be useful for per web application JAAS Realms.
+        Based on a patch by eolivelli. (markt)
+      </fix>
+      <fix>
+        <bug>54745</bug>: Fix JAR file scanning when Tomcat is deployed via Java
+        Web Start. Patch provided by Nick Williams. (markt)
+      </fix>
+      <add>
+        <bug>55017</bug>: Add the ability to configure the RMI bind address when
+        using the JMX remote lifecycle listener. Patch provided by Alexey
+        Noskov. (markt)
+      </add>
+      <fix>
+        <bug>55071</bug>: Ensure original exception is reported if JDBC Realm
+        fails to read a user&apos;s credentials. (markt)
+      </fix>
+      <fix>
+        <bug>55073</bug>, <bug>55108</bug>, <bug>55109</bug>, <bug>55110</bug>,
+        <bug>55158</bug> &amp; <bug>55159</bug>: Small performance improvements.
+        Patches provided by Adrian Nistor. (markt/violetagg)
+      </fix>
+      <add>
+        <bug>55102</bug>: Add support for time to first byte in the
+        AccessLogValve. Patch provided by Jeremy Boynes. (markt)
+      </add>
+      <fix>
+        <bug>55125</bug>: If the Server container fails to start, don't allow
+        the Catalina wrapper to start (used when running from the command line
+        and when running as a service) since Tomcat will not be able to do any
+        useful work. (markt)
+      </fix>
+      <fix>
+        Update the <code>JreMemoryLeakPreventionListener</code> to take account
+        of changes in the behaviour of
+        <code>java.beans.Introspector.flushCaches()</code> and
+        <code>sun.awt.AppContext.getAppContext()</code> in Java 7. (markt)
+      </fix>
+      <fix>
+        Avoid WARNING log message of
+        <code>Users:type=UserDatabase,database=UserDatabase</code> at Tomcat
+        shutdown. (pero)
+      </fix>
+      <fix>
+        Avoid <code>ClassCastException</code> when an asynchronous dispatch is
+        invoked in an asynchronous cycle which is started by a call to
+        <code>ServletRequest.startAsync(ServletRequest,ServletResponse)</code>
+        where ServletRequest/ServletResponse are custom implementations.
+        (violetagg)
+      </fix>
+      <fix>
+        Correct a regression introduced in 7.0.39 (refactoring of base 64
+        encoding and decoding) that broke the JNDI Realm when
+        <code>userPassword</code> was set and passwords were hashed with MD5 or
+        SHA1. (markt/kkolinko)
+      </fix>
+      <fix>
+        Correct the mechanism for the path calculation in
+        <code>AsyncContext.dispatch()</code>. (violetagg)
+      </fix>
+      <fix>
+        <bug>55155</bug>: Avoid constant focus grabbing when running the Tomcat
+        unit tests under Java 6 on OSX. Patch provided by Casey Lucas. (markt)
+      </fix>
+      <fix>
+        <bug>55160</bug>: Don't ignore connectionUploadTimeout setting when
+        using HTTP NIO connector. (markt) 
+      </fix>
+      <fix>
+        <bug>55176</bug>: Correctly handle regular expressions within SSI
+        expressions that contain an equals character. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        <bug>55177</bug>: Correctly handle infinite soTimeout for BIO HTTP
+        connector. Based on a patch by Nick Bunn. (markt)
+      </fix>
+      <fix>
+        <bug>55180</bug>: Correctly handle infinite soTimeout when
+        <code>disableUploadTimeout</code> is set to false. Patch provided by
+        Nick Bunn. (violetagg)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Cluster">
+    <changelog>
+      <fix>
+        Delete leftover of war file from tempDir when removing invalid
+        <code>FileMessageFactory</code>. (kfujino)
+      </fix>
+      <fix>
+        Ensure that the keepAlive of NioSender works correctly when
+        <code>keepAliveCount</code>/<code>keepAliveTime</code> is set to a value
+        greater than 0. (kfujino)
+      </fix>
+      <add>
+        Add logging of when a member is unable to join the cluster. (kfujino)
+      </add>
+      <fix>
+        Replace Tribes&apos;s <code>TaskQueue</code> as executor&apos;s
+        workQueue in order to ensure that executor&apos;s <code>maxThread</code>
+        works correctly. (kfujino)
+      </fix>
+      <fix>
+        <bug>54086</bug>: Fix an additional code path that could lead to
+        multiple threads attempting to modify the same selector key set. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <add>
+        Complete the document for <code>MessageDispatch15Interceptor</code>.
+        (kfujino)
+      </add>
+      <add>
+        <bug>53655</bug>: Document the circumstances under which Tomcat will add
+        a <code>javax.mail.Authenticator</code> to mail sessions created via a
+        JNDI resource. (markt)
+      </add>
+      <fix>
+        <bug>55179</bug>: Correct the Javadoc for the remote IP valve so the
+        correct name is used to refer to the <code>proxiesHeader</code>
+        property. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="jdbc-pool">
+    <changelog>
+      <fix>
+        <bug>55031</bug>: Fixed <code>Export-Package</code> header and
+        <code>uses</code> directives in MANIFEST.MF. Change the version for
+        package <code>org.apache.juli.logging</code> to "0" in
+        <code>Import-Package</code> header. Thus any version of that package
+        can be used. Patch provided by Martin Lichtin. (violetagg)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <update>
+        Update Maven Cental location used to download dependencies at build time
+        to be <code>repo.maven.apache.org</code>. (kkolinko)
+      </update>
+      <update>
+        Update JUnit to version 4.11. Configure separate download for Hamcrest
+        1.3 core library as its classes are no longer included in junit.jar.
+        (kkolinko)
+      </update>
+      <fix>
+        <bug>54013</bug>: When using a forced stop, allow a short period of time
+        (5s) for the process to die before returning. Patch provided by
+        mukarram.baig. (markt)
+      </fix>
+      <fix>
+        <bug>55119</bug>: Ensure that the build process produces Javadoc that is
+        not vulnerable to CVE-2013-1571. Based on a patch by Uwe Schindler.
+        (markt)
+      </fix>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 7.0.41 (markt)" rtext="2013-06-10">
   <subsection name="Catalina">
     <changelog>
       <fix>
@@ -127,8 +308,8 @@
       </add>
       <add>
         <bug>55046</bug>: Add a Servlet Filter that implements
-        <a href="http://www.w3.org/TR/cors/">CORS</a>. Patch provided by Mohit
-        Soni. (markt)
+        <a href="http://www.w3.org/TR/cors/" rel="nofollow">CORS</a>. Patch
+        provided by Mohit Soni. (markt)
       </add>
       <add>
         <bug>55052</bug>: JULI&apos;s LogManager now additionally looks for
@@ -2744,8 +2925,9 @@
       <update>
         <bug>52405</bug>: Align the Servlet 3.0 implementation with the changes
         defined in the first maintenance release (also know as Rev. A). See the
-        <a href="http://jcp.org/aboutJava/communityprocess/maintenance/jsr315/servlet3-mr-reva.html">
-        JCP documentation</a> for a detailed list of changes. (markt) 
+        <a href="http://jcp.org/aboutJava/communityprocess/maintenance/jsr315/servlet3-mr-reva.html"
+        rel="nofollow">JCP documentation</a> for a detailed list of changes
+        (markt) 
       </update>
       <fix>
         Improve JMX names for objects related to Connectors that have the
@@ -3201,10 +3383,10 @@
         <code>DeltaSession.setId(String)</code>. (kkolinko)
       </fix>
       <fix>
-        Work around a <a href="http://bugs.sun.com/view_bug.do?bug_id=6427854">
-        known JVM bug</a> that is fixed in 1.7.0_01 but still present in
-        1.6.0_29 and was triggering intermittent unit test failures for
-        <code>org.apache.catalina.tribes.group.
+        Work around a <a href="http://bugs.sun.com/view_bug.do?bug_id=6427854"
+        rel="nofollow">known JVM bug</a> that is fixed in 1.7.0_01 but still
+        present in 1.6.0_29 and was triggering intermittent unit test failure
+        for <code>org.apache.catalina.tribes.group.
         TestGroupChannelMemberArrival.testMemberArrival</code>.
         The bug affects any components that use NIO although it was more likely
         to be observed in the clustering module than the HTTP or AJP NIO

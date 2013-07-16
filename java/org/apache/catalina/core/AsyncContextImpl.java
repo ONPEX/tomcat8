@@ -168,10 +168,20 @@ public class AsyncContextImpl implements AsyncContext, AsyncContextCallback {
     @Override
     public void dispatch() {
         check();
-        HttpServletRequest sr = (HttpServletRequest)getRequest();
-        String path = sr.getRequestURI();
-        String cpath = sr.getContextPath();
-        if (cpath.length()>1) path = path.substring(cpath.length());
+        String path;
+        String pathInfo;
+        ServletRequest servletRequest = getRequest();
+        if (servletRequest instanceof HttpServletRequest) {
+            HttpServletRequest sr = (HttpServletRequest) servletRequest;
+            path = sr.getServletPath();
+            pathInfo = sr.getPathInfo();
+        } else {
+            path = request.getServletPath();
+            pathInfo = request.getPathInfo();
+        }
+        if (pathInfo != null) {
+            path += pathInfo;
+        }
         dispatch(path);
     }
 
@@ -205,10 +215,8 @@ public class AsyncContextImpl implements AsyncContext, AsyncContextCallback {
         }
         final AsyncDispatcher applicationDispatcher =
                 (AsyncDispatcher) requestDispatcher;
-        final HttpServletRequest servletRequest =
-                (HttpServletRequest) getRequest();
-        final HttpServletResponse servletResponse =
-                (HttpServletResponse) getResponse();
+        final ServletRequest servletRequest = getRequest();
+        final ServletResponse servletResponse = getResponse();
         Runnable run = new Runnable() {
             @Override
             public void run() {
