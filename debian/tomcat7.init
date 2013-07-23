@@ -184,7 +184,7 @@ catalina_sh() {
 case "$1" in
   start)
 	if [ -z "$JAVA_HOME" ]; then
-		log_failure_msg "no JDK found - please set JAVA_HOME"
+		log_failure_msg "no JDK or JRE found - please set JAVA_HOME"
 		exit 1
 	fi
 

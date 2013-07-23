@@ -8,6 +8,8 @@ tomcat7 (7.0.42-1) unstable; urgency=low
   * Refresh patches.
   * debian/control: changed Vcs-Git and Vcs-Browser fields,
     now they are canonical.
+  * Fixed error message in Tomcat init script,
+    patch by Thijs Kinkhorst (Closes: #714348)
 
  -- Gianfranco Costamagna <costamagnagianfranco@yahoo.it>  Tue, 16 Jul 2013 17:34:58 +0200
 
