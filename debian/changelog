@@ -103,7 +103,7 @@ tomcat7 (7.0.28-4) unstable; urgency=high
 
   * Acknowledge NMU: 7.0.28-3+nmu1 (Closes: #692440)
     - Thank you to Michael Gilbert.
-  0* Add patches for the following security issues: (Closes: #695251)
+  * Add patches for the following security issues: (Closes: #695251)
     - CVE-2012-4431, CVE-2012-3546
 
  -- tony mancill <tmancill@debian.org>  Thu, 06 Dec 2012 22:25:07 -0800
