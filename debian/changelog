@@ -1,5 +1,7 @@
 tomcat7 (7.0.42-1) unstable; urgency=low
 
+  [ Gianfranco Costamagna ]
+  * Team upload.
   * New upstream release.
   * Added libhamcrest-java >= 1.3 as build-dep,
     tweaked debian/rules.
