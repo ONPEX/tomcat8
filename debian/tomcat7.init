@@ -149,7 +149,6 @@ catalina_sh() {
 
 	AUTHBIND_COMMAND=""
 	if [ "$AUTHBIND" = "yes" -a "$1" = "start" ]; then
-		JAVA_OPTS="$JAVA_OPTS -Djava.net.preferIPv4Stack=true"
 		AUTHBIND_COMMAND="/usr/bin/authbind --deep /bin/bash -c "
 	fi
 

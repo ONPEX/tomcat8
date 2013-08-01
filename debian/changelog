@@ -1,3 +1,13 @@
+tomcat7 (7.0.42-2) UNRELEASED; urgency=low
+
+  * Removed -Djava.net.preferIPv4Stack=true
+    from init script (lp: #1088681),
+    thanks Hendrik Haddorp.
+  * Added webapp manager path patch (lp: #1128067)
+    thanks TJ.
+
+ -- Gianfranco Costamagna <costamagnagianfranco@yahoo.it>  Thu, 01 Aug 2013 11:53:03 +0200
+
 tomcat7 (7.0.42-1) unstable; urgency=low
 
   * New upstream release.
