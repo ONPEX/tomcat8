@@ -7,6 +7,7 @@ tomcat8 (8.0.0~RC1-1) UNRELEASED; urgency=low
     - Updated the watch file to match the Tomcat 8 releases
     - Refreshed the patches
     - Updated debian/copyright
+  * Marked libtomcat8-java as conflicting with libtomcat7-java
   * Use XZ compression for the upstream tarball
   * Replaced Sun Microsystems with Oracle
 
