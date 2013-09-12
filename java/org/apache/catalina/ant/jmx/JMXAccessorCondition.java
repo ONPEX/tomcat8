@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,7 @@ import org.apache.tools.ant.taskdefs.condition.Condition;
 /**
  *
  * <b>Definition</b>:
- * <pre> 
+ * <pre>
  *   &lt;path id="catalina_ant">
  *       &lt;fileset dir="${catalina.home}/server/lib">
  *           &lt;include name="catalina-ant.jar"/>
@@ -46,7 +46,7 @@ import org.apache.tools.ant.taskdefs.condition.Condition;
  *       classname="org.apache.catalina.ant.jmx.JMXAccessorTask"
  *       classpathref="catalina_ant"/>
  * </pre>
- * 
+ *
  * <b>Usage</b>: Wait for start backup node
  * <pre>
  *     &lt;target name="wait"&gt;
@@ -58,7 +58,7 @@ import org.apache.tools.ant.taskdefs.condition.Condition;
  *               &lt;http url="${url}"/&gt;
  *               &lt;jmxCondition
  *                   name="Catalina:type=IDataSender,host=localhost,senderAddress=192.168.111.1,senderPort=9025"
- *                   operation="==" 
+ *                   operation="=="
  *                   attribute="connected" value="true"
  *               /&gt;
  *               &lt;jmxCondition
@@ -81,11 +81,11 @@ import org.apache.tools.ant.taskdefs.condition.Condition;
  * <li>&gt;= greater than or equals (&amp;gt;=)</li>
  * <li>&lt; lesser than (&amp;lt;)</li>
  * <li>&lt;= lesser than or equals (&amp;lt;=)</li>
- * </ul> 
+ * </ul>
  * <b>NOTE</b>:  For numeric expressions the type must be set and use xml entities as operations.<br/>
  * As type we currently support <em>long</em> and <em>double</em>.
  * @author Peter Rossbach
- * @version $Id: JMXAccessorCondition.java 1058260 2011-01-12 18:13:47Z markt $
+ * @version $Id: JMXAccessorCondition.java 1187783 2011-10-22 21:07:41Z markt $
  * @since 5.5.10
  *
  */
@@ -106,24 +106,7 @@ public class JMXAccessorCondition extends ProjectComponent implements Condition 
     private String ref = "jmx.server";
     private String unlessCondition;
     private String ifCondition;
-     
-    // ----------------------------------------------------- Instance Info
 
-    /**
-     * Descriptive information describing this implementation.
-     */
-    private static final String info = "org.apache.catalina.ant.JMXAccessorCondition/1.1";
-
-    /**
-     * Return descriptive information about this implementation and the
-     * corresponding version number, in the format
-     * <code>&lt;description&gt;/&lt;version&gt;</code>.
-     */
-    public String getInfo() {
-
-        return (info);
-
-    }
     // ----------------------------------------------------- Properties
 
     /**
@@ -245,7 +228,7 @@ public class JMXAccessorCondition extends ProjectComponent implements Condition 
     public void setValue(String value) {
         this.value = value;
     }
- 
+
     /**
      * @return Returns the ref.
      */
@@ -277,7 +260,7 @@ public class JMXAccessorCondition extends ProjectComponent implements Condition 
     public String getUnless() {
         return unlessCondition;
     }
- 
+
     /**
      * Only execute if a property of the given name does not
      * exist in the current project.
@@ -302,7 +285,7 @@ public class JMXAccessorCondition extends ProjectComponent implements Condition 
     }
 
     /**
-     * Get value from MBeans attribute 
+     * Get value from MBeans attribute
      * @return The value
      */
     protected String accessJMXValue() {

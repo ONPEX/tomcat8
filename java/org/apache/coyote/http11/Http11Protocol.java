@@ -19,15 +19,17 @@ package org.apache.coyote.http11;
 import java.io.IOException;
 import java.net.Socket;
 
+import javax.servlet.http.HttpUpgradeHandler;
+
 import org.apache.coyote.AbstractProtocol;
 import org.apache.coyote.Processor;
-import org.apache.coyote.http11.upgrade.UpgradeBioProcessor;
-import org.apache.coyote.http11.upgrade.UpgradeInbound;
+import org.apache.coyote.http11.upgrade.BioProcessor;
 import org.apache.juli.logging.Log;
 import org.apache.tomcat.util.net.AbstractEndpoint;
 import org.apache.tomcat.util.net.JIoEndpoint;
 import org.apache.tomcat.util.net.JIoEndpoint.Handler;
 import org.apache.tomcat.util.net.SSLImplementation;
+import org.apache.tomcat.util.net.SocketStatus;
 import org.apache.tomcat.util.net.SocketWrapper;
 
 
@@ -39,12 +41,12 @@ import org.apache.tomcat.util.net.SocketWrapper;
  * @author Remy Maucherat
  * @author Costin Manolache
  */
-public class Http11Protocol extends AbstractHttp11JsseProtocol {
+public class Http11Protocol extends AbstractHttp11JsseProtocol<Socket> {
 
 
     private static final org.apache.juli.logging.Log log
         = org.apache.juli.logging.LogFactory.getLog(Http11Protocol.class);
-    
+
     @Override
     protected Log getLog() { return log; }
 
@@ -67,10 +69,10 @@ public class Http11Protocol extends AbstractHttp11JsseProtocol {
         setTcpNoDelay(Constants.DEFAULT_TCP_NO_DELAY);
     }
 
-    
+
     // ----------------------------------------------------------------- Fields
 
-    protected Http11ConnectionHandler cHandler;
+    private final Http11ConnectionHandler cHandler;
 
 
     // ------------------------------------------------ HTTP specific properties
@@ -89,7 +91,15 @@ public class Http11Protocol extends AbstractHttp11JsseProtocol {
             this.disableKeepAlivePercentage = disableKeepAlivePercentage;
         }
     }
-    
+
+    @Override
+    public void start() throws Exception {
+        super.start();
+        if (npnHandler != null) {
+            npnHandler.init(endpoint, 0, getAdapter());
+        }
+    }
+
     // ----------------------------------------------------- JMX related methods
 
     @Override
@@ -104,7 +114,7 @@ public class Http11Protocol extends AbstractHttp11JsseProtocol {
             extends AbstractConnectionHandler<Socket, Http11Processor> implements Handler {
 
         protected Http11Protocol proto;
-            
+
         Http11ConnectionHandler(Http11Protocol proto) {
             this.proto = proto;
         }
@@ -118,16 +128,28 @@ public class Http11Protocol extends AbstractHttp11JsseProtocol {
         protected Log getLog() {
             return log;
         }
-        
+
         @Override
         public SSLImplementation getSslImplementation() {
             return proto.sslImplementation;
         }
 
+        @Override
+        public SocketState process(SocketWrapper<Socket> socket,
+                SocketStatus status) {
+            if (proto.npnHandler != null) {
+                SocketState ss = proto.npnHandler.process(socket, status);
+                if (ss != SocketState.OPEN) {
+                    return ss;
+                }
+            }
+            return super.process(socket, status);
+        }
+
         /**
          * Expected to be used by the handler once the processor is no longer
          * required.
-         * 
+         *
          * @param socket            Not used in BIO
          * @param processor
          * @param isSocketClosing   Not used in HTTP
@@ -138,7 +160,7 @@ public class Http11Protocol extends AbstractHttp11JsseProtocol {
                 Processor<Socket> processor, boolean isSocketClosing,
                 boolean addToPoller) {
             processor.recycle(isSocketClosing);
-            recycledProcessors.offer(processor);
+            recycledProcessors.push(processor);
         }
 
         @Override
@@ -157,7 +179,7 @@ public class Http11Protocol extends AbstractHttp11JsseProtocol {
         @Override
         protected void longPoll(SocketWrapper<Socket> socket,
                 Processor<Socket> processor) {
-            connections.put(socket.getSocket(), processor);
+            // NO-OP
         }
 
         @Override
@@ -165,7 +187,7 @@ public class Http11Protocol extends AbstractHttp11JsseProtocol {
             Http11Processor processor = new Http11Processor(
                     proto.getMaxHttpHeaderSize(), (JIoEndpoint)proto.endpoint,
                     proto.getMaxTrailerSize());
-            processor.setAdapter(proto.adapter);
+            processor.setAdapter(proto.getAdapter());
             processor.setMaxKeepAliveRequests(proto.getMaxKeepAliveRequests());
             processor.setKeepAliveTimeout(proto.getKeepAliveTimeout());
             processor.setConnectionUploadTimeout(
@@ -187,9 +209,14 @@ public class Http11Protocol extends AbstractHttp11JsseProtocol {
 
         @Override
         protected Processor<Socket> createUpgradeProcessor(
-                SocketWrapper<Socket> socket, UpgradeInbound inbound)
+                SocketWrapper<Socket> socket,
+                HttpUpgradeHandler httpUpgradeProcessor)
                 throws IOException {
-            return new UpgradeBioProcessor(socket, inbound);
+            return new BioProcessor(socket, httpUpgradeProcessor);
+        }
+
+        @Override
+        public void beforeHandshake(SocketWrapper<Socket> socket) {
         }
     }
 }

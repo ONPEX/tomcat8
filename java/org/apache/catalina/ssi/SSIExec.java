@@ -25,16 +25,16 @@ import java.io.PrintWriter;
 import org.apache.catalina.util.IOTools;
 /**
  * Implements the Server-side #exec command
- * 
+ *
  * @author Bip Thelin
  * @author Amy Roh
  * @author Paul Speed
  * @author Dan Sandberg
  * @author David Becker
- * @version $Id: SSIExec.java 1138121 2011-06-21 18:32:41Z markt $
+ * @version $Id: SSIExec.java 1361823 2012-07-15 22:16:06Z markt $
  */
 public class SSIExec implements SSICommand {
-    protected SSIInclude ssiInclude = new SSIInclude();
+    protected final SSIInclude ssiInclude = new SSIInclude();
     protected static final int BUFFER_SIZE = 1024;
 
 
@@ -67,7 +67,7 @@ public class SSIExec implements SSICommand {
                 IOTools.flow(stdErrReader, writer, buf);
                 IOTools.flow(stdOutReader, writer, buf);
                 proc.waitFor();
-                lastModified = System.currentTimeMillis();                
+                lastModified = System.currentTimeMillis();
             } catch (InterruptedException e) {
                 ssiMediator.log("Couldn't exec file: " + substitutedValue, e);
                 writer.write(configErrMsg);

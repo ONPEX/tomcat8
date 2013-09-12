@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,7 +33,7 @@ import org.apache.tomcat.util.res.StringManager;
  * support most of the functionality required by a Store.
  *
  * @author Bip Thelin
- * @version $Id: StoreBase.java 1153854 2011-08-04 11:45:53Z kfujino $
+ * @version $Id: StoreBase.java 1361802 2012-07-15 21:18:36Z markt $
  */
 
 public abstract class StoreBase extends LifecycleBase implements Store {
@@ -41,19 +41,14 @@ public abstract class StoreBase extends LifecycleBase implements Store {
     // ----------------------------------------------------- Instance Variables
 
     /**
-     * The descriptive information about this implementation.
-     */
-    protected static final String info = "StoreBase/1.0";
-
-    /**
      * Name to register for this Store, used for logging.
      */
-    protected static String storeName = "StoreBase";
+    protected static final String storeName = "StoreBase";
 
     /**
      * The property change support for this component.
      */
-    protected PropertyChangeSupport support = new PropertyChangeSupport(this);
+    protected final PropertyChangeSupport support = new PropertyChangeSupport(this);
 
     /**
      * The string manager for this package.
@@ -65,16 +60,8 @@ public abstract class StoreBase extends LifecycleBase implements Store {
      */
     protected Manager manager;
 
+
     // ------------------------------------------------------------- Properties
-
-    /**
-     * Return the info for this Store.
-     */
-    @Override
-    public String getInfo() {
-        return(info);
-    }
-
 
     /**
      * Return the name for this Store, used for logging.
@@ -145,11 +132,11 @@ public abstract class StoreBase extends LifecycleBase implements Store {
         try {
             keys = keys();
         } catch (IOException e) {
-            manager.getContainer().getLogger().error("Error getting keys", e);
+            manager.getContext().getLogger().error("Error getting keys", e);
             return;
         }
-        if (manager.getContainer().getLogger().isDebugEnabled()) {
-            manager.getContainer().getLogger().debug(getStoreName()+ ": processExpires check number of " + keys.length + " sessions" );
+        if (manager.getContext().getLogger().isDebugEnabled()) {
+            manager.getContext().getLogger().debug(getStoreName()+ ": processExpires check number of " + keys.length + " sessions" );
         }
 
         long timeNow = System.currentTimeMillis();
@@ -164,8 +151,8 @@ public abstract class StoreBase extends LifecycleBase implements Store {
                 if (timeIdle < session.getMaxInactiveInterval()) {
                     continue;
                 }
-                if (manager.getContainer().getLogger().isDebugEnabled()) {
-                    manager.getContainer().getLogger().debug(getStoreName()+ ": processExpires expire store session " + keys[i] );
+                if (manager.getContext().getLogger().isDebugEnabled()) {
+                    manager.getContext().getLogger().debug(getStoreName()+ ": processExpires expire store session " + keys[i] );
                 }
                 boolean isLoaded = false;
                 if (manager instanceof PersistentManagerBase) {
@@ -188,11 +175,11 @@ public abstract class StoreBase extends LifecycleBase implements Store {
                 }
                 remove(keys[i]);
             } catch (Exception e) {
-                manager.getContainer().getLogger().error("Session: "+keys[i]+"; ", e);
+                manager.getContext().getLogger().error("Session: "+keys[i]+"; ", e);
                 try {
                     remove(keys[i]);
                 } catch (IOException e2) {
-                    manager.getContainer().getLogger().error("Error removing key", e2);
+                    manager.getContext().getLogger().error("Error removing key", e2);
                 }
             }
         }
@@ -203,8 +190,8 @@ public abstract class StoreBase extends LifecycleBase implements Store {
     protected void initInternal() {
         // NOOP
     }
-    
-    
+
+
     /**
      * Start this component and implement the requirements
      * of {@link LifecycleBase#startInternal()}.
@@ -214,7 +201,7 @@ public abstract class StoreBase extends LifecycleBase implements Store {
      */
     @Override
     protected synchronized void startInternal() throws LifecycleException {
-        
+
         setState(LifecycleState.STARTING);
     }
 
@@ -231,14 +218,14 @@ public abstract class StoreBase extends LifecycleBase implements Store {
 
         setState(LifecycleState.STOPPING);
     }
-    
-    
+
+
     @Override
     protected void destroyInternal() {
         // NOOP
     }
-    
-    
+
+
     /**
      * Return a String rendering of this object.
      */

@@ -30,9 +30,7 @@ import java.util.Set;
 import java.util.Vector;
 
 import javax.el.ELContext;
-import javax.el.ELException;
 import javax.el.ELResolver;
-import javax.el.PropertyNotFoundException;
 import javax.el.PropertyNotWritableException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -78,8 +76,7 @@ public class ImplicitObjectELResolver extends ELResolver {
     }
 
     @Override
-    public Object getValue(ELContext context, Object base, Object property)
-            throws NullPointerException, PropertyNotFoundException, ELException {
+    public Object getValue(ELContext context, Object base, Object property) {
         if (context == null) {
             throw new NullPointerException();
         }
@@ -90,7 +87,7 @@ public class ImplicitObjectELResolver extends ELResolver {
             if (idx >= 0) {
                 PageContext page = (PageContext) context
                         .getContext(JspContext.class);
-                context.setPropertyResolved(true);
+                context.setPropertyResolved(base, property);
                 switch (idx) {
                 case APPLICATIONSCOPE:
                     return ScopeManager.get(page).getApplicationScope();
@@ -122,8 +119,7 @@ public class ImplicitObjectELResolver extends ELResolver {
 
     @Override
     @SuppressWarnings({ "unchecked", "rawtypes" }) // TCK signature test fails with generics
-    public Class getType(ELContext context, Object base, Object property)
-            throws NullPointerException, PropertyNotFoundException, ELException {
+    public Class getType(ELContext context, Object base, Object property) {
         if (context == null) {
             throw new NullPointerException();
         }
@@ -131,7 +127,7 @@ public class ImplicitObjectELResolver extends ELResolver {
         if (base == null && property != null) {
             int idx = Arrays.binarySearch(SCOPE_NAMES, property.toString());
             if (idx >= 0) {
-                context.setPropertyResolved(true);
+                context.setPropertyResolved(base, property);
             }
         }
         return null;
@@ -139,9 +135,7 @@ public class ImplicitObjectELResolver extends ELResolver {
 
     @Override
     public void setValue(ELContext context, Object base, Object property,
-            Object value) throws NullPointerException,
-            PropertyNotFoundException, PropertyNotWritableException,
-            ELException {
+            Object value) {
         if (context == null) {
             throw new NullPointerException();
         }
@@ -149,15 +143,14 @@ public class ImplicitObjectELResolver extends ELResolver {
         if (base == null && property != null) {
             int idx = Arrays.binarySearch(SCOPE_NAMES, property.toString());
             if (idx >= 0) {
-                context.setPropertyResolved(true);
+                context.setPropertyResolved(base, property);
                 throw new PropertyNotWritableException();
             }
         }
     }
 
     @Override
-    public boolean isReadOnly(ELContext context, Object base, Object property)
-            throws NullPointerException, PropertyNotFoundException, ELException {
+    public boolean isReadOnly(ELContext context, Object base, Object property) {
         if (context == null) {
             throw new NullPointerException();
         }
@@ -165,7 +158,7 @@ public class ImplicitObjectELResolver extends ELResolver {
         if (base == null && property != null) {
             int idx = Arrays.binarySearch(SCOPE_NAMES, property.toString());
             if (idx >= 0) {
-                context.setPropertyResolved(true);
+                context.setPropertyResolved(base, property);
                 return true;
             }
         }
@@ -174,8 +167,7 @@ public class ImplicitObjectELResolver extends ELResolver {
 
     @Override
     public Iterator<FeatureDescriptor> getFeatureDescriptors(ELContext context, Object base) {
-        List<FeatureDescriptor> feats = new ArrayList<FeatureDescriptor>(
-                SCOPE_NAMES.length);
+        List<FeatureDescriptor> feats = new ArrayList<>(SCOPE_NAMES.length);
         FeatureDescriptor feat;
         for (int i = 0; i < SCOPE_NAMES.length; i++) {
             feat = new FeatureDescriptor();
@@ -272,7 +264,7 @@ public class ImplicitObjectELResolver extends ELResolver {
                         Cookie[] c = ((HttpServletRequest) page.getRequest())
                                 .getCookies();
                         if (c != null) {
-                            Vector<String> v = new Vector<String>();
+                            Vector<String> v = new Vector<>();
                             for (int i = 0; i < c.length; i++) {
                                 v.add(c[i].getName());
                             }
@@ -334,7 +326,7 @@ public class ImplicitObjectELResolver extends ELResolver {
                             ((HttpServletRequest) page.getRequest())
                                     .getHeaders(name);
                         if (e != null) {
-                            List<String> list = new ArrayList<String>();
+                            List<String> list = new ArrayList<>();
                             while (e.hasMoreElements()) {
                                 list.add(e.nextElement());
                             }
@@ -517,7 +509,7 @@ public class ImplicitObjectELResolver extends ELResolver {
         @Override
         public final Set<Map.Entry<String,V>> entrySet() {
             Enumeration<String> e = getAttributeNames();
-            Set<Map.Entry<String, V>> set = new HashSet<Map.Entry<String, V>>();
+            Set<Map.Entry<String, V>> set = new HashSet<>();
             if (e != null) {
                 while (e.hasMoreElements()) {
                     set.add(new ScopeEntry(e.nextElement()));

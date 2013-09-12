@@ -16,6 +16,7 @@
  */
 package org.apache.catalina.authenticator;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,15 +29,14 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 import org.apache.catalina.Context;
-import org.apache.catalina.deploy.LoginConfig;
-import org.apache.catalina.deploy.SecurityCollection;
-import org.apache.catalina.deploy.SecurityConstraint;
 import org.apache.catalina.startup.TesterServlet;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
-import org.apache.tomcat.util.buf.B2CConverter;
 import org.apache.tomcat.util.buf.ByteChunk;
 import org.apache.tomcat.util.codec.binary.Base64;
+import org.apache.tomcat.util.descriptor.web.LoginConfig;
+import org.apache.tomcat.util.descriptor.web.SecurityCollection;
+import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
 
 /**
  * Test BasicAuthenticator and NonLoginAuthenticator when a
@@ -190,13 +190,11 @@ public class TestSSOnonLoginAndBasicAuthenticator extends TomcatBaseTest {
             boolean expectedReject, int expectedRC)
             throws Exception {
 
-        Map<String,List<String>> reqHeaders =
-                new HashMap<String,List<String>>();
+        Map<String,List<String>> reqHeaders = new HashMap<>();
         if (addCookies) {
             addCookies(reqHeaders);
         }
-        Map<String,List<String>> respHeaders =
-                new HashMap<String,List<String>>();
+        Map<String,List<String>> respHeaders = new HashMap<>();
 
         ByteChunk bc = new ByteChunk();
         int rc = getUrl(HTTP_PREFIX + getPort() + uri, bc, reqHeaders,
@@ -218,10 +216,8 @@ public class TestSSOnonLoginAndBasicAuthenticator extends TomcatBaseTest {
             boolean expectedReject2, int expectedRC2) throws Exception {
 
         // the first access attempt should be challenged
-        Map<String,List<String>> reqHeaders1 =
-                new HashMap<String,List<String>>();
-        Map<String,List<String>> respHeaders1 =
-                new HashMap<String,List<String>>();
+        Map<String,List<String>> reqHeaders1 = new HashMap<>();
+        Map<String,List<String>> respHeaders1 = new HashMap<>();
 
         ByteChunk bc = new ByteChunk();
         int rc = getUrl(HTTP_PREFIX + getPort() + uri, bc, reqHeaders1,
@@ -241,16 +237,15 @@ public class TestSSOnonLoginAndBasicAuthenticator extends TomcatBaseTest {
         String credentials = user + ":" + pwd;
 
         String base64auth = Base64.encodeBase64String(
-                credentials.getBytes(B2CConverter.ISO_8859_1));
+                credentials.getBytes(StandardCharsets.ISO_8859_1));
         String authLine = "Basic " + base64auth;
 
-        List<String> auth = new ArrayList<String>();
+        List<String> auth = new ArrayList<>();
         auth.add(authLine);
-        Map<String,List<String>> reqHeaders2 = new HashMap<String,List<String>>();
+        Map<String,List<String>> reqHeaders2 = new HashMap<>();
         reqHeaders2.put(CLIENT_AUTH_HEADER, auth);
 
-        Map<String,List<String>> respHeaders2 =
-            new HashMap<String,List<String>>();
+        Map<String,List<String>> respHeaders2 = new HashMap<>();
 
         bc.recycle();
         rc = getUrl(HTTP_PREFIX + getPort() + uri, bc, reqHeaders2,

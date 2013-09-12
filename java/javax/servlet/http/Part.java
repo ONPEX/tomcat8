@@ -48,6 +48,15 @@ public interface Part {
     public String getName();
 
     /**
+     * If this part represents an uploaded file, gets the file name submitted
+     * in the upload. Returns {@code null} if no file name is available or if
+     * this part is not a file upload.
+     *
+     * @return the submitted file name or {@code null}.
+     */
+    public String getSubmittedFileName();
+
+    /**
      * Obtain the size of this part.
      */
     public long getSize();
@@ -81,7 +90,7 @@ public interface Part {
      * Behaviour of other containers may be different.
      */
     public void delete() throws IOException;
-    
+
     /**
      * Obtains the value of the specified part header as a String. If there are
      * multiple headers with the same name, this method returns the first header

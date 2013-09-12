@@ -23,10 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.el.ELContext;
-import javax.el.ELException;
 import javax.el.ELResolver;
-import javax.el.PropertyNotFoundException;
-import javax.el.PropertyNotWritableException;
 import javax.servlet.jsp.JspContext;
 import javax.servlet.jsp.PageContext;
 
@@ -41,14 +38,13 @@ public class ScopedAttributeELResolver extends ELResolver {
     }
 
     @Override
-    public Object getValue(ELContext context, Object base, Object property)
-            throws NullPointerException, PropertyNotFoundException, ELException {
+    public Object getValue(ELContext context, Object base, Object property) {
         if (context == null) {
             throw new NullPointerException();
         }
 
         if (base == null) {
-            context.setPropertyResolved(true);
+            context.setPropertyResolved(base, property);
             if (property != null) {
                 String key = property.toString();
                 PageContext page = (PageContext) context
@@ -61,14 +57,14 @@ public class ScopedAttributeELResolver extends ELResolver {
     }
 
     @Override
-    public Class<Object> getType(ELContext context, Object base, Object property)
-            throws NullPointerException, PropertyNotFoundException, ELException {
+    public Class<Object> getType(ELContext context, Object base,
+            Object property) {
         if (context == null) {
             throw new NullPointerException();
         }
 
         if (base == null) {
-            context.setPropertyResolved(true);
+            context.setPropertyResolved(base, property);
             return Object.class;
         }
 
@@ -77,15 +73,13 @@ public class ScopedAttributeELResolver extends ELResolver {
 
     @Override
     public void setValue(ELContext context, Object base, Object property,
-            Object value) throws NullPointerException,
-            PropertyNotFoundException, PropertyNotWritableException,
-            ELException {
+            Object value) {
         if (context == null) {
             throw new NullPointerException();
         }
 
         if (base == null) {
-            context.setPropertyResolved(true);
+            context.setPropertyResolved(base, property);
             if (property != null) {
                 String key = property.toString();
                 PageContext page = (PageContext) context
@@ -101,14 +95,13 @@ public class ScopedAttributeELResolver extends ELResolver {
     }
 
     @Override
-    public boolean isReadOnly(ELContext context, Object base, Object property)
-            throws NullPointerException, PropertyNotFoundException, ELException {
+    public boolean isReadOnly(ELContext context, Object base, Object property) {
         if (context == null) {
             throw new NullPointerException();
         }
 
         if (base == null) {
-            context.setPropertyResolved(true);
+            context.setPropertyResolved(base, property);
         }
 
         return false;
@@ -119,7 +112,7 @@ public class ScopedAttributeELResolver extends ELResolver {
             Object base) {
 
         PageContext ctxt = (PageContext) context.getContext(JspContext.class);
-        List<FeatureDescriptor> list = new ArrayList<FeatureDescriptor>();
+        List<FeatureDescriptor> list = new ArrayList<>();
         Enumeration<String> e;
         Object value;
         String name;

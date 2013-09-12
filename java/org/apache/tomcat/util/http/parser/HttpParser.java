@@ -50,8 +50,7 @@ public class HttpParser {
     private static final Integer FIELD_TYPE_LHEX = Integer.valueOf(3);
     private static final Integer FIELD_TYPE_QUOTED_TOKEN = Integer.valueOf(4);
 
-    private static final Map<String,Integer> fieldTypes =
-            new HashMap<String,Integer>();
+    private static final Map<String,Integer> fieldTypes = new HashMap<>();
 
     // Arrays used by isToken(), isHex()
     private static final boolean isToken[] = new boolean[128];
@@ -117,7 +116,7 @@ public class HttpParser {
     public static Map<String,String> parseAuthorizationDigest (
             StringReader input) throws IllegalArgumentException, IOException {
 
-        Map<String,String> result = new HashMap<String,String>();
+        Map<String,String> result = new HashMap<>();
 
         if (skipConstant(input, "Digest") != SkipConstantResult.FOUND) {
             return null;
@@ -200,8 +199,7 @@ public class HttpParser {
             return null;
         }
 
-        LinkedHashMap<String,String> parameters =
-                new LinkedHashMap<String,String>();
+        LinkedHashMap<String,String> parameters = new LinkedHashMap<>();
 
         SkipConstantResult lookForSemiColon = skipConstant(input, ";");
         if (lookForSemiColon == SkipConstantResult.NOT_FOUND) {

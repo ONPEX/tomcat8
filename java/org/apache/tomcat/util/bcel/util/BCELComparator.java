@@ -19,16 +19,16 @@ package org.apache.tomcat.util.bcel.util;
 
 /**
  * Used for BCEL comparison strategy
- * 
+ *
  * @author <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
- * @version $Id: BCELComparator.java 1181133 2011-10-10 18:49:14Z markt $
+ * @version $Id: BCELComparator.java 1187781 2011-10-22 21:02:40Z markt $
  * @since 5.2
  */
 public interface BCELComparator {
 
     /**
      * Compare two objects and return what THIS.equals(THAT) should return
-     * 
+     *
      * @param THIS
      * @param THAT
      * @return true if and only if THIS equals THAT
@@ -38,7 +38,7 @@ public interface BCELComparator {
 
     /**
      * Return hashcode for THIS.hashCode()
-     * 
+     *
      * @param THIS
      * @return hashcode for THIS.hashCode()
      */

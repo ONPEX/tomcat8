@@ -20,13 +20,13 @@ package org.apache.tomcat.jni;
 /** Library
  *
  * @author Mladen Turk
- * @version $Id: Library.java 1145285 2011-07-11 18:40:48Z kkolinko $
+ * @version $Id: Library.java 1447080 2013-02-17 20:48:51Z markt $
  */
 
 public final class Library {
 
     /* Default library names */
-    private static String [] NAMES = {"tcnative-1", "libtcnative-1"};
+    private static final String [] NAMES = {"tcnative-1", "libtcnative-1"};
     /*
      * A handle to the unique Library singleton instance.
      */

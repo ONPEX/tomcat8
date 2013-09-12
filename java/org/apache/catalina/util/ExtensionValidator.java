@@ -5,16 +5,15 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.catalina.util;
 
 import java.io.File;
@@ -24,18 +23,13 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Locale;
-import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
-import javax.naming.Binding;
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.directory.DirContext;
-
 import org.apache.catalina.Context;
-import org.apache.naming.resources.Resource;
+import org.apache.catalina.WebResource;
+import org.apache.catalina.WebResourceRoot;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.res.StringManager;
 
@@ -50,7 +44,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Greg Murray
  * @author Justyna Horwat
- * @version $Id: ExtensionValidator.java 1428084 2013-01-02 21:57:27Z markt $
+ * @version $Id: ExtensionValidator.java 1428079 2013-01-02 21:48:09Z markt $
  *
  */
 public final class ExtensionValidator {
@@ -62,12 +56,12 @@ public final class ExtensionValidator {
      * The string resources for this package.
      */
     private static final StringManager sm =
-        StringManager.getManager("org.apache.catalina.util");
-    
+            StringManager.getManager("org.apache.catalina.util");
+
     private static volatile ArrayList<Extension> containerAvailableExtensions =
-        null;
-    private static ArrayList<ManifestResource> containerManifestResources =
-        new ArrayList<ManifestResource>();
+            null;
+    private static final ArrayList<ManifestResource> containerManifestResources =
+            new ArrayList<>();
 
 
     // ----------------------------------------------------- Static Initializer
@@ -75,10 +69,10 @@ public final class ExtensionValidator {
 
     /**
      *  This static initializer loads the container level extensions that are
-     *  available to all web applications. This method scans all extension 
-     *  directories available via the "java.ext.dirs" System property. 
+     *  available to all web applications. This method scans all extension
+     *  directories available via the "java.ext.dirs" System property.
      *
-     *  The System Class-Path is also scanned for jar files that may contain 
+     *  The System Class-Path is also scanned for jar files that may contain
      *  available extensions.
      */
     static {
@@ -86,7 +80,7 @@ public final class ExtensionValidator {
         // check for container level optional packages
         String systemClasspath = System.getProperty("java.class.path");
 
-        StringTokenizer strTok = new StringTokenizer(systemClasspath, 
+        StringTokenizer strTok = new StringTokenizer(systemClasspath,
                                                      File.pathSeparator);
 
         // build a list of jar files in the classpath
@@ -116,41 +110,37 @@ public final class ExtensionValidator {
     /**
      * Runtime validation of a Web Application.
      *
-     * This method uses JNDI to look up the resources located under a 
-     * <code>DirContext</code>. It locates Web Application MANIFEST.MF 
-     * file in the /META-INF/ directory of the application and all 
-     * MANIFEST.MF files in each JAR file located in the WEB-INF/lib 
-     * directory and creates an <code>ArrayList</code> of 
-     * <code>ManifestResorce<code> objects. These objects are then passed 
+     * This method uses JNDI to look up the resources located under a
+     * <code>DirContext</code>. It locates Web Application MANIFEST.MF
+     * file in the /META-INF/ directory of the application and all
+     * MANIFEST.MF files in each JAR file located in the WEB-INF/lib
+     * directory and creates an <code>ArrayList</code> of
+     * <code>ManifestResorce<code> objects. These objects are then passed
      * to the validateManifestResources method for validation.
      *
-     * @param dirContext The JNDI root of the Web Application
-     * @param context The context from which the Logger and path to the
-     *                application
+     * @param resources The resources configured for this Web Application
+     * @param context   The context from which the Logger and path to the
+     *                  application
      *
      * @return true if all required extensions satisfied
      */
     public static synchronized boolean validateApplication(
-                                           DirContext dirContext, 
+                                           WebResourceRoot resources,
                                            Context context)
                     throws IOException {
 
         String appName = context.getName();
-        ArrayList<ManifestResource> appManifestResources =
-            new ArrayList<ManifestResource>();
-        // If the application context is null it does not exist and 
+        ArrayList<ManifestResource> appManifestResources = new ArrayList<>();
+        // If the application context is null it does not exist and
         // therefore is not valid
-        if (dirContext == null) return false;
+        if (resources == null) return false;
         // Find the Manifest for the Web Application
         InputStream inputStream = null;
         try {
-            NamingEnumeration<Binding> wne =
-                dirContext.listBindings("/META-INF/");
-            Binding binding = wne.nextElement();
-            if (binding.getName().toUpperCase(Locale.ENGLISH).equals("MANIFEST.MF")) {
-                Resource resource = (Resource)dirContext.lookup
-                                    ("/META-INF/" + binding.getName());
-                inputStream = resource.streamContent();
+            WebResource resource =
+                    resources.getResource("/META-INF/MANIFEST.MF");
+            if (resource.isFile()) {
+                inputStream = resource.getInputStream();
                 Manifest manifest = new Manifest(inputStream);
                 inputStream.close();
                 inputStream = null;
@@ -158,11 +148,7 @@ public final class ExtensionValidator {
                     (sm.getString("extensionValidator.web-application-manifest"),
                     manifest, ManifestResource.WAR);
                 appManifestResources.add(mre);
-            } 
-        } catch (NamingException nex) {
-            // Application does not contain a MANIFEST.MF file
-        } catch (NoSuchElementException nse) {
-            // Application does not contain a MANIFEST.MF file
+            }
         } finally {
             if (inputStream != null) {
                 try {
@@ -173,36 +159,24 @@ public final class ExtensionValidator {
             }
         }
 
-        // Locate the Manifests for all bundled JARs
-        NamingEnumeration<Binding> ne = null;
         // Primarily used for error reporting
         String jarName = null;
         try {
-            ne = dirContext.listBindings("WEB-INF/lib/");
-            while ((ne != null) && ne.hasMoreElements()) {
-                Binding binding = ne.nextElement();
-                jarName = binding.getName();
-                if (!jarName.toLowerCase(Locale.ENGLISH).endsWith(".jar")) {
-                    continue;
-                }
-                Object obj =
-                    dirContext.lookup("/WEB-INF/lib/" + jarName);
-                if (!(obj instanceof Resource)) {
-                    // Probably a directory named xxx.jar - ignore it
-                    continue;
-                }
-                Resource resource = (Resource) obj;
-                inputStream = resource.streamContent();
-                Manifest jmanifest = getManifest(inputStream);
-                if (jmanifest != null) {
-                    ManifestResource mre = new ManifestResource(jarName,
-                            jmanifest, ManifestResource.APPLICATION);
-                    appManifestResources.add(mre);
+            WebResource[] jars = resources.listResources("/WEB-INF/lib");
+            for (WebResource jar : jars) {
+                jarName = jar.getName();
+                if (jarName.toLowerCase(Locale.ENGLISH).endsWith(".jar") &&
+                        jar.isFile()) {
+
+                    inputStream = jar.getInputStream();
+                    Manifest jmanifest = getManifest(inputStream);
+                    if (jmanifest != null) {
+                        ManifestResource mre = new ManifestResource(jarName,
+                                jmanifest, ManifestResource.APPLICATION);
+                        appManifestResources.add(mre);
+                    }
                 }
             }
-        } catch (NamingException nex) {
-            // Jump out of the check for this application because it 
-            // has no resources
         } catch (IOException ioe) {
             throw new IOException("Jar: " + jarName, ioe);
         } finally {
@@ -241,20 +215,20 @@ public final class ExtensionValidator {
 
 
     /**
-     * Validates a <code>ArrayList</code> of <code>ManifestResource</code> 
-     * objects. This method requires an application name (which is the 
-     * context root of the application at runtime).  
+     * Validates a <code>ArrayList</code> of <code>ManifestResource</code>
+     * objects. This method requires an application name (which is the
+     * context root of the application at runtime).
      *
      * <code>false</false> is returned if the extension dependencies
-     * represented by any given <code>ManifestResource</code> objects 
+     * represented by any given <code>ManifestResource</code> objects
      * is not met.
      *
-     * This method should also provide static validation of a Web Application 
+     * This method should also provide static validation of a Web Application
      * if provided with the necessary parameters.
      *
-     * @param appName The name of the Application that will appear in the 
+     * @param appName The name of the Application that will appear in the
      *                error messages
-     * @param resources A list of <code>ManifestResource</code> objects 
+     * @param resources A list of <code>ManifestResource</code> objects
      *                  to be validated.
      *
      * @return true if manifest resource file requirements are met
@@ -262,7 +236,7 @@ public final class ExtensionValidator {
     private static boolean validateManifestResources(String appName,
             ArrayList<ManifestResource> resources) {
         boolean passes = true;
-        int failureCount = 0;        
+        int failureCount = 0;
         ArrayList<Extension> availableExtensions = null;
 
         Iterator<ManifestResource> it = resources.iterator();
@@ -335,18 +309,18 @@ public final class ExtensionValidator {
 
         return passes;
     }
-    
-   /* 
-    * Build this list of available extensions so that we do not have to 
-    * re-build this list every time we iterate through the list of required 
-    * extensions. All available extensions in all of the 
-    * <code>MainfestResource</code> objects will be added to a 
+
+   /*
+    * Build this list of available extensions so that we do not have to
+    * re-build this list every time we iterate through the list of required
+    * extensions. All available extensions in all of the
+    * <code>MainfestResource</code> objects will be added to a
     * <code>HashMap</code> which is returned on the first dependency list
-    * processing pass. 
+    * processing pass.
     *
     * The key is the name + implementation version.
     *
-    * NOTE: A list is built only if there is a dependency that needs 
+    * NOTE: A list is built only if there is a dependency that needs
     * to be checked (performance optimization).
     *
     * @param resources A list of <code>ManifestResource</code> objects
@@ -367,7 +341,7 @@ public final class ExtensionValidator {
                 while (values.hasNext()) {
                     Extension ext = values.next();
                     if (availableList == null) {
-                        availableList = new ArrayList<Extension>();
+                        availableList = new ArrayList<>();
                         availableList.add(ext);
                     } else {
                         availableList.add(ext);
@@ -378,7 +352,7 @@ public final class ExtensionValidator {
 
         return availableList;
     }
-    
+
     /**
      * Return the Manifest from a jar file or war file
      *

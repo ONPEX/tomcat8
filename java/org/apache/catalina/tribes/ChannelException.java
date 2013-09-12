@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,7 +27,7 @@ import java.util.ArrayList;
  * the application can retrieve what recipients failed by using the <code>getFaultyMembers()</code>
  * method. This way, an application will always know if a message was delivered successfully or not.
  * @author Filip Hanik
- * @version $Id: ChannelException.java 1038846 2010-11-24 22:08:38Z markt $
+ * @version $Id: ChannelException.java 1370472 2012-08-07 19:52:06Z markt $
  */
 
 public class ChannelException extends Exception {
@@ -40,7 +40,7 @@ public class ChannelException extends Exception {
      * Holds a list of faulty members
      */
     private ArrayList<FaultyMember> faultyMembers=null;
-    
+
     /**
      * Constructor, creates a ChannelException
      * @see java.lang.Exception#Exception()
@@ -75,7 +75,7 @@ public class ChannelException extends Exception {
     public ChannelException(Throwable cause) {
         super(cause);
     }
-    
+
     /**
      * Returns the message for this exception
      * @return String
@@ -96,7 +96,7 @@ public class ChannelException extends Exception {
         }
         return buf.toString();
     }
-    
+
     /**
      * Adds a faulty member, and the reason the member failed.
      * @param mbr Member
@@ -105,7 +105,7 @@ public class ChannelException extends Exception {
     public boolean addFaultyMember(Member mbr, Exception x ) {
         return addFaultyMember(new FaultyMember(mbr,x));
     }
-    
+
     /**
      * Adds a list of faulty members
      * @param mbrs FaultyMember[]
@@ -123,11 +123,11 @@ public class ChannelException extends Exception {
      * @param mbr FaultyMember
      */
     public boolean addFaultyMember(FaultyMember mbr) {
-        if ( this.faultyMembers==null ) this.faultyMembers = new ArrayList<FaultyMember>();
+        if ( this.faultyMembers==null ) this.faultyMembers = new ArrayList<>();
         if ( !faultyMembers.contains(mbr) ) return faultyMembers.add(mbr);
         else return false;
     }
-    
+
     /**
      * Returns an array of members that failed and the reason they failed.
      * @return FaultyMember[]
@@ -136,43 +136,43 @@ public class ChannelException extends Exception {
         if ( this.faultyMembers==null ) return EMPTY_LIST;
         return faultyMembers.toArray(new FaultyMember[faultyMembers.size()]);
     }
-    
+
     /**
-     * 
-     * <p>Title: FaultyMember class</p> 
-     * 
+     *
+     * <p>Title: FaultyMember class</p>
+     *
      * <p>Description: Represent a failure to a specific member when a message was sent
-     * to more than one member</p> 
-     * 
+     * to more than one member</p>
+     *
      * @author Filip Hanik
      * @version 1.0
      */
     public static class FaultyMember {
-        protected Exception cause;
-        protected Member member;
-        public FaultyMember(Member mbr, Exception x) { 
+        protected final Exception cause;
+        protected final Member member;
+        public FaultyMember(Member mbr, Exception x) {
             this.member = mbr;
             this.cause = x;
         }
-        
+
         public Member getMember() {
             return member;
         }
-        
+
         public Exception getCause() {
             return cause;
         }
-        
+
         @Override
         public String toString() {
             return "FaultyMember:"+member.toString();
         }
-        
+
         @Override
         public int hashCode() {
             return (member!=null)?member.hashCode():0;
         }
-        
+
         @Override
         public boolean equals(Object o) {
             if (member==null || (!(o instanceof FaultyMember)) || (((FaultyMember)o).member==null)) return false;

@@ -30,7 +30,6 @@ import org.apache.catalina.Valve;
 import org.apache.catalina.comet.CometEvent;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
-import org.apache.catalina.mbeans.MBeanUtils;
 import org.apache.catalina.util.LifecycleMBeanBase;
 import org.apache.juli.logging.Log;
 import org.apache.tomcat.util.res.StringManager;
@@ -44,7 +43,7 @@ import org.apache.tomcat.util.res.StringManager;
  * management and lifecycle support.
  *
  * @author Craig R. McClanahan
- * @version $Id: ValveBase.java 1187022 2011-10-20 19:55:37Z markt $
+ * @version $Id: ValveBase.java 1240108 2012-02-03 12:10:32Z markt $
  */
 
 public abstract class ValveBase extends LifecycleMBeanBase
@@ -76,14 +75,6 @@ public abstract class ValveBase extends LifecycleMBeanBase
      * Container log
      */
     protected Log containerLog = null;
-
-
-    /**
-     * Descriptive information about this Valve implementation.  This value
-     * should be overridden by subclasses.
-     */
-    protected static final String info =
-        "org.apache.catalina.core.ValveBase/1.0";
 
 
     /**
@@ -133,17 +124,6 @@ public abstract class ValveBase extends LifecycleMBeanBase
     public void setContainer(Container container) {
 
         this.container = container;
-
-    }
-
-
-    /**
-     * Return descriptive information about this Valve implementation.
-     */
-    @Override
-    public String getInfo() {
-
-        return (info);
 
     }
 
@@ -285,7 +265,7 @@ public abstract class ValveBase extends LifecycleMBeanBase
 
         Container container = getContainer();
 
-        name.append(MBeanUtils.getContainerKeyProperties(container));
+        name.append(container.getMBeanKeyProperties());
 
         int seq = 0;
 
@@ -327,6 +307,11 @@ public abstract class ValveBase extends LifecycleMBeanBase
 
     @Override
     public String getDomainInternal() {
-        return MBeanUtils.getDomain(getContainer());
+        Container c = getContainer();
+        if (c == null) {
+            return null;
+        } else {
+            return c.getDomain();
+        }
     }
 }

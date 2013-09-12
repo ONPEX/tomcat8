@@ -102,7 +102,7 @@ public class PooledConnection {
      */
     protected ConnectionPool parent;
 
-    private HashMap<Object, Object> attributes = new HashMap<Object, Object>();
+    private HashMap<Object, Object> attributes = new HashMap<>();
 
     private volatile long connectionVersion=0;
 
@@ -365,7 +365,6 @@ public class PooledConnection {
      * Returns true if the connection pool is configured
      * to do validation for a certain action.
      * @param action
-     * @return
      */
     private boolean doValidate(int action) {
         if (action == PooledConnection.VALIDATE_BORROW &&

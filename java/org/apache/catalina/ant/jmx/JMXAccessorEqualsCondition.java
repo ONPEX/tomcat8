@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,7 @@ import org.apache.tools.ant.taskdefs.condition.Condition;
 /**
  *
  * Definition
- * <pre> 
+ * <pre>
  *   &lt;path id="catalina_ant">
  *       &lt;fileset dir="${catalina.home}/server/lib">
  *           &lt;include name="catalina-ant.jar"/>
@@ -42,7 +42,7 @@ import org.apache.tools.ant.taskdefs.condition.Condition;
  *       classname="org.apache.catalina.ant.jmx.JMXAccessorEqualsCondition"
  *       classpathref="catalina_ant"/>
  * </pre>
- * 
+ *
  * usage: Wait for start backup node
  * <pre>
  *     &lt;target name="wait"&gt;
@@ -50,7 +50,7 @@ import org.apache.tools.ant.taskdefs.condition.Condition;
  *           &lt;and&gt;
  *               &lt;socket server="${server.name}" port="${server.port}"/&gt;
  *               &lt;http url="${url}"/&gt;
- *               &lt;jmxEquals 
+ *               &lt;jmxEquals
  *                   host="localhost" port="9014" username="controlRole" password="tomcat"
  *                   name="Catalina:type=IDataSender,host=localhost,senderAddress=192.168.111.1,senderPort=9025"
  *                   attribute="connected" value="true"
@@ -62,9 +62,9 @@ import org.apache.tools.ant.taskdefs.condition.Condition;
  *   &lt;/target&gt;
  *
  * </pre>
- * 
+ *
  * @author Peter Rossbach
- * @version $Id: JMXAccessorEqualsCondition.java 1058260 2011-01-12 18:13:47Z markt $
+ * @version $Id: JMXAccessorEqualsCondition.java 1187783 2011-10-22 21:07:41Z markt $
  * @since 5.5.10
  *
  */
@@ -81,23 +81,7 @@ public class JMXAccessorEqualsCondition  extends ProjectComponent  implements Co
     private String attribute;
     private String value;
     private String ref = "jmx.server" ;
-    // ----------------------------------------------------- Instance Info
 
-    /**
-     * Descriptive information describing this implementation.
-     */
-    private static final String info = "org.apache.catalina.ant.JMXAccessorEqualsCondition/1.1";
-
-    /**
-     * Return descriptive information about this implementation and the
-     * corresponding version number, in the format
-     * <code>&lt;description&gt;/&lt;version&gt;</code>.
-     */
-    public String getInfo() {
-
-        return (info);
-
-    }
     // ----------------------------------------------------- Properties
 
     /**
@@ -207,7 +191,7 @@ public class JMXAccessorEqualsCondition  extends ProjectComponent  implements Co
     public void setRef(String refId) {
         this.ref = refId;
     }
-    
+
     protected MBeanServerConnection getJMXConnection()
             throws MalformedURLException, IOException {
         return JMXAccessorTask.accessJMXConnection(

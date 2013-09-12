@@ -283,15 +283,6 @@ public class MimeHeaders {
         return mhf.getValue();
     }
 
-    /** Create a new named header using translated char[].
-     */
-    public MessageBytes addValue(char c[], int startN, int len)
-    {
-        MimeHeaderField mhf=createHeader();
-        mhf.getName().setChars(c, startN, len);
-        return mhf.getValue();
-    }
-
     /** Allow "set" operations -
         return a MessageBytes container for the
         header value ( existing header or new
@@ -394,10 +385,10 @@ public class MimeHeaders {
     we want to keep add O(1).
 */
 class NamesEnumerator implements Enumeration<String> {
-    int pos;
-    int size;
-    String next;
-    MimeHeaders headers;
+    private int pos;
+    private final int size;
+    private String next;
+    private final MimeHeaders headers;
 
     public NamesEnumerator(MimeHeaders headers) {
         this.headers=headers;
@@ -444,11 +435,11 @@ class NamesEnumerator implements Enumeration<String> {
     value element.
 */
 class ValuesEnumerator implements Enumeration<String> {
-    int pos;
-    int size;
-    MessageBytes next;
-    MimeHeaders headers;
-    String name;
+    private int pos;
+    private final int size;
+    private MessageBytes next;
+    private final MimeHeaders headers;
+    private final String name;
 
     ValuesEnumerator(MimeHeaders headers, String name) {
         this.name=name;
@@ -484,14 +475,9 @@ class ValuesEnumerator implements Enumeration<String> {
 }
 
 class MimeHeaderField {
-    // multiple headers with same name - a linked list will
-    // speed up name enumerations and search ( both cpu and
-    // GC)
-    MimeHeaderField next;
-    MimeHeaderField prev;
 
-    protected final MessageBytes nameB = MessageBytes.newInstance();
-    protected final MessageBytes valueB = MessageBytes.newInstance();
+    private final MessageBytes nameB = MessageBytes.newInstance();
+    private final MessageBytes valueB = MessageBytes.newInstance();
 
     /**
      * Creates a new, uninitialized header field.
@@ -503,7 +489,6 @@ class MimeHeaderField {
     public void recycle() {
         nameB.recycle();
         valueB.recycle();
-        next=null;
     }
 
     public MessageBytes getName() {

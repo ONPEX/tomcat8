@@ -25,7 +25,7 @@ import java.util.EventListener;
  * Interface defining a listener for significant Session generated events.
  *
  * @author Craig R. McClanahan
- * @version $Id: SessionListener.java 1200162 2011-11-10 05:37:57Z kkolinko $
+ * @version $Id: SessionListener.java 1187801 2011-10-22 21:16:40Z markt $
  */
 
 public interface SessionListener extends EventListener {

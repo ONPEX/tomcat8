@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,7 +31,7 @@ import org.apache.juli.logging.LogFactory;
  * directory (adding new WAR files->deploy or remove WAR files->undeploy) And
  * notifies a listener of the changes made
  * </p>
- * 
+ *
  * @author Filip Hanik
  * @author Peter Rossbach
  * @version 1.1
@@ -46,23 +46,19 @@ public class WarWatcher {
     /**
      * Directory to watch for war files
      */
-    protected File watchDir = null;
+    protected final File watchDir;
 
     /**
      * Parent to be notified of changes
      */
-    protected FileChangeListener listener = null;
+    protected final FileChangeListener listener;
 
     /**
      * Currently deployed files
      */
-    protected Map<String, WarInfo> currentStatus =
-        new HashMap<String, WarInfo>();
+    protected final Map<String, WarInfo> currentStatus = new HashMap<>();
 
     /*--Constructor---------------------------------------------*/
-
-    public WarWatcher() {
-    }
 
     public WarWatcher(FileChangeListener listener, File watchDir) {
         this.listener = listener;
@@ -122,35 +118,6 @@ public class WarWatcher {
         currentStatus.clear();
     }
 
-    /**
-     * @return Returns the watchDir.
-     */
-    public File getWatchDir() {
-        return watchDir;
-    }
-
-    /**
-     * @param watchDir
-     *            The watchDir to set.
-     */
-    public void setWatchDir(File watchDir) {
-        this.watchDir = watchDir;
-    }
-
-    /**
-     * @return Returns the listener.
-     */
-    public FileChangeListener getListener() {
-        return listener;
-    }
-
-    /**
-     * @param listener
-     *            The listener to set.
-     */
-    public void setListener(FileChangeListener listener) {
-        this.listener = listener;
-    }
 
     /*--Inner classes-------------------------------------------*/
 
@@ -170,7 +137,7 @@ public class WarWatcher {
      * File information on existing WAR files
      */
     protected static class WarInfo {
-        protected File war = null;
+        protected final File war;
 
         protected long lastChecked = 0;
 
@@ -194,7 +161,7 @@ public class WarWatcher {
         /**
          * Returns 1 if the file has been added/modified, 0 if the file is
          * unchanged and -1 if the file has been removed
-         * 
+         *
          * @return int 1=file added; 0=unchanged; -1=file removed
          */
         public int check() {

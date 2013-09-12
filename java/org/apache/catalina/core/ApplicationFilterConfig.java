@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,11 +36,11 @@ import javax.servlet.ServletException;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.Globals;
-import org.apache.catalina.deploy.FilterDef;
 import org.apache.catalina.security.SecurityUtil;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.InstanceManager;
 import org.apache.tomcat.util.ExceptionUtils;
+import org.apache.tomcat.util.descriptor.web.FilterDef;
 import org.apache.tomcat.util.log.SystemLogHandler;
 import org.apache.tomcat.util.modeler.Registry;
 import org.apache.tomcat.util.modeler.Util;
@@ -53,7 +53,7 @@ import org.apache.tomcat.util.res.StringManager;
  * is first started.
  *
  * @author Craig R. McClanahan
- * @version $Id: ApplicationFilterConfig.java 1429172 2013-01-05 00:07:05Z kkolinko $
+ * @version $Id: ApplicationFilterConfig.java 1500964 2013-07-08 21:24:05Z markt $
  */
 
 public final class ApplicationFilterConfig implements FilterConfig, Serializable {
@@ -119,7 +119,7 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
     /**
      * The Context with which we are associated.
      */
-    private transient Context context = null;
+    private final transient Context context;
 
 
     /**
@@ -188,7 +188,7 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
     @Override
     public Enumeration<String> getInitParameterNames() {
         Map<String,String> map = filterDef.getParameterMap();
-        
+
         if (map == null) {
             return Collections.enumeration(emptyString);
         }
@@ -258,9 +258,9 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
         // Identify the class loader we will be using
         String filterClass = filterDef.getFilterClass();
         this.filter = (Filter) getInstanceManager().newInstance(filterClass);
-        
+
         initFilter();
-        
+
         return (this.filter);
 
     }
@@ -280,7 +280,7 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
         } else {
             filter.init(this);
         }
-        
+
         // Expose filter via JMX
         registerJMX();
     }
@@ -301,7 +301,7 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
     void release() {
 
         unregisterJMX();
-        
+
         if (this.filter != null)
         {
             try {
@@ -347,7 +347,7 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
                 instanceManager = new DefaultInstanceManager(null,
                         new HashMap<String, Map<String, String>>(),
                         context,
-                        getClass().getClassLoader()); 
+                        getClass().getClassLoader());
             }
         }
         return instanceManager;
@@ -390,7 +390,7 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
                     getFilterClass(), getFilterName()), ex);
         }
     }
-    
+
     private void unregisterJMX() {
         // unregister this component
         if (oname != null) {

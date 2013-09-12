@@ -21,7 +21,7 @@ package org.apache.tomcat.util.http.fileupload;
  * can provide their own custom configuration, over and above that provided
  * by the default file upload implementation.</p>
  *
- * @version $Id: FileItemFactory.java 1456935 2013-03-15 12:47:29Z markt $
+ * @version $Id: FileItemFactory.java 1456904 2013-03-15 11:36:53Z markt $
  */
 public interface FileItemFactory {
 

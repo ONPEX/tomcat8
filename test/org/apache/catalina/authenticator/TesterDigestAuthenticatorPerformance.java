@@ -29,11 +29,11 @@ import org.junit.Test;
 import org.apache.catalina.Context;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.core.StandardContext;
-import org.apache.catalina.deploy.LoginConfig;
 import org.apache.catalina.filters.TesterHttpServletResponse;
-import org.apache.catalina.startup.TestTomcat.MapRealm;
+import org.apache.catalina.startup.TesterMapRealm;
 import org.apache.catalina.util.ConcurrentMessageDigest;
 import org.apache.catalina.util.MD5Encoder;
+import org.apache.tomcat.util.descriptor.web.LoginConfig;
 
 public class TesterDigestAuthenticatorPerformance {
 
@@ -108,7 +108,7 @@ public class TesterDigestAuthenticatorPerformance {
         ConcurrentMessageDigest.init("MD5");
 
         // Configure the Realm
-        MapRealm realm = new MapRealm();
+        TesterMapRealm realm = new TesterMapRealm();
         realm.addUser(USER, PWD);
         realm.addUserRole(USER, ROLE);
 
@@ -116,6 +116,11 @@ public class TesterDigestAuthenticatorPerformance {
         Context context = new StandardContext();
         context.setName(CONTEXT_PATH);
         context.setRealm(realm);
+
+        // Configure the Login config
+        LoginConfig config = new LoginConfig();
+        config.setRealmName(REALM);
+        context.setLoginConfig(config);
 
         // Make the Context and Realm visible to the Authenticator
         authenticator.setContainer(context);
@@ -135,7 +140,6 @@ public class TesterDigestAuthenticatorPerformance {
 
         private TesterDigestRequest request;
         private HttpServletResponse response;
-        private LoginConfig config;
         private DigestAuthenticator authenticator;
 
         private static final String A1 = USER + ":" + REALM + ":" + PWD;
@@ -156,11 +160,9 @@ public class TesterDigestAuthenticatorPerformance {
             this.requestCount = requestCount;
 
             request = new TesterDigestRequest();
+            request.setContext(authenticator.context);
 
             response = new TesterHttpServletResponse();
-
-            config = new LoginConfig();
-            config.setRealmName(REALM);
         }
 
         @Override

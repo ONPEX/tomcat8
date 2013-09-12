@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,7 +39,7 @@ import org.apache.tomcat.util.modeler.Registry;
  * <code>org.apache.catalina.users.MemoryUserDatabase</code> component.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: MemoryUserDatabaseMBean.java 1140070 2011-06-27 09:27:06Z markt $
+ * @version $Id: MemoryUserDatabaseMBean.java 1361761 2012-07-15 19:12:31Z markt $
  */
 
 public class MemoryUserDatabaseMBean extends BaseModelMBean {
@@ -71,34 +71,34 @@ public class MemoryUserDatabaseMBean extends BaseModelMBean {
     /**
      * The configuration information registry for our managed beans.
      */
-    protected Registry registry = MBeanUtils.createRegistry();
+    protected final Registry registry = MBeanUtils.createRegistry();
 
 
     /**
      * The <code>ManagedBean</code> information describing this MBean.
      */
-    protected ManagedBean managed =
+    protected final ManagedBean managed =
         registry.findManagedBean("MemoryUserDatabase");
 
 
     /**
      * The <code>ManagedBean</code> information describing Group MBeans.
      */
-    protected ManagedBean managedGroup =
+    protected final ManagedBean managedGroup =
         registry.findManagedBean("Group");
 
 
     /**
      * The <code>ManagedBean</code> information describing Group MBeans.
      */
-    protected ManagedBean managedRole =
+    protected final ManagedBean managedRole =
         registry.findManagedBean("Role");
 
 
     /**
      * The <code>ManagedBean</code> information describing User MBeans.
      */
-    protected ManagedBean managedUser =
+    protected final ManagedBean managedUser =
         registry.findManagedBean("User");
 
 
@@ -111,7 +111,7 @@ public class MemoryUserDatabaseMBean extends BaseModelMBean {
     public String[] getGroups() {
 
         UserDatabase database = (UserDatabase) this.resource;
-        ArrayList<String> results = new ArrayList<String>();
+        ArrayList<String> results = new ArrayList<>();
         Iterator<Group> groups = database.getGroups();
         while (groups.hasNext()) {
             Group group = groups.next();
@@ -128,7 +128,7 @@ public class MemoryUserDatabaseMBean extends BaseModelMBean {
     public String[] getRoles() {
 
         UserDatabase database = (UserDatabase) this.resource;
-        ArrayList<String> results = new ArrayList<String>();
+        ArrayList<String> results = new ArrayList<>();
         Iterator<Role> roles = database.getRoles();
         while (roles.hasNext()) {
             Role role = roles.next();
@@ -145,7 +145,7 @@ public class MemoryUserDatabaseMBean extends BaseModelMBean {
     public String[] getUsers() {
 
         UserDatabase database = (UserDatabase) this.resource;
-        ArrayList<String> results = new ArrayList<String>();
+        ArrayList<String> results = new ArrayList<>();
         Iterator<User> users = database.getUsers();
         while (users.hasNext()) {
             User user = users.next();

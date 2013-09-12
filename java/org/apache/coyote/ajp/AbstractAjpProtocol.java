@@ -16,19 +16,20 @@
  */
 package org.apache.coyote.ajp;
 
+import javax.servlet.http.HttpUpgradeHandler;
+
 import org.apache.coyote.AbstractProtocol;
 import org.apache.coyote.Processor;
-import org.apache.coyote.http11.upgrade.UpgradeInbound;
 import org.apache.tomcat.util.net.SocketWrapper;
 import org.apache.tomcat.util.res.StringManager;
 
 public abstract class AbstractAjpProtocol extends AbstractProtocol {
-    
+
     /**
      * The string manager for this package.
      */
     protected static final StringManager sm =
-        StringManager.getManager(Constants.Package);
+            StringManager.getManager(Constants.Package);
 
 
     @Override
@@ -40,9 +41,9 @@ public abstract class AbstractAjpProtocol extends AbstractProtocol {
 
     // ------------------------------------------------- AJP specific properties
     // ------------------------------------------ managed in the ProtocolHandler
-    
+
     /**
-     * Should authentication be done in the native webserver layer, 
+     * Should authentication be done in the native webserver layer,
      * or in the Servlet container ?
      */
     protected boolean tomcatAuthentication = true;
@@ -73,7 +74,7 @@ public abstract class AbstractAjpProtocol extends AbstractProtocol {
             this.packetSize = packetSize;
         }
     }
-    
+
     protected abstract static class AbstractAjpConnectionHandler<S,P extends AbstractAjpProcessor<S>>
             extends AbstractConnectionHandler<S, P> {
 
@@ -86,13 +87,12 @@ public abstract class AbstractAjpProtocol extends AbstractProtocol {
         protected void longPoll(SocketWrapper<S> socket,
                 Processor<S> processor) {
             // Same requirements for all AJP connectors
-            connections.put(socket.getSocket(), processor);
             socket.setAsync(true);
         }
 
         @Override
         protected P createUpgradeProcessor(SocketWrapper<S> socket,
-                UpgradeInbound inbound) {
+                HttpUpgradeHandler httpUpgradeHandler) {
             // TODO should fail - throw IOE
             return null;
         }

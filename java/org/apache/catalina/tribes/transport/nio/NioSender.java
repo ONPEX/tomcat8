@@ -62,8 +62,8 @@ public class NioSender extends AbstractSender {
      */
     protected ByteBuffer readbuf = null;
     protected ByteBuffer writebuf = null;
-    protected byte[] current = null;
-    protected XByteBuffer ackbuf = new XByteBuffer(128,true);
+    protected volatile byte[] current = null;
+    protected final XByteBuffer ackbuf = new XByteBuffer(128,true);
     protected int remaining = 0;
     protected boolean complete;
 
@@ -97,7 +97,7 @@ public class NioSender extends AbstractSender {
                 return false;
             }//end if
         } else if ( key.isWritable() ) {
-            boolean writecomplete = write(key);
+            boolean writecomplete = write();
             if ( writecomplete ) {
                 //we are completed, should we read an ack?
                 if ( waitForAck ) {
@@ -107,7 +107,7 @@ public class NioSender extends AbstractSender {
                     //if not, we are ready, setMessage will reregister us for another write interest
                     //do a health check, we have no way of verify a disconnected
                     //socket since we don't register for OP_READ on waitForAck=false
-                    read(key);//this causes overhead
+                    read();//this causes overhead
                     setRequestCount(getRequestCount()+1);
                     return true;
                 }
@@ -116,7 +116,7 @@ public class NioSender extends AbstractSender {
                 key.interestOps(key.interestOps()|SelectionKey.OP_WRITE);
             }//end if
         } else if ( key.isReadable() ) {
-            boolean readcomplete = read(key);
+            boolean readcomplete = read();
             if ( readcomplete ) {
                 setRequestCount(getRequestCount()+1);
                 return true;
@@ -163,7 +163,8 @@ public class NioSender extends AbstractSender {
     }
 
 
-    protected boolean read(SelectionKey key) throws IOException {
+
+    protected boolean read() throws IOException {
         //if there is no message here, we are done
         if ( current == null ) return true;
         int read = isUdpBased()?dataChannel.read(readbuf) : socketChannel.read(readbuf);
@@ -186,7 +187,7 @@ public class NioSender extends AbstractSender {
     }
 
 
-    protected boolean write(SelectionKey key) throws IOException {
+    protected boolean write() throws IOException {
         if ( (!isConnected()) || (this.socketChannel==null && this.dataChannel==null)) {
             throw new IOException("NioSender is not connected, this should not occur.");
         }
@@ -239,7 +240,7 @@ public class NioSender extends AbstractSender {
             dataChannel.connect(daddr);
             completeConnect();
             dataChannel.register(getSelector(),SelectionKey.OP_WRITE, this);
-            
+
         } else {
             InetSocketAddress addr = new InetSocketAddress(getAddress(),getPort());
             if ( socketChannel != null ) throw new IOException("Socket channel has already been established. Connection might be in progress.");
@@ -265,27 +266,43 @@ public class NioSender extends AbstractSender {
         try {
             connecting = false;
             setConnected(false);
-            if ( socketChannel != null ) {
+            if (socketChannel != null) {
                 try {
-                    try {socketChannel.socket().close();}catch ( Exception x){}
+                    try {
+                        socketChannel.socket().close();
+                    } catch (Exception x) {
+                        // Ignore
+                    }
                     //error free close, all the way
                     //try {socket.shutdownOutput();}catch ( Exception x){}
                     //try {socket.shutdownInput();}catch ( Exception x){}
                     //try {socket.close();}catch ( Exception x){}
-                    try {socketChannel.close();}catch ( Exception x){}
-                }finally {
+                    try {
+                        socketChannel.close();
+                    } catch (Exception x) {
+                        // Ignore
+                    }
+                } finally {
                     socketChannel = null;
                 }
             }
-            if ( dataChannel != null ) {
+            if (dataChannel != null) {
                 try {
-                    try {dataChannel.socket().close();}catch ( Exception x){}
+                    try {
+                        dataChannel.socket().close();
+                    } catch (Exception x) {
+                        // Ignore
+                    }
                     //error free close, all the way
                     //try {socket.shutdownOutput();}catch ( Exception x){}
                     //try {socket.shutdownInput();}catch ( Exception x){}
                     //try {socket.close();}catch ( Exception x){}
-                    try {dataChannel.close();}catch ( Exception x){}
-                }finally {
+                    try {
+                        dataChannel.close();
+                    } catch (Exception x) {
+                        // Ignore
+                    }
+                } finally {
                     dataChannel = null;
                 }
             }
@@ -330,38 +347,41 @@ public class NioSender extends AbstractSender {
     * @throws IOException
     * TODO Implement this org.apache.catalina.tribes.transport.IDataSender method
     */
-   public synchronized void setMessage(byte[] data) throws IOException {
-       setMessage(data,0,data.length);
-   }
+    public void setMessage(byte[] data) throws IOException {
+        setMessage(data,0,data.length);
+    }
 
-   public synchronized void setMessage(byte[] data,int offset, int length) throws IOException {
-       if ( data != null ) {
-           current = data;
-           remaining = length;
-           ackbuf.clear();
-           if ( writebuf != null ) writebuf.clear();
-           else writebuf = getBuffer(length);
-           if ( writebuf.capacity() < length ) writebuf = getBuffer(length);
-           
-           //TODO use ByteBuffer.wrap to avoid copying the data.
-           writebuf.put(data,offset,length);
-           //writebuf.rewind();
-           //set the limit so that we don't write non wanted data
-           //writebuf.limit(length);
-           writebuf.flip();
-           if (isConnected()) {
-               if (isUdpBased())
-                   dataChannel.register(getSelector(), SelectionKey.OP_WRITE, this);
-               else
-                   socketChannel.register(getSelector(), SelectionKey.OP_WRITE, this);
-           }
-       }
-   }
+    public void setMessage(byte[] data,int offset, int length) throws IOException {
+        if (data != null) {
+            synchronized (this) {
+                current = data;
+                remaining = length;
+                ackbuf.clear();
+                if (writebuf != null) {
+                    writebuf.clear();
+                } else {
+                    writebuf = getBuffer(length);
+                }
+                if (writebuf.capacity() < length) {
+                    writebuf = getBuffer(length);
+                }
 
-   public byte[] getMessage() {
-       return current;
-   }
+                // TODO use ByteBuffer.wrap to avoid copying the data.
+                writebuf.put(data,offset,length);
+                writebuf.flip();
+                if (isConnected()) {
+                    if (isUdpBased())
+                        dataChannel.register(getSelector(), SelectionKey.OP_WRITE, this);
+                    else
+                        socketChannel.register(getSelector(), SelectionKey.OP_WRITE, this);
+                }
+            }
+        }
+    }
 
+    public byte[] getMessage() {
+        return current;
+    }
 
 
     public boolean isComplete() {

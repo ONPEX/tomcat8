@@ -14,10 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.catalina.authenticator;
-
 
 import java.io.IOException;
 import java.security.Principal;
@@ -26,44 +23,15 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.catalina.Session;
 import org.apache.catalina.connector.Request;
-import org.apache.catalina.deploy.LoginConfig;
-
-
 
 /**
  * An <b>Authenticator</b> and <b>Valve</b> implementation that checks
  * only security constraints not involving user authentication.
  *
  * @author Craig R. McClanahan
- * @version $Id: NonLoginAuthenticator.java 1297906 2012-03-07 09:22:09Z kfujino $
+ * @version $Id: NonLoginAuthenticator.java 1297904 2012-03-07 09:20:48Z kfujino $
  */
-
-public final class NonLoginAuthenticator
-    extends AuthenticatorBase {
-
-
-    // ----------------------------------------------------- Instance Variables
-
-
-    /**
-     * Descriptive information about this implementation.
-     */
-    private static final String info =
-        "org.apache.catalina.authenticator.NonLoginAuthenticator/1.0";
-
-
-    // ------------------------------------------------------------- Properties
-
-
-    /**
-     * Return descriptive information about this Valve implementation.
-     */
-    @Override
-    public String getInfo() {
-
-        return (info);
-
-    }
+public final class NonLoginAuthenticator extends AuthenticatorBase {
 
 
     // --------------------------------------------------------- Public Methods
@@ -105,15 +73,11 @@ public final class NonLoginAuthenticator
      *
      * @param request  Request we are processing
      * @param response Response we are creating
-     * @param config   Login configuration describing how authentication
-     *                 should be performed
      * @return boolean to indicate whether the user is authenticated
      * @exception IOException if an input/output error occurs
      */
     @Override
-    public boolean authenticate(Request request,
-                                HttpServletResponse response,
-                                LoginConfig config)
+    public boolean authenticate(Request request, HttpServletResponse response)
         throws IOException {
 
         Principal principal = request.getPrincipal();

@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,41 +46,42 @@ import org.apache.jasper.compiler.Localizer;
 
 /**
  * Implementation of a JSP Context Wrapper.
- * 
+ *
  * The JSP Context Wrapper is a JspContext created and maintained by a tag
  * handler implementation. It wraps the Invoking JSP Context, that is, the
  * JspContext instance passed to the tag handler by the invoking page via
  * setJspContext().
- * 
+ *
  * @author Kin-man Chung
  * @author Jan Luehe
  * @author Jacob Hookom
  */
+@SuppressWarnings("deprecation") // Have to support old JSP EL API
 public class JspContextWrapper extends PageContext implements VariableResolver {
 
     // Invoking JSP context
-    private PageContext invokingJspCtxt;
+    private final PageContext invokingJspCtxt;
 
-    private transient HashMap<String, Object> pageAttributes;
+    private final transient HashMap<String, Object> pageAttributes;
 
     // ArrayList of NESTED scripting variables
-    private ArrayList<String> nestedVars;
+    private final ArrayList<String> nestedVars;
 
     // ArrayList of AT_BEGIN scripting variables
-    private ArrayList<String> atBeginVars;
+    private final ArrayList<String> atBeginVars;
 
     // ArrayList of AT_END scripting variables
-    private ArrayList<String> atEndVars;
+    private final ArrayList<String> atEndVars;
 
-    private Map<String,String> aliases;
+    private final Map<String,String> aliases;
 
-    private HashMap<String, Object> originalNestedVars;
+    private final HashMap<String, Object> originalNestedVars;
 
     private ServletContext servletContext = null;
 
     private ELContext elContext = null;
 
-    private PageContext rootJspCtxt;
+    private final PageContext rootJspCtxt;
 
     public JspContextWrapper(JspContext jspContext,
             ArrayList<String> nestedVars, ArrayList<String> atBeginVars,
@@ -95,11 +96,13 @@ public class JspContextWrapper extends PageContext implements VariableResolver {
         this.nestedVars = nestedVars;
         this.atBeginVars = atBeginVars;
         this.atEndVars = atEndVars;
-        this.pageAttributes = new HashMap<String, Object>(16);
+        this.pageAttributes = new HashMap<>(16);
         this.aliases = aliases;
 
         if (nestedVars != null) {
-            this.originalNestedVars = new HashMap<String, Object>(nestedVars.size());
+            this.originalNestedVars = new HashMap<>(nestedVars.size());
+        } else {
+            this.originalNestedVars = null;
         }
         syncBeginTagFile();
     }
@@ -394,7 +397,7 @@ public class JspContextWrapper extends PageContext implements VariableResolver {
     /**
      * Copies the variables of the given scope from the virtual page scope of
      * this JSP context wrapper to the page scope of the invoking JSP context.
-     * 
+     *
      * @param scope
      *            variable scope (one of NESTED, AT_BEGIN, or AT_END)
      */
@@ -471,7 +474,7 @@ public class JspContextWrapper extends PageContext implements VariableResolver {
     /**
      * Checks to see if the given variable name is used as an alias, and if so,
      * returns the variable name for which it is used as an alias.
-     * 
+     *
      * @param varName
      *            The variable name to check
      * @return The variable name for which varName is used as an alias, or
@@ -494,12 +497,12 @@ public class JspContextWrapper extends PageContext implements VariableResolver {
     @Override
     public ELContext getELContext() {
         // instead decorate!!!
-        
+
         if (elContext == null) {
             elContext = rootJspCtxt.getELContext();
         }
         return elContext;
-        
+
         /*
         if (this.elContext != null) {
             JspFactory jspFact = JspFactory.getDefaultFactory();

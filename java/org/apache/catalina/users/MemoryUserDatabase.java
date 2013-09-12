@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,7 +43,7 @@ import org.xml.sax.Attributes;
  * and uses a specified XML file for its persistent storage.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: MemoryUserDatabase.java 1301272 2012-03-15 23:41:08Z markt $
+ * @version $Id: MemoryUserDatabase.java 1370479 2012-08-07 19:59:00Z markt $
  * @since 4.1
  */
 public class MemoryUserDatabase implements UserDatabase {
@@ -79,7 +79,7 @@ public class MemoryUserDatabase implements UserDatabase {
      * The set of {@link Group}s defined in this database, keyed by
      * group name.
      */
-    protected final HashMap<String,Group> groups = new HashMap<String,Group>();
+    protected final HashMap<String,Group> groups = new HashMap<>();
 
 
     /**
@@ -118,7 +118,7 @@ public class MemoryUserDatabase implements UserDatabase {
      * The set of {@link Role}s defined in this database, keyed by
      * role name.
      */
-    protected final HashMap<String,Role> roles = new HashMap<String,Role>();
+    protected final HashMap<String,Role> roles = new HashMap<>();
 
 
     /**
@@ -132,7 +132,7 @@ public class MemoryUserDatabase implements UserDatabase {
      * The set of {@link User}s defined in this database, keyed by
      * user name.
      */
-    protected final HashMap<String,User> users = new HashMap<String,User>();
+    protected final HashMap<String,User> users = new HashMap<>();
 
 
     // ------------------------------------------------------------- Properties
@@ -506,9 +506,8 @@ public class MemoryUserDatabase implements UserDatabase {
 
 
     /**
-     * Check for permissions to save this user database
-     * to persistent storage location
-     *
+     * Check for permissions to save this user database to persistent storage
+     * location.
      */
     public boolean isWriteable() {
 
@@ -519,7 +518,6 @@ public class MemoryUserDatabase implements UserDatabase {
         }
         File dir = file.getParentFile();
         return dir.exists() && dir.isDirectory() && dir.canWrite();
-
     }
 
 
@@ -649,23 +647,7 @@ public class MemoryUserDatabase implements UserDatabase {
         sb.append(this.users.size());
         sb.append("]");
         return (sb.toString());
-
     }
-
-
-    // -------------------------------------------------------- Package Methods
-
-
-    /**
-     * Return the <code>StringManager</code> for use in looking up messages.
-     */
-    StringManager getStringManager() {
-
-        return (sm);
-
-    }
-
-
 }
 
 
@@ -711,7 +693,7 @@ class MemoryGroupCreationFactory extends AbstractObjectCreationFactory {
         return (group);
     }
 
-    private MemoryUserDatabase database = null;
+    private final MemoryUserDatabase database;
 }
 
 
@@ -735,7 +717,7 @@ class MemoryRoleCreationFactory extends AbstractObjectCreationFactory {
         return (role);
     }
 
-    private MemoryUserDatabase database = null;
+    private final MemoryUserDatabase database;
 }
 
 
@@ -805,5 +787,5 @@ class MemoryUserCreationFactory extends AbstractObjectCreationFactory {
         return (user);
     }
 
-    private MemoryUserDatabase database = null;
+    private final MemoryUserDatabase database;
 }

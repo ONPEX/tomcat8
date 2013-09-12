@@ -5,15 +5,15 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */ 
+ */
 
 package org.apache.juli.logging;
 
@@ -24,7 +24,7 @@ package org.apache.juli.logging;
  * factory methods.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: LogConfigurationException.java 1038846 2010-11-24 22:08:38Z markt $
+ * @version $Id: LogConfigurationException.java 1382521 2012-09-09 15:58:04Z markt $
  */
 
 public class LogConfigurationException extends RuntimeException {
@@ -58,7 +58,7 @@ public class LogConfigurationException extends RuntimeException {
      * @param cause The underlying cause
      */
     public LogConfigurationException(Throwable cause) {
-        this( ((cause == null) ? null : cause.toString()), cause);
+        super(cause);
     }
 
 
@@ -69,28 +69,6 @@ public class LogConfigurationException extends RuntimeException {
      * @param cause The underlying cause
      */
     public LogConfigurationException(String message, Throwable cause) {
-
-        super(message);
-        this.cause = cause; // Two-argument version requires JDK 1.4 or later
-
+        super(message, cause);
     }
-
-
-    /**
-     * The underlying cause of this exception.
-     */
-    protected Throwable cause = null;
-
-
-    /**
-     * Return the underlying cause of this exception (if any).
-     */
-    @Override
-    public Throwable getCause() {
-
-        return (this.cause);
-
-    }
-
-
 }

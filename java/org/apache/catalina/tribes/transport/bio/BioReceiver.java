@@ -30,7 +30,7 @@ import org.apache.juli.logging.LogFactory;
 /**
  *
  * @author Filip Hanik
- * @version $Id: BioReceiver.java 1358615 2012-07-07 18:39:48Z markt $
+ * @version $Id: BioReceiver.java 1358612 2012-07-07 18:30:50Z markt $
  */
 public class BioReceiver extends ReceiverBase implements Runnable {
 
@@ -64,12 +64,12 @@ public class BioReceiver extends ReceiverBase implements Runnable {
             else throw new IOException(x.getMessage());
         }
     }
-    
+
     @Override
     public AbstractRxTask createRxTask() {
         return getReplicationThread();
     }
-    
+
     protected BioReplicationTask getReplicationThread() {
         BioReplicationTask result = new BioReplicationTask(this);
         result.setOptions(getWorkerThreadOptions());
@@ -108,7 +108,7 @@ public class BioReceiver extends ReceiverBase implements Runnable {
             log.error("Unable to run replication listener.", x);
         }
     }
-    
+
     public void listen() throws Exception {
         if (doListen()) {
             log.warn("ServerSocket already started");
@@ -149,6 +149,6 @@ public class BioReceiver extends ReceiverBase implements Runnable {
             getExecutor().execute(task);
         }//while
     }
-    
+
 
 }

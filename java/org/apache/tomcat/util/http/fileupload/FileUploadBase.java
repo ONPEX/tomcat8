@@ -18,7 +18,7 @@ package org.apache.tomcat.util.http.fileupload;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,14 +47,11 @@ import org.apache.tomcat.util.http.fileupload.util.Streams;
  * used to create them; a given part may be in memory, on disk, or somewhere
  * else.</p>
  *
- * @version $Id: FileUploadBase.java 1458566 2013-03-19 23:14:59Z markt $
+ * @version $Id: FileUploadBase.java 1508214 2013-07-29 22:17:59Z markt $
  */
 public abstract class FileUploadBase {
 
     // ---------------------------------------------------------- Class methods
-
-    private static final Charset CHARSET_ISO_8859_1 =
-        Charset.forName("ISO-8859-1");
 
     /**
      * <p>Utility method that determines whether the request contains multipart
@@ -279,7 +276,7 @@ public abstract class FileUploadBase {
      */
     public List<FileItem> parseRequest(RequestContext ctx)
             throws FileUploadException {
-        List<FileItem> items = new ArrayList<FileItem>();
+        List<FileItem> items = new ArrayList<>();
         boolean successful = false;
         try {
             FileItemIterator iter = getItemIterator(ctx);
@@ -340,15 +337,14 @@ public abstract class FileUploadBase {
     public Map<String, List<FileItem>> parseParameterMap(RequestContext ctx)
             throws FileUploadException {
         final List<FileItem> items = parseRequest(ctx);
-        final Map<String, List<FileItem>> itemsMap =
-                new HashMap<String, List<FileItem>>(items.size());
+        final Map<String, List<FileItem>> itemsMap = new HashMap<>(items.size());
 
         for (FileItem fileItem : items) {
             String fieldName = fileItem.getFieldName();
             List<FileItem> mappedItems = itemsMap.get(fieldName);
 
             if (mappedItems == null) {
-                mappedItems = new ArrayList<FileItem>();
+                mappedItems = new ArrayList<>();
                 itemsMap.put(fieldName, mappedItems);
             }
 
@@ -380,7 +376,7 @@ public abstract class FileUploadBase {
             return null;
         }
         byte[] boundary;
-        boundary = boundaryStr.getBytes(CHARSET_ISO_8859_1);
+        boundary = boundaryStr.getBytes(StandardCharsets.ISO_8859_1);
         return boundary;
     }
 

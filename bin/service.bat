@@ -26,7 +26,7 @@ rem
 rem name        (optional) If the second argument is present it is considered
 rem                        to be new service name
 rem
-rem $Id: service.bat 1000718 2010-09-24 06:00:00Z mturk $
+rem $Id: service.bat 1302376 2012-03-19 11:16:16Z markt $
 rem ---------------------------------------------------------------------------
 
 set "SELF=%~dp0%service.bat"

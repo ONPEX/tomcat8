@@ -20,12 +20,12 @@ package org.apache.catalina.ssi;
 import java.io.PrintWriter;
 /**
  * Implements the Server-side #exec command
- * 
+ *
  * @author Bip Thelin
  * @author Paul Speed
  * @author Dan Sandberg
  * @author David Becker
- * @version $Id: SSIConfig.java 1138121 2011-06-21 18:32:41Z markt $
+ * @version $Id: SSIConfig.java 1187798 2011-10-22 21:14:59Z markt $
  */
 public final class SSIConfig implements SSICommand {
     /**

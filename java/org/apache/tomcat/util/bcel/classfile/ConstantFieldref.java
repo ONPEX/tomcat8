@@ -22,10 +22,10 @@ import java.io.IOException;
 
 import org.apache.tomcat.util.bcel.Constants;
 
-/** 
+/**
  * This class represents a constant pool reference to a field.
  *
- * @version $Id: ConstantFieldref.java 1181133 2011-10-10 18:49:14Z markt $
+ * @version $Id: ConstantFieldref.java 1187781 2011-10-22 21:02:40Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */
 public final class ConstantFieldref extends ConstantCP {

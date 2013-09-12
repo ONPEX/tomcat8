@@ -25,7 +25,7 @@ package org.apache.catalina;
  * operation of the application containing this component.
  *
  * @author Craig R. McClanahan
- * @version $Id: LifecycleException.java 1200160 2011-11-10 05:35:13Z kkolinko $
+ * @version $Id: LifecycleException.java 1187801 2011-10-22 21:16:40Z markt $
  */
 
 public final class LifecycleException extends Exception {

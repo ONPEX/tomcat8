@@ -27,7 +27,7 @@ import org.apache.el.util.Validation;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: AstDotSuffix.java 1061787 2011-01-21 12:39:15Z markt $
+ * @version $Id: AstDotSuffix.java 1187802 2011-10-22 21:17:12Z markt $
  */
 public final class AstDotSuffix extends SimpleNode {
     public AstDotSuffix(int id) {
@@ -39,7 +39,7 @@ public final class AstDotSuffix extends SimpleNode {
             throws ELException {
         return this.image;
     }
-    
+
     @Override
     public void setImage(String image) {
         if (!Validation.isIdentifier(image)) {

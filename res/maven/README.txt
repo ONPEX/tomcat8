@@ -15,7 +15,7 @@
   limitations under the License.
 ================================================================================
 
-$Id: README.txt 1350902 2012-06-16 10:10:40Z kkolinko $
+$Id: README.txt 1234158 2012-01-20 21:44:13Z markt $
 
 General preparations before any publishing:
 1 - Download Maven Ant Tasks (version 2.1.0 is known to work) and place it in

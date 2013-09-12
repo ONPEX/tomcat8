@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,7 +27,6 @@ import javax.el.ELException;
 import javax.el.MethodExpression;
 import javax.el.MethodInfo;
 
-import org.apache.el.lang.ELSupport;
 import org.apache.el.util.ReflectionUtil;
 
 
@@ -52,16 +51,24 @@ public class MethodExpressionLiteral extends MethodExpression implements Externa
 
     @Override
     public MethodInfo getMethodInfo(ELContext context) throws ELException {
-        return new MethodInfo(this.expr, this.expectedType, this.paramTypes);
+        context.notifyBeforeEvaluation(getExpressionString());
+        MethodInfo result =
+                new MethodInfo(this.expr, this.expectedType, this.paramTypes);
+        context.notifyAfterEvaluation(getExpressionString());
+        return result;
     }
 
     @Override
     public Object invoke(ELContext context, Object[] params) throws ELException {
+        context.notifyBeforeEvaluation(getExpressionString());
+        Object result;
         if (this.expectedType != null) {
-            return ELSupport.coerceToType(this.expr, this.expectedType);
+            result = context.convertToType(this.expr, this.expectedType);
         } else {
-            return this.expr;
+            result = this.expr;
         }
+        context.notifyAfterEvaluation(getExpressionString());
+        return result;
     }
 
     @Override

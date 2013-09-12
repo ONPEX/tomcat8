@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,17 +30,17 @@ import org.apache.catalina.tribes.group.InterceptorPayload;
  * @author Rainer Jung
  * @author Peter Rossbach
  * @author Filip Hanik
- * @version $Id: LinkObject.java 939305 2010-04-29 13:43:39Z kkolinko $
+ * @version $Id: LinkObject.java 1370384 2012-08-07 17:41:06Z markt $
 
  */
 
 public class LinkObject {
 
-    private ChannelMessage msg;
+    private final ChannelMessage msg;
     private LinkObject next;
-    private byte[] key ;
-    private Member[] destination;
-    private InterceptorPayload payload;
+    private final byte[] key ;
+    private final Member[] destination;
+    private final InterceptorPayload payload;
 
     /**
      * Construct a new element from the data object.
@@ -73,7 +73,7 @@ public class LinkObject {
     public LinkObject next() {
         return next;
     }
-    
+
     public void setNext(LinkObject next) {
         this.next = next;
     }

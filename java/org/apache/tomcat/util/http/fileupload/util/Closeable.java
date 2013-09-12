@@ -21,7 +21,7 @@ import java.io.IOException;
 /**
  * Interface of an object, which may be closed.
  *
- * @version $Id: Closeable.java 1456935 2013-03-15 12:47:29Z markt $
+ * @version $Id: Closeable.java 1456904 2013-03-15 11:36:53Z markt $
  */
 public interface Closeable {
 

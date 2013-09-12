@@ -89,7 +89,7 @@ class Generator {
     /* System property that controls if the requirement to have the object
      * used in jsp:getProperty action to be previously "introduced"
      * to the JSP processor (see JSP.5.3) is enforced.
-     */ 
+     */
     private static final boolean STRICT_GET_PROPERTY = Boolean.valueOf(
             System.getProperty(
                     "org.apache.jasper.compiler.Generator.STRICT_GET_PROPERTY",
@@ -104,7 +104,7 @@ class Generator {
     private final ErrorDispatcher err;
 
     private final BeanRepository beanInfo;
-    
+
     private final Set<String> varInfoNames;
 
     private final JspCompilationContext ctxt;
@@ -122,7 +122,7 @@ class Generator {
     private final Vector<String> tagHandlerPoolNames;
 
     private GenBuffer charArrayBuffer;
-    
+
     private final DateFormat timestampFormat;
 
     private final ELInterpreter elInterpreter;
@@ -299,7 +299,7 @@ class Generator {
 
                 if (!n.implementsSimpleTag()) {
                     String name = createTagHandlerPoolName(n.getPrefix(), n
-                            .getLocalName(), n.getAttributes(), 
+                            .getLocalName(), n.getAttributes(),
                             n.getNamedAttributeNodes(), n.hasEmptyBody());
                     n.setTagHandlerPoolName(name);
                     if (!names.contains(name)) {
@@ -359,7 +359,7 @@ class Generator {
             private final Vector<String> vars;
 
             ScriptingVarVisitor() {
-                vars = new Vector<String>();
+                vars = new Vector<>();
             }
 
             @Override
@@ -748,7 +748,7 @@ class Generator {
     /**
      * A visitor that generates codes for the elements in the page.
      */
-    class GenerateVisitor extends Node.Visitor {
+    private class GenerateVisitor extends Node.Visitor {
 
         /*
          * Hashtable containing introspection information on tag handlers:
@@ -798,10 +798,9 @@ class Generator {
             this.methodsBuffered = methodsBuffered;
             this.fragmentHelperClass = fragmentHelperClass;
             methodNesting = 0;
-            handlerInfos =
-                new Hashtable<String,Hashtable<String,TagHandlerInfo>>();
-            tagVarNumbers = new Hashtable<String,Integer>();
-            textMap = new HashMap<String,String>();
+            handlerInfos = new Hashtable<>();
+            tagVarNumbers = new Hashtable<>();
+            textMap = new HashMap<>();
         }
 
         /**
@@ -821,7 +820,7 @@ class Generator {
          *            attributes that aren't EL expressions)
          */
         private String attributeValue(Node.JspAttribute attr, boolean encode,
-                Class<?> expectedType) {
+                Class<?> expectedType, boolean isXml) {
             String v = attr.getValue();
             if (!attr.isNamedAttribute() && (v == null))
                 return "";
@@ -834,7 +833,7 @@ class Generator {
                 return v;
             } else if (attr.isELInterpreterInput()) {
                 v = elInterpreter.interpreterCall(ctxt, this.isTagFile, v,
-                        expectedType, attr.getEL().getMapName(), false);
+                        expectedType, attr.getEL().getMapName(), isXml);
                 if (encode) {
                     return "org.apache.jasper.runtime.JspRuntimeLibrary.URLEncode("
                             + v + ", request.getCharacterEncoding())";
@@ -863,7 +862,7 @@ class Generator {
                 throws JasperException {
 
             class ParamVisitor extends Node.Visitor {
-                String separator;
+                private String separator;
 
                 ParamVisitor(String separator) {
                     this.separator = separator;
@@ -879,7 +878,8 @@ class Generator {
                             + "URLEncode(" + quote(n.getTextAttribute("name"))
                             + ", request.getCharacterEncoding())");
                     out.print("+ \"=\" + ");
-                    out.print(attributeValue(n.getValue(), true, String.class));
+                    out.print(attributeValue(n.getValue(), true, String.class,
+                            n.getRoot().isXmlSyntax()));
 
                     // The separator is '&' after the second use
                     separator = "\"&\"";
@@ -950,7 +950,8 @@ class Generator {
                 pageParam = generateNamedAttributeValue(page
                         .getNamedAttributeNode());
             } else {
-                pageParam = attributeValue(page, false, String.class);
+                pageParam = attributeValue(page, false, String.class,
+                        n.getRoot().isXmlSyntax());
             }
 
             // If any of the params have their values specified by
@@ -1036,7 +1037,8 @@ class Generator {
                 pageParam = generateNamedAttributeValue(page
                         .getNamedAttributeNode());
             } else {
-                pageParam = attributeValue(page, false, String.class);
+                pageParam = attributeValue(page, false, String.class,
+                        n.getRoot().isXmlSyntax());
             }
 
             // If any of the params have their values specified by
@@ -1103,7 +1105,7 @@ class Generator {
                 msg.append(name);
                 msg.append(
                         "'. Name was not previously introduced as per JSP.5.3");
-                
+
                 throw new JasperException(msg.toString());
             }
 
@@ -1143,7 +1145,8 @@ class Generator {
                         + "_jspx_page_context.findAttribute(\""
                         + name
                         + "\"), \"" + property + "\",");
-                out.print(attributeValue(value, false, null));
+                out.print(attributeValue(value, false, null,
+                        n.getRoot().isXmlSyntax()));
                 out.println(");");
             } else if (value.isELInterpreterInput()) {
                 // We've got to resolve the very call to the interpreter
@@ -1188,7 +1191,8 @@ class Generator {
                         + "_jspx_page_context.findAttribute(\""
                         + name
                         + "\"), \"" + property + "\", ");
-                out.print(attributeValue(value, false, null));
+                out.print(attributeValue(value, false, null,
+                        n.getRoot().isXmlSyntax()));
                 out.println(", null, null, false);");
             }
 
@@ -1320,7 +1324,7 @@ class Generator {
                                     .getNamedAttributeNode());
                         } else {
                             binaryName = attributeValue(beanName, false,
-                                    String.class);
+                                    String.class, n.getRoot().isXmlSyntax());
                         }
                     } else {
                         // Implies klass is not null
@@ -1429,20 +1433,24 @@ class Generator {
                         // We want something of the form
                         // out.println( "<param name=\"blah\"
                         // value=\"" + ... + "\">" );
-                        out.printil("out.write( \"<param name=\\\""
-                                + escape(name)
-                                + "\\\" value=\\\"\" + "
-                                + attributeValue(n.getValue(), false,
-                                        String.class) + " + \"\\\">\" );");
+                        out.printil("out.write( \"<param name=\\\"" +
+                                escape(name) +
+                                "\\\" value=\\\"\" + " +
+                                attributeValue(n.getValue(), false,
+                                        String.class,
+                                        n.getRoot().isXmlSyntax()) +
+                                " + \"\\\">\" );");
                         out.printil("out.write(\"\\n\");");
                     } else {
                         // We want something of the form
                         // out.print( " blah=\"" + ... + "\"" );
-                        out.printil("out.write( \" "
-                                + escape(name)
-                                + "=\\\"\" + "
-                                + attributeValue(n.getValue(), false,
-                                        String.class) + " + \"\\\"\" );");
+                        out.printil("out.write( \" " +
+                                escape(name) +
+                                "=\\\"\" + " +
+                                attributeValue(n.getValue(), false,
+                                        String.class,
+                                        n.getRoot().isXmlSyntax()) +
+                                " + \"\\\"\" );");
                     }
 
                     n.setEndJavaLine(out.getJavaLine());
@@ -1469,7 +1477,8 @@ class Generator {
                     widthStr = generateNamedAttributeValue(width
                             .getNamedAttributeNode());
                 } else {
-                    widthStr = attributeValue(width, false, String.class);
+                    widthStr = attributeValue(width, false, String.class,
+                            n.getRoot().isXmlSyntax());
                 }
             }
 
@@ -1479,7 +1488,8 @@ class Generator {
                     heightStr = generateNamedAttributeValue(height
                             .getNamedAttributeNode());
                 } else {
-                    heightStr = attributeValue(height, false, String.class);
+                    heightStr = attributeValue(height, false, String.class,
+                            n.getRoot().isXmlSyntax());
                 }
             }
 
@@ -1745,8 +1755,8 @@ class Generator {
                     }
                 }
             }
-            
-            
+
+
             if (n.implementsSimpleTag()) {
                 generateCustomDoTag(n, handlerInfo, tagHandlerVar);
             } else {
@@ -1797,7 +1807,7 @@ class Generator {
                 // restore previous writer
                 out = outSave;
             }
-            
+
         }
 
         private static final String DOUBLE_QUOTE = "\\\"";
@@ -1834,8 +1844,9 @@ class Generator {
                     out.print("=");
                     if (jspAttrs[i].isELInterpreterInput()) {
                         out.print("\\\"\" + ");
-                        out.print(attributeValue(jspAttrs[i], false,
-                                String.class));
+                        String debug = attributeValue(jspAttrs[i], false,
+                                String.class, n.getRoot().isXmlSyntax());
+                        out.print(debug);
                         out.print(" + \"\\\"");
                     } else {
                         out.print(DOUBLE_QUOTE);
@@ -1871,7 +1882,7 @@ class Generator {
 
             // Compute attribute value string for XML-style and named
             // attributes
-            Hashtable<String,String> map = new Hashtable<String,String>();
+            Hashtable<String,String> map = new Hashtable<>();
             Node.JspAttribute[] attrs = n.getJspAttributes();
             for (int i = 0; attrs != null && i < attrs.length; i++) {
                 String value = null;
@@ -1883,7 +1894,8 @@ class Generator {
                     if (omitAttr == null) {
                         omit = "false";
                     } else {
-                        omit = attributeValue(omitAttr, false, boolean.class);
+                        omit = attributeValue(omitAttr, false, boolean.class,
+                                n.getRoot().isXmlSyntax());
                         if ("true".equals(omit)) {
                             continue;
                         }
@@ -1899,7 +1911,8 @@ class Generator {
                                 " + \"\\\"\")";
                     }
                 } else {
-                    value = attributeValue(attrs[i], false, Object.class);
+                    value = attributeValue(attrs[i], false, Object.class,
+                            n.getRoot().isXmlSyntax());
                     nvp = " + \" " + attrs[i].getName() + "=\\\"\" + " +
                             value + " + \"\\\"\"";
                 }
@@ -1909,7 +1922,7 @@ class Generator {
             // Write begin tag, using XML-style 'name' attribute as the
             // element name
             String elemName = attributeValue(n.getNameAttribute(), false,
-                    String.class);
+                    String.class, n.getRoot().isXmlSyntax());
             out.printin("out.write(\"<\"");
             out.print(" + " + elemName);
 
@@ -1987,7 +2000,7 @@ class Generator {
                     charArrayBuffer = new GenBuffer();
                     caOut = charArrayBuffer.getOut();
                     caOut.pushIndent();
-                    textMap = new HashMap<String,String>();
+                    textMap = new HashMap<>();
                 } else {
                     caOut = charArrayBuffer.getOut();
                 }
@@ -2014,11 +2027,11 @@ class Generator {
                         caOut.print(quote(output));
                         caOut.println(".toCharArray();");
                     }
-    
+
                     n.setBeginJavaLine(out.getJavaLine());
                     out.printil("out.write(" + charArrayName + ");");
                     n.setEndJavaLine(out.getJavaLine());
-                    
+
                     textIndex = textIndex + len;
                 }
                 return;
@@ -2202,8 +2215,7 @@ class Generator {
             Hashtable<String,TagHandlerInfo> handlerInfosByShortName =
                 handlerInfos.get(n.getPrefix());
             if (handlerInfosByShortName == null) {
-                handlerInfosByShortName =
-                    new Hashtable<String,TagHandlerInfo>();
+                handlerInfosByShortName = new Hashtable<>();
                 handlerInfos.put(n.getPrefix(), handlerInfosByShortName);
             }
             TagHandlerInfo handlerInfo =
@@ -3421,7 +3433,7 @@ class Generator {
      */
     Generator(ServletWriter out, Compiler compiler) throws JasperException {
         this.out = out;
-        methodsBuffered = new ArrayList<GenBuffer>();
+        methodsBuffered = new ArrayList<>();
         charArrayBuffer = null;
         err = compiler.getErrorDispatcher();
         ctxt = compiler.getCompilationContext();
@@ -3456,7 +3468,7 @@ class Generator {
         varInfoNames = pageInfo.getVarInfoNames();
         breakAtLF = ctxt.getOptions().getMappedFile();
         if (isPoolingEnabled) {
-            tagHandlerPoolNames = new Vector<String>();
+            tagHandlerPoolNames = new Vector<>();
         } else {
             tagHandlerPoolNames = null;
         }
@@ -3950,8 +3962,8 @@ class Generator {
         TagHandlerInfo(Node n, Class<?> tagHandlerClass,
                 ErrorDispatcher err) throws JasperException {
             this.tagHandlerClass = tagHandlerClass;
-            this.methodMaps = new Hashtable<String, Method>();
-            this.propertyEditorMaps = new Hashtable<String, Class<?>>();
+            this.methodMaps = new Hashtable<>();
+            this.propertyEditorMaps = new Hashtable<>();
 
             try {
                 BeanInfo tagClassInfo = Introspector
@@ -4113,7 +4125,7 @@ class Generator {
         // True if the helper class should be generated.
         private boolean used = false;
 
-        private ArrayList<Fragment> fragments = new ArrayList<Fragment>();
+        private ArrayList<Fragment> fragments = new ArrayList<>();
 
         private String className;
 

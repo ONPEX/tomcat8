@@ -17,10 +17,13 @@
 package org.apache.catalina.core;
 
 import java.io.File;
+import java.util.Collection;
 
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
+import javax.servlet.descriptor.JspConfigDescriptor;
+import javax.servlet.descriptor.JspPropertyGroupDescriptor;
 import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Assert;
@@ -36,7 +39,7 @@ public class TestApplicationContext extends TomcatBaseTest {
     public void testBug53257() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         // app dir is relative to server home
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
@@ -59,7 +62,7 @@ public class TestApplicationContext extends TomcatBaseTest {
     public void testBug53467() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         // app dir is relative to server home
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
@@ -102,7 +105,7 @@ public class TestApplicationContext extends TomcatBaseTest {
     public void testGetJspConfigDescriptor() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         // app dir is relative to server home
         StandardContext standardContext = (StandardContext) tomcat.addWebapp(
                 null, "/test", appDir.getAbsolutePath());
@@ -116,11 +119,38 @@ public class TestApplicationContext extends TomcatBaseTest {
         Assert.assertNotNull(servletContext.getJspConfigDescriptor());
     }
 
+    @Test
+    public void testJspPropertyGroupsAreIsolated() throws Exception {
+        Tomcat tomcat = getTomcatInstance();
+
+        File appDir = new File("test/webapp");
+        // app dir is relative to server home
+        StandardContext standardContext = (StandardContext) tomcat.addWebapp(
+                null, "/test", appDir.getAbsolutePath());
+
+        ServletContext servletContext = standardContext.getServletContext();
+
+        Assert.assertNull(servletContext.getJspConfigDescriptor());
+
+        tomcat.start();
+
+        JspConfigDescriptor jspConfigDescriptor =
+                servletContext.getJspConfigDescriptor();
+        Collection<JspPropertyGroupDescriptor> propertyGroups =
+                jspConfigDescriptor.getJspPropertyGroups();
+        Assert.assertFalse(propertyGroups.isEmpty());
+        propertyGroups.clear();
+
+        jspConfigDescriptor = servletContext.getJspConfigDescriptor();
+        propertyGroups = jspConfigDescriptor.getJspPropertyGroups();
+        Assert.assertFalse(propertyGroups.isEmpty());
+    }
+
 
     private ServletContext getServletContext() {
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         // app dir is relative to server home
         StandardContext standardContext = (StandardContext) tomcat.addWebapp(
                 null, "/test", appDir.getAbsolutePath());

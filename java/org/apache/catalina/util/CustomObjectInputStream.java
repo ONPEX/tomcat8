@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,7 @@ import java.lang.reflect.Proxy;
  *
  * @author Craig R. McClanahan
  * @author Bip Thelin
- * @version $Id: CustomObjectInputStream.java 987920 2010-08-22 15:34:34Z markt $
+ * @version $Id: CustomObjectInputStream.java 1370569 2012-08-07 22:13:00Z markt $
  */
 
 public final class CustomObjectInputStream
@@ -40,7 +40,7 @@ public final class CustomObjectInputStream
     /**
      * The class loader we will use to resolve classes.
      */
-    private ClassLoader classLoader = null;
+    private final ClassLoader classLoader;
 
 
     /**

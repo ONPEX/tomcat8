@@ -26,9 +26,9 @@ import org.apache.catalina.Context;
 import org.apache.catalina.Manager;
 import org.apache.catalina.Session;
 import org.apache.catalina.Store;
+import org.apache.catalina.StoreManager;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
-import org.apache.catalina.session.PersistentManager;
 
 
 /**
@@ -41,7 +41,7 @@ import org.apache.catalina.session.PersistentManager;
  *                              per session at any one time.
  *
  * @author Jean-Frederic Clere
- * @version $Id: PersistentValve.java 1187022 2011-10-20 19:55:37Z markt $
+ * @version $Id: PersistentValve.java 1240047 2012-02-03 09:44:00Z markt $
  */
 
 public class PersistentValve extends ValveBase {
@@ -51,32 +51,8 @@ public class PersistentValve extends ValveBase {
         super(true);
     }
 
-    // ----------------------------------------------------- Instance Variables
-
-
-    /**
-     * The descriptive information related to this implementation.
-     */
-    private static final String info =
-        "org.apache.catalina.valves.PersistentValve/1.0";
-
-
-    // ------------------------------------------------------------- Properties
-
-
-    /**
-     * Return descriptive information about this Valve implementation.
-     */
-    @Override
-    public String getInfo() {
-
-        return (info);
-
-    }
-
 
     // --------------------------------------------------------- Public Methods
-
 
     /**
      * Select the appropriate child Context to process this request,
@@ -110,8 +86,8 @@ public class PersistentValve extends ValveBase {
         String sessionId = request.getRequestedSessionId();
         Manager manager = context.getManager();
         if (sessionId != null && manager != null) {
-            if (manager instanceof PersistentManager) {
-                Store store = ((PersistentManager) manager).getStore();
+            if (manager instanceof StoreManager) {
+                Store store = ((StoreManager) manager).getStore();
                 if (store != null) {
                     Session session = null;
                     try {
@@ -168,15 +144,15 @@ public class PersistentValve extends ValveBase {
             }
             if (newsessionId!=null) {
                 /* store the session and remove it from the manager */
-                if (manager instanceof PersistentManager) {
+                if (manager instanceof StoreManager) {
                     Session session = manager.findSession(newsessionId);
-                    Store store = ((PersistentManager) manager).getStore();
+                    Store store = ((StoreManager) manager).getStore();
                     if (store != null && session!=null &&
                         session.isValid() &&
                         !isSessionStale(session, System.currentTimeMillis())) {
                         // ((StandardSession)session).passivate();
                         store.save(session);
-                        ((PersistentManager) manager).removeSuper(session);
+                        ((StoreManager) manager).removeSuper(session);
                         session.recycle();
                     } else {
                         if (container.getLogger().isDebugEnabled()) {

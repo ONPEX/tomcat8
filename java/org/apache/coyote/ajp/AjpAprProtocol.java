@@ -35,8 +35,8 @@ import org.apache.tomcat.util.net.SocketWrapper;
  * @author Costin Manolache
  */
 public class AjpAprProtocol extends AbstractAjpProtocol {
-    
-    
+
+
     private static final Log log = LogFactory.getLog(AjpAprProtocol.class);
 
     @Override
@@ -70,14 +70,14 @@ public class AjpAprProtocol extends AbstractAjpProtocol {
         ((AprEndpoint) endpoint).setUseSendfile(false);
     }
 
-    
+
     // ----------------------------------------------------- Instance Variables
 
 
     /**
      * Connection handler for AJP.
      */
-    private AjpConnectionHandler cHandler;
+    private final AjpConnectionHandler cHandler;
 
 
     // --------------------------------------------------------- Public Methods
@@ -106,7 +106,7 @@ public class AjpAprProtocol extends AbstractAjpProtocol {
             extends AbstractAjpConnectionHandler<Long,AjpAprProcessor>
             implements Handler {
 
-        protected AjpAprProtocol proto;
+        protected final AjpAprProtocol proto;
 
         public AjpConnectionHandler(AjpAprProtocol proto) {
             this.proto = proto;
@@ -131,12 +131,11 @@ public class AjpAprProtocol extends AbstractAjpProtocol {
                 Processor<Long> processor, boolean isSocketClosing,
                 boolean addToPoller) {
             processor.recycle(isSocketClosing);
-            recycledProcessors.offer(processor);
+            recycledProcessors.push(processor);
             if (addToPoller) {
                 ((AprEndpoint)proto.endpoint).getPoller().add(
                         socket.getSocket().longValue(),
-                        proto.endpoint.getKeepAliveTimeout(),
-                        AprEndpoint.Poller.FLAGS_READ);
+                        proto.endpoint.getKeepAliveTimeout(), true, false);
             }
         }
 
@@ -144,7 +143,7 @@ public class AjpAprProtocol extends AbstractAjpProtocol {
         @Override
         protected AjpAprProcessor createProcessor() {
             AjpAprProcessor processor = new AjpAprProcessor(proto.packetSize, (AprEndpoint)proto.endpoint);
-            processor.setAdapter(proto.adapter);
+            processor.setAdapter(proto.getAdapter());
             processor.setTomcatAuthentication(proto.tomcatAuthentication);
             processor.setRequiredSecret(proto.requiredSecret);
             processor.setClientCertProvider(proto.getClientCertProvider());

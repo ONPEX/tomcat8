@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,7 +41,7 @@ import javax.servlet.ServletRequestWrapper;
  * keep these two classes in synchronization when making changes!
  *
  * @author Craig R. McClanahan
- * @version $Id: ApplicationRequest.java 1195962 2011-11-01 12:37:24Z markt $
+ * @version $Id: ApplicationRequest.java 1360933 2012-07-12 20:51:27Z markt $
  */
 
 class ApplicationRequest extends ServletRequestWrapper {
@@ -59,9 +59,9 @@ class ApplicationRequest extends ServletRequestWrapper {
       RequestDispatcher.INCLUDE_SERVLET_PATH,
       RequestDispatcher.INCLUDE_PATH_INFO,
       RequestDispatcher.INCLUDE_QUERY_STRING,
-      RequestDispatcher.FORWARD_REQUEST_URI, 
+      RequestDispatcher.FORWARD_REQUEST_URI,
       RequestDispatcher.FORWARD_CONTEXT_PATH,
-      RequestDispatcher.FORWARD_SERVLET_PATH, 
+      RequestDispatcher.FORWARD_SERVLET_PATH,
       RequestDispatcher.FORWARD_PATH_INFO,
       RequestDispatcher.FORWARD_QUERY_STRING };
 
@@ -89,8 +89,7 @@ class ApplicationRequest extends ServletRequestWrapper {
      * The request attributes for this request.  This is initialized from the
      * wrapped request, but updates are allowed.
      */
-    protected HashMap<String, Object> attributes =
-        new HashMap<String, Object>();
+    protected final HashMap<String, Object> attributes = new HashMap<>();
 
 
     // ------------------------------------------------- ServletRequest Methods

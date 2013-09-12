@@ -21,15 +21,15 @@
 # modules that Tomcat depends on.  Copy this file to "build.properties"
 # in the top-level source directory, and customize it as needed.
 #
-# $Id: build.properties.default 1498817 2013-07-02 07:54:21Z markt $
+# $Id: build.properties.default 1509411 2013-08-01 20:11:49Z markt $
 # -----------------------------------------------------------------------------
 
 # ----- Version Control Flags -----
-version.major=7
+version.major=8
 version.minor=0
-version.build=42
+version.build=0
 version.patch=0
-version.suffix=
+version.suffix=-RC1
 
 # ----- Build control flags -----
 # Note enabling validation uses Checkstyle which is LGPL licensed
@@ -57,8 +57,8 @@ base.path=/usr/share/java
 #base.path=C:/path/to/the/repository
 #base.path=/usr/local
 
-compile.source=1.6
-compile.target=1.6
+compile.source=1.7
+compile.target=1.7
 compile.debug=true
 
 base-apache.loc.1=http://www.apache.org/dist
@@ -76,25 +76,25 @@ base-maven.loc=http://repo.maven.apache.org/maven2
 # base-sf.loc=http://sunet.dl.sourceforge.net
 
 # ----- Commons Logging, version 1.1 or later -----
-# If this version is updated, check the versions required for the deps
+# If this version is updated, check the versions required for the dependencies below
 # - avalon-framework
 # - log4j
 # - logkit
 # - servletapi
-commons-logging.version=1.1.1
+commons-logging.version=1.1.3
 commons-logging.home=${base.path}/commons-logging-${commons-logging.version}
 commons-logging-src.loc.1=${base-commons.loc.1}/logging/source/commons-logging-${commons-logging.version}-src.tar.gz
 commons-logging-src.loc.2=${base-commons.loc.2}/logging/source/commons-logging-${commons-logging.version}-src.tar.gz
 commons-logging-src.tar.gz=${commons-logging.home}/commons-logging-${commons-logging.version}-src.tar.gz
 
 # ----- Avalon Framework (required by commons logging) -----
-avalon-framework.version=4.1.3
+avalon-framework.version=4.1.5
 avalon-framework.home=${base.path}/avalon-framework-${avalon-framework.version}
 avalon-framework.loc=${base-maven.loc}/avalon-framework/avalon-framework/${avalon-framework.version}/avalon-framework-${avalon-framework.version}.jar
 avalon-framework.jar=${avalon-framework.home}/avalon-framework-${avalon-framework.version}.jar
 
 # ----- log4j (required by commons logging) -----
-log4j.version=1.2.12
+log4j.version=1.2.17
 log4j.home=${base.path}/log4j-${log4j.version}
 log4j.loc=${base-maven.loc}/log4j/log4j/${log4j.version}/log4j-${log4j.version}.jar
 log4j.jar=${log4j.home}/log4j-${log4j.version}.jar
@@ -132,6 +132,12 @@ jdt.jar=${jdt.home}/ecj-${jdt.version}.jar
 jdt.loc.1=http://archive.eclipse.org/eclipse/downloads/drops4/${jdt.release}/ecj-${jdt.version}.jar
 jdt.loc.2=http://download.eclipse.org/eclipse/downloads/drops4/${jdt.release}/ecj-${jdt.version}.jar
 
+# ---- NPN support
+npn.version=8.1.2.v20120308
+npn.home=${base.path}/npn-${npn.version}
+npn.jar=${npn.home}/npn-${npn.version}.jar
+npn.loc=http://repo1.maven.org/maven2/org/eclipse/jetty/npn/npn-api/${npn.version}/npn-api-${npn.version}.jar
+
 # ----- Tomcat native library -----
 tomcat-native.version=1.1.27
 tomcat-native.home=${base.path}/tomcat-native-${tomcat-native.version}
@@ -142,16 +148,27 @@ tomcat-native.win.1=${base-tomcat.loc.1}/tomcat-connectors/native/${tomcat-nativ
 tomcat-native.win.2=${base-tomcat.loc.2}/tomcat-connectors/native/${tomcat-native.version}/binaries/tomcat-native-${tomcat-native.version}-win32-bin.zip
 
 # ----- Commons DBCP, version 1.1 or later -----
-commons-dbcp.version=1.4
-commons-dbcp.home=${base.path}/commons-dbcp-${commons-dbcp.version}-src
-commons-dbcp-src.loc.1=${base-commons.loc.1}/dbcp/source/commons-dbcp-${commons-dbcp.version}-src.tar.gz
-commons-dbcp-src.loc.2=${base-commons.loc.2}/dbcp/source/commons-dbcp-${commons-dbcp.version}-src.tar.gz
+#commons-dbcp.version=1.4
+#commons-dbcp.home=${base.path}/commons-dbcp-${commons-dbcp.version}-src
+#commons-dbcp-src.loc.1=${base-commons.loc.1}/dbcp/source/commons-dbcp-${commons-dbcp.version}-src.tar.gz
+#commons-dbcp-src.loc.2=${base-commons.loc.2}/dbcp/source/commons-dbcp-${commons-dbcp.version}-src.tar.gz
+commons-dbcp.version=2.0-20130801.192813-128
+commons-dbcp.home=${base.path}/commons-dbcp2-2.0-SNAPSHOT-src
+commons-dbcp-src.loc.1=https://repository.apache.org/content/repositories/snapshots/org/apache/commons/commons-dbcp2/2.0-SNAPSHOT/commons-dbcp2-${commons-dbcp.version}-src.tar.gz
+commons-dbcp-src.loc.2=https://repository.apache.org/content/repositories/snapshots/org/apache/commons/commons-dbcp2/2.0-SNAPSHOT/commons-dbcp2-${commons-dbcp.version}-src.tar.gz
 
 # ----- Commons Pool, version 1.1 or later -----
-commons-pool.version=1.5.7
-commons-pool.home=${base.path}/commons-pool-${commons-pool.version}-src
-commons-pool-src.loc.1=${base-commons.loc.1}/pool/source/commons-pool-${commons-pool.version}-src.tar.gz
-commons-pool-src.loc.2=${base-commons.loc.2}/pool/source/commons-pool-${commons-pool.version}-src.tar.gz
+#commons-pool.version=1.5.7
+#commons-pool.home=${base.path}/commons-pool-${commons-pool.version}-src
+#commons-pool-src.loc.1=${base-commons.loc.1}/pool/source/commons-pool-${commons-pool.version}-src.tar.gz
+#commons-pool-src.loc.2=${base-commons.loc.2}/pool/source/commons-pool-${commons-pool.version}-src.tar.gz
+#Temporary use of snapshots until Commons Pool 2 has its first release
+commons-pool.version=2.0-20130801.192625-235
+commons-pool.home=${base.path}/commons-pool2-2.0-SNAPSHOT-src
+commons-pool-src.loc.1=https://repository.apache.org/content/repositories/snapshots/org/apache/commons/commons-pool2/2.0-SNAPSHOT/commons-pool2-${commons-pool.version}-src.tar.gz
+commons-pool-src.loc.2=https://repository.apache.org/content/repositories/snapshots/org/apache/commons/commons-pool2/2.0-SNAPSHOT/commons-pool2-${commons-pool.version}-src.tar.gz
+
+
 
 # ----- NSIS, version 2.0 or later -----
 nsis.home=${base.path}/nsis-2.46
@@ -204,3 +221,5 @@ dojo-js.home=${base.path}/dojo-release-1.1.1
 dojo-js.loc=http://download.dojotoolkit.org/release-1.1.1/dojo-release-1.1.1.tar.gz
 dojo-js.jar=${dojo-js.home}/dojo/dojo.js
 
+# ----- JVM settings for unit tests
+java.net.preferIPv4Stack=false

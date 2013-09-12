@@ -50,10 +50,10 @@ import org.apache.catalina.LifecycleException;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
-import org.apache.catalina.deploy.FilterDef;
-import org.apache.catalina.deploy.FilterMap;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
+import org.apache.tomcat.util.descriptor.web.FilterDef;
+import org.apache.tomcat.util.descriptor.web.FilterMap;
 
 public class TestRemoteIpFilter extends TomcatBaseTest {
 
@@ -147,7 +147,7 @@ public class TestRemoteIpFilter extends TomcatBaseTest {
 
     @Test
     public void testCommaDelimitedListToStringArrayEmptyList() {
-        List<String> elements = new ArrayList<String>();
+        List<String> elements = new ArrayList<>();
         String actual = RemoteIpFilter.listToCommaDelimitedString(elements);
         assertEquals("", actual);
     }
@@ -546,7 +546,7 @@ public class TestRemoteIpFilter extends TomcatBaseTest {
     public void testWithTomcatServer() throws Exception {
 
         // mostly default configuration : enable "x-forwarded-proto"
-        Map<String, String> remoteIpFilterParameter = new HashMap<String, String>();
+        Map<String, String> remoteIpFilterParameter = new HashMap<>();
         remoteIpFilterParameter.put("protocolHeader", "x-forwarded-proto");
 
         // SETUP

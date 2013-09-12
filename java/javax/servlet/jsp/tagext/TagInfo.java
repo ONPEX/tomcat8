@@ -15,7 +15,7 @@
 * limitations under the License.
 */
 
- 
+
 package javax.servlet.jsp.tagext;
 
 /**
@@ -23,7 +23,7 @@ package javax.servlet.jsp.tagext;
  * This class is instantiated from the Tag Library Descriptor file (TLD)
  * and is available only at translation time.
  *
- * 
+ *
 */
 
 public class TagInfo {
@@ -46,12 +46,12 @@ public class TagInfo {
      */
 
     public static final String BODY_CONTENT_EMPTY = "empty";
-    
+
     /**
      * Static constant for getBodyContent() when it is scriptless.
-     * 
+     *
      * @since 2.0
-     */ 
+     */
     public static final String BODY_CONTENT_SCRIPTLESS = "scriptless";
 
     /**
@@ -90,10 +90,17 @@ public class TagInfo {
         this.tagExtraInfo  = tagExtraInfo;
         this.attributeInfo = attributeInfo;
 
+        // Use defaults for unspecified values
+        this.displayName = null;
+        this.largeIcon = null;
+        this.smallIcon = null;
+        this.tagVariableInfo = null;
+        this.dynamicAttributes = false;
+
         if (tagExtraInfo != null)
             tagExtraInfo.setTagInfo(this);
     }
-                         
+
     /**
      * Constructor for TagInfo from data in the JSP 1.2 format for TLD.
      * This class is to be instantiated only from the TagLibrary code
@@ -141,10 +148,13 @@ public class TagInfo {
         this.largeIcon = largeIcon;
         this.tagVariableInfo = tvi;
 
+        // Use defaults for unspecified values
+        this.dynamicAttributes = false;
+
         if (tagExtraInfo != null)
             tagExtraInfo.setTagInfo(this);
     }
-                         
+
     /**
      * Constructor for TagInfo from data in the JSP 2.0 format for TLD.
      * This class is to be instantiated only from the TagLibrary code
@@ -243,7 +253,7 @@ public class TagInfo {
    }
 
     /**
-     * Translation-time validation of the attributes. 
+     * Translation-time validation of the attributes.
      * This is a convenience method on the associated TagExtraInfo class.
      *
      * @param data The translation-time TagData instance.
@@ -276,7 +286,7 @@ public class TagInfo {
 
     /**
      * Set the instance for extra tag information.
-     * 
+     *
      * @param tei the TagExtraInfo instance
      */
     public void setTagExtraInfo(TagExtraInfo tei) {
@@ -286,7 +296,7 @@ public class TagInfo {
 
     /**
      * The instance (if any) for extra tag information.
-     * 
+     *
      * @return The TagExtraInfo instance, if any.
      */
     public TagExtraInfo getTagExtraInfo() {
@@ -299,7 +309,7 @@ public class TagInfo {
      *
      * @return The name of the tag handler class.
      */
-    
+
     public String getTagClassName() {
         return tagClassName;
     }
@@ -321,7 +331,7 @@ public class TagInfo {
     /**
      * The information string for the tag.
      *
-     * @return the info string, or null if 
+     * @return the info string, or null if
      *         not defined
      */
 
@@ -424,24 +434,24 @@ public class TagInfo {
     /*
      * private fields for 1.1 info
      */
-    private String             tagName; // the name of the tag
-    private String             tagClassName;
-    private String             bodyContent;
-    private String             infoString;
-    private TagLibraryInfo     tagLibrary;
-    private TagExtraInfo       tagExtraInfo; // instance of TagExtraInfo
-    private TagAttributeInfo[] attributeInfo;
+    private final String             tagName; // the name of the tag
+    private final String             tagClassName;
+    private final String             bodyContent;
+    private final String             infoString;
+    private TagLibraryInfo           tagLibrary;
+    private TagExtraInfo             tagExtraInfo; // instance of TagExtraInfo
+    private final TagAttributeInfo[] attributeInfo;
 
     /*
      * private fields for 1.2 info
      */
-    private String             displayName;
-    private String             smallIcon;
-    private String             largeIcon;
-    private TagVariableInfo[]  tagVariableInfo;
+    private final String             displayName;
+    private final String             smallIcon;
+    private final String             largeIcon;
+    private final TagVariableInfo[]  tagVariableInfo;
 
     /*
      * Additional private fields for 2.0 info
      */
-    private boolean dynamicAttributes;
+    private final boolean dynamicAttributes;
 }

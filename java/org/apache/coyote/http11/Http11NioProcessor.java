@@ -78,17 +78,6 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
 
 
     // ----------------------------------------------------- Instance Variables
-    /**
-     * Input.
-     */
-    protected InternalNioInputBuffer inputBuffer = null;
-
-
-    /**
-     * Output.
-     */
-    protected InternalNioOutputBuffer outputBuffer = null;
-
 
     /**
      * Sendfile data.
@@ -103,7 +92,6 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
 
 
     // --------------------------------------------------------- Public Methods
-
 
     /**
      * Process pipelined HTTP requests using the specified input and output
@@ -121,7 +109,7 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
         final NioEndpoint.KeyAttachment attach = (NioEndpoint.KeyAttachment)socket.getSocket().getAttachment(false);
         try {
             rp.setStage(org.apache.coyote.Constants.STAGE_SERVICE);
-            error = !adapter.event(request, response, status);
+            error = !getAdapter().event(request, response, status);
             if ( !error ) {
                 if (attach != null) {
                     attach.setComet(comet);
@@ -149,7 +137,7 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
             log.error(sm.getString("http11processor.request.process"), t);
             // 500 - Internal Server Error
             response.setStatus(500);
-            adapter.log(request, response, 0);
+            getAdapter().log(request, response, 0);
             error = true;
         }
 
@@ -167,6 +155,23 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
             }
         } else {
             return SocketState.LONG;
+        }
+    }
+
+
+    @Override
+    protected void registerForEvent(boolean read, boolean write) {
+        final NioEndpoint.KeyAttachment attach =
+                (NioEndpoint.KeyAttachment)socket.getSocket().getAttachment(
+                        false);
+        if (attach == null) {
+            return;
+        }
+        if (read) {
+            attach.interestOps(attach.interestOps() | SelectionKey.OP_READ);
+        }
+        if (write) {
+            attach.interestOps(attach.interestOps() | SelectionKey.OP_WRITE);
         }
     }
 
@@ -221,7 +226,8 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
         // open
         openSocket = true;
         // Check to see if we have read any of the request line yet
-        if (inputBuffer.getParsingRequestLinePhase() < 2) {
+        if (((InternalNioInputBuffer)
+                inputBuffer).getParsingRequestLinePhase() < 2) {
             if (socket.getLastAccess() > -1 || keptAlive) {
                 // Haven't read the request line and have previously processed a
                 // request. Must be keep-alive. Make sure poller uses keepAlive.
@@ -237,7 +243,7 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
         if (endpoint.isPaused()) {
             // 503 - Service unavailable
             response.setStatus(503);
-            adapter.log(request, response, 0);
+            getAdapter().log(request, response, 0);
             error = true;
         } else {
             return true;
@@ -291,6 +297,8 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
     }
 
 
+
+
     @Override
     public void recycleInternal() {
         socket = null;
@@ -312,65 +320,88 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
 
         if (actionCode == ActionCode.REQ_HOST_ADDR_ATTRIBUTE) {
 
-            // Get remote host address
-            if ((remoteAddr == null) && (socket != null)) {
-                InetAddress inetAddr = socket.getSocket().getIOChannel().socket().getInetAddress();
-                if (inetAddr != null) {
-                    remoteAddr = inetAddr.getHostAddress();
+            if (socket == null) {
+                request.remoteAddr().recycle();
+            } else {
+                if (socket.getRemoteAddr() == null) {
+                    InetAddress inetAddr = socket.getSocket().getIOChannel().socket().getInetAddress();
+                    if (inetAddr != null) {
+                        socket.setRemoteAddr(inetAddr.getHostAddress());
+                    }
                 }
+                request.remoteAddr().setString(socket.getRemoteAddr());
             }
-            request.remoteAddr().setString(remoteAddr);
 
         } else if (actionCode == ActionCode.REQ_LOCAL_NAME_ATTRIBUTE) {
 
-            // Get local host name
-            if ((localName == null) && (socket != null)) {
-                InetAddress inetAddr = socket.getSocket().getIOChannel().socket().getLocalAddress();
-                if (inetAddr != null) {
-                    localName = inetAddr.getHostName();
+            if (socket == null) {
+                request.localName().recycle();
+            } else {
+                if (socket.getLocalName() == null) {
+                    InetAddress inetAddr = socket.getSocket().getIOChannel().socket().getLocalAddress();
+                    if (inetAddr != null) {
+                        socket.setLocalName(inetAddr.getHostName());
+                    }
                 }
+                request.localName().setString(socket.getLocalName());
             }
-            request.localName().setString(localName);
 
         } else if (actionCode == ActionCode.REQ_HOST_ATTRIBUTE) {
 
-            // Get remote host name
-            if ((remoteHost == null) && (socket != null)) {
-                InetAddress inetAddr = socket.getSocket().getIOChannel().socket().getInetAddress();
-                if (inetAddr != null) {
-                    remoteHost = inetAddr.getHostName();
-                }
-                if(remoteHost == null) {
-                    if(remoteAddr != null) {
-                        remoteHost = remoteAddr;
-                    } else { // all we can do is punt
-                        request.remoteHost().recycle();
+            if (socket == null) {
+                request.remoteHost().recycle();
+            } else {
+                if (socket.getRemoteHost() == null) {
+                    InetAddress inetAddr = socket.getSocket().getIOChannel().socket().getInetAddress();
+                    if (inetAddr != null) {
+                        socket.setRemoteHost(inetAddr.getHostName());
+                    }
+                    if (socket.getRemoteHost() == null) {
+                        if (socket.getRemoteAddr() == null &&
+                                inetAddr != null) {
+                            socket.setRemoteAddr(inetAddr.getHostAddress());
+                        }
+                        if (socket.getRemoteAddr() != null) {
+                            socket.setRemoteHost(socket.getRemoteAddr());
+                        }
                     }
                 }
+                request.remoteHost().setString(socket.getRemoteHost());
             }
-            request.remoteHost().setString(remoteHost);
 
         } else if (actionCode == ActionCode.REQ_LOCAL_ADDR_ATTRIBUTE) {
 
-            if (localAddr == null) {
-                localAddr = socket.getSocket().getIOChannel().socket().getLocalAddress().getHostAddress();
+            if (socket == null) {
+                request.localAddr().recycle();
+            } else {
+                if (socket.getLocalAddr() == null) {
+                    socket.setLocalAddr(
+                            socket.getSocket().getIOChannel().socket().getLocalAddress().getHostAddress());
+                }
+                request.localAddr().setString(socket.getLocalAddr());
             }
-
-            request.localAddr().setString(localAddr);
 
         } else if (actionCode == ActionCode.REQ_REMOTEPORT_ATTRIBUTE) {
 
-            if ((remotePort == -1 ) && (socket !=null)) {
-                remotePort = socket.getSocket().getIOChannel().socket().getPort();
+            if (socket == null) {
+                request.setRemotePort(0);
+            } else {
+                if (socket.getRemotePort() == -1) {
+                    socket.setRemotePort(socket.getSocket().getIOChannel().socket().getPort());
+                }
+                request.setRemotePort(socket.getRemotePort());
             }
-            request.setRemotePort(remotePort);
 
         } else if (actionCode == ActionCode.REQ_LOCALPORT_ATTRIBUTE) {
 
-            if ((localPort == -1 ) && (socket !=null)) {
-                localPort = socket.getSocket().getIOChannel().socket().getLocalPort();
+            if (socket == null) {
+                request.setLocalPort(0);
+            } else {
+                if (socket.getLocalPort() == -1) {
+                    socket.setLocalPort(socket.getSocket().getIOChannel().socket().getLocalPort());
+                }
+                request.setLocalPort(socket.getLocalPort());
             }
-            request.setLocalPort(localPort);
 
         } else if (actionCode == ActionCode.REQ_SSL_ATTRIBUTE ) {
 
@@ -441,19 +472,14 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
                     log.warn(sm.getString("http11processor.socket.ssl"), e);
                 }
             }
-
-        } else if (actionCode == ActionCode.AVAILABLE) {
-            request.setAvailable(inputBuffer.available());
         } else if (actionCode == ActionCode.COMET_BEGIN) {
             comet = true;
         } else if (actionCode == ActionCode.COMET_END) {
             comet = false;
-        }  else if (actionCode == ActionCode.COMET_CLOSE) {
+        } else if (actionCode == ActionCode.COMET_CLOSE) {
             if (socket==null || socket.getSocket().getAttachment(false)==null) {
                 return;
             }
-            NioEndpoint.KeyAttachment attach = (NioEndpoint.KeyAttachment)socket.getSocket().getAttachment(false);
-            attach.setCometOps(NioEndpoint.OP_CALLBACK);
             RequestInfo rp = request.getRequestProcessor();
             if (rp.getStage() != org.apache.coyote.Constants.STAGE_SERVICE) {
                 // Close event for this processor triggered by request
@@ -477,8 +503,7 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
             }
         } else if (actionCode == ActionCode.ASYNC_COMPLETE) {
             if (asyncStateMachine.asyncComplete()) {
-                ((NioEndpoint)endpoint).processSocket(this.socket.getSocket(),
-                        SocketStatus.OPEN, true);
+                ((NioEndpoint)endpoint).dispatchForEvent(this.socket.getSocket(),SocketStatus.OPEN_READ, true);
             }
         } else if (actionCode == ActionCode.ASYNC_SETTIMEOUT) {
             if (param==null) {
@@ -493,8 +518,7 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
             attach.setTimeout(timeout);
         } else if (actionCode == ActionCode.ASYNC_DISPATCH) {
             if (asyncStateMachine.asyncDispatch()) {
-                ((NioEndpoint)endpoint).processSocket(this.socket.getSocket(),
-                        SocketStatus.OPEN, true);
+                ((NioEndpoint)endpoint).dispatchForEvent(this.socket.getSocket(),SocketStatus.OPEN_READ, true);
             }
         }
     }

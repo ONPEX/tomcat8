@@ -19,6 +19,7 @@ package org.apache.tomcat.util.http;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -27,7 +28,6 @@ import java.util.Map;
 
 import org.apache.tomcat.util.buf.B2CConverter;
 import org.apache.tomcat.util.buf.ByteChunk;
-import org.apache.tomcat.util.buf.CharChunk;
 import org.apache.tomcat.util.buf.MessageBytes;
 import org.apache.tomcat.util.buf.UDecoder;
 import org.apache.tomcat.util.log.UserDataHelper;
@@ -46,21 +46,20 @@ public final class Parameters {
 
     private static final UserDataHelper maxParamCountLog = new UserDataHelper(log);
 
-    protected static final StringManager sm =
+    private static final StringManager sm =
         StringManager.getManager("org.apache.tomcat.util.http");
 
     private final HashMap<String,ArrayList<String>> paramHashValues =
-        new HashMap<String,ArrayList<String>>();
-
+            new HashMap<>();
     private boolean didQueryParameters=false;
 
-    MessageBytes queryMB;
+    private MessageBytes queryMB;
 
-    UDecoder urlDec;
-    MessageBytes decodedQuery=MessageBytes.newInstance();
+    private UDecoder urlDec;
+    private final MessageBytes decodedQuery = MessageBytes.newInstance();
 
-    String encoding=null;
-    String queryStringEncoding=null;
+    private String encoding=null;
+    private String queryStringEncoding=null;
 
     private int limit = -1;
     private int parameterCount = 0;
@@ -121,23 +120,6 @@ public final class Parameters {
     // -------------------- Data access --------------------
     // Access to the current name/values, no side effect ( processing ).
     // You must explicitly call handleQueryParameters and the post methods.
-
-    @Deprecated
-    public void addParameterValues(String key, String[] newValues) {
-        if (key == null) {
-            return;
-        }
-        ArrayList<String> values = paramHashValues.get(key);
-        if (values == null) {
-            values = new ArrayList<String>(newValues.length);
-            paramHashValues.put(key, values);
-        } else {
-            values.ensureCapacity(values.size() + newValues.length);
-        }
-        for (String newValue : newValues) {
-            values.add(newValue);
-        }
-    }
 
     public String[] getParameterValues(String name) {
         handleQueryParameters();
@@ -213,7 +195,7 @@ public final class Parameters {
 
         ArrayList<String> values = paramHashValues.get(key);
         if (values == null) {
-            values = new ArrayList<String>(1);
+            values = new ArrayList<>(1);
             paramHashValues.put(key, values);
         }
         values.add(value);
@@ -226,14 +208,13 @@ public final class Parameters {
     // -------------------- Parameter parsing --------------------
     // we are called from a single thread - we can do it the hard way
     // if needed
-    ByteChunk tmpName=new ByteChunk();
-    ByteChunk tmpValue=new ByteChunk();
+    private final ByteChunk tmpName=new ByteChunk();
+    private final ByteChunk tmpValue=new ByteChunk();
     private final ByteChunk origName=new ByteChunk();
     private final ByteChunk origValue=new ByteChunk();
-    CharChunk tmpNameC=new CharChunk(1024);
     public static final String DEFAULT_ENCODING = "ISO-8859-1";
     private static final Charset DEFAULT_CHARSET =
-        Charset.forName(DEFAULT_ENCODING);
+            StandardCharsets.ISO_8859_1;
 
 
     public void processParameters( byte bytes[], int start, int len ) {
@@ -516,7 +497,8 @@ public final class Parameters {
     /**
      * Debug purpose
      */
-    public String paramsAsString() {
+    @Override
+    public String toString() {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, ArrayList<String>> e : paramHashValues.entrySet()) {
             sb.append(e.getKey()).append('=');

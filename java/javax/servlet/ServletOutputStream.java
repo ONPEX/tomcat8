@@ -30,7 +30,7 @@ import java.util.ResourceBundle;
  * This is an abstract class that the servlet container implements. Subclasses
  * of this class must implement the <code>java.io.OutputStream.write(int)</code>
  * method.
- * 
+ *
  * @author Various
  * @version $Version$
  * @see ServletResponse
@@ -50,7 +50,7 @@ public abstract class ServletOutputStream extends OutputStream {
     /**
      * Writes a <code>String</code> to the client, without a carriage
      * return-line feed (CRLF) character at the end.
-     * 
+     *
      * @param s
      *            the <code>String</code> to send to the client
      * @exception IOException
@@ -83,7 +83,7 @@ public abstract class ServletOutputStream extends OutputStream {
     /**
      * Writes a <code>boolean</code> value to the client, with no carriage
      * return-line feed (CRLF) character at the end.
-     * 
+     *
      * @param b
      *            the <code>boolean</code> value to send to the client
      * @exception IOException
@@ -102,7 +102,7 @@ public abstract class ServletOutputStream extends OutputStream {
     /**
      * Writes a character to the client, with no carriage return-line feed
      * (CRLF) at the end.
-     * 
+     *
      * @param c
      *            the character to send to the client
      * @exception IOException
@@ -115,7 +115,7 @@ public abstract class ServletOutputStream extends OutputStream {
     /**
      * Writes an int to the client, with no carriage return-line feed (CRLF) at
      * the end.
-     * 
+     *
      * @param i
      *            the int to send to the client
      * @exception IOException
@@ -128,7 +128,7 @@ public abstract class ServletOutputStream extends OutputStream {
     /**
      * Writes a <code>long</code> value to the client, with no carriage
      * return-line feed (CRLF) at the end.
-     * 
+     *
      * @param l
      *            the <code>long</code> value to send to the client
      * @exception IOException
@@ -141,7 +141,7 @@ public abstract class ServletOutputStream extends OutputStream {
     /**
      * Writes a <code>float</code> value to the client, with no carriage
      * return-line feed (CRLF) at the end.
-     * 
+     *
      * @param f
      *            the <code>float</code> value to send to the client
      * @exception IOException
@@ -154,7 +154,7 @@ public abstract class ServletOutputStream extends OutputStream {
     /**
      * Writes a <code>double</code> value to the client, with no carriage
      * return-line feed (CRLF) at the end.
-     * 
+     *
      * @param d
      *            the <code>double</code> value to send to the client
      * @exception IOException
@@ -166,7 +166,7 @@ public abstract class ServletOutputStream extends OutputStream {
 
     /**
      * Writes a carriage return-line feed (CRLF) to the client.
-     * 
+     *
      * @exception IOException
      *                if an input or output exception occurred
      */
@@ -177,7 +177,7 @@ public abstract class ServletOutputStream extends OutputStream {
     /**
      * Writes a <code>String</code> to the client, followed by a carriage
      * return-line feed (CRLF).
-     * 
+     *
      * @param s
      *            the <code>String</code> to write to the client
      * @exception IOException
@@ -191,7 +191,7 @@ public abstract class ServletOutputStream extends OutputStream {
     /**
      * Writes a <code>boolean</code> value to the client, followed by a carriage
      * return-line feed (CRLF).
-     * 
+     *
      * @param b
      *            the <code>boolean</code> value to write to the client
      * @exception IOException
@@ -205,7 +205,7 @@ public abstract class ServletOutputStream extends OutputStream {
     /**
      * Writes a character to the client, followed by a carriage return-line feed
      * (CRLF).
-     * 
+     *
      * @param c
      *            the character to write to the client
      * @exception IOException
@@ -219,7 +219,7 @@ public abstract class ServletOutputStream extends OutputStream {
     /**
      * Writes an int to the client, followed by a carriage return-line feed
      * (CRLF) character.
-     * 
+     *
      * @param i
      *            the int to write to the client
      * @exception IOException
@@ -233,7 +233,7 @@ public abstract class ServletOutputStream extends OutputStream {
     /**
      * Writes a <code>long</code> value to the client, followed by a carriage
      * return-line feed (CRLF).
-     * 
+     *
      * @param l
      *            the <code>long</code> value to write to the client
      * @exception IOException
@@ -247,7 +247,7 @@ public abstract class ServletOutputStream extends OutputStream {
     /**
      * Writes a <code>float</code> value to the client, followed by a carriage
      * return-line feed (CRLF).
-     * 
+     *
      * @param f
      *            the <code>float</code> value to write to the client
      * @exception IOException
@@ -261,7 +261,7 @@ public abstract class ServletOutputStream extends OutputStream {
     /**
      * Writes a <code>double</code> value to the client, followed by a carriage
      * return-line feed (CRLF).
-     * 
+     *
      * @param d
      *            the <code>double</code> value to write to the client
      * @exception IOException
@@ -271,4 +271,34 @@ public abstract class ServletOutputStream extends OutputStream {
         print(d);
         println();
     }
+
+    /**
+     * Checks if a non-blocking write will succeed. If this returns
+     * <code>false</code>, it will cause a callback to
+     * {@link WriteListener#onWritePossible()} when the buffer has emptied. If
+     * this method returns <code>false</code> no further data must be written
+     * until the contain calls {@link WriteListener#onWritePossible()}.
+     *
+     * @return <code>true</code> if data can be written, else <code>false</code>
+     *
+     * @since Servlet 3.1
+     */
+    public abstract boolean isReady();
+
+    /**
+     * Sets the {@link WriteListener} for this {@link ServletOutputStream} and
+     * thereby switches to non-blocking IO. It is only valid to switch to
+     * non-blocking IO within async processing or HTTP upgrade processing.
+     *
+     * @param listener  The non-blocking IO write listener
+     *
+     * @throws IllegalStateException    If this method is called if neither
+     *                                  async nor HTTP upgrade is in progress or
+     *                                  if the {@link WriteListener} has already
+     *                                  been set
+     * @throws NullPointerException     If listener is null
+     *
+     * @since Servlet 3.1
+     */
+    public abstract void setWriteListener(javax.servlet.WriteListener listener);
 }

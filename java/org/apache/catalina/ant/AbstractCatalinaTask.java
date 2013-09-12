@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,8 +26,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 
-import org.apache.tomcat.util.buf.B2CConverter;
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
@@ -39,7 +39,7 @@ import org.apache.tools.ant.Project;
  * undeploying applications.  These tasks require Ant 1.4 or later.
  *
  * @author Craig R. McClanahan
- * @version $Id: AbstractCatalinaTask.java 1459346 2013-03-21 15:05:54Z markt $
+ * @version $Id: AbstractCatalinaTask.java 1508214 2013-07-29 22:17:59Z markt $
  * @since 4.1
  */
 
@@ -51,8 +51,8 @@ public abstract class AbstractCatalinaTask extends BaseRedirectorHelperTask {
 
     /**
      * manager webapp's encoding.
-     */ 
-    private static String CHARSET = "utf-8";
+     */
+    private static final String CHARSET = "utf-8";
 
 
     // ------------------------------------------------------------- Properties
@@ -189,7 +189,7 @@ public abstract class AbstractCatalinaTask extends BaseRedirectorHelperTask {
                 if (contentLength >= 0) {
                     hconn.setRequestProperty("Content-Length",
                                              "" + contentLength);
-                    
+
                     hconn.setFixedLengthStreamingMode(contentLength);
                 }
             } else {
@@ -202,7 +202,7 @@ public abstract class AbstractCatalinaTask extends BaseRedirectorHelperTask {
             // Set up an authorization header with our credentials
             String input = username + ":" + password;
             String output = Base64.encodeBase64String(
-                    input.getBytes(B2CConverter.ISO_8859_1));
+                    input.getBytes(StandardCharsets.ISO_8859_1));
             hconn.setRequestProperty("Authorization",
                                      "Basic " + output);
 

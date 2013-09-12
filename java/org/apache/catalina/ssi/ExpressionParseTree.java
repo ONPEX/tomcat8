@@ -24,8 +24,8 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 /**
  * Represents a parsed expression.
- * 
- * @version $Revision: 1136399 $
+ *
+ * @version $Revision: 1361823 $
  * @author Paul Speed
  */
 public class ExpressionParseTree {
@@ -33,12 +33,12 @@ public class ExpressionParseTree {
      * Contains the current set of completed nodes. This is a workspace for the
      * parser.
      */
-    private LinkedList<Node> nodeStack = new LinkedList<Node>();
+    private final LinkedList<Node> nodeStack = new LinkedList<>();
     /**
      * Contains operator nodes that don't yet have values. This is a workspace
      * for the parser.
      */
-    private LinkedList<OppNode> oppStack = new LinkedList<OppNode>();
+    private final LinkedList<OppNode> oppStack = new LinkedList<>();
     /**
      * The root node after the expression has been parsed.
      */
@@ -46,7 +46,7 @@ public class ExpressionParseTree {
     /**
      * The SSIMediator to use when evaluating the expressions.
      */
-    private SSIMediator ssiMediator;
+    private final SSIMediator ssiMediator;
 
 
     /**
@@ -352,7 +352,7 @@ public class ExpressionParseTree {
         protected int compareBranches() {
             String val1 = ((StringNode)left).getValue();
             String val2 = ((StringNode)right).getValue();
-            
+
             int val2Len = val2.length();
             if (val2Len > 1 && val2.charAt(0) == '/' &&
                     val2.charAt(val2Len - 1) == '/') {

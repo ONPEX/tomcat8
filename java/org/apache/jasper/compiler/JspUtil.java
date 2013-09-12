@@ -119,7 +119,7 @@ public class JspUtil {
 
         // AttributesImpl.removeAttribute is broken, so we do this...
         int tempLength = (attrs == null) ? 0 : attrs.getLength();
-        Vector<String> temp = new Vector<String>(tempLength, 1);
+        Vector<String> temp = new Vector<>(tempLength, 1);
         for (int i = 0; i < tempLength; i++) {
             @SuppressWarnings("null")  // If attrs==null, tempLength == 0
             String qName = attrs.getQName(i);
@@ -232,36 +232,10 @@ public class JspUtil {
         return sb.toString();
     }
 
-    /**
-     * Replaces any occurrences of the character <tt>replace</tt> with the
-     * string <tt>with</tt>.
-     */
-    public static String replace(String name, char replace, String with) {
-        StringBuilder buf = new StringBuilder();
-        int begin = 0;
-        int end;
-        int last = name.length();
-
-        while (true) {
-            end = name.indexOf(replace, begin);
-            if (end < 0) {
-                end = last;
-            }
-            buf.append(name.substring(begin, end));
-            if (end == last) {
-                break;
-            }
-            buf.append(with);
-            begin = end + 1;
-        }
-
-        return buf.toString();
-    }
-
     public static class ValidAttribute {
-        String name;
 
-        boolean mandatory;
+        private final String name;
+        private final boolean mandatory;
 
         public ValidAttribute(String name, boolean mandatory) {
             this.name = name;
@@ -678,8 +652,7 @@ public class JspUtil {
     }
 
     public static InputStream getInputStream(String fname, JarFile jarFile,
-            JspCompilationContext ctxt, ErrorDispatcher err)
-            throws JasperException, IOException {
+            JspCompilationContext ctxt) throws IOException {
 
         InputStream in = null;
 
@@ -797,7 +770,7 @@ public class JspUtil {
      * @return the components of the path
      */
     private static final String[] split(String path, String pat) {
-        Vector<String> comps = new Vector<String>();
+        Vector<String> comps = new Vector<>();
         int pos = path.indexOf(pat);
         int start = 0;
         while (pos >= 0) {
@@ -908,31 +881,6 @@ public class JspUtil {
         return false;
     }
 
-    public static boolean isJavaIdentifier(String key) {
-        // Should not be the case but check to be sure
-        if (key == null || key.length() == 0) {
-            return false;
-        }
-
-        if (isJavaKeyword(key)) {
-            return false;
-        }
-
-        // Check the start character that has more restrictions
-        if (!Character.isJavaIdentifierStart(key.charAt(0))) {
-            return false;
-        }
-
-        // Check each remaining character used is permitted
-        for (int idx = 1; idx < key.length(); idx++) {
-            if (!Character.isJavaIdentifierPart(key.charAt(idx))) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     static InputStreamReader getReader(String fname, String encoding,
             JarFile jarFile, JspCompilationContext ctxt, ErrorDispatcher err)
             throws JasperException, IOException {
@@ -945,7 +893,7 @@ public class JspUtil {
             int skip) throws JasperException, IOException {
 
         InputStreamReader reader = null;
-        InputStream in = getInputStream(fname, jarFile, ctxt, err);
+        InputStream in = getInputStream(fname, jarFile, ctxt);
         for (int i = 0; i < skip; i++) {
             in.read();
         }
@@ -1003,6 +951,13 @@ public class JspUtil {
                 break;
             }
         }
+
+        if (t == null) {
+            // Should never happen
+            throw new IllegalArgumentException("Unable to extract type from [" +
+                    type + "]");
+        }
+
         StringBuilder resultType = new StringBuilder(t);
         for (; dims > 0; dims--) {
             resultType.append("[]");

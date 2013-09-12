@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,7 +28,7 @@ import org.apache.catalina.SessionListener;
 public class DummyProxySession implements Session {
 
     private String sessionId;
-    
+
     public DummyProxySession(String sessionId) {
         this.sessionId = sessionId;
     }
@@ -76,11 +76,6 @@ public class DummyProxySession implements Session {
     @Override
     public String getIdInternal() {
         return sessionId;
-    }
-
-    @Override
-    public String getInfo() {
-        return null;
     }
 
     @Override
@@ -201,6 +196,12 @@ public class DummyProxySession implements Session {
 
     @Override
     public void setValid(boolean isValid) {
+        // NOOP
+    }
+
+    @Override
+    public void tellChangedSessionId(String newId, String oldId,
+            boolean notifySessionListeners, boolean notifyContainerListeners) {
         // NOOP
     }
 }

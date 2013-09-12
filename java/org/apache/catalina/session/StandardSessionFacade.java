@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,30 +29,18 @@ import javax.servlet.http.HttpSession;
  * Facade for the StandardSession object.
  *
  * @author Remy Maucherat
- * @version $Id: StandardSessionFacade.java 1142655 2011-07-04 13:28:11Z markt $
+ * @version $Id: StandardSessionFacade.java 1361802 2012-07-15 21:18:36Z markt $
  */
 
-public class StandardSessionFacade
-    implements HttpSession {
+public class StandardSessionFacade implements HttpSession {
 
 
     // ----------------------------------------------------------- Constructors
-
-
-    /**
-     * Construct a new session facade.
-     */
-    public StandardSessionFacade(StandardSession session) {
-        super();
-        this.session = session;
-    }
-
 
     /**
      * Construct a new session facade.
      */
     public StandardSessionFacade(HttpSession session) {
-        super();
         this.session = session;
     }
 
@@ -63,7 +51,7 @@ public class StandardSessionFacade
     /**
      * Wrapped session object.
      */
-    private HttpSession session = null;
+    private final HttpSession session;
 
 
     // ---------------------------------------------------- HttpSession Methods

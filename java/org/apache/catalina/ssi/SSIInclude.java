@@ -21,12 +21,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 /**
  * Implements the Server-side #include command
- * 
+ *
  * @author Bip Thelin
  * @author Paul Speed
  * @author Dan Sandberg
  * @author David Becker
- * @version $Id: SSIInclude.java 1138121 2011-06-21 18:32:41Z markt $
+ * @version $Id: SSIInclude.java 1187798 2011-10-22 21:14:59Z markt $
  */
 public final class SSIInclude implements SSICommand {
     /**

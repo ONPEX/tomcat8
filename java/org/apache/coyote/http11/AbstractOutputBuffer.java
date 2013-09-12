@@ -17,8 +17,12 @@
 package org.apache.coyote.http11;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.Iterator;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.OutputBuffer;
@@ -32,7 +36,7 @@ import org.apache.tomcat.util.net.AbstractEndpoint;
 import org.apache.tomcat.util.net.SocketWrapper;
 import org.apache.tomcat.util.res.StringManager;
 
-public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
+public abstract class AbstractOutputBuffer<S> implements OutputBuffer {
 
     // ----------------------------------------------------- Instance Variables
 
@@ -58,7 +62,7 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
     /**
      * The buffer used for header composition.
      */
-    protected byte[] buf;
+    protected byte[] headerBuffer;
 
 
     /**
@@ -95,15 +99,52 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
      */
     protected long byteCount = 0;
 
-    // -------------------------------------------------------------- Variables
+    /**
+     * Socket buffering.
+     */
+    protected int socketBuffer = -1;
 
+    /**
+     * For "non-blocking" writes use an external set of buffers. Although the
+     * API only allows one non-blocking write at a time, due to buffering and
+     * the possible need to write HTTP headers, there may be more than one write
+     * to the OutputBuffer.
+     */
+    protected final LinkedBlockingDeque<ByteBufferHolder> bufferedWrites =
+            new LinkedBlockingDeque<>();
+
+    /**
+     * The max size of the buffered write buffer
+     */
+    protected int bufferedWriteSize = 64*1024; //64k default write buffer
+
+
+    protected AbstractOutputBuffer(Response response, int headerBufferSize) {
+
+        this.response = response;
+
+        headerBuffer = new byte[headerBufferSize];
+
+        filterLibrary = new OutputFilter[0];
+        activeFilters = new OutputFilter[0];
+        lastActiveFilter = -1;
+
+        committed = false;
+        finished = false;
+
+        // Cause loading of HttpMessages
+        HttpMessages.getMessage(200);
+    }
+
+
+    // -------------------------------------------------------------- Variables
 
     /**
      * The string manager for this package.
      */
     protected static final StringManager sm =
         StringManager.getManager(Constants.Package);
-    
+
     /**
      * Logger.
      */
@@ -118,7 +159,7 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
      */
     public void addFilter(OutputFilter filter) {
 
-        OutputFilter[] newFilterLibrary = 
+        OutputFilter[] newFilterLibrary =
             new OutputFilter[filterLibrary.length + 1];
         for (int i = 0; i < filterLibrary.length; i++) {
             newFilterLibrary[i] = filterLibrary[i];
@@ -163,24 +204,49 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
     }
 
 
- // --------------------------------------------------- OutputBuffer Methods
+    /**
+     * Set the socket buffer flag.
+     */
+    public void setSocketBuffer(int socketBuffer) {
+        this.socketBuffer = socketBuffer;
+    }
 
 
     /**
+     * Get the socket buffer flag.
+     */
+    public int getSocketBuffer() {
+        return socketBuffer;
+    }
+
+
+    public void setBufferedWriteSize(int bufferedWriteSize) {
+        this.bufferedWriteSize = bufferedWriteSize;
+    }
+
+
+    public int getBufferedWriteSize() {
+        return bufferedWriteSize;
+    }
+
+
+    // --------------------------------------------------- OutputBuffer Methods
+
+    /**
      * Write the contents of a byte chunk.
-     * 
+     *
      * @param chunk byte chunk
      * @return number of bytes written
      * @throws IOException an underlying I/O error occurred
      */
     @Override
-    public int doWrite(ByteChunk chunk, Response res) 
+    public int doWrite(ByteChunk chunk, Response res)
         throws IOException {
 
         if (!committed) {
 
             // Send the connector a request for commit. The connector should
-            // then validate the headers, send them (using sendHeaders) and 
+            // then validate the headers, send them (using sendHeaders) and
             // set the filters accordingly.
             response.action(ActionCode.COMMIT, null);
 
@@ -209,7 +275,7 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
 
     /**
      * Flush the response.
-     * 
+     *
      * @throws IOException an underlying I/O error occurred
      */
     public void flush()
@@ -218,12 +284,12 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
         if (!committed) {
 
             // Send the connector a request for commit. The connector should
-            // then validate the headers, send them (using sendHeader) and 
+            // then validate the headers, send them (using sendHeader) and
             // set the filters accordingly.
             response.action(ActionCode.COMMIT, null);
 
         }
-        
+
         // go through the filters and if there is gzip filter
         // invoke it to flush
         for (int i = 0; i <= lastActiveFilter; i++) {
@@ -236,17 +302,22 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
                 break;
             }
         }
+
+        // Flush the current buffer(s)
+        flushBuffer(isBlocking());
     }
-    
+
+
     /**
      * Reset current response.
-     * 
+     *
      * @throws IllegalStateException if the response has already been committed
      */
     public void reset() {
 
-        if (committed)
-            throw new IllegalStateException(/*FIXME:Put an error message*/);
+        if (committed) {
+            throw new IllegalStateException(sm.getString("iob.illegalreset"));
+        }
 
         // Recycle Request object
         response.recycle();
@@ -255,19 +326,20 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
         pos = 0;
         byteCount = 0;
     }
-    
+
     /**
-     * Recycle the output buffer. This should be called when closing the 
+     * Recycle the output buffer. This should be called when closing the
      * connection.
      */
     public void recycle() {
         // Sub-classes may wish to do more than this.
         nextRequest();
+        bufferedWrites.clear();
     }
-    
+
     /**
      * End processing of current HTTP request.
-     * Note: All bytes of the current request should have been already 
+     * Note: All bytes of the current request should have been already
      * consumed. This method only resets all the pointers so that we are ready
      * to parse the next HTTP request.
      */
@@ -285,22 +357,20 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
         finished = false;
         byteCount = 0;
     }
-    
+
+
     /**
      * End request.
-     * 
+     *
      * @throws IOException an underlying I/O error occurred
      */
-    public void endRequest()
-        throws IOException {
+    public void endRequest() throws IOException {
 
         if (!committed) {
-
             // Send the connector a request for commit. The connector should
-            // then validate the headers, send them (using sendHeader) and 
+            // then validate the headers, send them (using sendHeader) and
             // set the filters accordingly.
             response.action(ActionCode.COMMIT, null);
-
         }
 
         if (finished)
@@ -308,15 +378,18 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
 
         if (lastActiveFilter != -1)
             activeFilters[lastActiveFilter].end();
+
+        flushBuffer(true);
+
         finished = true;
     }
 
-    
+
     public abstract void init(SocketWrapper<S> socketWrapper,
             AbstractEndpoint endpoint) throws IOException;
 
     public abstract void sendAck() throws IOException;
-    
+
     protected abstract void commit() throws IOException;
 
 
@@ -327,7 +400,7 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
 
         // Write protocol name
         write(Constants.HTTP_11_BYTES);
-        buf[pos++] = Constants.SP;
+        headerBuffer[pos++] = Constants.SP;
 
         // Write status code
         int status = response.getStatus();
@@ -345,7 +418,7 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
             write(status);
         }
 
-        buf[pos++] = Constants.SP;
+        headerBuffer[pos++] = Constants.SP;
 
         // Write message
         String message = null;
@@ -354,7 +427,7 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
             message = response.getMessage();
         }
         if (message == null) {
-            write(HttpMessages.getMessage(status)); 
+            write(HttpMessages.getMessage(status));
         } else {
             write(message);
         }
@@ -365,34 +438,34 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
                 new PrivilegedAction<Void>(){
                     @Override
                     public Void run(){
-                        buf[pos++] = Constants.CR;
-                        buf[pos++] = Constants.LF;
+                        headerBuffer[pos++] = Constants.CR;
+                        headerBuffer[pos++] = Constants.LF;
                         return null;
                     }
                 }
            );
         } else {
-            buf[pos++] = Constants.CR;
-            buf[pos++] = Constants.LF;
+            headerBuffer[pos++] = Constants.CR;
+            headerBuffer[pos++] = Constants.LF;
         }
 
-    } 
+    }
 
 
     /**
      * Send a header.
-     * 
+     *
      * @param name Header name
      * @param value Header value
      */
     public void sendHeader(MessageBytes name, MessageBytes value) {
 
         write(name);
-        buf[pos++] = Constants.COLON;
-        buf[pos++] = Constants.SP;
+        headerBuffer[pos++] = Constants.COLON;
+        headerBuffer[pos++] = Constants.SP;
         write(value);
-        buf[pos++] = Constants.CR;
-        buf[pos++] = Constants.LF;
+        headerBuffer[pos++] = Constants.CR;
+        headerBuffer[pos++] = Constants.LF;
 
     }
 
@@ -402,17 +475,17 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
      */
     public void endHeaders() {
 
-        buf[pos++] = Constants.CR;
-        buf[pos++] = Constants.LF;
+        headerBuffer[pos++] = Constants.CR;
+        headerBuffer[pos++] = Constants.LF;
 
     }
-    
-    
+
+
     /**
-     * This method will write the contents of the specified message bytes 
+     * This method will write the contents of the specified message bytes
      * buffer to the output stream, without filtering. This method is meant to
      * be used to write the response header.
-     * 
+     *
      * @param mb data to be written
      */
     protected void write(MessageBytes mb) {
@@ -431,10 +504,10 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
 
 
     /**
-     * This method will write the contents of the specified message bytes 
+     * This method will write the contents of the specified message bytes
      * buffer to the output stream, without filtering. This method is meant to
      * be used to write the response header.
-     * 
+     *
      * @param bc data to be written
      */
     protected void write(ByteChunk bc) {
@@ -442,17 +515,17 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
         // Writing the byte chunk to the output buffer
         int length = bc.getLength();
         checkLengthBeforeWrite(length);
-        System.arraycopy(bc.getBytes(), bc.getStart(), buf, pos, length);
+        System.arraycopy(bc.getBytes(), bc.getStart(), headerBuffer, pos, length);
         pos = pos + length;
 
     }
 
 
     /**
-     * This method will write the contents of the specified char 
+     * This method will write the contents of the specified char
      * buffer to the output stream, without filtering. This method is meant to
      * be used to write the response header.
-     * 
+     *
      * @param cc data to be written
      */
     protected void write(CharChunk cc) {
@@ -470,34 +543,34 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
             if (((c <= 31) && (c != 9)) || c == 127 || c > 255) {
                 c = ' ';
             }
-            buf[pos++] = (byte) c;
+            headerBuffer[pos++] = (byte) c;
         }
 
     }
 
 
     /**
-     * This method will write the contents of the specified byte 
+     * This method will write the contents of the specified byte
      * buffer to the output stream, without filtering. This method is meant to
      * be used to write the response header.
-     * 
+     *
      * @param b data to be written
      */
     public void write(byte[] b) {
         checkLengthBeforeWrite(b.length);
 
         // Writing the byte chunk to the output buffer
-        System.arraycopy(b, 0, buf, pos, b.length);
+        System.arraycopy(b, 0, headerBuffer, pos, b.length);
         pos = pos + b.length;
 
     }
 
 
     /**
-     * This method will write the contents of the specified String to the 
-     * output stream, without filtering. This method is meant to be used to 
+     * This method will write the contents of the specified String to the
+     * output stream, without filtering. This method is meant to be used to
      * write the response header.
-     * 
+     *
      * @param s data to be written
      */
     protected void write(String s) {
@@ -517,17 +590,17 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
             if (((c <= 31) && (c != 9)) || c == 127 || c > 255) {
                 c = ' ';
             }
-            buf[pos++] = (byte) c;
+            headerBuffer[pos++] = (byte) c;
         }
 
     }
 
 
     /**
-     * This method will print the specified integer to the output stream, 
-     * without filtering. This method is meant to be used to write the 
+     * This method will print the specified integer to the output stream,
+     * without filtering. This method is meant to be used to write the
      * response header.
-     * 
+     *
      * @param i data to be written
      */
     protected void write(int i) {
@@ -542,10 +615,104 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer{
      * requested number of bytes.
      */
     private void checkLengthBeforeWrite(int length) {
-        if (pos + length > buf.length) {
+        if (pos + length > headerBuffer.length) {
             throw new HeadersTooLargeException(
                     sm.getString("iob.responseheadertoolarge.error"));
         }
     }
 
+
+    //------------------------------------------------------ Non-blocking writes
+
+    protected abstract boolean hasMoreDataToFlush();
+    protected abstract void registerWriteInterest() throws IOException;
+
+
+    /**
+     * Writes any remaining buffered data.
+     *
+     * @param block     Should this method block until the buffer is empty
+     * @return  <code>true</code> if data remains in the buffer (which can only
+     *          happen in non-blocking mode) else <code>false</code>.
+     * @throws IOException
+     */
+    protected abstract boolean flushBuffer(boolean block) throws IOException;
+
+
+    /**
+     * Is standard Servlet blocking IO being used for output?
+     */
+    protected final boolean isBlocking() {
+        return response.getWriteListener() == null;
+    }
+
+
+    protected final boolean isReady() throws IOException {
+        boolean result = !hasDataToWrite();
+        if (!result) {
+            registerWriteInterest();
+        }
+        return result;
+    }
+
+
+    public final boolean hasDataToWrite() {
+        return hasMoreDataToFlush() || hasBufferedData();
+    }
+
+
+    private boolean hasBufferedData() {
+        boolean result = false;
+        if (bufferedWrites!=null) {
+            Iterator<ByteBufferHolder> iter = bufferedWrites.iterator();
+            while (!result && iter.hasNext()) {
+                result = iter.next().hasData();
+            }
+        }
+        return result;
+    }
+
+
+    protected static class ByteBufferHolder {
+        private final ByteBuffer buf;
+        private final AtomicBoolean flipped;
+        public ByteBufferHolder(ByteBuffer buf, boolean flipped) {
+           this.buf = buf;
+           this.flipped = new AtomicBoolean(flipped);
+        }
+        public ByteBuffer getBuf() {
+            return buf;
+        }
+        public boolean isFlipped() {
+            return flipped.get();
+        }
+
+        public boolean flip() {
+            if (flipped.compareAndSet(false, true)) {
+                buf.flip();
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        public boolean hasData() {
+            if (flipped.get()) {
+                return buf.remaining()>0;
+            } else {
+                return buf.position()>0;
+            }
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder(super.toString());
+            builder.append("[flipped=");
+            builder.append(isFlipped()?"true, remaining=" : "false, position=");
+            builder.append(isFlipped()? buf.remaining(): buf.position());
+            builder.append("]");
+            return builder.toString();
+        }
+
+    }
 }

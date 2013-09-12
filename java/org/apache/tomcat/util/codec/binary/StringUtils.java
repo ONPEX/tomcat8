@@ -17,8 +17,7 @@
 package org.apache.tomcat.util.codec.binary;
 
 import java.nio.charset.Charset;
-
-import org.apache.tomcat.util.buf.B2CConverter;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Converts String to and from bytes using the encodings required by the Java specification. These encodings are
@@ -28,7 +27,7 @@ import org.apache.tomcat.util.buf.B2CConverter;
  * <p>This class is immutable and thread-safe.</p>
  *
  * @see <a href="http://download.oracle.com/javase/6/docs/api/java/nio/charset/Charset.html">Standard charsets</a>
- * @version $Id: StringUtils.java 1459218 2013-03-21 10:31:50Z markt $
+ * @version $Id: StringUtils.java 1508214 2013-07-29 22:17:59Z markt $
  * @since 1.4
  */
 public class StringUtils {
@@ -59,7 +58,7 @@ public class StringUtils {
      * @see <a href="http://download.oracle.com/javase/6/docs/api/java/nio/charset/Charset.html">Standard charsets</a>
      */
     public static byte[] getBytesUtf8(final String string) {
-        return getBytes(string, B2CConverter.UTF_8);
+        return getBytes(string, StandardCharsets.UTF_8);
     }
 
     /**
@@ -85,7 +84,7 @@ public class StringUtils {
      *         or {@code null} if the input byte array was {@code null}.
      */
     public static String newStringUtf8(final byte[] bytes) {
-        return newString(bytes, B2CConverter.UTF_8);
+        return newString(bytes, StandardCharsets.UTF_8);
     }
 
 }

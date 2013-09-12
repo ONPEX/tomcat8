@@ -24,6 +24,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
 import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -39,10 +40,7 @@ public class B2CConverter {
         StringManager.getManager(Constants.Package);
 
     private static final Map<String, Charset> encodingToCharsetCache =
-        new HashMap<String, Charset>();
-
-    public static final Charset ISO_8859_1;
-    public static final Charset UTF_8;
+            new HashMap<>();
 
     // Protected so unit tests can use it
     protected static final int LEFTOVER_SIZE = 9;
@@ -56,17 +54,6 @@ public class B2CConverter {
                         alias.toLowerCase(Locale.ENGLISH), charset);
             }
         }
-        Charset iso88591 = null;
-        Charset utf8 = null;
-        try {
-            iso88591 = getCharset("ISO-8859-1");
-            utf8 = getCharset("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            // Impossible. All JVMs must support these.
-            e.printStackTrace();
-        }
-        ISO_8859_1 = iso88591;
-        UTF_8 = utf8;
     }
 
     public static Charset getCharset(String enc)
@@ -121,7 +108,7 @@ public class B2CConverter {
         // Special case. Use the Apache Harmony based UTF-8 decoder because it
         // - a) rejects invalid sequences that the JVM decoder does not
         // - b) fails faster for some invalid sequences
-        if (charset.equals(UTF_8)) {
+        if (charset.equals(StandardCharsets.UTF_8)) {
             decoder = new Utf8Decoder();
         } else {
             decoder = charset.newDecoder();
@@ -130,7 +117,7 @@ public class B2CConverter {
         decoder.onUnmappableCharacter(action);
     }
 
-    /** 
+    /**
      * Reset the decoder state.
      */
     public void recycle() {
@@ -140,7 +127,7 @@ public class B2CConverter {
 
     /**
      * Convert the given bytes to characters.
-     * 
+     *
      * @param bc byte input
      * @param cc char output
      * @param endOfInput    Is this all of the available data
@@ -157,7 +144,7 @@ public class B2CConverter {
         }
         if ((cb == null) || (cb.array() != cc.getBuffer())) {
             // Create a new char buffer if anything changed
-            cb = CharBuffer.wrap(cc.getBuffer(), cc.getEnd(), 
+            cb = CharBuffer.wrap(cc.getBuffer(), cc.getEnd(),
                     cc.getBuffer().length - cc.getEnd());
         } else {
             // Initialize the char buffer

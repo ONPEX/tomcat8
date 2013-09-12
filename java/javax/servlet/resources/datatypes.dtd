@@ -16,7 +16,7 @@
 -->
 <!--
         DTD for XML Schemas: Part 2: Datatypes
-        $Id: datatypes.dtd 615583 2008-01-27 12:01:49Z rjung $
+        $Id: datatypes.dtd 1302376 2012-03-19 11:16:16Z markt $
         Note this DTD is NOT normative, or even definitive. - - the
         prose copy in the datatypes REC is the definitive version
         (which shouldn't differ from this one except for this comment
@@ -102,7 +102,7 @@
    "%pattern; | %enumeration; | %whiteSpace; | %length; |
    %maxLength; | %minLength;">
 <!ENTITY % facet "%ordered; | %unordered;">
-<!ENTITY % facetAttr 
+<!ENTITY % facetAttr
         "value CDATA #REQUIRED
         id ID #IMPLIED">
 <!ENTITY % fixedAttr "fixed %boolean; #IMPLIED">

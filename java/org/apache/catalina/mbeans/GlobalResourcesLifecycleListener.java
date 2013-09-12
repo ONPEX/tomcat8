@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,7 +45,7 @@ import org.apache.tomcat.util.modeler.Registry;
  * management.
  *
  * @author Craig R. McClanahan
- * @version $Id: GlobalResourcesLifecycleListener.java 1142655 2011-07-04 13:28:11Z markt $
+ * @version $Id: GlobalResourcesLifecycleListener.java 1361761 2012-07-15 19:12:31Z markt $
  * @since 4.1
  */
 
@@ -65,7 +65,7 @@ public class GlobalResourcesLifecycleListener
     /**
      * The configuration information registry for our managed beans.
      */
-    protected static Registry registry = MBeanUtils.createRegistry();
+    protected static final Registry registry = MBeanUtils.createRegistry();
 
 
     // ---------------------------------------------- LifecycleListener Methods

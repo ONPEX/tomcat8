@@ -40,11 +40,6 @@
       description="enable a jvm Route check"
       type="boolean"/>
     <attribute
-      name="info"
-      description="describe version"
-      type="java.lang.String"
-      writeable="false"/>
-    <attribute
       name="numberOfSessions"
       description="number of jvmRoute session corrections"
       type="long"
@@ -67,23 +62,6 @@
       description="Stops the Cluster JvmRouteBinderValve"
       impact="ACTION"
       returnType="void"/>
-  </mbean>
-  <mbean
-    name="JvmRouteSessionIDBinderListener"
-    description="Monitors the jvmRoute activity"
-    domain="Catalina"
-    group="Listener"
-    type="org.apache.catalina.ha.session.JvmRouteSessionIDBinderListener">
-    <attribute
-      name="info"
-      description="describe version"
-      type="java.lang.String"
-      writeable="false"/>
-    <attribute
-      name="numberOfSessions"
-      description="number of jvmRoute session corrections"
-      type="long"
-      writeable="false"/>
   </mbean>
   <mbean
     name="DeltaManager"
@@ -209,11 +187,6 @@
       description="expire all sessions cluster wide as one node goes down"
       type="boolean"/>
     <attribute
-      name="info"
-      description="describe version"
-      type="java.lang.String"
-      writeable="false"/>
-    <attribute
       name="invalidatedSessions"
       description="describe version"
       type="[Ljava.lang.String;"
@@ -300,7 +273,7 @@
       name="stateTransfered"
       is="true"
       description="Is session state transfered complete? "
-      type="boolean"/>  
+      type="boolean"/>
     <attribute
       name="stateTransferTimeout"
       description="state transfer timeout in sec"
@@ -362,7 +335,7 @@
       description="Return the set of active Sessions associated with this Manager."
       impact="ACTION"
       returnType="[Lorg.apache.catalina.Session;">
-    </operation>  
+    </operation>
     <operation
       name="getAllClusterSessions"
       description="send to oldest cluster member that this node need all cluster sessions (resync member)"
@@ -377,7 +350,7 @@
         name="sessionId"
         description="The session id for the session "
         type="java.lang.String"/>
-    </operation>   
+    </operation>
     <operation
       name="getLastAccessedTime"
       description="Get the last access time. This one gets updated whenever a request finishes. "
@@ -387,7 +360,7 @@
         name="sessionId"
         description="Id of the session"
         type="java.lang.String"/>
-    </operation> 
+    </operation>
     <operation
       name="getSessionAttribute"
       description="Return a session attribute"
@@ -411,7 +384,7 @@
         name="sessionId"
         description="Id of the session"
         type="java.lang.String"/>
-    </operation> 
+    </operation>
     <operation
       name="listSessionIds"
       description="Return the list of active primary session ids"
@@ -542,6 +515,11 @@
       description="Timeout for RPC messages, how long we will wait for a reply"
       type="long"/>
     <attribute
+      name="terminateOnStartFailure"
+      description="Flag for whether to terminate this map that failed to start."
+      is="true"
+      type="boolean"/>
+    <attribute
       name="secureRandomAlgorithm"
       description="The secure random number generator algorithm name"
       type="java.lang.String"/>
@@ -578,7 +556,7 @@
       description="Return the set of active Sessions associated with this Manager."
       impact="ACTION"
       returnType="[Lorg.apache.catalina.Session;">
-    </operation>  
+    </operation>
     <operation
       name="getCreationTime"
       description="Return the creatio time for this session"
@@ -588,7 +566,7 @@
         name="sessionId"
         description="The session id for the session "
         type="java.lang.String"/>
-    </operation>   
+    </operation>
     <operation
       name="getLastAccessedTime"
       description="Get the last access time. This one gets updated whenever a request finishes. "
@@ -598,7 +576,7 @@
         name="sessionId"
         description="Id of the session"
         type="java.lang.String"/>
-    </operation> 
+    </operation>
     <operation
       name="getSessionAttribute"
       description="Return a session attribute"
@@ -622,7 +600,7 @@
         name="sessionId"
         description="Id of the session"
         type="java.lang.String"/>
-    </operation> 
+    </operation>
     <operation
       name="listSessionIds"
       description="Return the list of active primary session ids"

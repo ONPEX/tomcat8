@@ -50,7 +50,7 @@ import java.beans.PropertyChangeListener;
  * </ul>
  *
  * @author Craig R. McClanahan
- * @version $Id: Loader.java 1200160 2011-11-10 05:35:13Z kkolinko $
+ * @version $Id: Loader.java 1401503 2012-10-23 22:38:16Z markt $
  */
 
 public interface Loader {
@@ -74,17 +74,17 @@ public interface Loader {
 
 
     /**
-     * Return the Container with which this Loader has been associated.
+     * Return the Context with which this Loader has been associated.
      */
-    public Container getContainer();
+    public Context getContext();
 
 
     /**
-     * Set the Container with which this Loader has been associated.
+     * Set the Context with which this Loader has been associated.
      *
-     * @param container The associated Container
+     * @param context The associated Context
      */
-    public void setContainer(Container container);
+    public void setContext(Context context);
 
 
     /**
@@ -101,14 +101,6 @@ public interface Loader {
      * @param delegate The new flag
      */
     public void setDelegate(boolean delegate);
-
-
-    /**
-     * Return descriptive information about this Loader implementation and
-     * the corresponding version number, in the format
-     * <code>&lt;description&gt;/&lt;version&gt;</code>.
-     */
-    public String getInfo();
 
 
     /**
@@ -134,21 +126,6 @@ public interface Loader {
      * @param listener The listener to add
      */
     public void addPropertyChangeListener(PropertyChangeListener listener);
-
-
-    /**
-     * Add a new repository to the set of repositories for this class loader.
-     *
-     * @param repository Repository to be added
-     */
-    public void addRepository(String repository);
-
-
-    /**
-     * Return the set of repositories defined for this class loader.
-     * If none are defined, a zero-length array is returned.
-     */
-    public String[] findRepositories();
 
 
     /**

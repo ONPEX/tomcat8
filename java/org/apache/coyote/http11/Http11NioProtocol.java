@@ -20,10 +20,12 @@ import java.io.IOException;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 
+import javax.net.ssl.SSLEngine;
+import javax.servlet.http.HttpUpgradeHandler;
+
 import org.apache.coyote.AbstractProtocol;
 import org.apache.coyote.Processor;
-import org.apache.coyote.http11.upgrade.UpgradeInbound;
-import org.apache.coyote.http11.upgrade.UpgradeNioProcessor;
+import org.apache.coyote.http11.upgrade.NioProcessor;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.net.AbstractEndpoint;
@@ -32,6 +34,7 @@ import org.apache.tomcat.util.net.NioEndpoint;
 import org.apache.tomcat.util.net.NioEndpoint.Handler;
 import org.apache.tomcat.util.net.SSLImplementation;
 import org.apache.tomcat.util.net.SecureNioChannel;
+import org.apache.tomcat.util.net.SocketStatus;
 import org.apache.tomcat.util.net.SocketWrapper;
 
 
@@ -44,7 +47,7 @@ import org.apache.tomcat.util.net.SocketWrapper;
  * @author Costin Manolache
  * @author Filip Hanik
  */
-public class Http11NioProtocol extends AbstractHttp11JsseProtocol {
+public class Http11NioProtocol extends AbstractHttp11JsseProtocol<NioChannel> {
 
     private static final Log log = LogFactory.getLog(Http11NioProtocol.class);
 
@@ -73,10 +76,17 @@ public class Http11NioProtocol extends AbstractHttp11JsseProtocol {
         return ((NioEndpoint)endpoint);
     }
 
+    @Override
+    public void start() throws Exception {
+        super.start();
+        if (npnHandler != null) {
+            npnHandler.init(getEndpoint(), 0, getAdapter());
+        }
+    }
 
     // -------------------- Properties--------------------
 
-    private Http11ConnectionHandler cHandler;
+    private final Http11ConnectionHandler cHandler;
 
     // -------------------- Pool setup --------------------
 
@@ -197,8 +207,20 @@ public class Http11NioProtocol extends AbstractHttp11JsseProtocol {
                 connections.remove(socket.getSocket());
             if (processor != null) {
                 processor.recycle(true);
-                recycledProcessors.offer(processor);
+                recycledProcessors.push(processor);
             }
+        }
+
+        @Override
+        public SocketState process(SocketWrapper<NioChannel> socket,
+                SocketStatus status) {
+            if (proto.npnHandler != null) {
+                SocketState ss = proto.npnHandler.process(socket, status);
+                if (ss != SocketState.OPEN) {
+                    return ss;
+                }
+            }
+            return super.process(socket, status);
         }
 
 
@@ -216,7 +238,7 @@ public class Http11NioProtocol extends AbstractHttp11JsseProtocol {
                 Processor<NioChannel> processor, boolean isSocketClosing,
                 boolean addToPoller) {
             processor.recycle(isSocketClosing);
-            recycledProcessors.offer(processor);
+            recycledProcessors.push(processor);
             if (addToPoller) {
                 socket.getSocket().getPoller().add(socket.getSocket());
             }
@@ -242,7 +264,6 @@ public class Http11NioProtocol extends AbstractHttp11JsseProtocol {
         @Override
         protected void longPoll(SocketWrapper<NioChannel> socket,
                 Processor<NioChannel> processor) {
-            connections.put(socket.getSocket(), processor);
 
             if (processor.isAsync()) {
                 socket.setAsync(true);
@@ -261,7 +282,7 @@ public class Http11NioProtocol extends AbstractHttp11JsseProtocol {
             Http11NioProcessor processor = new Http11NioProcessor(
                     proto.getMaxHttpHeaderSize(), (NioEndpoint)proto.endpoint,
                     proto.getMaxTrailerSize());
-            processor.setAdapter(proto.adapter);
+            processor.setAdapter(proto.getAdapter());
             processor.setMaxKeepAliveRequests(proto.getMaxKeepAliveRequests());
             processor.setKeepAliveTimeout(proto.getKeepAliveTimeout());
             processor.setConnectionUploadTimeout(
@@ -281,10 +302,18 @@ public class Http11NioProtocol extends AbstractHttp11JsseProtocol {
 
         @Override
         protected Processor<NioChannel> createUpgradeProcessor(
-                SocketWrapper<NioChannel> socket, UpgradeInbound inbound)
+                SocketWrapper<NioChannel> socket,
+                HttpUpgradeHandler httpUpgradeProcessor)
                 throws IOException {
-            return new UpgradeNioProcessor(socket, inbound,
+            return new NioProcessor(socket, httpUpgradeProcessor,
                     ((Http11NioProtocol) getProtocol()).getEndpoint().getSelectorPool());
+        }
+
+        @Override
+        public void onCreateSSLEngine(SSLEngine engine) {
+            if (proto.npnHandler != null) {
+                proto.npnHandler.onCreateEngine(engine);
+            }
         }
     }
 }

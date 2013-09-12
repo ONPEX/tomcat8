@@ -21,17 +21,17 @@ import java.util.Set;
 
 /**
  * @since Servlet 3.0
- * $Id: Registration.java 981816 2010-08-03 10:44:58Z markt $
+ * $Id: Registration.java 1187778 2011-10-22 20:54:57Z markt $
  * TODO SERVLET3 - Add comments
  */
 public interface Registration {
-    
+
     public String getName();
-    
+
     public String getClassName();
 
     /**
-     * 
+     *
      * @param name
      * @param value
      * @return TODO
@@ -41,9 +41,9 @@ public interface Registration {
     public boolean setInitParameter(String name, String value);
 
     public String getInitParameter(String name);
-    
+
     /**
-     * 
+     *
      * @param initParameters
      * @return TODO
      * @throws IllegalArgumentException
@@ -54,9 +54,9 @@ public interface Registration {
     public Map<String, String> getInitParameters();
 
     public interface Dynamic extends Registration {
-        
+
         /**
-         * 
+         *
          * @param isAsyncSupported
          * @throws IllegalStateException
          */

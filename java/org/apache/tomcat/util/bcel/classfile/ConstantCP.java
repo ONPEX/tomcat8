@@ -20,10 +20,10 @@ package org.apache.tomcat.util.bcel.classfile;
 import java.io.DataInput;
 import java.io.IOException;
 
-/** 
+/**
  * Abstract super class for Fieldref and Methodref constants.
  *
- * @version $Id: ConstantCP.java 1377533 2012-08-26 22:22:59Z markt $
+ * @version $Id: ConstantCP.java 1397950 2012-10-13 21:22:37Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     ConstantFieldref
  * @see     ConstantMethodref
@@ -60,7 +60,7 @@ public abstract class ConstantCP extends Constant {
     }
 
 
-    /** 
+    /**
      * @return Reference (index) to class this field or method belongs to.
      */
     public final int getClassIndex() {
@@ -73,15 +73,5 @@ public abstract class ConstantCP extends Constant {
      */
     public final int getNameAndTypeIndex() {
         return name_and_type_index;
-    }
-
-
-    /**
-     * @return String representation.
-     */
-    @Override
-    public final String toString() {
-        return super.toString() + "(class_index = " + class_index + ", name_and_type_index = "
-                + name_and_type_index + ")";
     }
 }

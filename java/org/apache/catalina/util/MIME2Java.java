@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,8 +17,9 @@
 
 package org.apache.catalina.util;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * MIME2Java is a convenience class which handles conversions between MIME charset names
@@ -467,16 +468,16 @@ import java.util.Locale;
  *  </TR>
  * </TABLE>
  *
- * @version $Id: MIME2Java.java 1043105 2010-12-07 15:42:32Z markt $
+ * @version $Id: MIME2Java.java 1370934 2012-08-08 20:14:36Z kkolinko $
  * @author TAMURA Kent &lt;kent@trl.ibm.co.jp&gt;
  */
 public class MIME2Java {
 
-    private static Hashtable<String,String> s_enchash;
-    private static Hashtable<String,String> s_revhash;
+    private static final Map<String,String> s_enchash;
+    private static final Map<String,String> s_revhash;
 
     static {
-        s_enchash = new Hashtable<String,String>();
+        s_enchash = new HashMap<>();
         //    <preferred MIME name>, <Java encoding name>
         s_enchash.put("UTF-8", "UTF8");
         s_enchash.put("US-ASCII",        "8859_1");    // ?
@@ -517,10 +518,10 @@ public class MIME2Java {
         s_enchash.put("EBCDIC-CP-IS",    "CP871");
         s_enchash.put("EBCDIC-CP-AR2",   "CP918");
 
-                                                // j:CNS11643 -> EUC-TW?
-                                                // ISO-2022-CN? ISO-2022-CN-EXT?
+        // j:CNS11643 -> EUC-TW?
+        // ISO-2022-CN? ISO-2022-CN-EXT?
 
-        s_revhash = new Hashtable<String,String>();
+        s_revhash = new HashMap<>();
         //    <Java encoding name>, <preferred MIME name>
         s_revhash.put("UTF8", "UTF-8");
         //s_revhash.put("8859_1", "US-ASCII");    // ?

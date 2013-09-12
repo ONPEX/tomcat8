@@ -48,7 +48,7 @@ public class SlowQueryReport extends AbstractQueryReport  {
      * we will be keeping track of query stats on a per pool basis
      */
     protected static ConcurrentHashMap<String,ConcurrentHashMap<String,QueryStats>> perPoolStats =
-        new ConcurrentHashMap<String,ConcurrentHashMap<String,QueryStats>>();
+        new ConcurrentHashMap<>();
     /**
      * the queries that are used for this interceptor.
      */
@@ -140,7 +140,7 @@ public class SlowQueryReport extends AbstractQueryReport  {
             //create the map to hold our stats
             //however TODO we need to improve the eviction
             //selection
-            queries = new ConcurrentHashMap<String,QueryStats>();
+            queries = new ConcurrentHashMap<>();
             if (perPoolStats.putIfAbsent(pool.getName(), queries)!=null) {
                 //there already was one
                 queries = SlowQueryReport.perPoolStats.get(pool.getName());
@@ -250,7 +250,7 @@ public class SlowQueryReport extends AbstractQueryReport  {
             "The date and time of the last invocation"
         };
 
-        static final OpenType[] FIELD_TYPES = new OpenType[] {
+        static final OpenType<?>[] FIELD_TYPES = new OpenType[] {
             SimpleType.STRING,
             SimpleType.INTEGER,
             SimpleType.LONG,
@@ -284,7 +284,7 @@ public class SlowQueryReport extends AbstractQueryReport  {
             return FIELD_DESCRIPTIONS;
         }
 
-        public static OpenType[] getFieldTypes() {
+        public static OpenType<?>[] getFieldTypes() {
             return FIELD_TYPES;
         }
 

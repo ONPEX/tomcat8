@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ import org.apache.tomcat.util.IntrospectionUtils;
  * <code>org.apache.coyote.tomcat5.CoyoteConnector</code> component.</p>
  *
  * @author Amy Roh
- * @version $Id: ConnectorMBean.java 939305 2010-04-29 13:43:39Z kkolinko $
+ * @version $Id: ConnectorMBean.java 1187796 2011-10-22 21:14:02Z markt $
  */
 
 public class ConnectorMBean extends ClassNameMBean {
@@ -98,7 +98,7 @@ public class ConnectorMBean extends ClassNameMBean {
 
     }
 
-    
+
     /**
      * Set the value of a specific attribute of this MBean.
      *
@@ -135,7 +135,7 @@ public class ConnectorMBean extends ClassNameMBean {
         } catch (InvalidTargetObjectTypeException e) {
             throw new MBeanException(e);
         }
-  
+
     }
 
 

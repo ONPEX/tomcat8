@@ -37,12 +37,12 @@ import org.apache.catalina.Globals;
 /**
  * Servlet to process SSI requests within a webpage. Mapped to a path from
  * within web.xml.
- * 
+ *
  * @author Bip Thelin
  * @author Amy Roh
  * @author Dan Sandberg
  * @author David Becker
- * @version $Id: SSIServlet.java 1138121 2011-06-21 18:32:41Z markt $
+ * @version $Id: SSIServlet.java 1187798 2011-10-22 21:14:59Z markt $
  */
 public class SSIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -66,29 +66,29 @@ public class SSIServlet extends HttpServlet {
     //----------------- Public methods.
     /**
      * Initialize this servlet.
-     * 
+     *
      * @exception ServletException
      *                if an error occurs
      */
     @Override
     public void init() throws ServletException {
-        
+
         if (getServletConfig().getInitParameter("debug") != null)
             debug = Integer.parseInt(getServletConfig().getInitParameter("debug"));
-        
-        isVirtualWebappRelative = 
+
+        isVirtualWebappRelative =
             Boolean.parseBoolean(getServletConfig().getInitParameter("isVirtualWebappRelative"));
-        
+
         if (getServletConfig().getInitParameter("expires") != null)
             expires = Long.valueOf(getServletConfig().getInitParameter("expires"));
-        
+
         buffered = Boolean.parseBoolean(getServletConfig().getInitParameter("buffered"));
-        
+
         inputEncoding = getServletConfig().getInitParameter("inputEncoding");
-        
+
         if (getServletConfig().getInitParameter("outputEncoding") != null)
             outputEncoding = getServletConfig().getInitParameter("outputEncoding");
-        
+
         allowExec = Boolean.parseBoolean(
                 getServletConfig().getInitParameter("allowExec"));
 
@@ -100,7 +100,7 @@ public class SSIServlet extends HttpServlet {
 
     /**
      * Process and forward the GET request to our <code>requestHandler()</code>*
-     * 
+     *
      * @param req
      *            a value of type 'HttpServletRequest'
      * @param res
@@ -121,7 +121,7 @@ public class SSIServlet extends HttpServlet {
     /**
      * Process and forward the POST request to our
      * <code>requestHandler()</code>.
-     * 
+     *
      * @param req
      *            a value of type 'HttpServletRequest'
      * @param res
@@ -141,7 +141,7 @@ public class SSIServlet extends HttpServlet {
 
     /**
      * Process our request and locate right SSI command.
-     * 
+     *
      * @param req
      *            a value of type 'HttpServletRequest'
      * @param res

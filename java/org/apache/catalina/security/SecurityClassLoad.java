@@ -25,7 +25,7 @@ package org.apache.catalina.security;
  *
  * @author Glenn L. Nielsen
  * @author Jean-Francois Arcand
- * @version $Id: SecurityClassLoad.java 1410548 2012-11-16 19:38:51Z markt $
+ * @version $Id: SecurityClassLoad.java 1410545 2012-11-16 19:35:42Z markt $
  */
 
 public final class SecurityClassLoad {
@@ -141,7 +141,6 @@ public final class SecurityClassLoad {
     private static final void loadUtilPackage(ClassLoader loader)
         throws Exception {
         final String basePackage = "org.apache.catalina.util.";
-        loader.loadClass(basePackage + "Enumerator");
         loader.loadClass(basePackage + "ParameterMap");
     }
 

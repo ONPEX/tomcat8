@@ -31,22 +31,12 @@ import java.io.IOException;
  * server or context restarts.
  *
  * @author Craig R. McClanahan
- * @version $Id: Store.java 1200162 2011-11-10 05:37:57Z kkolinko $
+ * @version $Id: Store.java 1187801 2011-10-22 21:16:40Z markt $
  */
 
 public interface Store {
 
-
     // ------------------------------------------------------------- Properties
-
-
-    /**
-     * Return descriptive information about this Store implementation and
-     * the corresponding version number, in the format
-     * <code>&lt;description&gt;/&lt;version&gt;</code>.
-     */
-    public String getInfo();
-
 
     /**
      * Return the Manager instance associated with this Store.

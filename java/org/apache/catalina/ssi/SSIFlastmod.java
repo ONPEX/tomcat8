@@ -25,12 +25,12 @@ import org.apache.catalina.util.Strftime;
 
 /**
  * Implements the Server-side #flastmod command
- * 
+ *
  * @author Bip Thelin
  * @author Paul Speed
  * @author Dan Sandberg
  * @author David Becker
- * @version $Id: SSIFlastmod.java 1349238 2012-06-12 10:36:37Z markt $
+ * @version $Id: SSIFlastmod.java 1349237 2012-06-12 10:35:26Z markt $
  */
 public final class SSIFlastmod implements SSICommand {
     /**

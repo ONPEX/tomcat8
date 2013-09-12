@@ -44,7 +44,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * @author <a href="mailto:nicolaken@supereva.it">Nicola Ken Barozzi</a> Aisa
  * @author <a href="mailto:stefano@apache.org">Stefano Mazzocchi</a>
  * @author Yoav Shapira
- * @version $Id: ErrorReportValve.java 1498384 2013-07-01 11:18:54Z violetagg $
+ * @version $Id: ErrorReportValve.java 1498368 2013-07-01 11:01:38Z violetagg $
  */
 
 public class ErrorReportValve extends ValveBase {
@@ -54,32 +54,8 @@ public class ErrorReportValve extends ValveBase {
         super(true);
     }
 
-    // ----------------------------------------------------- Instance Variables
-
-
-    /**
-     * The descriptive information related to this implementation.
-     */
-    private static final String info =
-        "org.apache.catalina.valves.ErrorReportValve/1.0";
-
-
-    // ------------------------------------------------------------- Properties
-
-
-    /**
-     * Return descriptive information about this Valve implementation.
-     */
-    @Override
-    public String getInfo() {
-
-        return (info);
-
-    }
-
 
     // --------------------------------------------------------- Public Methods
-
 
     /**
      * Invoke the next Valve in the sequence. When the invoke returns, check

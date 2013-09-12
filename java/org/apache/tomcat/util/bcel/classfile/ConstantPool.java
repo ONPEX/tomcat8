@@ -31,7 +31,7 @@ import org.apache.tomcat.util.bcel.Constants;
  * programatically should see <a href="../generic/ConstantPoolGen.html">
  * ConstantPoolGen</a>.
 
- * @version $Id: ConstantPool.java 1181133 2011-10-10 18:49:14Z markt $
+ * @version $Id: ConstantPool.java 1397953 2012-10-13 21:43:36Z markt $
  * @see     Constant
  * @author <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */
@@ -62,7 +62,7 @@ public class ConstantPool implements Cloneable, Serializable {
              * "All eight byte constants take up two spots in the constant pool.
              * If this is the n'th byte in the constant pool, then the next item
              * will be numbered n+2"
-             * 
+             *
              * Thus we have to increment the index counter.
              */
             tag = constant_pool[i].getTag();
@@ -213,7 +213,7 @@ public class ConstantPool implements Cloneable, Serializable {
 
 
     /**
-     * Get string from constant pool and bypass the indirection of 
+     * Get string from constant pool and bypass the indirection of
      * `ConstantClass' and `ConstantString' objects. I.e. these classes have
      * an index field that points to another entry of the constant pool of
      * type `ConstantUtf8' which contains the real data.
@@ -250,27 +250,4 @@ public class ConstantPool implements Cloneable, Serializable {
         c = getConstant(i, Constants.CONSTANT_Utf8);
         return ((ConstantUtf8) c).getBytes();
     }
-
-
-    /**
-     * @return Length of constant pool.
-     */
-    public int getLength() {
-        return constant_pool_count;
-    }
-
-
-    /**
-     * @return String representation.
-     */
-    @Override
-    public String toString() {
-        StringBuilder buf = new StringBuilder();
-        for (int i = 1; i < constant_pool_count; i++) {
-            buf.append(i).append(")").append(constant_pool[i]).append("\n");
-        }
-        return buf.toString();
-    }
-
-
 }

@@ -14,13 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.catalina.startup;
 
-
 import java.io.File;
-import java.lang.management.ManagementFactory;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -28,10 +25,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
-
-import javax.management.MBeanServer;
-import javax.management.MBeanServerFactory;
-import javax.management.ObjectName;
 
 import org.apache.catalina.Globals;
 import org.apache.catalina.security.SecurityClassLoad;
@@ -52,9 +45,8 @@ import org.apache.juli.logging.LogFactory;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: Bootstrap.java 1428018 2013-01-02 20:41:24Z markt $
+ * @version $Id: Bootstrap.java 1428010 2013-01-02 20:37:16Z markt $
  */
-
 public final class Bootstrap {
 
     private static final Log log = LogFactory.getLog(Bootstrap.class);
@@ -68,6 +60,72 @@ public final class Bootstrap {
      */
     private static Bootstrap daemon = null;
 
+
+    private static final File catalinaBaseFile;
+    private static final File catalinaHomeFile;
+
+    static {
+        // Will always be non-null
+        String userDir = System.getProperty("user.dir");
+
+        // Home first
+        String home = System.getProperty(Globals.CATALINA_HOME_PROP);
+        File homeFile = null;
+
+        if (home != null) {
+            File f = new File(home);
+            try {
+                homeFile = f.getCanonicalFile();
+            } catch (IOException ioe) {
+                homeFile = f.getAbsoluteFile();
+            }
+        }
+
+        if (homeFile == null) {
+            // First fall-back. See if current directory is a bin directory
+            // in a normal Tomcat install
+            File bootstrapJar = new File(userDir, "bootstrap.jar");
+
+            if (bootstrapJar.exists()) {
+                File f = new File(userDir, "..");
+                try {
+                    homeFile = f.getCanonicalFile();
+                } catch (IOException ioe) {
+                    homeFile = f.getAbsoluteFile();
+                }
+            }
+        }
+
+        if (homeFile == null) {
+            // Second fall-back. Use current directory
+            File f = new File(userDir);
+            try {
+                homeFile = f.getCanonicalFile();
+            } catch (IOException ioe) {
+                homeFile = f.getAbsoluteFile();
+            }
+        }
+
+        catalinaHomeFile = homeFile;
+        System.setProperty(
+                Globals.CATALINA_HOME_PROP, catalinaHomeFile.getPath());
+
+        // Then base
+        String base = System.getProperty(Globals.CATALINA_BASE_PROP);
+        if (base == null) {
+            catalinaBaseFile = catalinaHomeFile;
+        } else {
+            File baseFile = new File(base);
+            try {
+                baseFile = baseFile.getCanonicalFile();
+            } catch (IOException ioe) {
+                baseFile = baseFile.getAbsoluteFile();
+            }
+            catalinaBaseFile = baseFile;
+        }
+        System.setProperty(
+                Globals.CATALINA_BASE_PROP, catalinaBaseFile.getPath());
+    }
 
     // -------------------------------------------------------------- Variables
 
@@ -112,7 +170,7 @@ public final class Bootstrap {
 
         value = replace(value);
 
-        List<Repository> repositories = new ArrayList<Repository>();
+        List<Repository> repositories = new ArrayList<>();
 
         StringTokenizer tokenizer = new StringTokenizer(value, ",");
         while (tokenizer.hasMoreElements()) {
@@ -147,29 +205,12 @@ public final class Bootstrap {
             }
         }
 
-        ClassLoader classLoader = ClassLoaderFactory.createClassLoader
-            (repositories, parent);
-
-        // Retrieving MBean server
-        MBeanServer mBeanServer = null;
-        if (MBeanServerFactory.findMBeanServer(null).size() > 0) {
-            mBeanServer = MBeanServerFactory.findMBeanServer(null).get(0);
-        } else {
-            mBeanServer = ManagementFactory.getPlatformMBeanServer();
-        }
-
-        // Register the server classloader
-        ObjectName objectName =
-            new ObjectName("Catalina:type=ServerClassLoader,name=" + name);
-        mBeanServer.registerMBean(classLoader, objectName);
-
-        return classLoader;
-
+        return ClassLoaderFactory.createClassLoader(repositories, parent);
     }
 
     /**
      * System property replacement in the given string.
-     * 
+     *
      * @param str The original string
      * @return the modified string
      */
@@ -216,13 +257,7 @@ public final class Bootstrap {
     /**
      * Initialize daemon.
      */
-    public void init()
-        throws Exception
-    {
-
-        // Set Catalina path
-        setCatalinaHome();
-        setCatalinaBase();
+    public void init() throws Exception {
 
         initClassLoaders();
 
@@ -478,76 +513,42 @@ public final class Bootstrap {
 
     }
 
-    public void setCatalinaHome(String s) {
-        System.setProperty(Globals.CATALINA_HOME_PROP, s);
-    }
-
-    public void setCatalinaBase(String s) {
-        System.setProperty(Globals.CATALINA_BASE_PROP, s);
-    }
-
 
     /**
-     * Set the <code>catalina.base</code> System property to the current
-     * working directory if it has not been set.
-     */
-    private void setCatalinaBase() {
-
-        if (System.getProperty(Globals.CATALINA_BASE_PROP) != null)
-            return;
-        if (System.getProperty(Globals.CATALINA_HOME_PROP) != null)
-            System.setProperty(Globals.CATALINA_BASE_PROP,
-                               System.getProperty(Globals.CATALINA_HOME_PROP));
-        else
-            System.setProperty(Globals.CATALINA_BASE_PROP,
-                               System.getProperty("user.dir"));
-
-    }
-
-
-    /**
-     * Set the <code>catalina.home</code> System property to the current
-     * working directory if it has not been set.
-     */
-    private void setCatalinaHome() {
-
-        if (System.getProperty(Globals.CATALINA_HOME_PROP) != null)
-            return;
-        File bootstrapJar =
-            new File(System.getProperty("user.dir"), "bootstrap.jar");
-        if (bootstrapJar.exists()) {
-            try {
-                System.setProperty
-                    (Globals.CATALINA_HOME_PROP,
-                     (new File(System.getProperty("user.dir"), ".."))
-                     .getCanonicalPath());
-            } catch (Exception e) {
-                // Ignore
-                System.setProperty(Globals.CATALINA_HOME_PROP,
-                                   System.getProperty("user.dir"));
-            }
-        } else {
-            System.setProperty(Globals.CATALINA_HOME_PROP,
-                               System.getProperty("user.dir"));
-        }
-
-    }
-
-
-    /**
-     * Get the value of the catalina.home environment variable.
+     * Obtain the name of configured home (binary) directory. Note that home and
+     * base may be the same (and are by default).
      */
     public static String getCatalinaHome() {
-        return System.getProperty(Globals.CATALINA_HOME_PROP,
-                                  System.getProperty("user.dir"));
+        return catalinaHomeFile.getPath();
     }
 
 
     /**
-     * Get the value of the catalina.base environment variable.
+     * Obtain the name of the configured base (instance) directory. Note that
+     * home and base may be the same (and are by default). If this is not set
+     * the value returned by {@link #getCatalinaHome()} will be used.
      */
     public static String getCatalinaBase() {
-        return System.getProperty(Globals.CATALINA_BASE_PROP, getCatalinaHome());
+        return catalinaBaseFile.getPath();
+    }
+
+
+    /**
+     * Obtain the configured home (binary) directory. Note that home and
+     * base may be the same (and are by default).
+     */
+    public static File getCatalinaHomeFile() {
+        return catalinaHomeFile;
+    }
+
+
+    /**
+     * Obtain the configured base (instance) directory. Note that
+     * home and base may be the same (and are by default). If this is not set
+     * the value returned by {@link #getCatalinaHomeFile()} will be used.
+     */
+    public static File getCatalinaBaseFile() {
+        return catalinaBaseFile;
     }
 
 

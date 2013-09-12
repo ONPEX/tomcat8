@@ -20,7 +20,7 @@ package org.apache.tomcat.jni;
 /** Error
  *
  * @author Mladen Turk
- * @version $Id: Error.java 1037728 2010-11-22 14:12:05Z markt $
+ * @version $Id: Error.java 1447080 2013-02-17 20:48:51Z markt $
  */
 
 public class Error extends Exception {
@@ -30,12 +30,12 @@ public class Error extends Exception {
     /**
      * APR error type.
      */
-    private int error;
+    private final int error;
 
     /**
      * A description of the problem.
      */
-    private String description;
+    private final String description;
 
     /**
      * Construct an APRException.

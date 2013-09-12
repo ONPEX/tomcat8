@@ -85,8 +85,8 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
         items = new LinkedList[LOCK_COUNT];
         waiters = new LinkedList[LOCK_COUNT];
         for (int i=0; i<LOCK_COUNT; i++) {
-            items[i] = new LinkedList<E>();
-            waiters[i] = new LinkedList<ExchangeCountDownLatch<E>>();
+            items[i] = new LinkedList<>();
+            waiters[i] = new LinkedList<>();
             locks[i] = new ReentrantLock(false);
         }
     }
@@ -145,15 +145,14 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
         int idx = getNextPoll();
         E result = null;
         final ReentrantLock lock = this.locks[idx];
-        boolean error = true;
-        //acquire the global lock until we know what to do
-        lock.lock();
         try {
+            //acquire the global lock until we know what to do
+            lock.lock();
             //check to see if we have objects
             result = items[idx].poll();
             if (result==null && timeout>0) {
                 //the queue is empty we will wait for an object
-                ExchangeCountDownLatch<E> c = new ExchangeCountDownLatch<E>(1);
+                ExchangeCountDownLatch<E> c = new ExchangeCountDownLatch<>(1);
                 //add to the bottom of the wait list
                 waiters[idx].addLast(c);
                 //unlock the global lock
@@ -171,9 +170,8 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
                 //we have an object, release
                 lock.unlock();
             }
-            error = false;
         } finally {
-            if (error && lock.isHeldByCurrentThread()) {
+            if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
             }
         }
@@ -188,29 +186,23 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
         int idx = getNextPoll();
         Future<E> result = null;
         final ReentrantLock lock = this.locks[idx];
-        boolean error = true;
-        //grab the global lock
-        lock.lock();
         try {
+            //grab the global lock
+            lock.lock();
             //check to see if we have objects in the queue
             E item = items[idx].poll();
             if (item==null) {
                 //queue is empty, add ourselves as waiters
-                ExchangeCountDownLatch<E> c = new ExchangeCountDownLatch<E>(1);
+                ExchangeCountDownLatch<E> c = new ExchangeCountDownLatch<>(1);
                 waiters[idx].addLast(c);
-                lock.unlock();
                 //return a future that will wait for the object
-                result = new ItemFuture<E>(c);
+                result = new ItemFuture<>(c);
             } else {
-                lock.unlock();
                 //return a future with the item
-                result = new ItemFuture<E>(item);
+                result = new ItemFuture<>(item);
             }
-            error = false;
         } finally {
-            if (error && lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
+            lock.unlock();
         }
         return result;
     }
@@ -523,7 +515,7 @@ public class MultiLockFairBlockingQueue<E> implements BlockingQueue<E> {
 
         @SuppressWarnings("unchecked") // Can't create arrays of generic types
         public FairIterator() {
-            ArrayList<E> list = new ArrayList<E>(MultiLockFairBlockingQueue.this.size());
+            ArrayList<E> list = new ArrayList<>(MultiLockFairBlockingQueue.this.size());
             for (int idx=0; idx<LOCK_COUNT; idx++) {
                 final ReentrantLock lock = MultiLockFairBlockingQueue.this.locks[idx];
                 lock.lock();

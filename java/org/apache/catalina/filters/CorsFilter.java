@@ -133,10 +133,10 @@ public final class CorsFilter implements Filter {
 
 
     public CorsFilter() {
-        this.allowedOrigins = new HashSet<String>();
-        this.allowedHttpMethods = new HashSet<String>();
-        this.allowedHttpHeaders = new HashSet<String>();
-        this.exposedHeaders = new HashSet<String>();
+        this.allowedOrigins = new HashSet<>();
+        this.allowedHttpMethods = new HashSet<>();
+        this.allowedHttpHeaders = new HashSet<>();
+        this.exposedHeaders = new HashSet<>();
     }
 
 
@@ -349,7 +349,7 @@ public final class CorsFilter implements Filter {
         // Section 6.2.4
         String accessControlRequestHeadersHeader = request.getHeader(
                 CorsFilter.REQUEST_HEADER_ACCESS_CONTROL_REQUEST_HEADERS);
-        List<String> accessControlRequestHeaders = new LinkedList<String>();
+        List<String> accessControlRequestHeaders = new LinkedList<>();
         if (accessControlRequestHeadersHeader != null &&
                 !accessControlRequestHeadersHeader.trim().isEmpty()) {
             String[] headers = accessControlRequestHeadersHeader.trim().split(
@@ -729,7 +729,7 @@ public final class CorsFilter implements Filter {
         if (allowedHttpHeaders != null) {
             Set<String> setAllowedHttpHeaders =
                     parseStringToSet(allowedHttpHeaders);
-            Set<String> lowerCaseHeaders = new HashSet<String>();
+            Set<String> lowerCaseHeaders = new HashSet<>();
             for (String header : setAllowedHttpHeaders) {
                 String lowerCase = header.toLowerCase();
                 lowerCaseHeaders.add(lowerCase);
@@ -785,7 +785,7 @@ public final class CorsFilter implements Filter {
             splits = new String[] {};
         }
 
-        Set<String> set = new HashSet<String>();
+        Set<String> set = new HashSet<>();
         if (splits.length > 0) {
             for (String split : splits) {
                 set.add(split.trim());
@@ -1030,14 +1030,13 @@ public final class CorsFilter implements Filter {
      *
      */
     public static final Collection<String> HTTP_METHODS =
-            new HashSet<String>(Arrays.asList("OPTIONS", "GET", "HEAD", "POST",
-                    "PUT", "DELETE", "TRACE", "CONNECT"));
+            new HashSet<>(Arrays.asList("OPTIONS", "GET", "HEAD", "POST", "PUT",
+                    "DELETE", "TRACE", "CONNECT"));
     /**
      * {@link Collection} of non-simple HTTP methods. Case sensitive.
      */
     public static final Collection<String> COMPLEX_HTTP_METHODS =
-            new HashSet<String>(Arrays.asList("PUT", "DELETE", "TRACE",
-                    "CONNECT"));
+            new HashSet<>(Arrays.asList("PUT", "DELETE", "TRACE", "CONNECT"));
     /**
      * {@link Collection} of Simple HTTP methods. Case sensitive.
      *
@@ -1045,7 +1044,7 @@ public final class CorsFilter implements Filter {
      *       >http://www.w3.org/TR/cors/#terminology</a>
      */
     public static final Collection<String> SIMPLE_HTTP_METHODS =
-            new HashSet<String>(Arrays.asList("GET", "POST", "HEAD"));
+            new HashSet<>(Arrays.asList("GET", "POST", "HEAD"));
 
     /**
      * {@link Collection} of Simple HTTP request headers. Case in-sensitive.
@@ -1054,7 +1053,7 @@ public final class CorsFilter implements Filter {
      *       >http://www.w3.org/TR/cors/#terminology</a>
      */
     public static final Collection<String> SIMPLE_HTTP_REQUEST_HEADERS =
-            new HashSet<String>(Arrays.asList("Accept", "Accept-Language",
+            new HashSet<>(Arrays.asList("Accept", "Accept-Language",
                     "Content-Language"));
 
     /**
@@ -1064,9 +1063,8 @@ public final class CorsFilter implements Filter {
      *       >http://www.w3.org/TR/cors/#terminology</a>
      */
     public static final Collection<String> SIMPLE_HTTP_RESPONSE_HEADERS =
-            new HashSet<String>(Arrays.asList("Cache-Control",
-                    "Content-Language", "Content-Type", "Expires",
-                    "Last-Modified", "Pragma"));
+            new HashSet<>(Arrays.asList("Cache-Control", "Content-Language",
+                    "Content-Type", "Expires", "Last-Modified", "Pragma"));
 
     /**
      * {@link Collection} of Simple HTTP request headers. Case in-sensitive.
@@ -1075,8 +1073,7 @@ public final class CorsFilter implements Filter {
      *       >http://www.w3.org/TR/cors/#terminology</a>
      */
     public static final Collection<String> SIMPLE_HTTP_REQUEST_CONTENT_TYPE_VALUES =
-            new HashSet<String>(Arrays.asList(
-                    "application/x-www-form-urlencoded",
+            new HashSet<>(Arrays.asList("application/x-www-form-urlencoded",
                     "multipart/form-data", "text/plain"));
 
     // ------------------------------------------------ Configuration Defaults

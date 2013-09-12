@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,6 @@ import java.util.Arrays;
 import org.apache.catalina.tribes.ChannelMessage;
 import org.apache.catalina.tribes.Member;
 import org.apache.catalina.tribes.group.ChannelInterceptorBase;
-import org.apache.catalina.tribes.membership.MemberImpl;
 import org.apache.catalina.tribes.membership.Membership;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
@@ -38,7 +37,7 @@ import org.apache.juli.logging.LogFactory;
 public class DomainFilterInterceptor extends ChannelInterceptorBase {
     private static final Log log = LogFactory.getLog(DomainFilterInterceptor.class);
     protected Membership membership = null;
-    
+
     protected byte[] domain = new byte[0];
 
     @Override
@@ -54,7 +53,7 @@ public class DomainFilterInterceptor extends ChannelInterceptorBase {
         boolean notify = false;
         synchronized (membership) {
             notify = Arrays.equals(domain,member.getDomain());
-            if ( notify ) notify = membership.memberAlive((MemberImpl)member);
+            if ( notify ) notify = membership.memberAlive(member);
         }
         if ( notify ) {
             super.memberAdded(member);
@@ -69,7 +68,7 @@ public class DomainFilterInterceptor extends ChannelInterceptorBase {
         boolean notify = false;
         synchronized (membership) {
             notify = Arrays.equals(domain,member.getDomain());
-            membership.removeMember((MemberImpl)member);
+            membership.removeMember(member);
         }
         if ( notify ) super.memberDisappeared(member);
     }
@@ -100,7 +99,7 @@ public class DomainFilterInterceptor extends ChannelInterceptorBase {
 
     protected synchronized void setupMembership() {
         if ( membership == null ) {
-            membership = new Membership((MemberImpl)super.getLocalMember(true));
+            membership = new Membership(super.getLocalMember(true));
         }
 
     }

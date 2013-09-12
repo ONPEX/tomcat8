@@ -35,9 +35,8 @@ import org.apache.tomcat.util.bcel.Constants;
  * org.apache.tomcat.util.bcel.classfile.AttributeReader)">Attribute.addAttributeReader</a>.
 
  *
- * @version $Id: Unknown.java 1377533 2012-08-26 22:22:59Z markt $
+ * @version $Id: Unknown.java 1398112 2012-10-14 18:27:10Z markt $
  * @see org.apache.tomcat.util.bcel.classfile.Attribute
- * @see org.apache.tomcat.util.bcel.classfile.AttributeReader
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */
 public final class Unknown extends Attribute {
@@ -46,7 +45,7 @@ public final class Unknown extends Attribute {
     private byte[] bytes;
     private String name;
     private static final Map<String, Unknown> unknown_attributes =
-            new HashMap<String, Unknown>();
+            new HashMap<>();
 
 
     /**
@@ -58,7 +57,7 @@ public final class Unknown extends Attribute {
      * @param constant_pool Array of constants
      */
     public Unknown(int name_index, int length, byte[] bytes, ConstantPool constant_pool) {
-        super(Constants.ATTR_UNKNOWN, name_index, length, constant_pool);
+        super(name_index, length, constant_pool);
         this.bytes = bytes;
         name = ((ConstantUtf8) constant_pool.getConstant(name_index, Constants.CONSTANT_Utf8))
                 .getBytes();
@@ -90,40 +89,5 @@ public final class Unknown extends Attribute {
     @Override
     public final String getName() {
         return name;
-    }
-
-
-    /**
-     * @return String representation.
-     */
-    @Override
-    public final String toString() {
-        if (length == 0 || bytes == null) {
-            return "(Unknown attribute " + name + ")";
-        }
-        String hex;
-        if (length > 10) {
-            byte[] tmp = new byte[10];
-            System.arraycopy(bytes, 0, tmp, 0, 10);
-            hex = Utility.toHexString(tmp) + "... (truncated)";
-        } else {
-            hex = Utility.toHexString(bytes);
-        }
-        return "(Unknown attribute " + name + ": " + hex + ")";
-    }
-
-
-    /**
-     * @return deep copy of this attribute
-     */
-    @Override
-    public Attribute copy( ConstantPool _constant_pool ) {
-        Unknown c = (Unknown) clone();
-        if (bytes != null) {
-            c.bytes = new byte[bytes.length];
-            System.arraycopy(bytes, 0, c.bytes, 0, bytes.length);
-        }
-        c.constant_pool = _constant_pool;
-        return c;
     }
 }

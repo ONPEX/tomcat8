@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,7 +41,7 @@ import java.util.StringTokenizer;
  * @author Craig McClanahan
  * @author Justyna Horwat
  * @author Greg Murray
- * @version $Id: Extension.java 939305 2010-04-29 13:43:39Z kkolinko $
+ * @version $Id: Extension.java 1187792 2011-10-22 21:11:51Z markt $
  */
 
 public final class Extension {
@@ -54,7 +54,7 @@ public final class Extension {
      * The name of the optional package being made available, or required.
      */
     private String extensionName = null;
-    
+
 
     public String getExtensionName() {
         return (this.extensionName);
@@ -163,7 +163,7 @@ public final class Extension {
     public void setFulfilled(boolean fulfilled) {
         this.fulfilled = fulfilled;
     }
-    
+
     public boolean isFulfilled() {
         return fulfilled;
     }

@@ -164,15 +164,18 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
 
     // ------------------------------------------------------------- Properties
 
-
     /**
      * Add an input filter to the filter library.
+     *
+     * @throws NullPointerException if the supplied filter is null
      */
     public void addFilter(InputFilter filter) {
 
-        // FIXME: Check for null ?
+        if (filter == null) {
+            throw new NullPointerException(sm.getString("iib.filter.npe"));
+        }
 
-        InputFilter[] newFilterLibrary = 
+        InputFilter[] newFilterLibrary =
             new InputFilter[filterLibrary.length + 1];
         for (int i = 0; i < filterLibrary.length; i++) {
             newFilterLibrary[i] = filterLibrary[i];
@@ -181,7 +184,6 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
         filterLibrary = newFilterLibrary;
 
         activeFilters = new InputFilter[filterLibrary.length];
-
     }
 
 
@@ -227,20 +229,31 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
 
     public abstract boolean parseRequestLine(boolean useAvailableDataOnly)
         throws IOException;
-    
+
     public abstract boolean parseHeaders() throws IOException;
-    
-    protected abstract boolean fill(boolean block) throws IOException; 
+
+    /**
+     * Attempts to read some data into the input buffer.
+     *
+     * @return <code>true</code> if more data was added to the input buffer
+     *         otherwise <code>false</code>
+     */
+    protected abstract boolean fill(boolean block) throws IOException;
 
     protected abstract void init(SocketWrapper<S> socketWrapper,
             AbstractEndpoint endpoint) throws IOException;
 
+    /**
+     * Issues a non blocking read.
+     * @return int  Number of bytes read
+     */
+    protected abstract int nbRead() throws IOException;
+
 
     // --------------------------------------------------------- Public Methods
 
-
     /**
-     * Recycle the input buffer. This should be called when closing the 
+     * Recycle the input buffer. This should be called when closing the
      * connection.
      */
     public void recycle() {
@@ -264,7 +277,7 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
 
     /**
      * End processing of current HTTP request.
-     * Note: All bytes of the current request should have been already 
+     * Note: All bytes of the current request should have been already
      * consumed. This method only resets all the pointers so that we are ready
      * to parse the next HTTP request.
      */
@@ -302,7 +315,7 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
 
     /**
      * End request (consumes leftover bytes).
-     * 
+     *
      * @throws IOException an underlying I/O error occurred
      */
     public void endRequest()
@@ -314,7 +327,7 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
         }
 
     }
-    
+
 
     /**
      * Available bytes in the buffers (note that due to encoding, this may not
@@ -331,13 +344,44 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
     }
 
 
+    /**
+     * Has all of the request body been read? There are subtle differences
+     * between this and available() > 0 primarily because of having to handle
+     * faking non-blocking reads with the blocking IO connector.
+     */
+    public boolean isFinished() {
+        if (lastValid > pos) {
+            // Data to read in the buffer so not finished
+            return false;
+        }
+
+        /*
+         * Don't use fill(false) here because in the following circumstances
+         * BIO will block - possibly indefinitely
+         * - client is using keep-alive and connection is still open
+         * - client has sent the complete request
+         * - client has not sent any of the next request (i.e. no pipelining)
+         * - application has read the complete request
+         */
+
+        // Check the InputFilters
+
+        if (lastActiveFilter >= 0) {
+            return activeFilters[lastActiveFilter].isFinished();
+        } else {
+            // No filters. Assume request is not finished. EOF will signal end of
+            // request.
+            return false;
+        }
+    }
+
     // ---------------------------------------------------- InputBuffer Methods
 
     /**
      * Read some bytes.
      */
     @Override
-    public int doRead(ByteChunk chunk, Request req) 
+    public int doRead(ByteChunk chunk, Request req)
         throws IOException {
 
         if (lastActiveFilter == -1)

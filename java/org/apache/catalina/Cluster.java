@@ -29,19 +29,12 @@ package org.apache.catalina;
  * @author Bip Thelin
  * @author Remy Maucherat
  * @author Filip Hanik
- * @version $Id: Cluster.java 1200156 2011-11-10 05:30:28Z kkolinko $
+ * @version $Id: Cluster.java 1237984 2012-01-30 20:40:37Z markt $
  */
 
 public interface Cluster {
 
     // ------------------------------------------------------------- Properties
-
-    /**
-     * Return descriptive information about this Cluster implementation and
-     * the corresponding version number, in the format
-     * <code>&lt;description&gt;/&lt;version&gt;</code>.
-     */
-    public String getInfo();
 
     /**
      * Return the name of the cluster that this Server is currently
@@ -73,23 +66,6 @@ public interface Cluster {
      */
     public Container getContainer();
 
-    /**
-     * Set the protocol parameters.
-     *
-     * @param protocol The protocol used by the cluster
-     * @deprecated
-     */
-    @Deprecated
-    public void setProtocol(String protocol);
-
-    /**
-     * Get the protocol used by the cluster.
-     *
-     * @return The protocol
-     * @deprecated
-     */
-    @Deprecated
-    public String getProtocol();
 
     // --------------------------------------------------------- Public Methods
 

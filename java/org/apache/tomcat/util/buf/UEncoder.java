@@ -19,15 +19,16 @@ package org.apache.tomcat.util.buf;
 import java.io.IOException;
 import java.util.BitSet;
 
-/** Efficient implementation for encoders.
- *  This class is not thread safe - you need one encoder per thread.
- *  The encoder will save and recycle the internal objects, avoiding
- *  garbage.
+/**
+ * Efficient implementation of an UTF-8 encoder.
+ * This class is not thread safe - you need one encoder per thread.
+ * The encoder will save and recycle the internal objects, avoiding
+ * garbage.
  *
- *  You can add extra characters that you want preserved, for example
- *  while encoding a URL you can add "/".
+ * You can add extra characters that you want preserved, for example
+ * while encoding a URL you can add "/".
  *
- *  @author Costin Manolache
+ * @author Costin Manolache
  */
 public final class UEncoder {
 
@@ -39,18 +40,10 @@ public final class UEncoder {
     private CharChunk cb=null;
     private CharChunk output=null;
 
-    private String encoding="UTF8";
+    private final String ENCODING = "UTF8";
 
     public UEncoder() {
         initSafeChars();
-    }
-
-    /**
-     * @deprecated Unused. Will be removed in Tomcat 8.0.x onwards.
-     */
-    @Deprecated
-    public void setEncoding( String s ) {
-        encoding=s;
     }
 
     public void addSafeCharacter( char c ) {
@@ -72,7 +65,7 @@ public final class UEncoder {
            bb = new ByteChunk(8); // small enough.
            cb = new CharChunk(2); // small enough.
            output = new CharChunk(64); // small enough.
-           c2b = new C2BConverter(encoding);
+           c2b = new C2BConverter(ENCODING);
        } else {
            bb.recycle();
            cb.recycle();
@@ -105,7 +98,7 @@ public final class UEncoder {
                bb.recycle();
            }
        }
-       
+
        return output;
    }
 
@@ -120,7 +113,7 @@ public final class UEncoder {
            out.append(ch);
        }
    }
-   
+
     // -------------------- Internal implementation --------------------
 
     private void initSafeChars() {

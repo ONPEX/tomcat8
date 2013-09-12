@@ -5,23 +5,21 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.catalina.startup;
-
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.LinkedHashSet;
@@ -29,10 +27,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import org.apache.catalina.loader.StandardClassLoader;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
-
 
 /**
  * <p>Utility class for building class loaders for Catalina.  The factory
@@ -50,14 +46,13 @@ import org.apache.juli.logging.LogFactory;
  * </ul>
  *
  * @author Craig R. McClanahan
- * @version $Id: ClassLoaderFactory.java 1076059 2011-03-01 23:59:36Z kkolinko $
+ * @version $Id: ClassLoaderFactory.java 1364147 2012-07-21 18:52:54Z markt $
  */
-
 public final class ClassLoaderFactory {
 
 
     private static final Log log = LogFactory.getLog(ClassLoaderFactory.class);
-    
+
     // --------------------------------------------------------- Public Methods
 
 
@@ -66,10 +61,10 @@ public final class ClassLoaderFactory {
      * defaults and the specified directory paths:
      *
      * @param unpacked Array of pathnames to unpacked directories that should
-     *  be added to the repositories of the class loader, or <code>null</code> 
+     *  be added to the repositories of the class loader, or <code>null</code>
      * for no unpacked directories to be considered
      * @param packed Array of pathnames to directories containing JAR files
-     *  that should be added to the repositories of the class loader, 
+     *  that should be added to the repositories of the class loader,
      * or <code>null</code> for no directories of JAR files to be considered
      * @param parent Parent class loader for the new class loader, or
      *  <code>null</code> for the system class loader.
@@ -85,7 +80,7 @@ public final class ClassLoaderFactory {
             log.debug("Creating new class loader");
 
         // Construct the "class path" for this class loader
-        Set<URL> set = new LinkedHashSet<URL>();
+        Set<URL> set = new LinkedHashSet<>();
 
         // Add unpacked directories
         if (unpacked != null) {
@@ -125,13 +120,13 @@ public final class ClassLoaderFactory {
         // Construct the class loader itself
         final URL[] array = set.toArray(new URL[set.size()]);
         return AccessController.doPrivileged(
-                new PrivilegedAction<StandardClassLoader>() {
+                new PrivilegedAction<URLClassLoader>() {
                     @Override
-                    public StandardClassLoader run() {
+                    public URLClassLoader run() {
                         if (parent == null)
-                            return new StandardClassLoader(array);
+                            return new URLClassLoader(array);
                         else
-                            return new StandardClassLoader(array, parent);
+                            return new URLClassLoader(array, parent);
                     }
                 });
     }
@@ -157,7 +152,7 @@ public final class ClassLoaderFactory {
             log.debug("Creating new class loader");
 
         // Construct the "class path" for this class loader
-        Set<URL> set = new LinkedHashSet<URL>();
+        Set<URL> set = new LinkedHashSet<>();
 
         if (repositories != null) {
             for (Repository repository : repositories)  {
@@ -223,13 +218,13 @@ public final class ClassLoaderFactory {
             }
 
         return AccessController.doPrivileged(
-                new PrivilegedAction<StandardClassLoader>() {
+                new PrivilegedAction<URLClassLoader>() {
                     @Override
-                    public StandardClassLoader run() {
+                    public URLClassLoader run() {
                         if (parent == null)
-                            return new StandardClassLoader(array);
+                            return new URLClassLoader(array);
                         else
-                            return new StandardClassLoader(array, parent);
+                            return new URLClassLoader(array, parent);
                     }
                 });
     }
@@ -278,20 +273,20 @@ public final class ClassLoaderFactory {
         JAR,
         URL
     }
-    
+
     public static class Repository {
-        private String location;
-        private RepositoryType type;
-        
+        private final String location;
+        private final RepositoryType type;
+
         public Repository(String location, RepositoryType type) {
             this.location = location;
             this.type = type;
         }
-        
+
         public String getLocation() {
             return location;
         }
-        
+
         public RepositoryType getType() {
             return type;
         }

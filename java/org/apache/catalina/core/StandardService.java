@@ -5,17 +5,15 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.catalina.core;
 
 
@@ -28,12 +26,14 @@ import javax.management.ObjectName;
 import org.apache.catalina.Container;
 import org.apache.catalina.Engine;
 import org.apache.catalina.Executor;
+import org.apache.catalina.JmxEnabled;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleState;
 import org.apache.catalina.Server;
 import org.apache.catalina.Service;
 import org.apache.catalina.connector.Connector;
-import org.apache.catalina.mbeans.MBeanUtils;
+import org.apache.catalina.mapper.Mapper;
+import org.apache.catalina.mapper.MapperListener;
 import org.apache.catalina.util.LifecycleMBeanBase;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
@@ -51,17 +51,9 @@ import org.apache.tomcat.util.res.StringManager;
 public class StandardService extends LifecycleMBeanBase implements Service {
 
     private static final Log log = LogFactory.getLog(StandardService.class);
-   
+
 
     // ----------------------------------------------------- Instance Variables
-
-
-    /**
-     * Descriptive information about this component implementation.
-     */
-    private static final String info =
-        "org.apache.catalina.core.StandardService/1.0";
-
 
     /**
      * The name of this service.
@@ -83,29 +75,46 @@ public class StandardService extends LifecycleMBeanBase implements Service {
     /**
      * The property change support for this component.
      */
-    protected PropertyChangeSupport support = new PropertyChangeSupport(this);
+    protected final PropertyChangeSupport support = new PropertyChangeSupport(this);
 
 
     /**
      * The set of Connectors associated with this Service.
      */
     protected Connector connectors[] = new Connector[0];
-    
-    /**
-     * 
-     */
-    protected ArrayList<Executor> executors = new ArrayList<Executor>();
+    private final Object connectorsLock = new Object();
 
     /**
-     * The Container associated with this Service. (In the case of the
-     * org.apache.catalina.startup.Embedded subclass, this holds the most
-     * recently added Engine.)
+     *
+     */
+    protected final ArrayList<Executor> executors = new ArrayList<>();
+
+    /**
+     * The Container associated with this Service.
      */
     protected Container container = null;
 
     private ClassLoader parentClassLoader = null;
 
+    /**
+     * Mapper.
+     */
+    protected final Mapper mapper = new Mapper();
+
+
+    /**
+     * Mapper listener.
+     */
+    protected final MapperListener mapperListener =
+            new MapperListener(mapper, this);
+
+
     // ------------------------------------------------------------- Properties
+
+    @Override
+    public Mapper getMapper() {
+        return mapper;
+    }
 
 
     /**
@@ -152,19 +161,6 @@ public class StandardService extends LifecycleMBeanBase implements Service {
 
         // Report this property change to interested listeners
         support.firePropertyChange("container", oldContainer, this.container);
-
-    }
-
-
-    /**
-     * Return descriptive information about this Service implementation and
-     * the corresponding version number, in the format
-     * <code>&lt;description&gt;/&lt;version&gt;</code>.
-     */
-    @Override
-    public String getInfo() {
-
-        return (info);
 
     }
 
@@ -229,7 +225,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
     @Override
     public void addConnector(Connector connector) {
 
-        synchronized (connectors) {
+        synchronized (connectorsLock) {
             connector.setService(this);
             Connector results[] = new Connector[connectors.length + 1];
             System.arraycopy(connectors, 0, results, 0, connectors.length);
@@ -279,7 +275,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
     @Override
     public Connector[] findConnectors() {
 
-        return (connectors);
+        return connectors;
 
     }
 
@@ -294,7 +290,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
     @Override
     public void removeConnector(Connector connector) {
 
-        synchronized (connectors) {
+        synchronized (connectorsLock) {
             int j = -1;
             for (int i = 0; i < connectors.length; i++) {
                 if (connector == connectors[i]) {
@@ -450,8 +446,11 @@ public class StandardService extends LifecycleMBeanBase implements Service {
             }
         }
 
+
+        mapperListener.start();
+
         // Start our defined Connectors second
-        synchronized (connectors) {
+        synchronized (connectorsLock) {
             for (Connector connector: connectors) {
                 try {
                     // If it has already failed, don't try and start it
@@ -480,7 +479,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
     protected void stopInternal() throws LifecycleException {
 
         // Pause connectors first
-        synchronized (connectors) {
+        synchronized (connectorsLock) {
             for (Connector connector: connectors) {
                 try {
                     connector.pause();
@@ -504,7 +503,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
         }
 
         // Now stop the connectors
-        synchronized (connectors) {
+        synchronized (connectorsLock) {
             for (Connector connector: connectors) {
                 if (!LifecycleState.STARTED.equals(
                         connector.getState())) {
@@ -523,6 +522,12 @@ public class StandardService extends LifecycleMBeanBase implements Service {
             }
         }
 
+        // If the Server failed to start, the mapperListener won't have been
+        // started
+        if (mapperListener.getState() != LifecycleState.INITIALIZED) {
+            mapperListener.stop();
+        }
+
         synchronized (executors) {
             for (Executor executor: executors) {
                 executor.stop();
@@ -539,21 +544,24 @@ public class StandardService extends LifecycleMBeanBase implements Service {
     protected void initInternal() throws LifecycleException {
 
         super.initInternal();
-        
+
         if (container != null) {
             container.init();
         }
 
         // Initialize any Executors
         for (Executor executor : findExecutors()) {
-            if (executor instanceof LifecycleMBeanBase) {
-                ((LifecycleMBeanBase) executor).setDomain(getDomain());
+            if (executor instanceof JmxEnabled) {
+                ((JmxEnabled) executor).setDomain(getDomain());
             }
             executor.init();
         }
 
+        // Initialize mapper listener
+        mapperListener.init();
+
         // Initialize our defined Connectors
-        synchronized (connectors) {
+        synchronized (connectorsLock) {
             for (Connector connector : connectors) {
                 try {
                     connector.init();
@@ -568,11 +576,13 @@ public class StandardService extends LifecycleMBeanBase implements Service {
             }
         }
     }
-    
+
     @Override
     protected void destroyInternal() throws LifecycleException {
+        mapperListener.destroy();
+
         // Destroy our defined Connectors
-        synchronized (connectors) {
+        synchronized (connectorsLock) {
             for (Connector connector : connectors) {
                 try {
                     connector.destroy();
@@ -621,10 +631,25 @@ public class StandardService extends LifecycleMBeanBase implements Service {
         support.firePropertyChange("parentClassLoader", oldParentClassLoader,
                                    this.parentClassLoader);
     }
+
     @Override
     protected String getDomainInternal() {
-        
-        return MBeanUtils.getDomain(this);
+        String domain = null;
+        Container engine = getContainer();
+
+        // Use the engine name first
+        if (engine != null) {
+            domain = engine.getName();
+        }
+
+        // No engine or no engine name, use the service name
+        if (domain == null) {
+            domain = getName();
+        }
+
+        // No service name, return null which will trigger the use of the
+        // default
+        return domain;
     }
 
     @Override

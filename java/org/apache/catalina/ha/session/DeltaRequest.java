@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,7 @@ package org.apache.catalina.ha.session;
 
 /**
  * This class is used to track the series of actions that happens when
- * a request is executed. These actions will then translate into invocations of methods 
+ * a request is executed. These actions will then translate into invocations of methods
  * on the actual session.
  * This class is NOT thread safe. One DeltaRequest per session
  * @author <a href="mailto:fhanik@apache.org">Filip Hanik</a>
@@ -64,16 +64,15 @@ public class DeltaRequest implements Externalizable {
     public static final String NAME_AUTHTYPE = "__SET__AUTHTYPE__";
 
     private String sessionId;
-    private LinkedList<AttributeInfo> actions = new LinkedList<AttributeInfo>();
-    private LinkedList<AttributeInfo> actionPool =
-        new LinkedList<AttributeInfo>();
-    
+    private LinkedList<AttributeInfo> actions = new LinkedList<>();
+    private final LinkedList<AttributeInfo> actionPool = new LinkedList<>();
+
     private boolean recordAllActions = false;
 
     public DeltaRequest() {
-        
+
     }
-    
+
     public DeltaRequest(String sessionId, boolean recordAllActions) {
         this.recordAllActions=recordAllActions;
         if(sessionId != null)
@@ -95,7 +94,7 @@ public class DeltaRequest implements Externalizable {
         int action = ACTION_SET;
         addAction(TYPE_MAXINTERVAL,action,NAME_MAXINTERVAL,Integer.valueOf(interval));
     }
-    
+
     /**
      * convert principal at SerializablePrincipal for backup nodes.
      * Only support principals from type {@link GenericPrincipal GenericPrincipal}
@@ -154,7 +153,7 @@ public class DeltaRequest implements Externalizable {
         //add the action
         actions.addLast(info);
     }
-    
+
     public void execute(DeltaSession session, boolean notifyListeners) {
         if ( !this.sessionId.equals( session.getId() ) )
             throw new java.lang.IllegalArgumentException("Session id mismatch, not executing the delta request");
@@ -162,7 +161,7 @@ public class DeltaRequest implements Externalizable {
         for ( int i=0; i<actions.size(); i++ ) {
             AttributeInfo info = actions.get(i);
             switch ( info.getType() ) {
-                case TYPE_ATTRIBUTE: {
+                case TYPE_ATTRIBUTE:
                     if ( info.getAction() == ACTION_SET ) {
                         if ( log.isTraceEnabled() ) log.trace("Session.setAttribute('"+info.getName()+"', '"+info.getValue()+"')");
                         session.setAttribute(info.getName(), info.getValue(),notifyListeners,false);
@@ -170,20 +169,17 @@ public class DeltaRequest implements Externalizable {
                         if ( log.isTraceEnabled() ) log.trace("Session.removeAttribute('"+info.getName()+"')");
                         session.removeAttribute(info.getName(),notifyListeners,false);
                     }
-                        
+
                     break;
-                }//case
-                case TYPE_ISNEW: {
-                if ( log.isTraceEnabled() ) log.trace("Session.setNew('"+info.getValue()+"')");
+                case TYPE_ISNEW:
+                    if ( log.isTraceEnabled() ) log.trace("Session.setNew('"+info.getValue()+"')");
                     session.setNew(((Boolean)info.getValue()).booleanValue(),false);
                     break;
-                }//case
-                case TYPE_MAXINTERVAL: {
+                case TYPE_MAXINTERVAL:
                     if ( log.isTraceEnabled() ) log.trace("Session.setMaxInactiveInterval('"+info.getValue()+"')");
                     session.setMaxInactiveInterval(((Integer)info.getValue()).intValue(),false);
                     break;
-                }//case
-                case TYPE_PRINCIPAL: {
+                case TYPE_PRINCIPAL:
                     Principal p = null;
                     if ( info.getAction() == ACTION_SET ) {
                         SerializablePrincipal sp = (SerializablePrincipal)info.getValue();
@@ -191,16 +187,15 @@ public class DeltaRequest implements Externalizable {
                     }
                     session.setPrincipal(p,false);
                     break;
-                }//case
-                case TYPE_AUTHTYPE: {
+                case TYPE_AUTHTYPE:
                     String authType = null;
                     if ( info.getAction() == ACTION_SET ) {
                         authType = (String)info.getValue();
                     }
                     session.setAuthType(authType,false);
                     break;
-                }//case
-                default : throw new java.lang.IllegalArgumentException("Invalid attribute info type="+info);
+                default :
+                    throw new java.lang.IllegalArgumentException("Invalid attribute info type="+info);
             }//switch
         }//for
         session.endAccess();
@@ -219,7 +214,7 @@ public class DeltaRequest implements Externalizable {
         }
         actions.clear();
     }
-    
+
     public String getSessionId() {
         return sessionId;
     }
@@ -232,12 +227,12 @@ public class DeltaRequest implements Externalizable {
     public int getSize() {
         return actions.size();
     }
-    
+
     public void clear() {
         actions.clear();
         actionPool.clear();
     }
-    
+
     @Override
     public void readExternal(java.io.ObjectInput in) throws IOException,ClassNotFoundException {
         //sessionId - String
@@ -249,7 +244,7 @@ public class DeltaRequest implements Externalizable {
         recordAllActions = in.readBoolean();
         int cnt = in.readInt();
         if (actions == null)
-            actions = new LinkedList<AttributeInfo>();
+            actions = new LinkedList<>();
         else
             actions.clear();
         for (int i = 0; i < cnt; i++) {
@@ -285,11 +280,11 @@ public class DeltaRequest implements Externalizable {
             info.writeExternal(out);
         }
     }
-    
+
     /**
      * serialize DeltaRequest
      * @see DeltaRequest#writeExternal(java.io.ObjectOutput)
-     * 
+     *
      * @return serialized delta request
      * @throws IOException
      */
@@ -301,7 +296,7 @@ public class DeltaRequest implements Externalizable {
         oos.close();
         return bos.toByteArray();
     }
-    
+
     private static class AttributeInfo implements java.io.Externalizable {
         private String name = null;
         private Object value = null;
@@ -349,7 +344,7 @@ public class DeltaRequest implements Externalizable {
         public String getName() {
             return name;
         }
-        
+
         public void recycle() {
             name = null;
             value = null;
@@ -363,7 +358,7 @@ public class DeltaRequest implements Externalizable {
             AttributeInfo other =  (AttributeInfo)o;
             return other.getName().equals(this.getName());
         }
-        
+
         @Override
         public void readExternal(java.io.ObjectInput in ) throws IOException,ClassNotFoundException {
             //type - int
@@ -391,7 +386,7 @@ public class DeltaRequest implements Externalizable {
             out.writeBoolean(getValue()!=null);
             if (getValue()!=null) out.writeObject(getValue());
         }
-        
+
         @Override
         public String toString() {
             StringBuilder buf = new StringBuilder("AttributeInfo[type=");

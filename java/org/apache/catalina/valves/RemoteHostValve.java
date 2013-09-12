@@ -30,39 +30,11 @@ import org.apache.catalina.connector.Response;
  * based on the remote client's host name.
  *
  * @author Craig R. McClanahan
- * @version $Id: RemoteHostValve.java 1187022 2011-10-20 19:55:37Z markt $
+ * @version $Id: RemoteHostValve.java 1187756 2011-10-22 19:25:55Z markt $
  */
-
-public final class RemoteHostValve
-    extends RequestFilterValve {
-
-
-    // ----------------------------------------------------- Instance Variables
-
-
-    /**
-     * The descriptive information related to this implementation.
-     */
-    private static final String info =
-        "org.apache.catalina.valves.RemoteHostValve/1.0";
-
-
-    // ------------------------------------------------------------- Properties
-
-
-    /**
-     * Return descriptive information about this Valve implementation.
-     */
-    @Override
-    public String getInfo() {
-
-        return (info);
-
-    }
-
+public final class RemoteHostValve extends RequestFilterValve {
 
     // --------------------------------------------------------- Public Methods
-
 
     /**
      * Extract the desired request property, and pass it (along with the
@@ -83,6 +55,4 @@ public final class RemoteHostValve
         process(request.getRequest().getRemoteHost(), request, response);
 
     }
-
-
 }

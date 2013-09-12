@@ -40,8 +40,8 @@ import org.apache.catalina.connector.Request;
 public class TesterHttpServletResponse implements HttpServletResponse {
 
     private PrintWriter pw;
-    private List<String> headerNames = new ArrayList<String>();
-    private List<String> headerValues = new ArrayList<String>();
+    private List<String> headerNames = new ArrayList<>();
+    private List<String> headerValues = new ArrayList<>();
     private int status;
 
     public TesterHttpServletResponse() {
@@ -244,4 +244,6 @@ public class TesterHttpServletResponse implements HttpServletResponse {
     @Override
     @Deprecated
     public void setStatus(int status, String message) {/* NOOP */}
+    @Override
+    public void setContentLengthLong(long length) {/* NOOP */}
 }

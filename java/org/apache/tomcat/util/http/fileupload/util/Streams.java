@@ -26,7 +26,7 @@ import org.apache.tomcat.util.http.fileupload.InvalidFileNameException;
 /**
  * Utility class for working with streams.
  *
- * @version $Id: Streams.java 1456935 2013-03-15 12:47:29Z markt $
+ * @version $Id: Streams.java 1507052 2013-07-25 16:18:43Z markt $
  */
 public final class Streams {
 
@@ -186,7 +186,7 @@ public final class Streams {
     public static String checkFileName(String pFileName) {
         if (pFileName != null  &&  pFileName.indexOf('\u0000') != -1) {
             // pFileName.replace("\u0000", "\\0")
-            final StringBuffer sb = new StringBuffer();
+            final StringBuilder sb = new StringBuilder();
             for (int i = 0;  i < pFileName.length();  i++) {
                 char c = pFileName.charAt(i);
                 switch (c) {

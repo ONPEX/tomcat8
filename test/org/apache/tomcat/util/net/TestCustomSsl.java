@@ -27,13 +27,16 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
+import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
 import org.apache.coyote.ProtocolHandler;
 import org.apache.coyote.http11.AbstractHttp11JsseProtocol;
 import org.apache.tomcat.util.buf.ByteChunk;
+import org.apache.tomcat.util.descriptor.web.ApplicationListener;
 import org.apache.tomcat.util.net.jsse.TesterBug50640SslImpl;
+import org.apache.tomcat.websocket.server.WsListener;
 
 /**
  * The keys and certificates used in this file are all available in svn and were
@@ -70,7 +73,10 @@ public class TestCustomSsl extends TomcatBaseTest {
         connector.setProperty("SSLEnabled", "true");
 
         File appDir = new File(getBuildDirectory(), "webapps/examples");
-        tomcat.addWebapp(null, "/examples", appDir.getAbsolutePath());
+        Context ctxt  = tomcat.addWebapp(
+                null, "/examples", appDir.getAbsolutePath());
+        ctxt.addApplicationListener(new ApplicationListener(
+                WsListener.class.getName(), false));
 
         tomcat.start();
         ByteChunk res = getUrl("https://localhost:" + getPort() +
@@ -108,7 +114,7 @@ public class TestCustomSsl extends TomcatBaseTest {
         // Override the defaults
         ProtocolHandler handler = tomcat.getConnector().getProtocolHandler();
         if (handler instanceof AbstractHttp11JsseProtocol) {
-            ((AbstractHttp11JsseProtocol) handler).setTruststoreFile(null);
+            ((AbstractHttp11JsseProtocol<?>) handler).setTruststoreFile(null);
         } else {
             // Unexpected
             fail("Unexpected handler type");

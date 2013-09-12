@@ -32,6 +32,7 @@ import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
+import org.apache.tomcat.util.net.jsse.JSSESocketFactory;
 
 
 /**
@@ -102,6 +103,16 @@ public class JIoEndpoint extends AbstractEndpoint {
         }
     }
 
+
+    @Override
+    public String[] getCiphersUsed() {
+        if (serverSocketFactory instanceof JSSESocketFactory) {
+            return ((JSSESocketFactory) serverSocketFactory).getEnabledCiphers();
+        }
+        return new String[0];
+    }
+
+
     /*
      * Optional feature support.
      */
@@ -128,6 +139,7 @@ public class JIoEndpoint extends AbstractEndpoint {
         public SocketState process(SocketWrapper<Socket> socket,
                 SocketStatus status);
         public SSLImplementation getSslImplementation();
+        public void beforeHandshake(SocketWrapper<Socket> socket);
     }
 
 
@@ -292,7 +304,7 @@ public class JIoEndpoint extends AbstractEndpoint {
             synchronized (socket) {
                 try {
                     SocketState state = SocketState.OPEN;
-
+                    handler.beforeHandshake(socket);
                     try {
                         // SSL handshake
                         serverSocketFactory.handshake(socket.getSocket());
@@ -307,7 +319,7 @@ public class JIoEndpoint extends AbstractEndpoint {
 
                     if ((state != SocketState.CLOSED)) {
                         if (status == null) {
-                            state = handler.process(socket, SocketStatus.OPEN);
+                            state = handler.process(socket, SocketStatus.OPEN_READ);
                         } else {
                             state = handler.process(socket,status);
                         }
@@ -336,7 +348,7 @@ public class JIoEndpoint extends AbstractEndpoint {
                 } finally {
                     if (launch) {
                         try {
-                            getExecutor().execute(new SocketProcessor(socket, SocketStatus.OPEN));
+                            getExecutor().execute(new SocketProcessor(socket, SocketStatus.OPEN_READ));
                         } catch (RejectedExecutionException x) {
                             log.warn("Socket reprocessing request was rejected for:"+socket,x);
                             try {
@@ -516,7 +528,7 @@ public class JIoEndpoint extends AbstractEndpoint {
     protected boolean processSocket(Socket socket) {
         // Process the request from this socket
         try {
-            SocketWrapper<Socket> wrapper = new SocketWrapper<Socket>(socket);
+            SocketWrapper<Socket> wrapper = new SocketWrapper<>(socket);
             wrapper.setKeepAliveLeft(getMaxKeepAliveRequests());
             // During shutdown, executor may be null - avoid NPE
             if (!running) {
@@ -594,7 +606,7 @@ public class JIoEndpoint extends AbstractEndpoint {
     }
 
     protected ConcurrentLinkedQueue<SocketWrapper<Socket>> waitingRequests =
-        new ConcurrentLinkedQueue<SocketWrapper<Socket>>();
+            new ConcurrentLinkedQueue<>();
 
     @Override
     protected Log getLog() {

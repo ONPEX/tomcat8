@@ -29,7 +29,7 @@ import javax.servlet.http.HttpServletResponse;
 /**
  *
  * @author Peter Rossbach
- * @version $Id: ParamServlet.java 1198558 2011-11-06 21:12:12Z kkolinko $
+ * @version $Id: ParamServlet.java 1187806 2011-10-22 21:23:07Z markt $
  */
 @WebServlet(value = "/annotation/overwrite", name = "param", initParams = {
         @WebInitParam(name = "foo", value = "Hello"),

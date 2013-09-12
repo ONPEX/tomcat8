@@ -40,10 +40,10 @@ import org.apache.tomcat.util.http.RequestUtil;
 
 /**
  * An implementation of SSIExternalResolver that is used with servlets.
- * 
+ *
  * @author Dan Sandberg
  * @author David Becker
- * @version $Id: SSIServletExternalResolver.java 1239053 2012-02-01 10:52:00Z markt $
+ * @version $Id: SSIServletExternalResolver.java 1361823 2012-07-15 22:16:06Z markt $
  */
 public class SSIServletExternalResolver implements SSIExternalResolver {
     protected final String VARIABLE_NAMES[] = {"AUTH_TYPE", "CONTENT_LENGTH",
@@ -56,12 +56,12 @@ public class SSIServletExternalResolver implements SSIExternalResolver {
             "REQUEST_URI", "SCRIPT_FILENAME", "SCRIPT_NAME", "SERVER_ADDR",
             "SERVER_NAME", "SERVER_PORT", "SERVER_PROTOCOL", "SERVER_SOFTWARE",
             "UNIQUE_ID"};
-    protected ServletContext context;
-    protected HttpServletRequest req;
-    protected HttpServletResponse res;
-    protected boolean isVirtualWebappRelative;
-    protected int debug;
-    protected String inputEncoding;
+    protected final ServletContext context;
+    protected final HttpServletRequest req;
+    protected final HttpServletResponse res;
+    protected final boolean isVirtualWebappRelative;
+    protected final int debug;
+    protected final String inputEncoding;
 
     public SSIServletExternalResolver(ServletContext context,
             HttpServletRequest req, HttpServletResponse res,
@@ -247,10 +247,10 @@ public class SSIServletExternalResolver implements SSIExternalResolver {
                         // Use default as a last resort
                         String queryStringEncoding =
                             Constants.DEFAULT_CHARACTER_ENCODING;
-                
+
                         String uriEncoding = null;
                         boolean useBodyEncodingForURI = false;
-                
+
                         // Get encoding settings from request / connector if
                         // possible
                         String requestEncoding = req.getCharacterEncoding();
@@ -260,7 +260,7 @@ public class SSIServletExternalResolver implements SSIExternalResolver {
                             useBodyEncodingForURI = ((Request)req)
                                     .getConnector().getUseBodyEncodingForURI();
                         }
-                
+
                         // If valid, apply settings from request / connector
                         if (uriEncoding != null) {
                             queryStringEncoding = uriEncoding;
@@ -269,10 +269,10 @@ public class SSIServletExternalResolver implements SSIExternalResolver {
                                 queryStringEncoding = requestEncoding;
                             }
                         }
-                
+
                         try {
                             retVal = URLDecoder.decode(queryString,
-                                    queryStringEncoding);                       
+                                    queryStringEncoding);
                         } catch (UnsupportedEncodingException e) {
                             retVal = queryString;
                         }
@@ -563,8 +563,8 @@ public class SSIServletExternalResolver implements SSIExternalResolver {
     }
 
     protected static class ServletContextAndPath {
-        protected ServletContext servletContext;
-        protected String path;
+        protected final ServletContext servletContext;
+        protected final String path;
 
 
         public ServletContextAndPath(ServletContext servletContext,

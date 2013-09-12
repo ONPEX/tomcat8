@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,33 +19,20 @@ package org.apache.catalina.ant.jmx;
 /**
  *
  * @author Peter Rossbach
- * @version $Id: Arg.java 1360850 2012-07-12 18:35:57Z markt $
+ * @version $Id: Arg.java 1360839 2012-07-12 18:10:32Z markt $
  * @since 5.5.10
  */
 public class Arg {
-    /**
-     * @deprecated  Use getter/setter
-     */
-    @Deprecated
-    String type;
-    /**
-     * @deprecated  Use getter/setter
-     */
-    @Deprecated
-    String value;
+
+    private String type;
+    private String value;
 
     public void setType( String type) {
         this.type=type;
     }
+
     public void setValue( String value ) {
         this.value=value;
-    }
-    /**
-     * @deprecated  Use {@link #setValue(String)}
-     */
-    @Deprecated
-    public void addText( String text ) {
-        this.value=text;
     }
 
     public String getValue() {

@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ import org.apache.catalina.Wrapper;
  * registered InstanceListeners.
  *
  * @author Craig R. McClanahan
- * @version $Id: InstanceSupport.java 987920 2010-08-22 15:34:34Z markt $
+ * @version $Id: InstanceSupport.java 1370569 2012-08-07 22:13:00Z markt $
  */
 
 public final class InstanceSupport {
@@ -65,14 +65,14 @@ public final class InstanceSupport {
      * The set of registered InstanceListeners for event notifications.
      */
     private InstanceListener listeners[] = new InstanceListener[0];
-    
+
     private final Object listenersLock = new Object(); // Lock object for changes to listeners
 
 
     /**
      * The source component for instance events that we will fire.
      */
-    private Wrapper wrapper = null;
+    private final Wrapper wrapper;
 
 
     // ------------------------------------------------------------- Properties

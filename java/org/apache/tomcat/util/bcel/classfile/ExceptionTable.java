@@ -20,9 +20,7 @@ package org.apache.tomcat.util.bcel.classfile;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-import org.apache.tomcat.util.bcel.Constants;
-
-/** 
+/**
  * This class represents the table of exceptions that are thrown by a
  * method. This attribute may be used once per method.  The name of
  * this class is <em>ExceptionTable</em> for historical reasons; The
@@ -30,7 +28,7 @@ import org.apache.tomcat.util.bcel.Constants;
  * attribute using the name <em>Exceptions</em> (which is inconsistent
  * with the other classes).
  *
- * @version $Id: ExceptionTable.java 1377533 2012-08-26 22:22:59Z markt $
+ * @version $Id: ExceptionTable.java 1397988 2012-10-14 01:00:48Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Code
  */
@@ -49,7 +47,7 @@ public final class ExceptionTable extends Attribute {
      */
     public ExceptionTable(int name_index, int length, int[] exception_index_table,
             ConstantPool constant_pool) {
-        super(Constants.ATTR_EXCEPTIONS, name_index, length, constant_pool);
+        super(name_index, length, constant_pool);
         setExceptionIndexTable(exception_index_table);
     }
 
@@ -80,40 +78,5 @@ public final class ExceptionTable extends Attribute {
     public final void setExceptionIndexTable( int[] exception_index_table ) {
         this.exception_index_table = exception_index_table;
         number_of_exceptions = (exception_index_table == null) ? 0 : exception_index_table.length;
-    }
-
-
-    /**
-     * @return String representation, i.e., a list of thrown exceptions.
-     */
-    @Override
-    public final String toString() {
-        StringBuilder buf = new StringBuilder();
-        String str;
-        for (int i = 0; i < number_of_exceptions; i++) {
-            str = constant_pool.getConstantString(exception_index_table[i],
-                    Constants.CONSTANT_Class);
-            buf.append(Utility.compactClassName(str, false));
-            if (i < number_of_exceptions - 1) {
-                buf.append(", ");
-            }
-        }
-        return buf.toString();
-    }
-
-
-    /**
-     * @return deep copy of this attribute
-     */
-    @Override
-    public Attribute copy( ConstantPool _constant_pool ) {
-        ExceptionTable c = (ExceptionTable) clone();
-        if (exception_index_table != null) {
-            c.exception_index_table = new int[exception_index_table.length];
-            System.arraycopy(exception_index_table, 0, c.exception_index_table, 0,
-                    exception_index_table.length);
-        }
-        c.constant_pool = _constant_pool;
-        return c;
     }
 }

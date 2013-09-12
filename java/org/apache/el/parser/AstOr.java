@@ -25,7 +25,7 @@ import org.apache.el.lang.EvaluationContext;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: AstOr.java 939311 2010-04-29 14:01:02Z kkolinko $
+ * @version $Id: AstOr.java 1503937 2013-07-16 23:01:27Z markt $
  */
 public final class AstOr extends BooleanNode {
     public AstOr(int id) {
@@ -36,12 +36,12 @@ public final class AstOr extends BooleanNode {
     public Object getValue(EvaluationContext ctx)
             throws ELException {
         Object obj = this.children[0].getValue(ctx);
-        Boolean b = coerceToBoolean(obj);
+        Boolean b = coerceToBoolean(obj, true);
         if (b.booleanValue()) {
             return b;
         }
         obj = this.children[1].getValue(ctx);
-        b = coerceToBoolean(obj);
+        b = coerceToBoolean(obj, true);
         return b;
     }
 }

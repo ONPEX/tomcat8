@@ -23,7 +23,7 @@ import org.apache.catalina.tribes.ChannelException;
 import org.apache.catalina.tribes.Member;
 
 /**
- * All-to-all replication for a hash map implementation. Each node in the cluster will carry an identical 
+ * All-to-all replication for a hash map implementation. Each node in the cluster will carry an identical
  * copy of the map.<br><br>
  * This map implementation doesn't have a background thread running to replicate changes.
  * If you do have changes without invoking put/remove then you need to invoke one of the following methods:
@@ -42,11 +42,11 @@ import org.apache.catalina.tribes.Member;
  * TODO implement periodic sync/transfer thread
  * @author Filip Hanik
  * @version 1.0
- * 
+ *
  * TODO memberDisappeared, should do nothing except change map membership
  *       by default it relocates the primary objects
  */
-public class ReplicatedMap extends AbstractReplicatedMap {
+public class ReplicatedMap<K,V> extends AbstractReplicatedMap<K,V> {
 
     private static final long serialVersionUID = 1L;
 
@@ -62,7 +62,7 @@ public class ReplicatedMap extends AbstractReplicatedMap {
      * @param loadFactor float - load factor, see HashMap
      */
     public ReplicatedMap(MapOwner owner, Channel channel, long timeout, String mapContextName, int initialCapacity,float loadFactor, ClassLoader[] cls) {
-        super(owner,channel, timeout, mapContextName, initialCapacity, loadFactor, Channel.SEND_OPTIONS_DEFAULT, cls);
+        super(owner,channel, timeout, mapContextName, initialCapacity, loadFactor, Channel.SEND_OPTIONS_DEFAULT, cls, true);
     }
 
     /**
@@ -73,7 +73,7 @@ public class ReplicatedMap extends AbstractReplicatedMap {
      * @param initialCapacity int - the size of this map, see HashMap
      */
     public ReplicatedMap(MapOwner owner, Channel channel, long timeout, String mapContextName, int initialCapacity, ClassLoader[] cls) {
-        super(owner,channel, timeout, mapContextName, initialCapacity, AbstractReplicatedMap.DEFAULT_LOAD_FACTOR,Channel.SEND_OPTIONS_DEFAULT, cls);
+        super(owner,channel, timeout, mapContextName, initialCapacity, AbstractReplicatedMap.DEFAULT_LOAD_FACTOR,Channel.SEND_OPTIONS_DEFAULT, cls, true);
     }
 
     /**
@@ -83,7 +83,19 @@ public class ReplicatedMap extends AbstractReplicatedMap {
      * @param mapContextName String - unique name for this map, to allow multiple maps per channel
      */
     public ReplicatedMap(MapOwner owner, Channel channel, long timeout, String mapContextName, ClassLoader[] cls) {
-        super(owner, channel, timeout, mapContextName,AbstractReplicatedMap.DEFAULT_INITIAL_CAPACITY, AbstractReplicatedMap.DEFAULT_LOAD_FACTOR, Channel.SEND_OPTIONS_DEFAULT, cls);
+        super(owner, channel, timeout, mapContextName,AbstractReplicatedMap.DEFAULT_INITIAL_CAPACITY, AbstractReplicatedMap.DEFAULT_LOAD_FACTOR, Channel.SEND_OPTIONS_DEFAULT, cls, true);
+    }
+
+    /**
+     * Creates a new map
+     * @param channel The channel to use for communication
+     * @param timeout long - timeout for RPC messags
+     * @param mapContextName String - unique name for this map, to allow multiple maps per channel
+     * @param terminate boolean - Flag for whether to terminate this map that failed to start.
+     */
+    public ReplicatedMap(MapOwner owner, Channel channel, long timeout, String mapContextName, ClassLoader[] cls, boolean terminate) {
+        super(owner, channel, timeout, mapContextName,AbstractReplicatedMap.DEFAULT_INITIAL_CAPACITY,
+                AbstractReplicatedMap.DEFAULT_LOAD_FACTOR, Channel.SEND_OPTIONS_DEFAULT, cls, terminate);
     }
 
 //------------------------------------------------------------------------------
@@ -93,7 +105,7 @@ public class ReplicatedMap extends AbstractReplicatedMap {
     protected int getStateMessageType() {
         return AbstractReplicatedMap.MapMessage.MSG_STATE_COPY;
     }
-    
+
     /**
      * publish info about a map pair (key/value) to other nodes in the cluster
      * @param key Object

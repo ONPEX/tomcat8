@@ -25,7 +25,7 @@ import org.apache.el.lang.EvaluationContext;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: AstNot.java 939311 2010-04-29 14:01:02Z kkolinko $
+ * @version $Id: AstNot.java 1503937 2013-07-16 23:01:27Z markt $
  */
 public final class AstNot extends SimpleNode {
     public AstNot(int id) {
@@ -42,7 +42,7 @@ public final class AstNot extends SimpleNode {
     public Object getValue(EvaluationContext ctx)
             throws ELException {
         Object obj = this.children[0].getValue(ctx);
-        Boolean b = coerceToBoolean(obj);
+        Boolean b = coerceToBoolean(obj, true);
         return Boolean.valueOf(!b.booleanValue());
     }
 }

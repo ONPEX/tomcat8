@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,7 +32,7 @@ import org.apache.catalina.util.RequestUtil;
  * {@link MemoryUserDatabase} implementation of {@link UserDatabase}.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: MemoryUser.java 1140070 2011-06-27 09:27:06Z markt $
+ * @version $Id: MemoryUser.java 1370479 2012-08-07 19:59:00Z markt $
  * @since 4.1
  */
 
@@ -69,19 +69,19 @@ public class MemoryUser extends AbstractUser {
     /**
      * The {@link MemoryUserDatabase} that owns this user.
      */
-    protected MemoryUserDatabase database = null;
+    protected final MemoryUserDatabase database;
 
 
     /**
      * The set of {@link Group}s that this user is a member of.
      */
-    protected ArrayList<Group> groups = new ArrayList<Group>();
+    protected final ArrayList<Group> groups = new ArrayList<>();
 
 
     /**
      * The set of {@link Role}s associated with this user.
      */
-    protected ArrayList<Role> roles = new ArrayList<Role>();
+    protected final ArrayList<Role> roles = new ArrayList<>();
 
 
     // ------------------------------------------------------------- Properties

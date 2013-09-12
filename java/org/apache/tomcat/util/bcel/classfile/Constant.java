@@ -29,7 +29,7 @@ import org.apache.tomcat.util.bcel.util.BCELComparator;
  * in the constant pool of a class file. The classes keep closely to
  * the JVM specification.
  *
- * @version $Id: Constant.java 1377534 2012-08-26 22:26:10Z markt $
+ * @version $Id: Constant.java 1507013 2013-07-25 15:32:05Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */
 public abstract class Constant implements Cloneable, Serializable {
@@ -56,7 +56,7 @@ public abstract class Constant implements Cloneable, Serializable {
      * places we will use the tag for switch()es anyway.
      *
      * First, we want match the specification as closely as possible. Second we
-     * need the tag as an index to select the corresponding class name from the 
+     * need the tag as an index to select the corresponding class name from the
      * `CONSTANT_NAMES' array.
      */
     protected byte tag;
@@ -73,15 +73,6 @@ public abstract class Constant implements Cloneable, Serializable {
      */
     public final byte getTag() {
         return tag;
-    }
-
-
-    /**
-     * @return String representation.
-     */
-    @Override
-    public String toString() {
-        return Constants.CONSTANT_NAMES[tag] + "[" + tag + "]";
     }
 
 
@@ -122,7 +113,7 @@ public abstract class Constant implements Cloneable, Serializable {
             case Constants.CONSTANT_NameAndType:
                 return new ConstantNameAndType(file);
             case Constants.CONSTANT_Utf8:
-                return new ConstantUtf8(file);
+                return ConstantUtf8.getInstance(file);
             case Constants.CONSTANT_MethodHandle:
                 return new ConstantMethodHandle(file);
             case Constants.CONSTANT_MethodType:
@@ -135,11 +126,18 @@ public abstract class Constant implements Cloneable, Serializable {
     }
 
 
+
+    @Override
+    public String toString() {
+        return "[" + tag + "]";
+    }
+
+
     /**
      * Return value as defined by given BCELComparator strategy.
      * By default two Constant objects are said to be equal when
      * the result of toString() is equal.
-     * 
+     *
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
@@ -151,7 +149,7 @@ public abstract class Constant implements Cloneable, Serializable {
     /**
      * Return value as defined by given BCELComparator strategy.
      * By default return the hashcode of the result of toString().
-     * 
+     *
      * @see java.lang.Object#hashCode()
      */
     @Override

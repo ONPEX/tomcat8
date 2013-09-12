@@ -25,7 +25,7 @@ import org.apache.el.lang.EvaluationContext;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: AstChoice.java 939311 2010-04-29 14:01:02Z kkolinko $
+ * @version $Id: AstChoice.java 1503937 2013-07-16 23:01:27Z markt $
  */
 public final class AstChoice extends SimpleNode {
     public AstChoice(int id) {
@@ -43,7 +43,7 @@ public final class AstChoice extends SimpleNode {
     public Object getValue(EvaluationContext ctx)
             throws ELException {
         Object obj0 = this.children[0].getValue(ctx);
-        Boolean b0 = coerceToBoolean(obj0);
+        Boolean b0 = coerceToBoolean(obj0, true);
         return this.children[((b0.booleanValue() ? 1 : 2))].getValue(ctx);
     }
 }

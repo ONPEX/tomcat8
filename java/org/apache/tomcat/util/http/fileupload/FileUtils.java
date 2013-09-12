@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,7 +40,7 @@ import java.io.IOException;
  * <p>
  * Origin of code: Excalibur, Alexandria, Commons-Utils
  *
- * @version $Id: FileUtils.java 1456969 2013-03-15 14:37:04Z markt $
+ * @version $Id: FileUtils.java 1456963 2013-03-15 14:21:24Z markt $
  */
 public class FileUtils {
 
@@ -53,7 +53,7 @@ public class FileUtils {
 
     //-----------------------------------------------------------------------
     /**
-     * Deletes a directory recursively. 
+     * Deletes a directory recursively.
      *
      * @param directory  directory to delete
      * @throws IOException in case deletion is unsuccessful

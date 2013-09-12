@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
 import java.security.Principal;
 import java.text.SimpleDateFormat;
@@ -40,6 +41,7 @@ import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.naming.NamingException;
 import javax.security.auth.Subject;
 import javax.servlet.AsyncContext;
 import javax.servlet.DispatcherType;
@@ -58,6 +60,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpUpgradeHandler;
 import javax.servlet.http.Part;
 
 import org.apache.catalina.Context;
@@ -66,15 +69,15 @@ import org.apache.catalina.Host;
 import org.apache.catalina.Manager;
 import org.apache.catalina.Realm;
 import org.apache.catalina.Session;
+import org.apache.catalina.TomcatPrincipal;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.core.ApplicationPart;
 import org.apache.catalina.core.ApplicationSessionCookieConfig;
 import org.apache.catalina.core.AsyncContextImpl;
-import org.apache.catalina.realm.GenericPrincipal;
+import org.apache.catalina.mapper.MappingData;
 import org.apache.catalina.util.ParameterMap;
 import org.apache.catalina.util.StringParser;
 import org.apache.coyote.ActionCode;
-import org.apache.coyote.http11.upgrade.UpgradeInbound;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
@@ -92,7 +95,6 @@ import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
-import org.apache.tomcat.util.http.mapper.MappingData;
 import org.apache.tomcat.util.res.StringManager;
 
 
@@ -101,7 +103,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: Request.java 1486942 2013-05-28 14:48:58Z markt $
+ * @version $Id: Request.java 1499642 2013-07-04 04:03:09Z violetagg $
  */
 
 public class Request
@@ -172,8 +174,8 @@ public class Request
      * Notice that because SimpleDateFormat is not thread-safe, we can't
      * declare formats[] as a static variable.
      */
-    protected SimpleDateFormat formats[] = {
-        new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US),
+    protected final SimpleDateFormat formats[] = {
+        new SimpleDateFormat(FastHttpDateFormat.RFC1123_DATE, Locale.US),
         new SimpleDateFormat("EEEEEE, dd-MMM-yy HH:mm:ss zzz", Locale.US),
         new SimpleDateFormat("EEE MMMM d HH:mm:ss yyyy", Locale.US)
     };
@@ -182,14 +184,13 @@ public class Request
     /**
      * The default Locale if none are specified.
      */
-    protected static Locale defaultLocale = Locale.getDefault();
+    protected static final Locale defaultLocale = Locale.getDefault();
 
 
     /**
      * The attributes associated with this Request, keyed by attribute name.
      */
-    protected HashMap<String, Object> attributes =
-        new HashMap<String, Object>();
+    protected final HashMap<String, Object> attributes = new HashMap<>();
 
 
     /**
@@ -202,21 +203,20 @@ public class Request
     /**
      * List of read only attributes for this Request.
      */
-    private final HashMap<String,Object> readOnlyAttributes =
-        new HashMap<String,Object>();
+    private final HashMap<String,Object> readOnlyAttributes = new HashMap<>();
 
 
     /**
      * The preferred Locales associated with this Request.
      */
-    protected ArrayList<Locale> locales = new ArrayList<Locale>();
+    protected final ArrayList<Locale> locales = new ArrayList<>();
 
 
     /**
      * Internal notes associated with this request by Catalina components
      * and event listeners.
      */
-    private transient HashMap<String, Object> notes = new HashMap<String, Object>();
+    private final transient HashMap<String, Object> notes = new HashMap<>();
 
 
     /**
@@ -246,14 +246,14 @@ public class Request
     /**
      * The associated input buffer.
      */
-    protected InputBuffer inputBuffer = new InputBuffer();
+    protected final InputBuffer inputBuffer = new InputBuffer();
 
 
     /**
      * ServletInputStream.
      */
     protected CoyoteInputStream inputStream =
-        new CoyoteInputStream(inputBuffer);
+            new CoyoteInputStream(inputBuffer);
 
 
     /**
@@ -278,13 +278,6 @@ public class Request
      * User principal.
      */
     protected Principal userPrincipal = null;
-
-
-    /**
-     * Session parsed flag.
-     */
-    @Deprecated
-    protected boolean sessionParsed = false;
 
 
     /**
@@ -314,14 +307,14 @@ public class Request
     /**
      * Post data buffer.
      */
-    protected static int CACHED_POST_LEN = 8192;
+    protected static final int CACHED_POST_LEN = 8192;
     protected byte[] postData = null;
 
 
     /**
      * Hash map used in the getParametersMap method.
      */
-    protected ParameterMap<String, String[]> parameterMap = new ParameterMap<String, String[]>();
+    protected ParameterMap<String, String[]> parameterMap = new ParameterMap<>();
 
 
     /**
@@ -428,7 +421,7 @@ public class Request
     /**
      * Path parameters
      */
-    protected Map<String,String> pathParameters = new HashMap<String, String>();
+    protected final Map<String,String> pathParameters = new HashMap<>();
 
     // --------------------------------------------------------- Public Methods
 
@@ -469,7 +462,6 @@ public class Request
         usingReader = false;
         userPrincipal = null;
         subject = null;
-        sessionParsed = false;
         parametersParsed = false;
         if (parts != null) {
             for (Part part: parts) {
@@ -512,7 +504,7 @@ public class Request
         requestedSessionURL = false;
 
         if (Globals.IS_SECURITY_ENABLED || Connector.RECYCLE_FACADES) {
-            parameterMap = new ParameterMap<String, String[]>();
+            parameterMap = new ParameterMap<>();
         } else {
             parameterMap.setLocked(false);
             parameterMap.clear();
@@ -542,11 +534,6 @@ public class Request
         asyncContext = null;
 
         pathParameters.clear();
-    }
-
-    @Deprecated
-    protected boolean isProcessing() {
-        return coyoteRequest.isProcessing();
     }
 
     /**
@@ -643,43 +630,14 @@ public class Request
      * Return the Host within which this Request is being processed.
      */
     public Host getHost() {
-        return ((Host) mappingData.host);
-    }
-
-
-    /**
-     * Set the Host within which this Request is being processed.  This
-     * must be called as soon as the appropriate Host is identified, and
-     * before the Request is passed to a context.
-     *
-     * @param host The newly associated Host
-     */
-    @Deprecated
-    public void setHost(Host host) {
-        mappingData.host = host;
-    }
-
-
-    /**
-     * Descriptive information about this Request implementation.
-     */
-    protected static final String info =
-        "org.apache.coyote.catalina.CoyoteRequest/1.0";
-
-    /**
-     * Return descriptive information about this Request implementation and
-     * the corresponding version number, in the format
-     * <code>&lt;description&gt;/&lt;version&gt;</code>.
-     */
-    public String getInfo() {
-        return info;
+        return mappingData.host;
     }
 
 
     /**
      * Mapping data.
      */
-    protected MappingData mappingData = new MappingData();
+    protected final MappingData mappingData = new MappingData();
 
     /**
      * Return mapping data.
@@ -830,16 +788,6 @@ public class Request
 
 
     /**
-     * Return an Iterator containing the String names of all notes bindings
-     * that exist for this request.
-     */
-    @Deprecated
-    public Iterator<String> getNoteNames() {
-        return notes.keySet().iterator();
-    }
-
-
-    /**
      * Remove any object bound to the specified name in the internal notes
      * for this request.
      *
@@ -904,17 +852,6 @@ public class Request
 
 
     /**
-     * Set the name of the server (virtual host) to process this request.
-     *
-     * @param name The server name
-     */
-    @Deprecated
-    public void setServerName(String name) {
-        coyoteRequest.serverName().setString(name);
-    }
-
-
-    /**
      * Set the port number of the server to process this request.
      *
      * @param port The server port
@@ -925,6 +862,7 @@ public class Request
 
 
     // ------------------------------------------------- ServletRequest Methods
+
 
 
     /**
@@ -970,7 +908,6 @@ public class Request
             attr = coyoteRequest.getAttribute(Globals.SSL_SESSION_ID_ATTR);
             if(attr != null) {
                 attributes.put(Globals.SSL_SESSION_ID_ATTR, attr);
-                attributes.put(Globals.SSL_SESSION_ID_TOMCAT_ATTR, attr);
             }
             attr = coyoteRequest.getAttribute(Globals.SSL_SESSION_MGR_ATTR);
             if(attr != null) {
@@ -983,6 +920,11 @@ public class Request
     }
 
 
+    @Override
+    public long getContentLengthLong() {
+        return coyoteRequest.getContentLengthLong();
+    }
+
     /**
      * Test if a given name is one of the special Servlet-spec SSL attributes.
      */
@@ -991,7 +933,6 @@ public class Request
             Globals.CIPHER_SUITE_ATTR.equals(name) ||
             Globals.KEY_SIZE_ATTR.equals(name)  ||
             Globals.SSL_SESSION_ID_ATTR.equals(name) ||
-            Globals.SSL_SESSION_ID_TOMCAT_ATTR.equals(name) ||
             Globals.SSL_SESSION_MGR_ATTR.equals(name);
     }
 
@@ -1010,8 +951,6 @@ public class Request
      * <li>{@link Globals#CIPHER_SUITE_ATTR} (SSL connections only)</li>
      * <li>{@link Globals#KEY_SIZE_ATTR} (SSL connections only)</li>
      * <li>{@link Globals#SSL_SESSION_ID_ATTR} (SSL connections only)</li>
-     * <li>{@link Globals#SSL_SESSION_ID_TOMCAT_ATTR} (SSL connections only)
-     * </li>
      * <li>{@link Globals#SSL_SESSION_MGR_ATTR} (SSL connections only)</li>
      * <li>{@link Globals#PARAMETER_PARSE_FAILED_ATTR}</li>
      * </ul>
@@ -1032,7 +971,7 @@ public class Request
         }
         // Take a copy to prevent ConncurrentModificationExceptions if used to
         // remove attributes
-        Set<String> names = new HashSet<String>();
+        Set<String> names = new HashSet<>();
         names.addAll(attributes.keySet());
         return Collections.enumeration(names);
     }
@@ -1062,6 +1001,14 @@ public class Request
     @Override
     public String getContentType() {
         return coyoteRequest.getContentType();
+    }
+
+
+    /**
+     * Set the content type for this Request.
+     */
+    public void setContentType(String contentType) {
+        coyoteRequest.setContentType(contentType);
     }
 
 
@@ -1128,7 +1075,7 @@ public class Request
         if (locales.size() > 0) {
             return Collections.enumeration(locales);
         }
-        ArrayList<Locale> results = new ArrayList<Locale>();
+        ArrayList<Locale> results = new ArrayList<>();
         results.add(defaultLocale);
         return Collections.enumeration(results);
 
@@ -1779,34 +1726,11 @@ public class Request
 
 
     /**
-     * Add a parameter name and corresponding set of values to this Request.
-     * (This is used when restoring the original request on a form based
-     * login).
-     *
-     * @param name Name of this request parameter
-     * @param values Corresponding values for this request parameter
-     */
-    @Deprecated
-    public void addParameter(String name, String values[]) {
-        coyoteRequest.getParameters().addParameterValues(name, values);
-    }
-
-
-    /**
      * Clear the collection of Cookies associated with this Request.
      */
     public void clearCookies() {
         cookiesParsed = true;
         cookies = null;
-    }
-
-
-    /**
-     * Clear the collection of Headers associated with this Request.
-     */
-    @Deprecated
-    public void clearHeaders() {
-        // Not used
     }
 
 
@@ -1819,15 +1743,6 @@ public class Request
 
 
     /**
-     * Clear the collection of parameters associated with this Request.
-     */
-    @Deprecated
-    public void clearParameters() {
-        // Not used
-    }
-
-
-    /**
      * Set the authentication type used for this request, if any; otherwise
      * set the type to <code>null</code>.  Typical values are "BASIC",
      * "DIGEST", or "SSL".
@@ -1836,25 +1751,6 @@ public class Request
      */
     public void setAuthType(String type) {
         this.authType = type;
-    }
-
-
-    /**
-     * Set the context path for this Request.  This will normally be called
-     * when the associated Context is mapping the Request to a particular
-     * Wrapper.
-     *
-     * @param path The context path
-     */
-    @Deprecated
-    public void setContextPath(String path) {
-
-        if (path == null) {
-            mappingData.contextPath.setString("");
-        } else {
-            mappingData.contextPath.setString(path);
-        }
-
     }
 
 
@@ -1946,21 +1842,6 @@ public class Request
 
 
     /**
-     * Set the servlet path for this Request.  This will normally be called
-     * when the associated Context is mapping the Request to a particular
-     * Wrapper.
-     *
-     * @param path The servlet path
-     */
-    @Deprecated
-    public void setServletPath(String path) {
-        if (path != null) {
-            mappingData.wrapperPath.setString(path);
-        }
-    }
-
-
-    /**
      * Set the Principal who has been authenticated for this Request.  This
      * value is also used to calculate the value to be returned by the
      * <code>getRemoteUser()</code> method.
@@ -1990,6 +1871,30 @@ public class Request
 
     // --------------------------------------------- HttpServletRequest Methods
 
+    /**
+     * {@inheritDoc}
+     *
+     * @since Servlet 3.1
+     */
+    @Override
+    public <T extends HttpUpgradeHandler> T upgrade(
+            Class<T> httpUpgradeHandlerClass) throws java.io.IOException, ServletException {
+
+        T handler;
+        try {
+            handler = (T) context.getInstanceManager().newInstance(httpUpgradeHandlerClass);
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NamingException e) {
+            throw new ServletException(e);
+        }
+
+        coyoteRequest.action(ActionCode.UPGRADE, handler);
+
+        // Output required by RFC2616. Protocol specific headers should have
+        // already been set.
+        response.setStatus(HttpServletResponse.SC_SWITCHING_PROTOCOLS);
+
+        return handler;
+    }
 
     /**
      * Return the authentication type used for this Request.
@@ -1999,7 +1904,6 @@ public class Request
         return authType;
     }
 
-
     /**
      * Return the portion of the request URI used to select the Context
      * of the Request.
@@ -2007,17 +1911,6 @@ public class Request
     @Override
     public String getContextPath() {
         return mappingData.contextPath.toString();
-    }
-
-
-    /**
-     * Get the context path.
-     *
-     * @return the context path
-     */
-    @Deprecated
-    public MessageBytes getContextPathMB() {
-        return mappingData.contextPath;
     }
 
 
@@ -2032,17 +1925,6 @@ public class Request
         }
 
         return cookies;
-
-    }
-
-
-    /**
-     * Set the set of cookies received with this Request.
-     */
-    @Deprecated
-    public void setCookies(Cookie[] cookies) {
-
-        this.cookies = cookies;
 
     }
 
@@ -2143,17 +2025,6 @@ public class Request
     @Override
     public String getPathInfo() {
         return mappingData.pathInfo.toString();
-    }
-
-
-    /**
-     * Get the path info.
-     *
-     * @return the path info
-     */
-    @Deprecated
-    public MessageBytes getPathInfoMB() {
-        return mappingData.pathInfo;
     }
 
 
@@ -2280,17 +2151,6 @@ public class Request
 
 
     /**
-     * Get the servlet path.
-     *
-     * @return the servlet path
-     */
-    @Deprecated
-    public MessageBytes getServletPathMB() {
-        return mappingData.wrapperPath;
-    }
-
-
-    /**
      * Return the session associated with this Request, creating one
      * if necessary.
      */
@@ -2399,7 +2259,7 @@ public class Request
                 return false;
             } else {
                 for (int i = (getMappingData().contexts.length); i > 0; i--) {
-                    Context ctxt = (Context) getMappingData().contexts[i - 1];
+                    Context ctxt = getMappingData().contexts[i - 1];
                     try {
                         if (ctxt.getManager().findSession(requestedSessionId) !=
                                 null) {
@@ -2436,6 +2296,18 @@ public class Request
             return false;
         }
 
+        // If the role is "*" then the return value must be false
+        // Servlet 31, section 13.3
+        if ("*".equals(role)) {
+            return false;
+        }
+
+        // If the role is "**" then, unless the application defines a role with
+        // that name, only check if the user is authenticated
+        if ("**".equals(role) && !context.findSecurityRole("**")) {
+            return userPrincipal != null;
+        }
+
         Realm realm = context.getRealm();
         if (realm == null) {
             return false;
@@ -2459,8 +2331,8 @@ public class Request
      */
     @Override
     public Principal getUserPrincipal() {
-        if (userPrincipal instanceof GenericPrincipal) {
-            return ((GenericPrincipal) userPrincipal).getUserPrincipal();
+        if (userPrincipal instanceof TomcatPrincipal) {
+            return ((TomcatPrincipal) userPrincipal).getUserPrincipal();
         }
 
         return userPrincipal;
@@ -2505,6 +2377,30 @@ public class Request
         }
     }
 
+    /**
+     * Changes the session ID of the session associated with this request.
+     *
+     * @return the old session ID before it was changed
+     * @see javax.servlet.http.HttpSessionIdListener
+     * @since Servlet 3.1
+     */
+    @Override
+    public String changeSessionId() {
+
+        Session session = this.getSessionInternal(false);
+        if (session == null) {
+            throw new IllegalStateException(
+                sm.getString("coyoteRequest.changeSessionId"));
+        }
+
+        Manager manager = this.getContext().getManager();
+        manager.changeSessionId(session);
+
+        String newSessionId = session.getId();
+        this.changeSessionId(newSessionId);
+
+        return newSessionId;
+    }
 
     /**
      * Return the session associated with this Request, creating one
@@ -2558,6 +2454,18 @@ public class Request
         return (inputBuffer.available() > 0);
     }
 
+
+    /**
+     * Return true if an attempt has been made to read the request body and all
+     * of the request body has been read
+     */
+    public boolean isFinished() {
+        AtomicBoolean result = new AtomicBoolean(false);
+        coyoteRequest.action(ActionCode.REQUEST_BODY_FULLY_READ, result);
+        return result.get();
+    }
+
+
     /**
      * Disable swallowing of remaining input if configured
      */
@@ -2575,15 +2483,6 @@ public class Request
 
     public void setCometTimeout(long timeout) {
         coyoteRequest.action(ActionCode.COMET_SETTIMEOUT, Long.valueOf(timeout));
-    }
-
-    /**
-     * Not part of Servlet 3 spec but probably should be.
-     * @return true if the requested session ID was obtained from the SSL session
-     */
-    @Deprecated
-    public boolean isRequestedSessionIdFromSSL() {
-        return requestedSessionSSL;
     }
 
     /**
@@ -2717,7 +2616,7 @@ public class Request
             upload.setFileSizeMax(mce.getMaxFileSize());
             upload.setSizeMax(mce.getMaxRequestSize());
 
-            parts = new ArrayList<Part>();
+            parts = new ArrayList<>();
             try {
                 List<FileItem> items =
                         upload.parseRequest(new ServletRequestContext(this));
@@ -2819,22 +2718,7 @@ public class Request
     }
 
 
-    // --------------------------------------------------------- Upgrade Methods
-
-    public void doUpgrade(UpgradeInbound inbound)
-            throws IOException {
-
-        coyoteRequest.action(ActionCode.UPGRADE, inbound);
-
-        // Output required by RFC2616. Protocol specific headers should have
-        // already been set.
-        response.setStatus(HttpServletResponse.SC_SWITCHING_PROTOCOLS);
-        response.flushBuffer();
-    }
-
-
     // ------------------------------------------------------ Protected Methods
-
 
     protected Session doGetSession(boolean create) {
 
@@ -3197,7 +3081,7 @@ public class Request
         // a local collection, sorted by the quality value (so we can
         // add Locales in descending order).  The values will be ArrayLists
         // containing the corresponding Locales to be added
-        TreeMap<Double, ArrayList<Locale>> locales = new TreeMap<Double, ArrayList<Locale>>();
+        TreeMap<Double, ArrayList<Locale>> locales = new TreeMap<>();
 
         // Preprocess the value to remove all whitespace
         int white = value.indexOf(' ');
@@ -3288,7 +3172,7 @@ public class Request
             Double key = new Double(-quality);  // Reverse the order
             ArrayList<Locale> values = locales.get(key);
             if (values == null) {
-                values = new ArrayList<Locale>();
+                values = new ArrayList<>();
                 locales.put(key, values);
             }
             values.add(locale);
@@ -3329,7 +3213,7 @@ public class Request
     }
 
     private static final Map<String, SpecialAttributeAdapter> specialAttributes
-        = new HashMap<String, SpecialAttributeAdapter>();
+        = new HashMap<>();
 
     static {
         specialAttributes.put(Globals.DISPATCHER_TYPE_ATTR,
@@ -3377,8 +3261,8 @@ public class Request
                 new SpecialAttributeAdapter() {
                     @Override
                     public Object get(Request request, String name) {
-                        if (request.userPrincipal instanceof GenericPrincipal) {
-                            return ((GenericPrincipal) request.userPrincipal)
+                        if (request.userPrincipal instanceof TomcatPrincipal) {
+                            return ((TomcatPrincipal) request.userPrincipal)
                                     .getGssCredential();
                         }
                         return null;
@@ -3400,6 +3284,45 @@ public class Request
                         return null;
                     }
 
+                    @Override
+                    public void set(Request request, String name, Object value) {
+                        // NO-OP
+                    }
+                });
+        specialAttributes.put(Globals.COMET_SUPPORTED_ATTR,
+                new SpecialAttributeAdapter() {
+                    @Override
+                    public Object get(Request request, String name) {
+                        return Boolean.valueOf(
+                                request.getConnector().getProtocolHandler(
+                                        ).isCometSupported());
+                    }
+                    @Override
+                    public void set(Request request, String name, Object value) {
+                        // NO-OP
+                    }
+                });
+        specialAttributes.put(Globals.COMET_TIMEOUT_SUPPORTED_ATTR,
+                new SpecialAttributeAdapter() {
+                    @Override
+                    public Object get(Request request, String name) {
+                        return Boolean.valueOf(
+                                request.getConnector().getProtocolHandler(
+                                        ).isCometTimeoutSupported());
+                    }
+                    @Override
+                    public void set(Request request, String name, Object value) {
+                        // NO-OP
+                    }
+                });
+        specialAttributes.put(Globals.SENDFILE_SUPPORTED_ATTR,
+                new SpecialAttributeAdapter() {
+                    @Override
+                    public Object get(Request request, String name) {
+                        return Boolean.valueOf(
+                                request.getConnector().getProtocolHandler(
+                                        ).isSendfileSupported());
+                    }
                     @Override
                     public void set(Request request, String name, Object value) {
                         // NO-OP

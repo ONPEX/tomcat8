@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.logging.LogManager;
 
 import org.apache.catalina.Container;
-import org.apache.catalina.Globals;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleState;
 import org.apache.catalina.Server;
@@ -64,11 +63,9 @@ import org.xml.sax.SAXParseException;
  * <li><b>stop</b>       - Stop the currently running instance of Catalina.
  * </u>
  *
- * Should do the same thing as Embedded, but using a server.xml file.
- *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: Catalina.java 1495882 2013-06-23 19:56:10Z markt $
+ * @version $Id: Catalina.java 1501081 2013-07-09 04:28:42Z violetagg $
  */
 public class Catalina {
 
@@ -107,24 +104,6 @@ public class Catalina {
 
 
     /**
-     * Are we starting a new server?
-     *
-     * @deprecated  Unused - will be removed in Tomcat 8.0.x
-     */
-    @Deprecated
-    protected boolean starting = false;
-
-
-    /**
-     * Are we stopping an existing server?
-     *
-     * @deprecated  Unused - will be removed in Tomcat 8.0.x
-     */
-    @Deprecated
-    protected boolean stopping = false;
-
-
-    /**
      * Use shutdown hook flag.
      */
     protected boolean useShutdownHook = true;
@@ -150,15 +129,6 @@ public class Catalina {
 
 
     // ------------------------------------------------------------- Properties
-
-    /**
-     * @deprecated  Use {@link #setConfigFile(String)}
-     */
-    @Deprecated
-    public void setConfig(String file) {
-        configFile = file;
-    }
-
 
     public void setConfigFile(String file) {
         configFile = file;
@@ -247,7 +217,7 @@ public class Catalina {
 
         if (args.length < 1) {
             usage();
-            return (false);
+            return false;
         }
 
         for (int i = 0; i < args.length; i++) {
@@ -257,27 +227,23 @@ public class Catalina {
             } else if (args[i].equals("-config")) {
                 isConfig = true;
             } else if (args[i].equals("-nonaming")) {
-                setUseNaming( false );
+                setUseNaming(false);
             } else if (args[i].equals("-help")) {
                 usage();
-                return (false);
+                return false;
             } else if (args[i].equals("start")) {
-                starting = true;
-                stopping = false;
+                // NOOP
             } else if (args[i].equals("configtest")) {
-                starting = true;
-                stopping = false;
+                // NOOP
             } else if (args[i].equals("stop")) {
-                starting = false;
-                stopping = true;
+                // NOOP
             } else {
                 usage();
-                return (false);
+                return false;
             }
         }
 
-        return (true);
-
+        return true;
     }
 
 
@@ -288,7 +254,7 @@ public class Catalina {
 
         File file = new File(configFile);
         if (!file.isAbsolute()) {
-            file = new File(System.getProperty(Globals.CATALINA_BASE_PROP), configFile);
+            file = new File(Bootstrap.getCatalinaBase(), configFile);
         }
         return (file);
 
@@ -304,9 +270,8 @@ public class Catalina {
         Digester digester = new Digester();
         digester.setValidating(false);
         digester.setRulesValidation(true);
-        HashMap<Class<?>, List<String>> fakeAttributes =
-            new HashMap<Class<?>, List<String>>();
-        ArrayList<String> attrs = new ArrayList<String>();
+        HashMap<Class<?>, List<String>> fakeAttributes = new HashMap<>();
+        ArrayList<String> attrs = new ArrayList<>();
         attrs.add("className");
         fakeAttributes.put(Object.class, attrs);
         digester.setFakeAttributes(fakeAttributes);
@@ -322,11 +287,11 @@ public class Catalina {
                             "org.apache.catalina.Server");
 
         digester.addObjectCreate("Server/GlobalNamingResources",
-                                 "org.apache.catalina.deploy.NamingResources");
+                                 "org.apache.catalina.deploy.NamingResourcesImpl");
         digester.addSetProperties("Server/GlobalNamingResources");
         digester.addSetNext("Server/GlobalNamingResources",
                             "setGlobalNamingResources",
-                            "org.apache.catalina.deploy.NamingResources");
+                            "org.apache.catalina.deploy.NamingResourcesImpl");
 
         digester.addObjectCreate("Server/Listener",
                                  null, // MUST be specified in the element
@@ -631,6 +596,8 @@ public class Catalina {
         }
 
         getServer().setCatalina(this);
+        getServer().setCatalinaHome(Bootstrap.getCatalinaHomeFile());
+        getServer().setCatalinaBase(Bootstrap.getCatalinaBaseFile());
 
         // Stream redirection
         initStreams();
@@ -796,55 +763,11 @@ public class Catalina {
 
 
     protected void initDirs() {
-
-        String catalinaHome = System.getProperty(Globals.CATALINA_HOME_PROP);
-        if (catalinaHome == null) {
-            // Backwards compatibility patch for J2EE RI 1.3
-            String j2eeHome = System.getProperty("com.sun.enterprise.home");
-            if (j2eeHome != null) {
-                catalinaHome=System.getProperty("com.sun.enterprise.home");
-            } else if (System.getProperty(Globals.CATALINA_BASE_PROP) != null) {
-                catalinaHome = System.getProperty(Globals.CATALINA_BASE_PROP);
-            }
-        }
-        // last resort - for minimal/embedded cases.
-        if(catalinaHome==null) {
-            catalinaHome=System.getProperty("user.dir");
-        }
-        if (catalinaHome != null) {
-            File home = new File(catalinaHome);
-            if (!home.isAbsolute()) {
-                try {
-                    catalinaHome = home.getCanonicalPath();
-                } catch (IOException e) {
-                    catalinaHome = home.getAbsolutePath();
-                }
-            }
-            System.setProperty(Globals.CATALINA_HOME_PROP, catalinaHome);
-        }
-
-        if (System.getProperty(Globals.CATALINA_BASE_PROP) == null) {
-            System.setProperty(Globals.CATALINA_BASE_PROP,
-                               catalinaHome);
-        } else {
-            String catalinaBase = System.getProperty(Globals.CATALINA_BASE_PROP);
-            File base = new File(catalinaBase);
-            if (!base.isAbsolute()) {
-                try {
-                    catalinaBase = base.getCanonicalPath();
-                } catch (IOException e) {
-                    catalinaBase = base.getAbsolutePath();
-                }
-            }
-            System.setProperty(Globals.CATALINA_BASE_PROP, catalinaBase);
-        }
-
         String temp = System.getProperty("java.io.tmpdir");
         if (temp == null || (!(new File(temp)).exists())
                 || (!(new File(temp)).isDirectory())) {
             log.error(sm.getString("embedded.notmp", temp));
         }
-
     }
 
 

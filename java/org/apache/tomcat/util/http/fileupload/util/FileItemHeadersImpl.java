@@ -33,7 +33,7 @@ import org.apache.tomcat.util.http.fileupload.FileItemHeaders;
  *
  * @since 1.2.1
  *
- * @version $Id: FileItemHeadersImpl.java 1458566 2013-03-19 23:14:59Z markt $
+ * @version $Id: FileItemHeadersImpl.java 1458564 2013-03-19 23:13:15Z markt $
  */
 public class FileItemHeadersImpl implements FileItemHeaders, Serializable {
 
@@ -47,7 +47,7 @@ public class FileItemHeadersImpl implements FileItemHeaders, Serializable {
      * <code>String</code> instances.
      */
     private final Map<String,List<String>> headerNameToValueListMap =
-            new LinkedHashMap<String,List<String>>();
+            new LinkedHashMap<>();
 
     /**
      * {@inheritDoc}
@@ -93,7 +93,7 @@ public class FileItemHeadersImpl implements FileItemHeaders, Serializable {
         String nameLower = name.toLowerCase(Locale.ENGLISH);
         List<String> headerValueList = headerNameToValueListMap.get(nameLower);
         if (null == headerValueList) {
-            headerValueList = new ArrayList<String>();
+            headerValueList = new ArrayList<>();
             headerNameToValueListMap.put(nameLower, headerValueList);
         }
         headerValueList.add(value);

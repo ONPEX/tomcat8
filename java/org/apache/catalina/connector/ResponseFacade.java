@@ -39,7 +39,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Jean-Francois Arcand
- * @version $Id: ResponseFacade.java 1200178 2011-11-10 06:14:46Z kkolinko $
+ * @version $Id: ResponseFacade.java 1354158 2012-06-26 18:38:09Z fhanik $
  */
 @SuppressWarnings("deprecation")
 public class ResponseFacade
@@ -231,6 +231,19 @@ public class ResponseFacade
 
     }
 
+
+    /**
+     * TODO SERVLET 3.1
+     */
+    @Override
+    public void setContentLengthLong(long length) {
+        if (isCommitted()) {
+            return;
+        }
+
+        response.setContentLengthLong(length);
+
+    }
 
     @Override
     public void setContentType(String type) {

@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,6 +25,7 @@ import java.util.List;
 
 import javax.security.auth.login.LoginContext;
 
+import org.apache.catalina.TomcatPrincipal;
 import org.ietf.jgss.GSSCredential;
 
 
@@ -33,31 +34,13 @@ import org.ietf.jgss.GSSCredential;
  * is available for use by <code>Realm</code> implementations.
  *
  * @author Craig R. McClanahan
- * @version $Id: GenericPrincipal.java 1361770 2012-07-15 19:38:51Z markt $
+ * @version $Id: GenericPrincipal.java 1361771 2012-07-15 19:40:18Z markt $
  */
 
-public class GenericPrincipal implements Principal {
+public class GenericPrincipal implements TomcatPrincipal {
 
 
     // ----------------------------------------------------------- Constructors
-
-
-    /**
-     * Construct a new Principal, associated with the specified Realm, for the
-     * specified username and password.
-     *
-     * @param name The username of the user represented by this Principal
-     * @param password Credentials used to authenticate this user
-     *
-     * @deprecated  Unused
-     */
-    @Deprecated
-    public GenericPrincipal(String name, String password) {
-
-        this(name, password, null);
-
-    }
-
 
     /**
      * Construct a new Principal, associated with the specified Realm, for the
@@ -80,14 +63,14 @@ public class GenericPrincipal implements Principal {
      * @param name The username of the user represented by this Principal
      * @param password Credentials used to authenticate this user
      * @param roles List of roles (must be Strings) possessed by this user
-     * @param userPrincipal - the principal to be returned from the request 
+     * @param userPrincipal - the principal to be returned from the request
      *        getUserPrincipal call if not null; if null, this will be returned
      */
     public GenericPrincipal(String name, String password, List<String> roles,
             Principal userPrincipal) {
         this(name, password, roles, userPrincipal, null);
     }
-    
+
     /**
      * Construct a new Principal, associated with the specified Realm, for the
      * specified username and password, with the specified role names
@@ -96,7 +79,7 @@ public class GenericPrincipal implements Principal {
      * @param name The username of the user represented by this Principal
      * @param password Credentials used to authenticate this user
      * @param roles List of roles (must be Strings) possessed by this user
-     * @param userPrincipal - the principal to be returned from the request 
+     * @param userPrincipal - the principal to be returned from the request
      *        getUserPrincipal call if not null; if null, this will be returned
      * @param loginContext  - If provided, this will be used to log out the user
      *        at the appropriate time
@@ -105,7 +88,7 @@ public class GenericPrincipal implements Principal {
             Principal userPrincipal, LoginContext loginContext) {
         this(name, password, roles, userPrincipal, loginContext, null);
     }
-    
+
     /**
      * Construct a new Principal, associated with the specified Realm, for the
      * specified username and password, with the specified role names
@@ -114,7 +97,7 @@ public class GenericPrincipal implements Principal {
      * @param name The username of the user represented by this Principal
      * @param password Credentials used to authenticate this user
      * @param roles List of roles (must be Strings) possessed by this user
-     * @param userPrincipal - the principal to be returned from the request 
+     * @param userPrincipal - the principal to be returned from the request
      *        getUserPrincipal call if not null; if null, this will be returned
      * @param loginContext  - If provided, this will be used to log out the user
      *        at the appropriate time
@@ -127,9 +110,10 @@ public class GenericPrincipal implements Principal {
         this.name = name;
         this.password = password;
         this.userPrincipal = userPrincipal;
-        if (roles != null) {
-            this.roles = new String[roles.size()];
-            this.roles = roles.toArray(this.roles);
+        if (roles == null) {
+            this.roles = new String[0];
+        } else {
+            this.roles = roles.toArray(new String[roles.size()]);
             if (this.roles.length > 1)
                 Arrays.sort(this.roles);
         }
@@ -144,7 +128,7 @@ public class GenericPrincipal implements Principal {
     /**
      * The username of the user represented by this Principal.
      */
-    protected String name = null;
+    protected final String name;
 
     @Override
     public String getName() {
@@ -156,7 +140,7 @@ public class GenericPrincipal implements Principal {
      * The authentication credentials for the user represented by
      * this Principal.
      */
-    protected String password = null;
+    protected final String password;
 
     public String getPassword() {
         return (this.password);
@@ -166,7 +150,7 @@ public class GenericPrincipal implements Principal {
     /**
      * The set of roles associated with this user.
      */
-    protected String roles[] = new String[0];
+    protected final String roles[];
 
     public String[] getRoles() {
         return (this.roles);
@@ -176,8 +160,9 @@ public class GenericPrincipal implements Principal {
     /**
      * The authenticated Principal to be exposed to applications.
      */
-    protected Principal userPrincipal = null;
+    protected final Principal userPrincipal;
 
+    @Override
     public Principal getUserPrincipal() {
         if (userPrincipal != null) {
             return userPrincipal;
@@ -186,12 +171,12 @@ public class GenericPrincipal implements Principal {
         }
     }
 
-    
+
     /**
      * The JAAS LoginContext, if any, used to authenticate this Principal.
      * Kept so we can call logout().
      */
-    protected LoginContext loginContext = null;
+    protected final LoginContext loginContext;
 
 
     /**
@@ -199,6 +184,7 @@ public class GenericPrincipal implements Principal {
      */
     protected GSSCredential gssCredential = null;
 
+    @Override
     public GSSCredential getGssCredential() {
         return this.gssCredential;
     }
@@ -243,17 +229,18 @@ public class GenericPrincipal implements Principal {
 
     }
 
-    
+
     /**
      * Calls logout, if necessary, on any associated JAASLoginContext. May in
      * the future be extended to cover other logout requirements.
-     * 
+     *
      * @throws Exception If something goes wrong with the logout. Uses Exception
      *                   to allow for future expansion of this method to cover
      *                   other logout mechanisms that might throw a different
      *                   exception to LoginContext
-     * 
+     *
      */
+    @Override
     public void logout() throws Exception {
         if (loginContext != null) {
             loginContext.logout();

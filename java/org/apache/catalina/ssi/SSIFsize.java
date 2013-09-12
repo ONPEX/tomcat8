@@ -22,12 +22,12 @@ import java.io.PrintWriter;
 import java.text.DecimalFormat;
 /**
  * Implements the Server-side #fsize command
- * 
+ *
  * @author Bip Thelin
  * @author Paul Speed
  * @author Dan Sandberg
  * @author David Becker
- * @version $Id: SSIFsize.java 1138121 2011-06-21 18:32:41Z markt $
+ * @version $Id: SSIFsize.java 1187798 2011-10-22 21:14:59Z markt $
  */
 public final class SSIFsize implements SSICommand {
     protected static final int ONE_KILOBYTE = 1024;

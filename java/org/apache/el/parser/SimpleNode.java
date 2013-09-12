@@ -32,14 +32,14 @@ import org.apache.el.util.MessageFactory;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: SimpleNode.java 1060907 2011-01-19 19:08:36Z markt $
+ * @version $Id: SimpleNode.java 1225464 2011-12-29 08:06:24Z markt $
  */
 public abstract class SimpleNode extends ELSupport implements Node {
     protected Node parent;
 
     protected Node[] children;
 
-    protected int id;
+    protected final int id;
 
     protected String image;
 
@@ -105,10 +105,6 @@ public abstract class SimpleNode extends ELSupport implements Node {
         return ELParserTreeConstants.jjtNodeName[id];
     }
 
-    public String toString(String prefix) {
-        return prefix + toString();
-    }
-
     @Override
     public String getImage() {
         return image;
@@ -163,8 +159,8 @@ public abstract class SimpleNode extends ELSupport implements Node {
             Class<?>[] paramTypes) throws ELException {
         throw new UnsupportedOperationException();
     }
-    
-    
+
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -207,7 +203,7 @@ public abstract class SimpleNode extends ELSupport implements Node {
     public ValueReference getValueReference(EvaluationContext ctx) {
         return null;
     }
-    
+
     /**
      * @since EL 2.2
      */

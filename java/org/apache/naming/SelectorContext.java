@@ -32,7 +32,7 @@ import javax.naming.NamingException;
  * Catalina JNDI Context implementation.
  *
  * @author Remy Maucherat
- * @version $Id: SelectorContext.java 1373051 2012-08-14 19:47:38Z markt $
+ * @version $Id: SelectorContext.java 1373003 2012-08-14 18:14:42Z markt $
  */
 
 public class SelectorContext implements Context {
@@ -70,6 +70,7 @@ public class SelectorContext implements Context {
      */
     public SelectorContext(Hashtable<String,Object> env) {
         this.env = env;
+        this.initialContext = false;
     }
 
 
@@ -78,7 +79,7 @@ public class SelectorContext implements Context {
      */
     public SelectorContext(Hashtable<String,Object> env,
             boolean initialContext) {
-        this(env);
+        this.env = env;
         this.initialContext = initialContext;
     }
 
@@ -89,7 +90,7 @@ public class SelectorContext implements Context {
     /**
      * Environment.
      */
-    protected Hashtable<String,Object> env;
+    protected final Hashtable<String,Object> env;
 
 
     /**
@@ -101,7 +102,7 @@ public class SelectorContext implements Context {
     /**
      * Request for an initial context.
      */
-    protected boolean initialContext = false;
+    protected final boolean initialContext;
 
 
     // --------------------------------------------------------- Public Methods

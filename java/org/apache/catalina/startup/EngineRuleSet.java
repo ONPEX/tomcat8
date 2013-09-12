@@ -30,7 +30,7 @@ import org.apache.tomcat.util.digester.RuleSetBase;
  * <code>HostRuleSet</code>.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: EngineRuleSet.java 996114 2010-09-11 10:17:07Z markt $
+ * @version $Id: EngineRuleSet.java 1364147 2012-07-21 18:52:54Z markt $
  */
 
 public class EngineRuleSet extends RuleSetBase {
@@ -42,7 +42,7 @@ public class EngineRuleSet extends RuleSetBase {
     /**
      * The matching pattern prefix to use for recognizing our elements.
      */
-    protected String prefix = null;
+    protected final String prefix;
 
 
     // ------------------------------------------------------------ Constructor
@@ -53,9 +53,7 @@ public class EngineRuleSet extends RuleSetBase {
      * matching pattern prefix.
      */
     public EngineRuleSet() {
-
         this("");
-
     }
 
 
@@ -67,11 +65,8 @@ public class EngineRuleSet extends RuleSetBase {
      *  trailing slash character)
      */
     public EngineRuleSet(String prefix) {
-
-        super();
         this.namespaceURI = null;
         this.prefix = prefix;
-
     }
 
 
@@ -89,7 +84,7 @@ public class EngineRuleSet extends RuleSetBase {
      */
     @Override
     public void addRuleInstances(Digester digester) {
-        
+
         digester.addObjectCreate(prefix + "Engine",
                                  "org.apache.catalina.core.StandardEngine",
                                  "className");
