@@ -49,6 +49,7 @@ public abstract class SimpleHttpClient {
     public static final String INFO_100 = "HTTP/1.1 100";
     public static final String OK_200 = "HTTP/1.1 200";
     public static final String REDIRECT_302 = "HTTP/1.1 302";
+    public static final String REDIRECT_303 = "HTTP/1.1 303";
     public static final String FAIL_400 = "HTTP/1.1 400";
     public static final String FAIL_404 = "HTTP/1.1 404";
     public static final String TIMEOUT_408 = "HTTP/1.1 408";
@@ -89,7 +90,7 @@ public abstract class SimpleHttpClient {
     private int requestPause = 1000;
 
     private String responseLine;
-    private List<String> responseHeaders = new ArrayList<String>();
+    private List<String> responseHeaders = new ArrayList<>();
     private String sessionId;
     private boolean useContentLength;
     private int contentLength;
@@ -98,7 +99,7 @@ public abstract class SimpleHttpClient {
     private String responseBody;
     private List<String> bodyUriElements = null;
 
-    protected void setPort(int thePort) {
+    public void setPort(int thePort) {
         port = thePort;
     }
 
@@ -321,7 +322,7 @@ public abstract class SimpleHttpClient {
      * @see #getResponseBodyUriElements()
      */
     public void extractUriElements() {
-        bodyUriElements = new ArrayList<String>();
+        bodyUriElements = new ArrayList<>();
         if (responseBody.length() > 0) {
             int ix = 0;
             while ((ix = extractUriElement(responseBody, ix, RESOURCE_TAG)) > 0){
@@ -384,7 +385,7 @@ public abstract class SimpleHttpClient {
         useContinue = false;
 
         responseLine = null;
-        responseHeaders = new ArrayList<String>();
+        responseHeaders = new ArrayList<>();
         responseBody = null;
     }
 
@@ -398,6 +399,10 @@ public abstract class SimpleHttpClient {
 
     public boolean isResponse302() {
         return getResponseLine().startsWith(REDIRECT_302);
+    }
+
+    public boolean isResponse303() {
+        return getResponseLine().startsWith(REDIRECT_303);
     }
 
     public boolean isResponse400() {

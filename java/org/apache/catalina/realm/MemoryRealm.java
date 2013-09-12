@@ -5,19 +5,16 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.catalina.realm;
-
 
 import java.io.File;
 import java.security.Principal;
@@ -25,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.catalina.Globals;
 import org.apache.catalina.LifecycleException;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
@@ -43,7 +39,7 @@ import org.apache.tomcat.util.digester.Digester;
  * synchronization is performed around accesses to the principals collection.
  *
  * @author Craig R. McClanahan
- * @version $Id: MemoryRealm.java 1361770 2012-07-15 19:38:51Z markt $
+ * @version $Id: MemoryRealm.java 1361771 2012-07-15 19:40:18Z markt $
  */
 
 public class MemoryRealm  extends RealmBase {
@@ -62,14 +58,6 @@ public class MemoryRealm  extends RealmBase {
     /**
      * Descriptive information about this Realm implementation.
      */
-    protected static final String info =
-        "org.apache.catalina.realm.MemoryRealm/1.0";
-
-
-    /**
-     * Descriptive information about this Realm implementation.
-     */
-
     protected static final String name = "MemoryRealm";
 
 
@@ -83,25 +71,10 @@ public class MemoryRealm  extends RealmBase {
     /**
      * The set of valid Principals for this Realm, keyed by user name.
      */
-    private Map<String,GenericPrincipal> principals =
-        new HashMap<String,GenericPrincipal>();
+    private final Map<String,GenericPrincipal> principals = new HashMap<>();
 
 
     // ------------------------------------------------------------- Properties
-
-
-    /**
-     * Return descriptive information about this Realm implementation and
-     * the corresponding version number, in the format
-     * <code>&lt;description&gt;/&lt;version&gt;</code>.
-     */
-    @Override
-    public String getInfo() {
-
-        return info;
-
-    }
-
 
     /**
      * Return the pathname of our XML file containing user definitions.
@@ -180,7 +153,7 @@ public class MemoryRealm  extends RealmBase {
     void addUser(String username, String password, String roles) {
 
         // Accumulate the list of roles for this user
-        ArrayList<String> list = new ArrayList<String>();
+        ArrayList<String> list = new ArrayList<>();
         roles += ",";
         while (true) {
             int comma = roles.indexOf(',');
@@ -262,21 +235,8 @@ public class MemoryRealm  extends RealmBase {
 
     }
 
-    /**
-     * Returns the principals for this realm.
-     *
-     * @return The principals, keyed by user name (a String)
-     *
-     * @deprecated  Unused
-     */
-    @Deprecated
-    protected Map<String,GenericPrincipal> getPrincipals() {
-        return principals;
-    }
-
 
     // ------------------------------------------------------ Lifecycle Methods
-
 
     /**
      * Prepare for the beginning of active use of the public methods of this
@@ -292,7 +252,7 @@ public class MemoryRealm  extends RealmBase {
         // Validate the existence of our database file
         File file = new File(pathname);
         if (!file.isAbsolute())
-            file = new File(System.getProperty(Globals.CATALINA_BASE_PROP), pathname);
+            file = new File(getContainer().getCatalinaBase(), pathname);
         if (!file.exists() || !file.canRead())
             throw new LifecycleException
                 (sm.getString("memoryRealm.loadExist",

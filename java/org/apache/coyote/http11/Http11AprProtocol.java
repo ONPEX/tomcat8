@@ -18,10 +18,11 @@ package org.apache.coyote.http11;
 
 import java.io.IOException;
 
+import javax.servlet.http.HttpUpgradeHandler;
+
 import org.apache.coyote.AbstractProtocol;
 import org.apache.coyote.Processor;
-import org.apache.coyote.http11.upgrade.UpgradeAprProcessor;
-import org.apache.coyote.http11.upgrade.UpgradeInbound;
+import org.apache.coyote.http11.upgrade.AprProcessor;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.net.AbstractEndpoint;
@@ -39,10 +40,9 @@ import org.apache.tomcat.util.net.SocketWrapper;
  * @author Remy Maucherat
  * @author Costin Manolache
  */
-public class Http11AprProtocol extends AbstractHttp11Protocol {
+public class Http11AprProtocol extends AbstractHttp11Protocol<Long> {
 
     private static final Log log = LogFactory.getLog(Http11AprProtocol.class);
-
 
     @Override
     protected Log getLog() { return log; }
@@ -82,12 +82,9 @@ public class Http11AprProtocol extends AbstractHttp11Protocol {
     public void setPollerSize(int pollerSize) { endpoint.setMaxConnections(pollerSize); }
     public int getPollerSize() { return endpoint.getMaxConnections(); }
 
-    public void setPollerThreadCount(int pollerThreadCount) { ((AprEndpoint)endpoint).setPollerThreadCount(pollerThreadCount); }
-    public int getPollerThreadCount() { return ((AprEndpoint)endpoint).getPollerThreadCount(); }
-    
     public int getSendfileSize() { return ((AprEndpoint)endpoint).getSendfileSize(); }
     public void setSendfileSize(int sendfileSize) { ((AprEndpoint)endpoint).setSendfileSize(sendfileSize); }
-    
+
     public void setSendfileThreadCount(int sendfileThreadCount) { ((AprEndpoint)endpoint).setSendfileThreadCount(sendfileThreadCount); }
     public int getSendfileThreadCount() { return ((AprEndpoint)endpoint).getSendfileThreadCount(); }
 
@@ -116,7 +113,7 @@ public class Http11AprProtocol extends AbstractHttp11Protocol {
      */
     public String getSSLCipherSuite() { return ((AprEndpoint)endpoint).getSSLCipherSuite(); }
     public void setSSLCipherSuite(String SSLCipherSuite) { ((AprEndpoint)endpoint).setSSLCipherSuite(SSLCipherSuite); }
-
+    public String[] getCiphersUsed() { return endpoint.getCiphersUsed();}
 
     /**
      * SSL honor cipher order.
@@ -190,7 +187,7 @@ public class Http11AprProtocol extends AbstractHttp11Protocol {
      */
     public int getSSLVerifyDepth() { return ((AprEndpoint)endpoint).getSSLVerifyDepth(); }
     public void setSSLVerifyDepth(int SSLVerifyDepth) { ((AprEndpoint)endpoint).setSSLVerifyDepth(SSLVerifyDepth); }
-    
+
     /**
      * Disable SSL compression.
      */
@@ -205,13 +202,22 @@ public class Http11AprProtocol extends AbstractHttp11Protocol {
     }
 
 
+    @Override
+    public void start() throws Exception {
+        super.start();
+        if (npnHandler != null) {
+            long sslCtx = ((AprEndpoint) endpoint).getJniSslContext();
+            npnHandler.init(endpoint, sslCtx, getAdapter());
+        }
+    }
+
     // --------------------  Connection handler --------------------
 
     protected static class Http11ConnectionHandler
             extends AbstractConnectionHandler<Long,Http11AprProcessor> implements Handler {
-        
+
         protected Http11AprProtocol proto;
-        
+
         Http11ConnectionHandler(Http11AprProtocol proto) {
             this.proto = proto;
         }
@@ -225,7 +231,7 @@ public class Http11AprProtocol extends AbstractHttp11Protocol {
         protected Log getLog() {
             return log;
         }
-        
+
         @Override
         public void recycle() {
             recycledProcessors.clear();
@@ -234,7 +240,7 @@ public class Http11AprProtocol extends AbstractHttp11Protocol {
         /**
          * Expected to be used by the handler once the processor is no longer
          * required.
-         * 
+         *
          * @param socket
          * @param processor
          * @param isSocketClosing   Not used in HTTP
@@ -245,13 +251,34 @@ public class Http11AprProtocol extends AbstractHttp11Protocol {
                 Processor<Long> processor, boolean isSocketClosing,
                 boolean addToPoller) {
             processor.recycle(isSocketClosing);
-            recycledProcessors.offer(processor);
+            recycledProcessors.push(processor);
             if (addToPoller && proto.endpoint.isRunning()) {
                 ((AprEndpoint)proto.endpoint).getPoller().add(
                         socket.getSocket().longValue(),
-                        proto.endpoint.getKeepAliveTimeout(),
-                        AprEndpoint.Poller.FLAGS_READ);
+                        proto.endpoint.getKeepAliveTimeout(), true, false);
             }
+        }
+
+        @Override
+        public SocketState process(SocketWrapper<Long> socket,
+                SocketStatus status) {
+            if (proto.npnHandler != null) {
+                Processor<Long> processor = null;
+                if (status == SocketStatus.OPEN_READ) {
+                    processor = connections.get(socket.getSocket());
+
+                }
+                if (processor == null) {
+                    // if not null - this is a former comet request, handled by http11
+                    SocketState socketState = proto.npnHandler.process(socket, status);
+                    // handled by npn protocol.
+                    if (socketState == SocketState.CLOSED ||
+                            socketState == SocketState.LONG) {
+                        return socketState;
+                    }
+                }
+            }
+            return super.process(socket, status);
         }
 
         @Override
@@ -263,7 +290,6 @@ public class Http11AprProtocol extends AbstractHttp11Protocol {
         @Override
         protected void longPoll(SocketWrapper<Long> socket,
                 Processor<Long> processor) {
-            connections.put(socket.getSocket(), processor);
 
             if (processor.isAsync()) {
                 // Async
@@ -271,10 +297,10 @@ public class Http11AprProtocol extends AbstractHttp11Protocol {
             } else if (processor.isComet()) {
                 // Comet
                 if (proto.endpoint.isRunning()) {
-                    ((AprEndpoint) proto.endpoint).getCometPoller().add(
+                    socket.setComet(true);
+                    ((AprEndpoint) proto.endpoint).getPoller().add(
                             socket.getSocket().longValue(),
-                            proto.endpoint.getSoTimeout(),
-                            AprEndpoint.Poller.FLAGS_READ);
+                            proto.endpoint.getSoTimeout(), true, false);
                 } else {
                     // Process a STOP directly
                     ((AprEndpoint) proto.endpoint).processSocket(
@@ -284,9 +310,7 @@ public class Http11AprProtocol extends AbstractHttp11Protocol {
             } else {
                 // Upgraded
                 ((AprEndpoint) proto.endpoint).getPoller().add(
-                        socket.getSocket().longValue(),
-                        processor.getUpgradeInbound().getReadTimeout(),
-                        AprEndpoint.Poller.FLAGS_READ);
+                        socket.getSocket().longValue(), -1, true, false);
             }
         }
 
@@ -295,7 +319,7 @@ public class Http11AprProtocol extends AbstractHttp11Protocol {
             Http11AprProcessor processor = new Http11AprProcessor(
                     proto.getMaxHttpHeaderSize(), (AprEndpoint)proto.endpoint,
                     proto.getMaxTrailerSize());
-            processor.setAdapter(proto.adapter);
+            processor.setAdapter(proto.getAdapter());
             processor.setMaxKeepAliveRequests(proto.getMaxKeepAliveRequests());
             processor.setKeepAliveTimeout(proto.getKeepAliveTimeout());
             processor.setConnectionUploadTimeout(
@@ -316,9 +340,11 @@ public class Http11AprProtocol extends AbstractHttp11Protocol {
 
         @Override
         protected Processor<Long> createUpgradeProcessor(
-                SocketWrapper<Long> socket, UpgradeInbound inbound)
+                SocketWrapper<Long> socket,
+                HttpUpgradeHandler httpUpgradeProcessor)
                 throws IOException {
-            return new UpgradeAprProcessor(socket, inbound);
+            return new AprProcessor(socket, httpUpgradeProcessor,
+                    (AprEndpoint) proto.endpoint);
         }
     }
 }

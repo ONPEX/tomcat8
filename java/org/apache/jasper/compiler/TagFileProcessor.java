@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,7 +27,6 @@ import java.util.Vector;
 import javax.el.MethodExpression;
 import javax.el.ValueExpression;
 import javax.servlet.jsp.tagext.TagAttributeInfo;
-import javax.servlet.jsp.tagext.TagExtraInfo;
 import javax.servlet.jsp.tagext.TagFileInfo;
 import javax.servlet.jsp.tagext.TagInfo;
 import javax.servlet.jsp.tagext.TagLibraryInfo;
@@ -42,7 +41,7 @@ import org.apache.jasper.servlet.JspServletWrapper;
 /**
  * 1. Processes and extracts the directive info in a tag file. 2. Compiles and
  * loads tag files used in a JSP file.
- * 
+ *
  * @author Kin-man Chung
  */
 
@@ -99,8 +98,6 @@ class TagFileProcessor {
 
         private String path = null;
 
-        private TagExtraInfo tei = null;
-
         private String bodycontent = null;
 
         private String description = null;
@@ -129,11 +126,9 @@ class TagFileProcessor {
 
         private static final String TAG_DYNAMIC = "the dynamic-attributes attribute of the tag directive";
 
-        private HashMap<String,NameEntry> nameTable =
-            new HashMap<String,NameEntry>();
+        private HashMap<String,NameEntry> nameTable = new HashMap<>();
 
-        private HashMap<String,NameEntry> nameFromTable =
-            new HashMap<String,NameEntry>();
+        private HashMap<String,NameEntry> nameFromTable = new HashMap<>();
 
         public TagFileDirectiveVisitor(Compiler compiler,
                 TagLibraryInfo tagLibInfo, String name, String path) {
@@ -141,8 +136,8 @@ class TagFileProcessor {
             this.tagLibInfo = tagLibInfo;
             this.name = name;
             this.path = path;
-            attributeVector = new Vector<TagAttributeInfo>();
-            variableVector = new Vector<TagVariableInfo>();
+            attributeVector = new Vector<>();
+            variableVector = new Vector<>();
         }
 
         @Override
@@ -240,7 +235,7 @@ class TagFileProcessor {
             if (deferredMethod && deferredValue) {
                 err.jspError(n, "jsp.error.deferredmethodandvalue");
             }
-            
+
             String attrName = n.getAttributeValue("name");
             boolean required = JspUtil.booleanValue(n
                     .getAttributeValue("required"));
@@ -267,7 +262,7 @@ class TagFileProcessor {
             } else {
                 if (type == null)
                     type = "java.lang.String";
-                
+
                 if (deferredValue) {
                     type = ValueExpression.class.getName();
                 } else if (deferredMethod) {
@@ -280,7 +275,7 @@ class TagFileProcessor {
                             || deferredValueSpecified || deferredValue)) {
                 err.jspError("jsp.error.invalid.version", path);
             }
-            
+
             TagAttributeInfo tagAttributeInfo = new TagAttributeInfo(attrName,
                     required, type, rtexprvalue, fragment, null, deferredValue,
                     deferredMethod, deferredValueType, deferredMethodSignature);
@@ -373,7 +368,7 @@ class TagFileProcessor {
             attributeVector.copyInto(tagAttributeInfo);
 
             return new JasperTagInfo(name, tagClassName, bodycontent,
-                    description, tagLibInfo, tei, tagAttributeInfo,
+                    description, tagLibInfo, null, tagAttributeInfo,
                     displayName, smallIcon, largeIcon, tagVariableInfos,
                     dynamicAttrsMapName);
         }
@@ -407,14 +402,14 @@ class TagFileProcessor {
         /**
          * Reports a translation error if names specified in attributes of
          * directives are not unique in this translation unit.
-         * 
+         *
          * The value of the following attributes must be unique. 1. 'name'
          * attribute of an attribute directive 2. 'name-given' attribute of a
          * variable directive 3. 'alias' attribute of variable directive 4.
          * 'dynamic-attributes' of a tag directive except that
          * 'dynamic-attributes' can (and must) have the same value when it
          * appears in multiple tag directives.
-         * 
+         *
          * Also, 'name-from' attribute of a variable directive cannot have the
          * same value as that from another variable directive.
          */
@@ -475,7 +470,7 @@ class TagFileProcessor {
      * in it. The method is used to obtain the info on the tag file, when the
      * handler that it represents is referenced. The tag file is not compiled
      * here.
-     * 
+     *
      * @param pc
      *            the current ParserController used in this compilation
      * @param name
@@ -483,11 +478,12 @@ class TagFileProcessor {
      * @param path
      *            the path for the tagfile
      * @param jarResource
-     *            the Jar resource containing the tag file 
+     *            the Jar resource containing the tag file
      * @param tagLibInfo
      *            the TagLibraryInfo object associated with this TagInfo
      * @return a TagInfo object assembled from the directives in the tag file.
      */
+    @SuppressWarnings("null") // page can't be null
     public static TagInfo parseTagFileDirectives(ParserController pc,
             String name, String path, JarResource jarResource, TagLibraryInfo tagLibInfo)
             throws JasperException {
@@ -520,7 +516,7 @@ class TagFileProcessor {
 
         JarResource tagJarResouce = null;
         if (tagFilePath.startsWith("/META-INF/")) {
-            tagJarResouce = 
+            tagJarResouce =
                 compiler.getCompilationContext().getTldLocation(
                         tagInfo.getTagLibrary().getURI()).getJarResource();
         }
@@ -669,14 +665,14 @@ class TagFileProcessor {
     public void loadTagFiles(Compiler compiler, Node.Nodes page)
             throws JasperException {
 
-        tempVector = new Vector<Compiler>();
+        tempVector = new Vector<>();
         page.visit(new TagFileLoaderVisitor(compiler));
     }
 
     /**
      * Removed the java and class files for the tag prototype generated from the
      * current compilation.
-     * 
+     *
      * @param classFileName
      *            If non-null, remove only the class file with with this name.
      */

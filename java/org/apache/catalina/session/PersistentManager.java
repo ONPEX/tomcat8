@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,51 +29,28 @@ package org.apache.catalina.session;
  * <li>Limit the number of active sessions kept in memory by
  *     swapping less active sessions out to disk.</li>
  *
- * @version $Revision: 832945 $
+ * @version $Revision: 1361802 $
  * @author Kief Morris (kief@kief.com)
  */
 
 public final class PersistentManager extends PersistentManagerBase {
 
-
     // ----------------------------------------------------- Instance Variables
-
-
-    /**
-     * The descriptive information about this implementation.
-     */
-    private static final String info = "PersistentManager/1.0";
-
 
     /**
      * The descriptive name of this Manager implementation (for logging).
      */
-    protected static String name = "PersistentManager";
+    protected static final String name = "PersistentManager";
 
 
     // ------------------------------------------------------------- Properties
-
-
-    /**
-     * Return descriptive information about this Manager implementation and
-     * the corresponding version number, in the format
-     * <code>&lt;description&gt;/&lt;version&gt;</code>.
-     */
-    @Override
-    public String getInfo() {
-
-        return (info);
-
-    }
 
     /**
      * Return the descriptive short name of this Manager implementation.
      */
     @Override
     public String getName() {
-
         return (name);
-
     }
  }
 

@@ -36,20 +36,20 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
-import org.apache.catalina.Container;
+import org.apache.catalina.Context;
 import org.apache.catalina.Loader;
 import org.apache.catalina.core.StandardContext;
-import org.apache.catalina.deploy.FilterDef;
-import org.apache.catalina.deploy.FilterMap;
-import org.apache.catalina.deploy.ServletDef;
-import org.apache.catalina.deploy.WebXml;
+import org.apache.tomcat.util.descriptor.web.FilterDef;
+import org.apache.tomcat.util.descriptor.web.FilterMap;
+import org.apache.tomcat.util.descriptor.web.ServletDef;
+import org.apache.tomcat.util.descriptor.web.WebXml;
 
 /**
  * Check Servlet 3.0 Spec 8.2.3.3: Override annotation parameter from web.xml or
  * fragment.
  *
  * @author Peter Rossbach
- * @version $Revision: 1352803 $
+ * @version $Revision: 1500964 $
  */
 public class TestContextConfigAnnotation {
 
@@ -328,15 +328,13 @@ public class TestContextConfigAnnotation {
             return this.getClass().getClassLoader();
         }
         @Override
-        public Container getContainer() { return null; }
+        public Context getContext() { return null; }
         @Override
-        public void setContainer(Container container) {}
+        public void setContext(Context context) {}
         @Override
         public boolean getDelegate() { return false; }
         @Override
         public void setDelegate(boolean delegate) {}
-        @Override
-        public String getInfo() { return null; }
         @Override
         public boolean getReloadable() { return false; }
         @Override
@@ -344,10 +342,6 @@ public class TestContextConfigAnnotation {
         @Override
         public void addPropertyChangeListener(PropertyChangeListener l) {
         }
-        @Override
-        public void addRepository(String repository) {}
-        @Override
-        public String[] findRepositories() { return null; }
         @Override
         public boolean modified() { return false; }
         @Override

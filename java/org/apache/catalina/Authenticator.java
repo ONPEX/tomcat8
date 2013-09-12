@@ -14,8 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.catalina;
 
 import java.io.IOException;
@@ -24,7 +22,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.catalina.connector.Request;
-import org.apache.catalina.deploy.LoginConfig;
 
 
 /**
@@ -32,9 +29,8 @@ import org.apache.catalina.deploy.LoginConfig;
  * provides some sort of authentication service.
  *
  * @author Craig R. McClanahan
- * @version $Id: Authenticator.java 1241170 2012-02-06 20:45:52Z markt $
+ * @version $Id: Authenticator.java 1241162 2012-02-06 20:32:36Z markt $
  */
-
 public interface Authenticator {
 
     /**
@@ -51,27 +47,6 @@ public interface Authenticator {
      */
     public boolean authenticate(Request request, HttpServletResponse response)
             throws IOException;
-
-    /**
-     * Authenticate the user making this request, based on the specified
-     * login configuration.  Return <code>true</code> if any specified
-     * constraint has been satisfied, or <code>false</code> if we have
-     * created a response challenge already.
-     *
-     * @param request Request we are processing
-     * @param response Response we are populating
-     * @param config    Login configuration describing how authentication
-     *              should be performed
-     *
-     * @exception IOException if an input/output error occurs
-     *
-     * @deprecated  Use {@link #authenticate(Request, HttpServletResponse)}.
-     *              This will be removed / have reduced visibility in Tomcat
-     *              8.0.x
-     */
-    @Deprecated
-    public boolean authenticate(Request request, HttpServletResponse response,
-            LoginConfig config) throws IOException;
 
     public void login(String userName, String password, Request request)
             throws ServletException;

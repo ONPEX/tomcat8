@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,7 +26,7 @@ import org.apache.tools.ant.BuildException;
 
 
 /**
- * Access <em>JMX</em> JSR 160 MBeans Server. 
+ * Access <em>JMX</em> JSR 160 MBeans Server.
  * <ul>
  * <li>Get Mbeans attributes</li>
  * <li>Show Get result as Ant console log</li>
@@ -35,11 +35,11 @@ import org.apache.tools.ant.BuildException;
  * <p>
  * Examples:
  * <br/>
- * Get a Mbean IDataSender attribute nrOfRequests and create a new ant property <em>IDataSender.9025.nrOfRequests</em> 
+ * Get a Mbean IDataSender attribute nrOfRequests and create a new ant property <em>IDataSender.9025.nrOfRequests</em>
  * <pre>
  *   &lt;jmx:get
  *           ref="jmx.server"
- *           name="Catalina:type=IDataSender,host=localhost,senderAddress=192.168.1.2,senderPort=9025" 
+ *           name="Catalina:type=IDataSender,host=localhost,senderAddress=192.168.1.2,senderPort=9025"
  *           attribute="nrOfRequests"
  *           resultproperty="IDataSender.9025.nrOfRequests"
  *           echo="false"&gt;
@@ -52,7 +52,7 @@ import org.apache.tools.ant.BuildException;
  * These tasks require Ant 1.6 or later interface.
  *
  * @author Peter Rossbach
- * @version $Id: JMXAccessorGetTask.java 939305 2010-04-29 13:43:39Z kkolinko $
+ * @version $Id: JMXAccessorGetTask.java 1187783 2011-10-22 21:07:41Z markt $
  * @since 5.5.10
  */
 
@@ -63,49 +63,30 @@ public class JMXAccessorGetTask extends JMXAccessorTask {
 
     private String attribute;
 
-    // ----------------------------------------------------- Instance Info
-
-    /**
-     * Descriptive information describing this implementation.
-     */
-    private static final String info = "org.apache.catalina.ant.JMXAccessorGetTask/1.0";
-
-    /**
-     * Return descriptive information about this implementation and the
-     * corresponding version number, in the format
-     * <code>&lt;description&gt;/&lt;version&gt;</code>.
-     */
-    @Override
-    public String getInfo() {
-
-        return (info);
-
-    }
-
     // ------------------------------------------------------------- Properties
-    
+
     /**
      * @return Returns the attribute.
      */
     public String getAttribute() {
         return attribute;
     }
-    
+
     /**
      * @param attribute The attribute to set.
      */
     public void setAttribute(String attribute) {
         this.attribute = attribute;
     }
-    
-  
+
+
     // ------------------------------------------------------ protected Methods
-    
+
     /**
      * Execute the specified command, based on the configured properties. The
      * input stream will be closed upon completion of this task, whether it was
      * executed successfully or not.
-     * 
+     *
      * @exception BuildException
      *                if an error occurs
      */

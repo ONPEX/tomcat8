@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,7 +29,7 @@ import javax.servlet.ServletContext;
  * Facade for the <b>StandardWrapper</b> object.
  *
  * @author Remy Maucharat
- * @version $Id: StandardWrapperFacade.java 1078863 2011-03-07 17:42:52Z markt $
+ * @version $Id: StandardWrapperFacade.java 1360933 2012-07-12 20:51:27Z markt $
  */
 
 public final class StandardWrapperFacade
@@ -56,7 +56,7 @@ public final class StandardWrapperFacade
     /**
      * Wrapped config.
      */
-    private ServletConfig config = null;
+    private final ServletConfig config;
 
 
     /**

@@ -22,10 +22,10 @@ import java.util.Collection;
 import java.util.Iterator;
 /**
  * Implements the Server-side #printenv command
- * 
+ *
  * @author Dan Sandberg
  * @author David Becker
- * @version $Id: SSIPrintenv.java 1138121 2011-06-21 18:32:41Z markt $
+ * @version $Id: SSIPrintenv.java 1187798 2011-10-22 21:14:59Z markt $
  */
 public class SSIPrintenv implements SSICommand {
     /**

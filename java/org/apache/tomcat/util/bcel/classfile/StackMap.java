@@ -20,8 +20,6 @@ package org.apache.tomcat.util.bcel.classfile;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-import org.apache.tomcat.util.bcel.Constants;
-
 /**
  * This class represents a stack map attribute used for
  * preverification of Java classes for the <a
@@ -31,7 +29,7 @@ import org.apache.tomcat.util.bcel.Constants;
  * within the Code attribute of a method. See CLDC specification
  * &sect;5.3.1.2
  *
- * @version $Id: StackMap.java 1377533 2012-08-26 22:22:59Z markt $
+ * @version $Id: StackMap.java 1397988 2012-10-14 01:00:48Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Code
  * @see     StackMapEntry
@@ -51,7 +49,7 @@ public final class StackMap extends Attribute {
      * @param constant_pool Array of constants
      */
     public StackMap(int name_index, int length, StackMapEntry[] map, ConstantPool constant_pool) {
-        super(Constants.ATTR_STACK_MAP, name_index, length, constant_pool);
+        super(name_index, length, constant_pool);
         setStackMap(map);
     }
 
@@ -70,7 +68,7 @@ public final class StackMap extends Attribute {
         map_length = file.readUnsignedShort();
         map = new StackMapEntry[map_length];
         for (int i = 0; i < map_length; i++) {
-            map[i] = new StackMapEntry(file, constant_pool);
+            map[i] = new StackMapEntry(file);
         }
     }
 
@@ -81,37 +79,5 @@ public final class StackMap extends Attribute {
     public final void setStackMap( StackMapEntry[] map ) {
         this.map = map;
         map_length = (map == null) ? 0 : map.length;
-    }
-
-
-    /**
-     * @return String representation.
-     */
-    @Override
-    public final String toString() {
-        StringBuilder buf = new StringBuilder("StackMap(");
-        for (int i = 0; i < map_length; i++) {
-            buf.append(map[i].toString());
-            if (i < map_length - 1) {
-                buf.append(", ");
-            }
-        }
-        buf.append(')');
-        return buf.toString();
-    }
-
-
-    /**
-     * @return deep copy of this attribute
-     */
-    @Override
-    public Attribute copy( ConstantPool _constant_pool ) {
-        StackMap c = (StackMap) clone();
-        c.map = new StackMapEntry[map_length];
-        for (int i = 0; i < map_length; i++) {
-            c.map[i] = map[i].copy();
-        }
-        c.constant_pool = _constant_pool;
-        return c;
     }
 }

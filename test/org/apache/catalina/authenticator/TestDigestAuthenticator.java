@@ -33,16 +33,16 @@ import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.core.TesterContext;
-import org.apache.catalina.deploy.LoginConfig;
-import org.apache.catalina.deploy.SecurityCollection;
-import org.apache.catalina.deploy.SecurityConstraint;
-import org.apache.catalina.startup.TestTomcat.MapRealm;
+import org.apache.catalina.startup.TesterMapRealm;
 import org.apache.catalina.startup.TesterServlet;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
 import org.apache.catalina.util.ConcurrentMessageDigest;
 import org.apache.catalina.util.MD5Encoder;
 import org.apache.tomcat.util.buf.ByteChunk;
+import org.apache.tomcat.util.descriptor.web.LoginConfig;
+import org.apache.tomcat.util.descriptor.web.SecurityCollection;
+import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
 
 public class TestDigestAuthenticator extends TomcatBaseTest {
 
@@ -68,7 +68,7 @@ public class TestDigestAuthenticator extends TomcatBaseTest {
         Request request = new TesterRequest();
         final int count = 1000;
 
-        Set<String> nonces = new HashSet<String>();
+        Set<String> nonces = new HashSet<>();
 
         for (int i = 0; i < count; i++) {
             nonces.add(digestAuthenticator.generateNonce(request));
@@ -200,14 +200,13 @@ public class TestDigestAuthenticator extends TomcatBaseTest {
         } else {
             digestUri = uri;
         }
-        List<String> auth = new ArrayList<String>();
+        List<String> auth = new ArrayList<>();
         auth.add(buildDigestResponse(user, pwd, digestUri, realm, "null",
                 "null", nc1, cnonce, qop));
-        Map<String,List<String>> reqHeaders = new HashMap<String,List<String>>();
+        Map<String,List<String>> reqHeaders = new HashMap<>();
         reqHeaders.put(CLIENT_AUTH_HEADER, auth);
 
-        Map<String,List<String>> respHeaders =
-            new HashMap<String,List<String>>();
+        Map<String,List<String>> respHeaders = new HashMap<>();
 
         // The first request will fail - but we need to extract the nonce
         ByteChunk bc = new ByteChunk();
@@ -284,7 +283,7 @@ public class TestDigestAuthenticator extends TomcatBaseTest {
         ctxt.addConstraint(sc);
 
         // Configure the Realm
-        MapRealm realm = new MapRealm();
+        TesterMapRealm realm = new TesterMapRealm();
         realm.addUser(USER, PWD);
         realm.addUserRole(USER, ROLE);
         ctxt.setRealm(realm);

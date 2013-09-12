@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,7 +32,6 @@ import java.util.ArrayList;
 
 import javax.servlet.ServletContext;
 
-import org.apache.catalina.Container;
 import org.apache.catalina.Context;
 import org.apache.catalina.Loader;
 import org.apache.catalina.Session;
@@ -45,7 +44,7 @@ import org.apache.catalina.util.CustomObjectInputStream;
  * saved are still subject to being expired based on inactivity.
  *
  * @author Craig R. McClanahan
- * @version $Id: FileStore.java 1162172 2011-08-26 17:12:33Z markt $
+ * @version $Id: FileStore.java 1361802 2012-07-15 21:18:36Z markt $
  */
 
 public final class FileStore extends StoreBase {
@@ -78,14 +77,10 @@ public final class FileStore extends StoreBase {
 
 
     /**
-     * The descriptive information about this implementation.
-     */
-    private static final String info = "FileStore/1.0";
-
-    /**
      * Name to register for this Store, used for logging.
      */
     private static final String storeName = "fileStore";
+
 
     /**
      * Name to register for the background thread.
@@ -123,23 +118,12 @@ public final class FileStore extends StoreBase {
 
 
     /**
-     * Return descriptive information about this Store implementation and
-     * the corresponding version number, in the format
-     * <code>&lt;description&gt;/&lt;version&gt;</code>.
-     */
-    @Override
-    public String getInfo() {
-
-        return (info);
-
-    }
-
-    /**
      * Return the thread name for this Store.
      */
     public String getThreadName() {
         return(threadName);
     }
+
 
     /**
      * Return the name for this Store, used for logging.
@@ -214,14 +198,14 @@ public final class FileStore extends StoreBase {
         }
 
         String files[] = file.list();
-        
+
         // Bugzilla 32130
         if((files == null) || (files.length < 1)) {
             return (new String[0]);
         }
 
         // Build and return the list of session identifiers
-        ArrayList<String> list = new ArrayList<String>();
+        ArrayList<String> list = new ArrayList<>();
         int n = FILE_EXT.length();
         for (int i = 0; i < files.length; i++) {
             if (files[i].endsWith(FILE_EXT)) {
@@ -256,8 +240,8 @@ public final class FileStore extends StoreBase {
         if (! file.exists()) {
             return (null);
         }
-        if (manager.getContainer().getLogger().isDebugEnabled()) {
-            manager.getContainer().getLogger().debug(sm.getString(getStoreName()+".loading",
+        if (manager.getContext().getLogger().isDebugEnabled()) {
+            manager.getContext().getLogger().debug(sm.getString(getStoreName()+".loading",
                              id, file.getAbsolutePath()));
         }
 
@@ -269,9 +253,9 @@ public final class FileStore extends StoreBase {
         try {
             fis = new FileInputStream(file.getAbsolutePath());
             bis = new BufferedInputStream(fis);
-            Container container = manager.getContainer();
-            if (container != null)
-                loader = container.getLoader();
+            Context context = manager.getContext();
+            if (context != null)
+                loader = context.getLoader();
             if (loader != null)
                 classLoader = loader.getClassLoader();
             if (classLoader != null)
@@ -279,8 +263,8 @@ public final class FileStore extends StoreBase {
             else
                 ois = new ObjectInputStream(bis);
         } catch (FileNotFoundException e) {
-            if (manager.getContainer().getLogger().isDebugEnabled())
-                manager.getContainer().getLogger().debug("No persisted data file found");
+            if (manager.getContext().getLogger().isDebugEnabled())
+                manager.getContext().getLogger().debug("No persisted data file found");
             return (null);
         } catch (IOException e) {
             if (bis != null) {
@@ -333,8 +317,8 @@ public final class FileStore extends StoreBase {
         if (file == null) {
             return;
         }
-        if (manager.getContainer().getLogger().isDebugEnabled()) {
-            manager.getContainer().getLogger().debug(sm.getString(getStoreName()+".removing",
+        if (manager.getContext().getLogger().isDebugEnabled()) {
+            manager.getContext().getLogger().debug(sm.getString(getStoreName()+".removing",
                              id, file.getAbsolutePath()));
         }
         file.delete();
@@ -358,8 +342,8 @@ public final class FileStore extends StoreBase {
         if (file == null) {
             return;
         }
-        if (manager.getContainer().getLogger().isDebugEnabled()) {
-            manager.getContainer().getLogger().debug(sm.getString(getStoreName()+".saving",
+        if (manager.getContext().getLogger().isDebugEnabled()) {
+            manager.getContext().getLogger().debug(sm.getString(getStoreName()+".saving",
                              session.getIdInternal(), file.getAbsolutePath()));
         }
         FileOutputStream fos = null;
@@ -406,10 +390,9 @@ public final class FileStore extends StoreBase {
         }
         File file = new File(this.directory);
         if (!file.isAbsolute()) {
-            Container container = manager.getContainer();
-            if (container instanceof Context) {
-                ServletContext servletContext =
-                    ((Context) container).getServletContext();
+            Context context = manager.getContext();
+            if (context != null) {
+                ServletContext servletContext = context.getServletContext();
                 File work = (File)
                     servletContext.getAttribute(ServletContext.TEMPDIR);
                 file = new File(work, this.directory);

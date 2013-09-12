@@ -353,11 +353,6 @@ public class RemoteIpValve extends ValveBase {
     private static final Pattern commaSeparatedValuesPattern = Pattern.compile("\\s*,\\s*");
 
     /**
-     * The descriptive information related to this implementation.
-     */
-    private static final String info = "org.apache.catalina.valves.RemoteIpValve/1.0";
-
-    /**
      * Logger
      */
     private static final Log log = LogFactory.getLog(RemoteIpValve.class);
@@ -495,14 +490,6 @@ public class RemoteIpValve extends ValveBase {
     }
 
     /**
-     * Return descriptive information about this Valve implementation.
-     */
-    @Override
-    public String getInfo() {
-        return info;
-    }
-
-    /**
      * @see #setInternalProxies(String)
      * @return Regular expression that defines the internal proxies
      */
@@ -580,7 +567,7 @@ public class RemoteIpValve extends ValveBase {
                 internalProxies.matcher(originalRemoteAddr).matches()) {
             String remoteIp = null;
             // In java 6, proxiesHeaderValue should be declared as a java.util.Deque
-            LinkedList<String> proxiesHeaderValue = new LinkedList<String>();
+            LinkedList<String> proxiesHeaderValue = new LinkedList<>();
             StringBuilder concatRemoteIpHeaderValue = new StringBuilder();
 
             for (Enumeration<String> e = request.getHeaders(remoteIpHeader); e.hasMoreElements();) {
@@ -608,7 +595,7 @@ public class RemoteIpValve extends ValveBase {
                 }
             }
             // continue to loop on remoteIpHeaderValue to build the new value of the remoteIpHeader
-            LinkedList<String> newRemoteIpHeaderValue = new LinkedList<String>();
+            LinkedList<String> newRemoteIpHeaderValue = new LinkedList<>();
             for (; idx >= 0; idx--) {
                 String currentRemoteIp = remoteIpHeaderValue[idx];
                 newRemoteIpHeaderValue.addFirst(currentRemoteIp);

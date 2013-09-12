@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,7 +47,7 @@ import org.apache.tomcat.util.res.StringManager;
  * This servlet will display a complete status of the HTTP/1.1 connector.
  *
  * @author Remy Maucherat
- * @version $Id: StatusManagerServlet.java 1136216 2011-06-15 21:58:00Z markt $
+ * @version $Id: StatusManagerServlet.java 1361753 2012-07-15 18:53:13Z markt $
  */
 
 public class StatusManagerServlet
@@ -65,25 +65,25 @@ public class StatusManagerServlet
     /**
      * Vector of protocol handlers object names.
      */
-    protected Vector<ObjectName> protocolHandlers = new Vector<ObjectName>();
+    protected final Vector<ObjectName> protocolHandlers = new Vector<>();
 
 
     /**
      * Vector of thread pools object names.
      */
-    protected Vector<ObjectName> threadPools = new Vector<ObjectName>();
+    protected final Vector<ObjectName> threadPools = new Vector<>();
 
 
     /**
      * Vector of request processors object names.
      */
-    protected Vector<ObjectName> requestProcessors = new Vector<ObjectName>();
+    protected final Vector<ObjectName> requestProcessors = new Vector<>();
 
 
     /**
      * Vector of global request processors object names.
      */
-    protected Vector<ObjectName> globalRequestProcessors = new Vector<ObjectName>();
+    protected final Vector<ObjectName> globalRequestProcessors = new Vector<>();
 
 
     /**
@@ -187,7 +187,7 @@ public class StatusManagerServlet
         // mode is flag for HTML or XML output
         int mode = 0;
         // if ?XML=true, set the mode to XML
-        if (request.getParameter("XML") != null 
+        if (request.getParameter("XML") != null
             && request.getParameter("XML").equals("true")) {
             mode = 1;
         }
@@ -196,7 +196,7 @@ public class StatusManagerServlet
         PrintWriter writer = response.getWriter();
 
         boolean completeStatus = false;
-        if ((request.getPathInfo() != null) 
+        if ((request.getPathInfo() != null)
             && (request.getPathInfo().equals("/all"))) {
             completeStatus = true;
         }
@@ -293,7 +293,7 @@ public class StatusManagerServlet
                      requestProcessors, mode);
             }
 
-            if ((request.getPathInfo() != null) 
+            if ((request.getPathInfo() != null)
                 && (request.getPathInfo().equals("/all"))) {
                 // Note: Retrieving the full status is much slower
                 // use StatusTransformer to output status
@@ -318,7 +318,7 @@ public class StatusManagerServlet
                                    java.lang.Object handback) {
 
         if (notification instanceof MBeanServerNotification) {
-            ObjectName objectName = 
+            ObjectName objectName =
                 ((MBeanServerNotification) notification).getMBeanName();
             if (notification.getType().equals
                 (MBeanServerNotification.REGISTRATION_NOTIFICATION)) {
@@ -350,7 +350,7 @@ public class StatusManagerServlet
                 }
                 String j2eeType = objectName.getKeyProperty("j2eeType");
                 if (j2eeType != null) {
-                    
+
                 }
             }
         }

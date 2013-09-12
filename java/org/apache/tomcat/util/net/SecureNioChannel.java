@@ -222,6 +222,7 @@ public class SecureNioChannel extends NioChannel  {
      * @throws IOException - if an IO exception occurs or if application or network buffers contain data
      * @throws SocketTimeoutException - if a socket operation timed out
      */
+    @SuppressWarnings("null") // key cannot be null
     public void rehandshake(long timeout) throws IOException {
         //validate the network buffers are empty
         if (netInBuffer.position() > 0 && netInBuffer.position()<netInBuffer.limit()) throw new IOException("Network input buffer still contains data. Handshake will fail.");
@@ -251,7 +252,7 @@ public class SecureNioChannel extends NioChannel  {
                             }
                             key = getIOChannel().register(selector, hsStatus);
                         } else {
-                            key.interestOps(hsStatus);
+                            key.interestOps(hsStatus); // null warning supressed
                         }
                         int keyCount = selector.select(timeout);
                         if (keyCount == 0 && ((System.currentTimeMillis()-now) >= timeout)) {
@@ -477,7 +478,7 @@ public class SecureNioChannel extends NioChannel  {
             int written = sc.write(src);
             return written;
         } else {
-            //make sure we can handle expand, and that we only use on buffer
+            //make sure we can handle expand, and that we only use one buffer
             if ( (!this.isSendFile()) && (src != bufHandler.getWriteBuffer()) ) throw new IllegalArgumentException("You can only write using the application write buffer provided by the handler.");
             //are we closing or closed?
             if ( closing || closed) throw new IOException("Channel is in closing state.");

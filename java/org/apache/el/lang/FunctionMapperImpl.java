@@ -5,16 +5,15 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.el.lang;
 
 import java.io.Externalizable;
@@ -22,8 +21,8 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.el.FunctionMapper;
 
@@ -32,43 +31,43 @@ import org.apache.el.util.ReflectionUtil;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: FunctionMapperImpl.java 1050660 2010-12-18 16:23:09Z markt $
  */
 public class FunctionMapperImpl extends FunctionMapper implements
         Externalizable {
 
     private static final long serialVersionUID = 1L;
 
-    protected Map<String, Function> functions = null;
+    protected Map<String, Function> functions = new ConcurrentHashMap<>();
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see javax.el.FunctionMapper#resolveFunction(java.lang.String,
      *      java.lang.String)
      */
     @Override
     public Method resolveFunction(String prefix, String localName) {
-        if (this.functions != null) {
-            Function f = this.functions.get(prefix + ":" + localName);
-            return f.getMethod();
+        Function f = this.functions.get(prefix + ":" + localName);
+        if (f == null) {
+            return null;
         }
-        return null;
+        return f.getMethod();
     }
 
-    public void addFunction(String prefix, String localName, Method m) {
-        if (this.functions == null) {
-            this.functions = new HashMap<String, Function>();
-        }
-        Function f = new Function(prefix, localName, m);
-        synchronized (this) {
-            this.functions.put(prefix+":"+localName, f);
+    @Override
+    public void mapFunction(String prefix, String localName, Method m) {
+        String key = prefix + ":" + localName;
+        if (m == null) {
+            functions.remove(key);
+        } else {
+            Function f = new Function(prefix, localName, m);
+            functions.put(key, f);
         }
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
      */
     @Override
@@ -78,10 +77,9 @@ public class FunctionMapperImpl extends FunctionMapper implements
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public void readExternal(ObjectInput in) throws IOException,
             ClassNotFoundException {
@@ -98,7 +96,7 @@ public class FunctionMapperImpl extends FunctionMapper implements
         protected String localName;
 
         /**
-         * 
+         *
          */
         public Function(String prefix, String localName, Method m) {
             if (localName == null) {
@@ -118,7 +116,7 @@ public class FunctionMapperImpl extends FunctionMapper implements
 
         /*
          * (non-Javadoc)
-         * 
+         *
          * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
          */
         @Override
@@ -141,7 +139,7 @@ public class FunctionMapperImpl extends FunctionMapper implements
 
         /*
          * (non-Javadoc)
-         * 
+         *
          * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
          */
         @Override

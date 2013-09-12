@@ -20,12 +20,12 @@ package org.apache.catalina.ssi;
 import java.io.PrintWriter;
 /**
  * Return the result associated with the supplied Server Variable.
- * 
+ *
  * @author Bip Thelin
  * @author Paul Speed
  * @author Dan Sandberg
  * @author David Becker
- * @version $Id: SSIEcho.java 1138121 2011-06-21 18:32:41Z markt $
+ * @version $Id: SSIEcho.java 1187798 2011-10-22 21:14:59Z markt $
  */
 public class SSIEcho implements SSICommand {
     protected static final String DEFAULT_ENCODING = "entity";

@@ -21,13 +21,13 @@ import java.util.Set;
 
 /**
  * @since Servlet 3.0
- * $Id: ServletRegistration.java 981816 2010-08-03 10:44:58Z markt $
+ * $Id: ServletRegistration.java 1187778 2011-10-22 20:54:57Z markt $
  * TODO SERVLET3 - Add comments
  */
 public interface ServletRegistration extends Registration {
-    
+
     /**
-     * 
+     *
      * @param urlPatterns
      * @return TODO
      * @throws IllegalArgumentException if urlPattern is null or empty
@@ -35,11 +35,11 @@ public interface ServletRegistration extends Registration {
      *                                  already been initialised
      */
     public Set<String> addMapping(String... urlPatterns);
-    
+
     public Collection<String> getMappings();
-    
+
     public String getRunAsRole();
-    
+
     public static interface Dynamic
     extends ServletRegistration, Registration.Dynamic {
         public void setLoadOnStartup(int loadOnStartup);

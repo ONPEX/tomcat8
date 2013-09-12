@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -36,7 +36,7 @@ import org.apache.jasper.JspCompilationContext;
 /**
  * Contains static utilities for generating SMAP data based on the
  * current version of Jasper.
- * 
+ *
  * @author Jayson Falkner
  * @author Shawn Bayern
  * @author Robert Field (inner SDEInstaller class)
@@ -48,7 +48,7 @@ public class SmapUtil {
     //*********************************************************************
     // Constants
 
-    public static final String SMAP_ENCODING = "UTF-8";
+    private static final String SMAP_ENCODING = "UTF-8";
 
     //*********************************************************************
     // Public entry points
@@ -76,7 +76,7 @@ public class SmapUtil {
 
         // set up our SMAP generator
         SmapGenerator g = new SmapGenerator();
-        
+
         /** Disable reading of input SMAP because:
             1. There is a bug here: getRealPath() is null if .jsp is in a jar
                Bugzilla 14660.
@@ -161,7 +161,7 @@ public class SmapUtil {
         for (int i = 0; i < smap.length; i += 2) {
             File outServlet = new File(smap[i]);
             SDEInstaller.install(outServlet,
-                    smap[i+1].getBytes(Charset.defaultCharset()));
+                    smap[i+1].getBytes(StandardCharsets.ISO_8859_1));
         }
     }
 
@@ -196,7 +196,8 @@ public class SmapUtil {
 
         static void install(File classFile, byte[] smap) throws IOException {
             File tmpFile = new File(classFile.getPath() + "tmp");
-            new SDEInstaller(classFile, smap, tmpFile);
+            SDEInstaller installer = new SDEInstaller(classFile, smap);
+            installer.install(tmpFile);
             if (!classFile.delete()) {
                 throw new IOException("classFile.delete() failed");
             }
@@ -205,7 +206,7 @@ public class SmapUtil {
             }
         }
 
-        SDEInstaller(File inClassFile, byte[] sdeAttr, File outClassFile)
+        SDEInstaller(File inClassFile, byte[] sdeAttr)
             throws IOException {
             if (!inClassFile.exists()) {
                 throw new FileNotFoundException("no such file: " + inClassFile);
@@ -215,7 +216,9 @@ public class SmapUtil {
             // get the bytes
             orig = readWhole(inClassFile);
             gen = new byte[orig.length + sdeAttr.length + 100];
+        }
 
+        void install(File outClassFile) throws IOException {
             // do it
             addSDE();
 
@@ -226,13 +229,13 @@ public class SmapUtil {
         }
 
         static byte[] readWhole(File input) throws IOException {
-            FileInputStream inStream = new FileInputStream(input);
             int len = (int)input.length();
             byte[] bytes = new byte[len];
-            if (inStream.read(bytes, 0, len) != len) {
-                throw new IOException("expected size: " + len);
+            try (FileInputStream inStream = new FileInputStream(input)) {
+                if (inStream.read(bytes, 0, len) != len) {
+                    throw new IOException("expected size: " + len);
+                }
             }
-            inStream.close();
             return bytes;
         }
 
@@ -455,11 +458,11 @@ public class SmapUtil {
         }
     }
 
-    static class SmapGenVisitor extends Node.Visitor {
+    private static class SmapGenVisitor extends Node.Visitor {
 
         private SmapStratum smap;
-        private boolean breakAtLF;
-        private HashMap<String, SmapStratum> innerClassMap;
+        private final boolean breakAtLF;
+        private final HashMap<String, SmapStratum> innerClassMap;
 
         SmapGenVisitor(SmapStratum s, boolean breakAtLF, HashMap<String, SmapStratum> map) {
             this.smap = s;
@@ -596,7 +599,7 @@ public class SmapUtil {
             int iInputStartLine = mark.getLineNumber();
             int iOutputStartLine = n.getBeginJavaLine();
             int iOutputLineIncrement = breakAtLF? 1: 0;
-            smap.addLineData(iInputStartLine, fileName, 1, iOutputStartLine, 
+            smap.addLineData(iInputStartLine, fileName, 1, iOutputStartLine,
                              iOutputLineIncrement);
 
             // Output additional mappings in the text
@@ -684,7 +687,7 @@ public class SmapUtil {
 
     private static class PreScanVisitor extends Node.Visitor {
 
-        HashMap<String, SmapStratum> map = new HashMap<String, SmapStratum>();
+        HashMap<String, SmapStratum> map = new HashMap<>();
 
         @Override
         public void doVisit(Node n) {
@@ -698,5 +701,5 @@ public class SmapUtil {
             return map;
         }
     }
-    
+
 }

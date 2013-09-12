@@ -17,7 +17,7 @@
 -->
 <!-- Content Stylesheet for "tomcat-docs" Documentation -->
 
-<!-- $Id: tomcat-docs.xsl 1460331 2013-03-24 12:21:31Z kkolinko $ -->
+<!-- $Id: tomcat-docs.xsl 1460330 2013-03-24 12:18:45Z kkolinko $ -->
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   version="1.0">
@@ -37,8 +37,8 @@
   <xsl:param    name="apache-logo"      select="'/images/asf-logo.gif'"/>
   <xsl:param    name="subdir"           select="''"/>
   <xsl:param    name="relative-path"    select="'.'"/>
-  <xsl:param    name="version"          select="'7.0.x'"/>
-  <xsl:param    name="majorversion"     select="'7.0'"/>
+  <xsl:param    name="version"          select="'8.0.x'"/>
+  <xsl:param    name="majorversion"     select="'8.0'"/>
   <xsl:param    name="build-date"       select="'MMM d yyyy'"/>
   <xsl:param    name="year"             select="'yyyy'"/>
   <xsl:param    name="void-image"       select="'/images/void.gif'"/>

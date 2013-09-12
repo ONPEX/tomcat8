@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,7 +33,7 @@ import org.xml.sax.Attributes;
  * <code>Container</code>).</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: CopyParentClassLoaderRule.java 987920 2010-08-22 15:34:34Z markt $
+ * @version $Id: CopyParentClassLoaderRule.java 1187791 2011-10-22 21:11:34Z markt $
  */
 
 public class CopyParentClassLoaderRule extends Rule {

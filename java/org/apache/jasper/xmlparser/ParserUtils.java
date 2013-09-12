@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,7 +48,7 @@ import org.xml.sax.SAXParseException;
  * use a separate class loader for the parser to be used.
  *
  * @author Craig R. McClanahan
- * @version $Id: ParserUtils.java 1301227 2012-03-15 21:59:06Z markt $
+ * @version $Id: ParserUtils.java 1446966 2013-02-16 22:26:32Z markt $
  */
 
 public class ParserUtils {
@@ -56,12 +56,12 @@ public class ParserUtils {
     /**
      * An error handler for use when parsing XML documents.
      */
-    static ErrorHandler errorHandler = new MyErrorHandler();
+    private static final ErrorHandler errorHandler = new MyErrorHandler();
 
     /**
      * An entity resolver for use when parsing XML documents.
      */
-    static EntityResolver entityResolver = new MyEntityResolver();
+    private static EntityResolver entityResolver = new MyEntityResolver();
 
     // Turn off for JSP 2.0 until switch over to using xschema.
     public static boolean validating = false;
@@ -191,7 +191,7 @@ public class ParserUtils {
                 }
             }
         }
-        
+
         // Return the completed TreeNode graph
         return (treeNode);
     }

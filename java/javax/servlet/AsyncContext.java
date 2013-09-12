@@ -17,7 +17,7 @@
 package javax.servlet;
 
 /**
- * $Id: AsyncContext.java 1147915 2011-07-18 15:01:41Z markt $
+ * $Id: AsyncContext.java 1354112 2012-06-26 17:07:22Z fhanik $
  * TODO SERVLET3 - Add comments
  * @since Servlet 3.0
  */
@@ -32,53 +32,53 @@ public interface AsyncContext {
         "javax.servlet.async.servlet_path";
     public static final String ASYNC_QUERY_STRING =
         "javax.servlet.async.query_string";
-    
+
     ServletRequest getRequest();
-    
+
     ServletResponse getResponse();
-    
+
     boolean hasOriginalRequestAndResponse();
-    
+
     /**
-     * 
+     *
      * @throws IllegalStateException
      */
     void dispatch();
-    
+
     /**
-     * 
+     *
      * @param path
      * @throws IllegalStateException
      */
     void dispatch(String path);
-    
+
     /**
-     * 
+     *
      * @param context
      * @param path
      * @throws IllegalStateException
      */
     void dispatch(ServletContext context, String path);
-    
+
     void complete();
-    
+
     void start(Runnable run);
-    
+
     void addListener(AsyncListener listener);
-    
+
     void addListener(AsyncListener listener, ServletRequest request,
             ServletResponse response);
-    
+
     <T extends AsyncListener> T createListener(Class<T> clazz)
     throws ServletException;
-    
-    /**
-     * Get timeout in milliseconds. 0 or less indicates no timeout.
-     */
-    long getTimeout();
-    
+
     /**
      * Set timeout in milliseconds. 0 or less indicates no timeout.
      */
     void setTimeout(long timeout);
+
+    /**
+     * Get timeout in milliseconds. 0 or less indicates no timeout.
+     */
+    long getTimeout();
 }

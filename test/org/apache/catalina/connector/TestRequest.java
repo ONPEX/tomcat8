@@ -14,7 +14,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package org.apache.catalina.connector;
 
 import java.io.BufferedReader;
@@ -44,15 +43,15 @@ import org.junit.Test;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.authenticator.BasicAuthenticator;
-import org.apache.catalina.deploy.FilterDef;
-import org.apache.catalina.deploy.FilterMap;
-import org.apache.catalina.deploy.LoginConfig;
 import org.apache.catalina.filters.FailedRequestFilter;
 import org.apache.catalina.startup.SimpleHttpClient;
-import org.apache.catalina.startup.TestTomcat.MapRealm;
+import org.apache.catalina.startup.TesterMapRealm;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
 import org.apache.tomcat.util.buf.ByteChunk;
+import org.apache.tomcat.util.descriptor.web.FilterDef;
+import org.apache.tomcat.util.descriptor.web.FilterMap;
+import org.apache.tomcat.util.descriptor.web.LoginConfig;
 
 /**
  * Test case for {@link Request}.
@@ -320,7 +319,7 @@ public class TestRequest extends TomcatBaseTest {
         Tomcat.addServlet(ctx, "servlet", new LoginLogoutServlet());
         ctx.addServletMapping("/", "servlet");
 
-        MapRealm realm = new MapRealm();
+        TesterMapRealm realm = new TesterMapRealm();
         realm.addUser(LoginLogoutServlet.USER, LoginLogoutServlet.PWD);
         ctx.setRealm(realm);
 
@@ -513,7 +512,8 @@ public class TestRequest extends TomcatBaseTest {
 
             PrintWriter out = resp.getWriter();
 
-            TreeMap<String,String[]> parameters = new TreeMap<String,String[]>(req.getParameterMap());
+            TreeMap<String,String[]> parameters =
+                    new TreeMap<>(req.getParameterMap());
 
             boolean first = true;
 
@@ -660,7 +660,7 @@ public class TestRequest extends TomcatBaseTest {
             writer.append("Content-Disposition: form-data; name=\"part\"\r\n");
             writer.append("Content-Type: text/plain; charset=UTF-8\r\n");
             writer.append("\r\n");
-            writer.append("дц").append("\r\n");
+            writer.append("пїЅпїЅ").append("\r\n");
             writer.flush();
 
             writer.append("\r\n");
@@ -676,7 +676,7 @@ public class TestRequest extends TomcatBaseTest {
 
     private void checkResponseBug54984(HttpURLConnection conn)
             throws Exception {
-        List<String> response = new ArrayList<String>();
+        List<String> response = new ArrayList<>();
         int status = conn.getResponseCode();
         if (status == HttpURLConnection.HTTP_OK) {
             BufferedReader reader = null;
@@ -687,7 +687,7 @@ public class TestRequest extends TomcatBaseTest {
                 while ((line = reader.readLine()) != null) {
                     response.add(line);
                 }
-                assertTrue(response.contains("Part дц"));
+                assertTrue(response.contains("Part пїЅпїЅ"));
             } finally {
                 if (reader != null) {
                     reader.close();

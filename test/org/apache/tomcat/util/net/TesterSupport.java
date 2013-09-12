@@ -45,11 +45,11 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.catalina.Context;
 import org.apache.catalina.authenticator.SSLAuthenticator;
 import org.apache.catalina.connector.Connector;
-import org.apache.catalina.deploy.LoginConfig;
-import org.apache.catalina.deploy.SecurityCollection;
-import org.apache.catalina.deploy.SecurityConstraint;
-import org.apache.catalina.startup.TestTomcat.MapRealm;
+import org.apache.catalina.startup.TesterMapRealm;
 import org.apache.catalina.startup.Tomcat;
+import org.apache.tomcat.util.descriptor.web.LoginConfig;
+import org.apache.tomcat.util.descriptor.web.SecurityCollection;
+import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
 
 public final class TesterSupport {
 
@@ -77,7 +77,7 @@ public final class TesterSupport {
         RFC_5746_SUPPORTED = result;
     }
 
-    protected static void initSsl(Tomcat tomcat) {
+    public static void initSsl(Tomcat tomcat) {
         initSsl(tomcat, "localhost.jks", null, null);
     }
 
@@ -194,7 +194,7 @@ public final class TesterSupport {
         ctx.addConstraint(sc);
 
         // Configure the Realm
-        MapRealm realm = new MapRealm();
+        TesterMapRealm realm = new TesterMapRealm();
         realm.addUser("CN=user1, C=US", "not used");
         realm.addUserRole("CN=user1, C=US", "testrole");
         ctx.setRealm(realm);

@@ -43,7 +43,7 @@ import java.util.ResourceBundle;
  * <p>Please see the documentation for java.util.ResourceBundle for
  * more information.
  *
- * @version $Id: StringManager.java 1200166 2011-11-10 05:50:36Z kkolinko $
+ * @version $Id: StringManager.java 1383614 2012-09-11 21:14:27Z markt $
  *
  * @author James Duncan Davidson [duncan@eng.sun.com]
  * @author James Todd [gonzo@eng.sun.com]
@@ -165,7 +165,7 @@ public class StringManager {
     // --------------------------------------------------------------
 
     private static final Map<String, Map<Locale,StringManager>> managers =
-        new Hashtable<String, Map<Locale,StringManager>>();
+            new Hashtable<>();
 
     /**
      * Get the StringManager for a particular package. If a manager for
@@ -192,7 +192,7 @@ public class StringManager {
 
         Map<Locale,StringManager> map = managers.get(packageName);
         if (map == null) {
-            map = new Hashtable<Locale, StringManager>();
+            map = new Hashtable<>();
             managers.put(packageName, map);
         }
 

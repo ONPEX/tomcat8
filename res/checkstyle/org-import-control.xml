@@ -66,6 +66,10 @@
       <allow pkg="org.apache.catalina.ha"/>
       <allow pkg="org.apache.catalina.tribes"/>
     </subpackage>
+    <subpackage name="storeconfig">
+      <allow pkg="org.apache.catalina.ha"/>
+      <allow pkg="org.apache.catalina.tribes"/>
+    </subpackage>
     <subpackage name="tribes">
       <disallow pkg="javax.annotation"/>
       <disallow pkg="javax.ejb"/>
@@ -79,9 +83,11 @@
     </subpackage>
   </subpackage>
   <subpackage name="coyote">
+    <allow pkg="javax.servlet"/>
     <allow pkg="org.apache.coyote"/>
     <allow pkg="org.apache.juli"/>
     <allow pkg="org.apache.tomcat.jni"/>
+    <allow pkg="org.apache.tomcat.spdy"/>
     <allow pkg="org.apache.tomcat.util"/>
   </subpackage>
   <subpackage name="el">
@@ -94,6 +100,7 @@
     <allow pkg="org.apache.jasper"/>
     <allow pkg="org.apache.juli"/>
     <allow pkg="org.apache.tomcat" exact-match="true"/>
+    <allow pkg="org.apache.tomcat.util.descriptor"/>
     <allow pkg="org.apache.tomcat.util.scan"/>
     <allow pkg="org.apache.tools.ant"/>
     <allow pkg="org.eclipse.jdt"/>
@@ -117,14 +124,41 @@
     <subpackage name="buildutil">
       <allow pkg="org.apache.tools.ant"/>
     </subpackage>
-    <subpackage name="jni"/>
+    <subpackage name="jni">
+      <subpackage name="socket">
+        <allow pkg="org.apache.tomcat.jni"/>
+      </subpackage>
+    </subpackage>
+    <subpackage name="spdy">
+      <allow pkg="org.apache.tomcat.jni"/>
+      <allow pkg="org.apache.tomcat.spdy"/>
+    </subpackage>
     <subpackage name="util">
       <allow pkg="org.apache.juli"/>
       <allow pkg="org.apache.tomcat.jni"/>
       <allow pkg="org.apache.tomcat.util"/>
-      <disallow pkg="org.apache.util.scan"/>
+      <disallow pkg="org.apache.tomcat.util.scan"/>
+      <subpackage name="descriptor">
+        <allow pkg="org.apache.tomcat.util.scan"/>
+        <allow pkg="org.apache.tomcat" exact-match="true"/>
+      </subpackage>
       <subpackage name="scan">
         <allow pkg="org.apache.tomcat" exact-match="true"/>
+      </subpackage>
+    </subpackage>
+    <subpackage name="websocket">
+      <allow pkg="javax.websocket"/>
+      <allow pkg="org.apache.juli"/>
+      <allow pkg="org.apache.tomcat.util"/>
+      <!-- Ideally want to remove this -->
+      <allow pkg="org.apache.tomcat.websocket.pojo"/>
+      <disallow pkg="javax.servlet"/>
+      <subpackage name="pojo">
+        <allow pkg="org.apache.tomcat.websocket"/>
+      </subpackage>
+      <subpackage name="server">
+        <allow pkg="javax.servlet"/>
+        <allow pkg="org.apache.tomcat.websocket"/>
       </subpackage>
     </subpackage>
   </subpackage>

@@ -41,7 +41,7 @@ import java.util.TimeZone;
  * <p>The cache can be created with a parent cache to build a cache hierarchy.
  * Access to the parent cache is threadsafe.</p>
  *
- * @version $Id: DateFormatCache.java 1402624 2012-10-26 19:27:06Z markt $
+ * @version $Id: DateFormatCache.java 1402622 2012-10-26 19:25:50Z markt $
  */
 
 public class DateFormatCache {
@@ -52,9 +52,9 @@ public class DateFormatCache {
     private final String format;
 
     /* Number of cached entries */
-    private int cacheSize = 0;
+    private final int cacheSize;
 
-    private Cache cache;
+    private final Cache cache;
 
     /**
      * Replace the millisecond formatting character 'S' by

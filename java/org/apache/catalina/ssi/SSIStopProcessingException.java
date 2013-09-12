@@ -21,10 +21,10 @@ package org.apache.catalina.ssi;
  * Exception used to tell SSIProcessor that it should stop processing SSI
  * commands. This is used to mimic the Apache behavior in #set with invalid
  * attributes.
- * 
+ *
  * @author Paul Speed
  * @author Dan Sandberg
- * @version $Id: SSIStopProcessingException.java 1038846 2010-11-24 22:08:38Z markt $
+ * @version $Id: SSIStopProcessingException.java 1187798 2011-10-22 21:14:59Z markt $
  */
 public class SSIStopProcessingException extends Exception {
 

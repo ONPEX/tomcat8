@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,7 +35,7 @@ import java.util.List;
  * synchronized.
  *
  * @author Craig R. McClanahan
- * @version $Id: TreeNode.java 1081765 2011-03-15 13:10:33Z markt $
+ * @version $Id: TreeNode.java 1446966 2013-02-16 22:26:32Z markt $
  */
 
 public class TreeNode {
@@ -68,31 +68,31 @@ public class TreeNode {
      * The attributes of this node, keyed by attribute name,
      * Instantiated only if required.
      */
-    protected HashMap<String,String> attributes = null;
+    private HashMap<String,String> attributes = null;
 
 
     /**
      * The body text associated with this node (if any).
      */
-    protected String body = null;
+    private String body = null;
 
 
     /**
      * The children of this node, instantiated only if required.
      */
-    protected ArrayList<TreeNode> children = null;
+    private ArrayList<TreeNode> children = null;
 
 
     /**
      * The name of this node.
      */
-    protected String name = null;
+    private final String name;
 
 
     /**
      * The parent node of this node.
      */
-    protected TreeNode parent = null;
+    private final TreeNode parent;
 
 
     // --------------------------------------------------------- Public Methods
@@ -108,7 +108,7 @@ public class TreeNode {
     public void addAttribute(String name, String value) {
 
         if (attributes == null)
-            attributes = new HashMap<String,String>();
+            attributes = new HashMap<>();
         attributes.put(name, value);
 
     }
@@ -122,7 +122,7 @@ public class TreeNode {
     public void addChild(TreeNode node) {
 
         if (children == null)
-            children = new ArrayList<TreeNode>();
+            children = new ArrayList<>();
         children.add(node);
 
     }
@@ -151,7 +151,7 @@ public class TreeNode {
     public Iterator<String> findAttributes() {
 
         if (attributes == null) {
-            List<String> empty = Collections.emptyList(); 
+            List<String> empty = Collections.emptyList();
             return empty.iterator();
         } else
             return attributes.keySet().iterator();
@@ -187,7 +187,7 @@ public class TreeNode {
     public Iterator<TreeNode> findChildren() {
 
         if (children == null) {
-            List<TreeNode> empty = Collections.emptyList(); 
+            List<TreeNode> empty = Collections.emptyList();
             return empty.iterator();
         } else
             return children.iterator();
@@ -205,11 +205,11 @@ public class TreeNode {
     public Iterator<TreeNode> findChildren(String name) {
 
         if (children == null) {
-            List<TreeNode> empty = Collections.emptyList(); 
+            List<TreeNode> empty = Collections.emptyList();
             return empty.iterator();
-        } 
+        }
 
-        ArrayList<TreeNode> results = new ArrayList<TreeNode>();
+        ArrayList<TreeNode> results = new ArrayList<>();
         Iterator<TreeNode> items = children.iterator();
         while (items.hasNext()) {
             TreeNode item = items.next();

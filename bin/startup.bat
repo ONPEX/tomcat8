@@ -18,7 +18,7 @@ if "%OS%" == "Windows_NT" setlocal
 rem ---------------------------------------------------------------------------
 rem Start script for the CATALINA Server
 rem
-rem $Id: startup.bat 895392 2010-01-03 14:02:31Z kkolinko $
+rem $Id: startup.bat 1302376 2012-03-19 11:16:16Z markt $
 rem ---------------------------------------------------------------------------
 
 rem Guess CATALINA_HOME if not defined

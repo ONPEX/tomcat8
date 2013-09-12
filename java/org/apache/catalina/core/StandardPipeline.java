@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,13 +25,13 @@ import javax.management.ObjectName;
 
 import org.apache.catalina.Contained;
 import org.apache.catalina.Container;
+import org.apache.catalina.JmxEnabled;
 import org.apache.catalina.Lifecycle;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleState;
 import org.apache.catalina.Pipeline;
 import org.apache.catalina.Valve;
 import org.apache.catalina.util.LifecycleBase;
-import org.apache.catalina.valves.ValveBase;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
@@ -98,28 +98,13 @@ public class StandardPipeline extends LifecycleBase
 
 
     /**
-     * Descriptive information about this implementation.
-     */
-    protected static final String info = "org.apache.catalina.core.StandardPipeline/1.0";
-
-
-    /**
      * The first valve associated with this Pipeline.
      */
     protected Valve first = null;
-    
+
+
     // --------------------------------------------------------- Public Methods
 
-
-    /**
-     * Return descriptive information about this implementation class.
-     */
-    public String getInfo() {
-
-        return info;
-
-    }
-    
     @Override
     public boolean isAsyncSupported() {
         Valve valve = (first!=null)?first:basic;
@@ -128,7 +113,7 @@ public class StandardPipeline extends LifecycleBase
             supported = supported & valve.isAsyncSupported();
             valve = valve.getNext();
         }
-        return supported; 
+        return supported;
     }
 
 
@@ -164,7 +149,7 @@ public class StandardPipeline extends LifecycleBase
         // NOOP
     }
 
-    
+
     /**
      * Start {@link Valve}s) in this pipeline and implement the requirements
      * of {@link LifecycleBase#startInternal()}.
@@ -214,7 +199,7 @@ public class StandardPipeline extends LifecycleBase
         }
     }
 
-    
+
     @Override
     protected void destroyInternal() {
         Valve[] valves = getValves();
@@ -223,7 +208,7 @@ public class StandardPipeline extends LifecycleBase
         }
     }
 
-    
+
     /**
      * Return a String representation of this component.
      */
@@ -313,7 +298,7 @@ public class StandardPipeline extends LifecycleBase
             }
             current = current.getNext();
         }
-        
+
         this.basic = valve;
 
     }
@@ -340,7 +325,7 @@ public class StandardPipeline extends LifecycleBase
      */
     @Override
     public void addValve(Valve valve) {
-    
+
         // Validate that we can add this Valve
         if (valve instanceof Contained)
             ((Contained) valve).setContainer(this.container);
@@ -371,7 +356,7 @@ public class StandardPipeline extends LifecycleBase
                 current = current.getNext();
             }
         }
-        
+
         container.fireContainerEvent(Container.ADD_VALVE_EVENT, valve);
     }
 
@@ -384,7 +369,7 @@ public class StandardPipeline extends LifecycleBase
     @Override
     public Valve[] getValves() {
 
-        ArrayList<Valve> valveList = new ArrayList<Valve>();
+        ArrayList<Valve> valveList = new ArrayList<>();
         Valve current = first;
         if (current == null) {
             current = basic;
@@ -400,14 +385,14 @@ public class StandardPipeline extends LifecycleBase
 
     public ObjectName[] getValveObjectNames() {
 
-        ArrayList<ObjectName> valveList = new ArrayList<ObjectName>();
+        ArrayList<ObjectName> valveList = new ArrayList<>();
         Valve current = first;
         if (current == null) {
             current = basic;
         }
         while (current != null) {
-            if (current instanceof ValveBase) {
-                valveList.add(((ValveBase) current).getObjectName());
+            if (current instanceof JmxEnabled) {
+                valveList.add(((JmxEnabled) current).getObjectName());
             }
             current = current.getNext();
         }
@@ -462,7 +447,7 @@ public class StandardPipeline extends LifecycleBase
                 log.error("StandardPipeline.removeValve: destroy: ", e);
             }
         }
-        
+
         container.fireContainerEvent(Container.REMOVE_VALVE_EVENT, valve);
     }
 
@@ -472,7 +457,7 @@ public class StandardPipeline extends LifecycleBase
         if (first != null) {
             return first;
         }
-        
+
         return basic;
     }
 }

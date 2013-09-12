@@ -234,7 +234,7 @@ public class JSSESocketFactory implements ServerSocketFactory, SSLUtil {
             return DEAFULT_SERVER_CIPHER_SUITES;
         }
 
-        List<String> requestedCiphers = new ArrayList<String>();
+        List<String> requestedCiphers = new ArrayList<>();
         for (String rc : requestedCiphersStr.split(",")) {
             final String cipher = rc.trim();
             if (cipher.length() > 0) {
@@ -244,7 +244,7 @@ public class JSSESocketFactory implements ServerSocketFactory, SSLUtil {
         if (requestedCiphers.isEmpty()) {
             return DEAFULT_SERVER_CIPHER_SUITES;
         }
-        List<String> ciphers = new ArrayList<String>(requestedCiphers);
+        List<String> ciphers = new ArrayList<>(requestedCiphers);
         ciphers.retainAll(Arrays.asList(context.getSupportedSSLParameters()
                 .getCipherSuites()));
 
@@ -255,13 +255,17 @@ public class JSSESocketFactory implements ServerSocketFactory, SSLUtil {
         if (log.isDebugEnabled()) {
             log.debug(sm.getString("jsse.enableable_ciphers", ciphers));
             if (ciphers.size() != requestedCiphers.size()) {
-                List<String> skipped = new ArrayList<String>(requestedCiphers);
+                List<String> skipped = new ArrayList<>(requestedCiphers);
                 skipped.removeAll(ciphers);
                 log.debug(sm.getString("jsse.unsupported_ciphers", skipped));
             }
         }
 
         return ciphers.toArray(new String[ciphers.size()]);
+    }
+
+    public String[] getEnabledCiphers() {
+        return enabledCiphers;
     }
 
     /*
@@ -700,7 +704,7 @@ public class JSSESocketFactory implements ServerSocketFactory, SSLUtil {
             return DEFAULT_SERVER_PROTOCOLS;
         }
 
-        List<String> protocols = new ArrayList<String>(
+        List<String> protocols = new ArrayList<>(
                 Arrays.asList(requestedProtocols));
         protocols.retainAll(Arrays.asList(context.getSupportedSSLParameters()
                 .getProtocols()));
@@ -712,7 +716,7 @@ public class JSSESocketFactory implements ServerSocketFactory, SSLUtil {
         if (log.isDebugEnabled()) {
             log.debug(sm.getString("jsse.enableable_protocols", protocols));
             if (protocols.size() != requestedProtocols.length) {
-                List<String> skipped = new ArrayList<String>(
+                List<String> skipped = new ArrayList<>(
                         Arrays.asList(requestedProtocols));
                 skipped.removeAll(protocols);
                 log.debug(sm.getString("jsse.unsupported_protocols", skipped));
@@ -745,7 +749,7 @@ public class JSSESocketFactory implements ServerSocketFactory, SSLUtil {
 
         socket.setEnabledCipherSuites(enabledCiphers);
         socket.setEnabledProtocols(enabledProtocols);
-        
+
         // we don't know if client auth is needed -
         // after parsing the request we may re-handshake
         configureClientAuth(socket);

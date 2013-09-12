@@ -18,7 +18,7 @@
 # -----------------------------------------------------------------------------
 # Script to digest password using the algorithm specified
 #
-# $Id: digest.sh 1202062 2011-11-15 06:50:02Z mturk $
+# $Id: digest.sh 1302376 2012-03-19 11:16:16Z markt $
 # -----------------------------------------------------------------------------
 
 # Better OS/400 detection: see Bugzilla 31132

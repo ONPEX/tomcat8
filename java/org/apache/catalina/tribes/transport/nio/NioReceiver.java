@@ -43,7 +43,7 @@ import org.apache.juli.logging.LogFactory;
 
 /**
  * @author Filip Hanik
- * @version $Id: NioReceiver.java 1498377 2013-07-01 11:09:51Z markt $
+ * @version $Id: NioReceiver.java 1498363 2013-07-01 10:57:50Z markt $
  */
 public class NioReceiver extends ReceiverBase implements Runnable {
 
@@ -52,38 +52,19 @@ public class NioReceiver extends ReceiverBase implements Runnable {
     /**
      * The string manager for this package.
      */
-    protected static final StringManager sm = StringManager.getManager(Constants.Package);
-
-    /**
-     * The descriptive information about this implementation.
-     */
-    private static final String info = "NioReceiver/1.0";
+    protected static final StringManager sm =
+            StringManager.getManager(Constants.Package);
 
     private volatile boolean running = false;
 
-    private AtomicReference<Selector> selector = new AtomicReference<Selector>();
-
+    private AtomicReference<Selector> selector = new AtomicReference<>();
     private ServerSocketChannel serverChannel = null;
     private DatagramChannel datagramChannel = null;
 
-    protected LinkedList<Runnable> events = new LinkedList<Runnable>();
-//    private Object interestOpsMutex = new Object();
+    protected final LinkedList<Runnable> events = new LinkedList<>();
 
     public NioReceiver() {
     }
-
-    /**
-     * Return descriptive information about this implementation and the
-     * corresponding version number, in the format
-     * <code>&lt;description&gt;/&lt;version&gt;</code>.
-     */
-    public String getInfo() {
-        return (info);
-    }
-
-//    public Object getInterestOpsMutex() {
-//        return interestOpsMutex;
-//    }
 
     @Override
     public void stop() {
@@ -102,7 +83,7 @@ public class NioReceiver extends ReceiverBase implements Runnable {
         try {
             setPool(new RxTaskPool(getMaxThreads(),getMinThreads(),this));
         } catch (Exception x) {
-            log.fatal("ThreadPool can initilzed. Listener not started", x);
+            log.fatal(sm.getString("NioReceiver.threadpool.fail"), x);
             if ( x instanceof IOException ) throw (IOException)x;
             else throw new IOException(x.getMessage());
         }
@@ -113,7 +94,7 @@ public class NioReceiver extends ReceiverBase implements Runnable {
             t.setDaemon(true);
             t.start();
         } catch (Exception x) {
-            log.fatal("Unable to start cluster receiver", x);
+            log.fatal(sm.getString("NioReceiver.start.fail"), x);
             if ( x instanceof IOException ) throw (IOException)x;
             else throw new IOException(x.getMessage());
         }
@@ -237,7 +218,12 @@ public class NioReceiver extends ReceiverBase implements Runnable {
                         long delta = now - ka.getLastAccess();
                         if (delta > getTimeout() && (!ka.isAccessed())) {
                             if (log.isWarnEnabled())
-                                log.warn("Channel key is registered, but has had no interest ops for the last "+getTimeout()+" ms. (cancelled:"+ka.isCancelled()+"):"+key+" last access:"+new java.sql.Timestamp(ka.getLastAccess())+" Possible cause: all threads used, perform thread dump");
+                                log.warn(sm.getString(
+                                        "NioReceiver.threadsExhausted",
+                                        Integer.valueOf(getTimeout()),
+                                        Boolean.valueOf(ka.isCancelled()),
+                                        key,
+                                        new java.sql.Timestamp(ka.getLastAccess())));
                             ka.setLastAccess(now);
                             //key.interestOps(SelectionKey.OP_READ);
                         }//end if
@@ -261,7 +247,7 @@ public class NioReceiver extends ReceiverBase implements Runnable {
      */
     protected void listen() throws Exception {
         if (doListen()) {
-            log.warn("ServerSocketChannel already started");
+            log.warn(sm.getString("NioReceiver.alreadyStarted"));
             return;
         }
 
@@ -331,7 +317,7 @@ public class NioReceiver extends ReceiverBase implements Runnable {
             } catch (java.nio.channels.ClosedSelectorException cse) {
                 // ignore is normal at shutdown or stop listen socket
             } catch (java.nio.channels.CancelledKeyException nx) {
-                log.warn("Replication client disconnected, error when polling key. Ignoring client.");
+                log.warn(sm.getString("NioReceiver.clientDisconnect"));
             } catch (Throwable t) {
                 if (t instanceof ThreadDeath) {
                     throw (ThreadDeath) t;
@@ -339,7 +325,7 @@ public class NioReceiver extends ReceiverBase implements Runnable {
                 if (t instanceof VirtualMachineError) {
                     throw (VirtualMachineError) t;
                 }
-                log.error("Unable to process request in NioReceiver", t);
+                log.error(sm.getString("NioReceiver.requestError"), t);
             }
 
         }
@@ -380,7 +366,7 @@ public class NioReceiver extends ReceiverBase implements Runnable {
                 }
                 closeSelector();
             } catch (Exception x) {
-                log.error("Unable to close cluster receiver selector.", x);
+                log.error(sm.getString("NioReceiver.stop.fail"), x);
             } finally {
                 this.selector.set(null);
             }
@@ -401,7 +387,7 @@ public class NioReceiver extends ReceiverBase implements Runnable {
             }
         }catch ( IOException ignore ){
             if (log.isWarnEnabled()) {
-                log.warn("Unable to cleanup on selector close.",ignore);
+                log.warn(sm.getString("NioReceiver.cleanup.fail"), ignore);
             }
         }catch ( ClosedSelectorException ignore){}
         selector.close();
@@ -433,7 +419,7 @@ public class NioReceiver extends ReceiverBase implements Runnable {
         try {
             listen();
         } catch (Exception x) {
-            log.error("Unable to run replication listener.", x);
+            log.error(sm.getString("NioReceiver.run.fail"), x);
         } finally {
             running = false;
         }

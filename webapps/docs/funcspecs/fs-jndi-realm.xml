@@ -25,7 +25,7 @@
   <properties>
     <author email="craigmcc@apache.org">Craig McClanahan</author>
     <title>JNDIRealm</title>
-    <revision>$Id: fs-jndi-realm.xml 1243045 2012-02-11 12:28:32Z rjung $</revision>
+    <revision>$Id: fs-jndi-realm.xml 1243038 2012-02-11 11:56:29Z rjung $</revision>
   </properties>
 
 <body>

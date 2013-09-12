@@ -25,6 +25,8 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.servlet.http.HttpUpgradeHandler;
+
 import org.apache.coyote.AbstractProcessor;
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.AsyncContextCallback;
@@ -33,7 +35,6 @@ import org.apache.coyote.OutputBuffer;
 import org.apache.coyote.Request;
 import org.apache.coyote.RequestInfo;
 import org.apache.coyote.Response;
-import org.apache.coyote.http11.upgrade.UpgradeInbound;
 import org.apache.juli.logging.Log;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.buf.ByteChunk;
@@ -119,7 +120,7 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
         pongMessage.appendByte(Constants.JK_AJP13_CPONG_REPLY);
         pongMessage.end();
         pongMessageArray = new byte[pongMessage.getLen()];
-        System.arraycopy(pongMessage.getBuffer(), 0, pongMessageArray, 
+        System.arraycopy(pongMessage.getBuffer(), 0, pongMessageArray,
                 0, pongMessage.getLen());
     }
 
@@ -137,7 +138,7 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
     /**
      * AJP packet size.
      */
-    protected int packetSize;
+    protected final int packetSize;
 
     /**
      * Header message. Note that this header is merely the one used during the
@@ -145,25 +146,25 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
      * request header. It will stay unchanged during the processing of the whole
      * request.
      */
-    protected AjpMessage requestHeaderMessage = null;
+    protected final AjpMessage requestHeaderMessage;
 
 
     /**
      * Message used for response composition.
      */
-    protected AjpMessage responseMessage = null;
+    protected final AjpMessage responseMessage;
 
 
     /**
      * Body message.
      */
-    protected AjpMessage bodyMessage = null;
+    protected final AjpMessage bodyMessage;
 
 
     /**
      * Body message.
      */
-    protected MessageBytes bodyBytes = MessageBytes.newInstance();
+    protected final MessageBytes bodyBytes = MessageBytes.newInstance();
 
 
     /**
@@ -181,13 +182,13 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
     /**
      * Temp message bytes used for processing.
      */
-    protected MessageBytes tmpMB = MessageBytes.newInstance();
+    protected final MessageBytes tmpMB = MessageBytes.newInstance();
 
 
     /**
      * Byte chunk for certs.
      */
-    protected MessageBytes certificates = MessageBytes.newInstance();
+    protected final MessageBytes certificates = MessageBytes.newInstance();
 
 
     /**
@@ -249,7 +250,7 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
                 Constants.MAX_PACKET_SIZE);
         getBodyMessage.end();
         getBodyMessageArray = new byte[getBodyMessage.getLen()];
-        System.arraycopy(getBodyMessage.getBuffer(), 0, getBodyMessageArray, 
+        System.arraycopy(getBodyMessage.getBuffer(), 0, getBodyMessageArray,
                 0, getBodyMessage.getLen());
     }
 
@@ -293,7 +294,7 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
      * provider is used to perform the conversion. For example it is used with
      * the AJP connectors, the HTTP APR connector and with the
      * {@link org.apache.catalina.valves.SSLValve}. If not specified, the
-     * default provider will be used. 
+     * default provider will be used.
      */
     protected String clientCertProvider = null;
     public String getClientCertProvider() { return clientCertProvider; }
@@ -474,7 +475,7 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
         RequestInfo rp = request.getRequestProcessor();
         try {
             rp.setStage(org.apache.coyote.Constants.STAGE_SERVICE);
-            error = !adapter.asyncDispatch(request, response, status);
+            error = !getAdapter().asyncDispatch(request, response, status);
         } catch (InterruptedIOException e) {
             error = true;
         } catch (Throwable t) {
@@ -485,7 +486,7 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
             if (error) {
                 // 500 - Internal Server Error
                 response.setStatus(500);
-                adapter.log(request, response, 0);
+                getAdapter().log(request, response, 0);
             }
         }
 
@@ -526,7 +527,7 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
 
 
     @Override
-    public SocketState upgradeDispatch() throws IOException {
+    public SocketState upgradeDispatch(SocketStatus status) throws IOException {
         // Should never reach this code but in case we do...
         throw new IOException(
                 sm.getString("ajpprocessor.httpupgrade.notsupported"));
@@ -534,7 +535,7 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
 
 
     @Override
-    public UpgradeInbound getUpgradeInbound() {
+    public HttpUpgradeHandler getHttpUpgradeHandler() {
         // Should never reach this code but in case we do...
         throw new IllegalStateException(
                 sm.getString("ajpprocessor.httpupgrade.notsupported"));
@@ -544,7 +545,7 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
     /**
      * Recycle the processor, ready for the next request which may be on the
      * same connection or a different connection.
-     * 
+     *
      * @param socketClosing Indicates if the socket is about to be closed
      *                      allowing the processor to perform any additional
      *                      clean-up that may be required
@@ -768,20 +769,17 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
                 break;
 
             case Constants.SC_A_SSL_CERT :
-                request.scheme().setString("https");
                 // SSL certificate extraction is lazy, moved to JkCoyoteHandler
                 requestHeaderMessage.getBytes(certificates);
                 break;
 
             case Constants.SC_A_SSL_CIPHER :
-                request.scheme().setString("https");
                 requestHeaderMessage.getBytes(tmpMB);
                 request.setAttribute(SSLSupport.CIPHER_SUITE_KEY,
                         tmpMB.toString());
                 break;
 
             case Constants.SC_A_SSL_SESSION :
-                request.scheme().setString("https");
                 requestHeaderMessage.getBytes(tmpMB);
                 request.setAttribute(SSLSupport.SESSION_ID_KEY,
                         tmpMB.toString());
@@ -852,7 +850,7 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
         parseHost(valueMB);
 
         if (error) {
-            adapter.log(request, response, 0);
+            getAdapter().log(request, response, 0);
         }
     }
 
@@ -1006,7 +1004,7 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
         }
     }
 
-    
+
     /**
      * Finish AJP response.
      */

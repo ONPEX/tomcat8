@@ -23,7 +23,7 @@ import org.apache.juli.logging.LogFactory;
 /**
  *
  * @author Filip Hanik
- * 
+ *
  * @version 1.0
  */
 public class BufferPool {
@@ -34,7 +34,7 @@ public class BufferPool {
 
 
     protected static volatile BufferPool instance = null;
-    protected BufferPoolAPI pool = null;
+    protected final BufferPoolAPI pool;
 
     private BufferPool(BufferPoolAPI pool) {
         this.pool = pool;
@@ -55,27 +55,18 @@ public class BufferPool {
 
 
     public static BufferPool getBufferPool() {
-        if (  (instance == null) ) {
+        if (instance == null) {
             synchronized (BufferPool.class) {
-                if ( instance == null ) {
-                   BufferPoolAPI pool = null;
-                   Class<?> clazz = null;
-                   try {
-                       // TODO Is this approach still required?
-                       clazz = Class.forName("org.apache.catalina.tribes.io.BufferPool15Impl");
-                       pool = (BufferPoolAPI)clazz.newInstance();
-                   } catch ( Throwable x ) {
-                       log.warn("Unable to initilize BufferPool, not pooling XByteBuffer objects:"+x.getMessage());
-                       if ( log.isDebugEnabled() ) log.debug("Unable to initilize BufferPool, not pooling XByteBuffer objects:",x);
-                   }
-                   if (pool != null) {
-                       pool.setMaxSize(DEFAULT_POOL_SIZE);
-                       log.info("Created a buffer pool with max size:"+DEFAULT_POOL_SIZE+" bytes of type:"+(clazz!=null?clazz.getName():"null"));
-                       instance = new BufferPool(pool);
-                   }
-                }//end if
-            }//sync
-        }//end if
+                if (instance == null) {
+                   BufferPoolAPI pool = new BufferPool15Impl();
+                   pool.setMaxSize(DEFAULT_POOL_SIZE);
+                   log.info("Created a buffer pool with max size:" +
+                           DEFAULT_POOL_SIZE + " bytes of type: " +
+                           pool.getClass().getName());
+                   instance = new BufferPool(pool);
+                }
+            }
+        }
         return instance;
     }
 
@@ -88,5 +79,5 @@ public class BufferPool {
         public void returnBuffer(XByteBuffer buffer);
 
         public void clear();
-    }    
+    }
 }

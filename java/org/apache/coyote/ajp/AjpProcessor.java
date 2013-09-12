@@ -75,18 +75,18 @@ public class AjpProcessor extends AbstractAjpProcessor<Socket> {
      */
     protected SocketWrapper<Socket> socket;
 
-    
+
     /**
      * Input stream.
      */
     protected InputStream input;
-    
-    
+
+
     /**
      * Output stream.
      */
     protected OutputStream output;
-    
+
 
     // --------------------------------------------------------- Public Methods
 
@@ -166,7 +166,7 @@ public class AjpProcessor extends AbstractAjpProcessor<Socket> {
                 log.debug(sm.getString("ajpprocessor.header.error"), t);
                 // 400 - Bad Request
                 response.setStatus(400);
-                adapter.log(request, response, 0);
+                getAdapter().log(request, response, 0);
                 error = true;
             }
 
@@ -180,7 +180,7 @@ public class AjpProcessor extends AbstractAjpProcessor<Socket> {
                     log.debug(sm.getString("ajpprocessor.request.prepare"), t);
                     // 400 - Internal Server Error
                     response.setStatus(400);
-                    adapter.log(request, response, 0);
+                    getAdapter().log(request, response, 0);
                     error = true;
                 }
             }
@@ -188,7 +188,7 @@ public class AjpProcessor extends AbstractAjpProcessor<Socket> {
             if (!error && !cping && endpoint.isPaused()) {
                 // 503 - Service unavailable
                 response.setStatus(503);
-                adapter.log(request, response, 0);
+                getAdapter().log(request, response, 0);
                 error = true;
             }
             cping = false;
@@ -197,7 +197,7 @@ public class AjpProcessor extends AbstractAjpProcessor<Socket> {
             if (!error) {
                 try {
                     rp.setStage(org.apache.coyote.Constants.STAGE_SERVICE);
-                    adapter.service(request, response);
+                    getAdapter().service(request, response);
                 } catch (InterruptedIOException e) {
                     error = true;
                 } catch (Throwable t) {
@@ -205,11 +205,11 @@ public class AjpProcessor extends AbstractAjpProcessor<Socket> {
                     log.error(sm.getString("ajpprocessor.request.process"), t);
                     // 500 - Internal Server Error
                     response.setStatus(500);
-                    adapter.log(request, response, 0);
+                    getAdapter().log(request, response, 0);
                     error = true;
                 }
             }
-            
+
             if (isAsync() && !error) {
                 break;
             }
@@ -234,7 +234,7 @@ public class AjpProcessor extends AbstractAjpProcessor<Socket> {
             rp.setStage(org.apache.coyote.Constants.STAGE_KEEPALIVE);
             recycle(false);
         }
-        
+
         rp.setStage(org.apache.coyote.Constants.STAGE_ENDED);
 
         if (isAsync() && !error && !endpoint.isPaused()) {
@@ -244,7 +244,7 @@ public class AjpProcessor extends AbstractAjpProcessor<Socket> {
             output = null;
             return SocketState.CLOSED;
         }
-        
+
     }
 
     @Override
@@ -271,7 +271,7 @@ public class AjpProcessor extends AbstractAjpProcessor<Socket> {
         if (actionCode == ActionCode.ASYNC_COMPLETE) {
             if (asyncStateMachine.asyncComplete()) {
                 ((JIoEndpoint)endpoint).processSocketAsync(this.socket,
-                        SocketStatus.OPEN);
+                        SocketStatus.OPEN_READ);
             }
         } else if (actionCode == ActionCode.ASYNC_SETTIMEOUT) {
             if (param == null) return;
@@ -281,7 +281,7 @@ public class AjpProcessor extends AbstractAjpProcessor<Socket> {
         } else if (actionCode == ActionCode.ASYNC_DISPATCH) {
             if (asyncStateMachine.asyncDispatch()) {
                 ((JIoEndpoint)endpoint).processSocketAsync(this.socket,
-                        SocketStatus.OPEN);
+                        SocketStatus.OPEN_READ);
             }
         }
     }
@@ -313,7 +313,7 @@ public class AjpProcessor extends AbstractAjpProcessor<Socket> {
                 throw new IOException(sm.getString("ajpprocessor.failedread"));
             }
         }
-        
+
         return true;
 
     }

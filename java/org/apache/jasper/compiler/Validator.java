@@ -57,11 +57,11 @@ class Validator {
     /**
      * A visitor to validate and extract page directive info
      */
-    static class DirectiveVisitor extends Node.Visitor {
+    private static class DirectiveVisitor extends Node.Visitor {
 
-        private PageInfo pageInfo;
+        private final PageInfo pageInfo;
 
-        private ErrorDispatcher err;
+        private final ErrorDispatcher err;
 
         private static final JspUtil.ValidAttribute[] pageDirectiveAttrs = {
             new JspUtil.ValidAttribute("language"),
@@ -414,13 +414,13 @@ class Validator {
     /**
      * A visitor for validating nodes other than page directives
      */
-    static class ValidateVisitor extends Node.Visitor {
+    private static class ValidateVisitor extends Node.Visitor {
 
-        private PageInfo pageInfo;
+        private final PageInfo pageInfo;
 
-        private ErrorDispatcher err;
+        private final ErrorDispatcher err;
 
-        private ClassLoader loader;
+        private final ClassLoader loader;
 
         private final StringBuilder buf = new StringBuilder(32);
 
@@ -522,7 +522,8 @@ class Validator {
             JspUtil.checkAttributes("Jsp:root", n, jspRootAttrs, err);
             String version = n.getTextAttribute("version");
             if (!version.equals("1.2") && !version.equals("2.0") &&
-                    !version.equals("2.1") && !version.equals("2.2")) {
+                    !version.equals("2.1") && !version.equals("2.2") &&
+                    !version.equals("2.3")) {
                 err.jspError(n, "jsp.error.jsproot.version.invalid", version);
             }
             visitBody(n);
@@ -652,6 +653,7 @@ class Validator {
             visitBody(n);
         }
 
+        @SuppressWarnings("null") // type can't be null after initial test
         @Override
         public void visit(Node.PlugIn n) throws JasperException {
             JspUtil.checkAttributes("Plugin", n, plugInAttrs, err);
@@ -803,6 +805,7 @@ class Validator {
             return false;
         }
 
+        @SuppressWarnings("null") // tagInfo can't be null after initial test
         @Override
         public void visit(Node.CustomTag n) throws JasperException {
 
@@ -870,7 +873,7 @@ class Validator {
             if (jspAttrsSize > 0) {
                 jspAttrs = new Node.JspAttribute[jspAttrsSize];
             }
-            Hashtable<String, Object> tagDataAttrs = new Hashtable<String, Object>(attrsSize);
+            Hashtable<String, Object> tagDataAttrs = new Hashtable<>(attrsSize);
 
             checkXmlAttributes(n, jspAttrs, tagDataAttrs);
             checkNamedAttributes(n, jspAttrs, attrsSize, tagDataAttrs);
@@ -1071,9 +1074,6 @@ class Validator {
                 throws JasperException {
 
             TagInfo tagInfo = n.getTagInfo();
-            if (tagInfo == null) {
-                err.jspError(n, "jsp.error.missing.tagInfo", n.getQName());
-            }
             TagAttributeInfo[] tldAttrs = tagInfo.getAttributes();
             Attributes attrs = n.getAttributes();
 
@@ -1215,7 +1215,8 @@ class Validator {
                                             attrs.getQName(i), attrs.getURI(i),
                                             attrs.getLocalName(i),
                                             attrs.getValue(i), false, el, false);
-                                    ELContextImpl ctx = new ELContextImpl();
+                                    ELContextImpl ctx = new ELContextImpl(
+                                            expressionFactory);
                                     ctx.setFunctionMapper(getFunctionMapper(el));
                                     try {
                                         jspAttrs[i].validateEL(this.pageInfo.getExpressionFactory(), ctx);
@@ -1279,9 +1280,6 @@ class Validator {
                 throws JasperException {
 
             TagInfo tagInfo = n.getTagInfo();
-            if (tagInfo == null) {
-                err.jspError(n, "jsp.error.missing.tagInfo", n.getQName());
-            }
             TagAttributeInfo[] tldAttrs = tagInfo.getAttributes();
             Node.Nodes naNodes = n.getNamedAttributeNodes();
 
@@ -1380,7 +1378,8 @@ class Validator {
                         result = new Node.JspAttribute(tai, qName, uri,
                                 localName, value, false, el, dynamic);
 
-                        ELContextImpl ctx = new ELContextImpl();
+                        ELContextImpl ctx =
+                                new ELContextImpl(expressionFactory);
                         ctx.setFunctionMapper(getFunctionMapper(el));
 
                         try {
@@ -1440,9 +1439,8 @@ class Validator {
                         if (((ELNode.Root) node).getType() == '$') {
                             elExpression = true;
                             break;
-                        } else if (checkDeferred &&
-                                !pageInfo.isDeferredSyntaxAllowedAsLiteral() &&
-                                ((ELNode.Root) node).getType() == '#') {
+                        } else if (checkDeferred && !pageInfo.isDeferredSyntaxAllowedAsLiteral()
+                                && ((ELNode.Root) node).getType() == '#') {
                             elExpression = true;
                             break;
                         }
@@ -1518,7 +1516,7 @@ class Validator {
 
             class FVVisitor extends ELNode.Visitor {
 
-                Node n;
+                private Node n;
 
                 FVVisitor(Node n) {
                     this.n = n;
@@ -1568,7 +1566,7 @@ class Validator {
             validateFunctions(el, n);
 
             // test it out
-            ELContextImpl ctx = new ELContextImpl();
+            ELContextImpl ctx = new ELContextImpl(expressionFactory);
             ctx.setFunctionMapper(this.getFunctionMapper(el));
             ExpressionFactory ef = this.pageInfo.getExpressionFactory();
             try {
@@ -1614,7 +1612,7 @@ class Validator {
                 throws JasperException {
             FunctionInfo funcInfo = func.getFunctionInfo();
             String signature = funcInfo.getFunctionSignature();
-            ArrayList<String> params = new ArrayList<String>();
+            ArrayList<String> params = new ArrayList<>();
             // Signature is of the form
             // <return-type> S <method-name S? '('
             // < <arg-type> ( ',' <arg-type> )* )? ')'
@@ -1647,10 +1645,12 @@ class Validator {
 
             class ValidateFunctionMapper extends FunctionMapper {
 
-                private HashMap<String, Method> fnmap = new HashMap<String, Method>();
+                private HashMap<String, Method> fnmap = new HashMap<>();
 
-                public void mapFunction(String fnQName, Method method) {
-                    fnmap.put(fnQName, method);
+                @Override
+                public void mapFunction(String prefix, String localName,
+                        Method method) {
+                    fnmap.put(prefix + ":" + localName, method);
                 }
 
                 @Override
@@ -1660,12 +1660,13 @@ class Validator {
             }
 
             class MapperELVisitor extends ELNode.Visitor {
-                ValidateFunctionMapper fmapper;
+                private ValidateFunctionMapper fmapper;
 
                 MapperELVisitor(ValidateFunctionMapper fmapper) {
                     this.fmapper = fmapper;
                 }
 
+                @SuppressWarnings("null") // c can't be null after catch block
                 @Override
                 public void visit(ELNode.Function n) throws JasperException {
 
@@ -1697,7 +1698,7 @@ class Validator {
                         err.jspError("jsp.error.noFunctionMethod", n
                                 .getMethodName(), n.getName(), c.getName());
                     }
-                    fmapper.mapFunction(n.getPrefix() + ':' + n.getName(),
+                    fmapper.mapFunction(n.getPrefix(), n.getName(),
                             method);
                 }
             }
@@ -1711,9 +1712,9 @@ class Validator {
     /**
      * A visitor for validating TagExtraInfo classes of all tags
      */
-    static class TagExtraInfoVisitor extends Node.Visitor {
+    private static class TagExtraInfoVisitor extends Node.Visitor {
 
-        private ErrorDispatcher err;
+        private final ErrorDispatcher err;
 
         /*
          * Constructor
@@ -1729,6 +1730,7 @@ class Validator {
                 err.jspError(n, "jsp.error.missing.tagInfo", n.getQName());
             }
 
+            @SuppressWarnings("null") // tagInfo can't be null here
             ValidationMessage[] errors = tagInfo.validate(n.getTagData());
             if (errors != null && errors.length != 0) {
                 StringBuilder errMsg = new StringBuilder();

@@ -48,7 +48,7 @@ import org.apache.catalina.connector.Response;
  * <p>This Valve should be attached to a Context.</p>
  *
  * @author Remy Maucherat
- * @version $Id: CometConnectionManagerValve.java 1301272 2012-03-15 23:41:08Z markt $
+ * @version $Id: CometConnectionManagerValve.java 1297729 2012-03-06 21:26:11Z markt $
  */
 
 public class CometConnectionManagerValve extends ValveBase
@@ -61,14 +61,6 @@ public class CometConnectionManagerValve extends ValveBase
 
 
     // ----------------------------------------------------- Instance Variables
-
-
-    /**
-     * The descriptive information related to this implementation.
-     */
-    protected static final String info =
-        "org.apache.catalina.valves.CometConnectionManagerValve/1.0";
-
 
     /**
      * List of current Comet connections.
@@ -159,16 +151,6 @@ public class CometConnectionManagerValve extends ValveBase
 
 
     // --------------------------------------------------------- Public Methods
-
-
-    /**
-     * Return descriptive information about this Valve implementation.
-     */
-    @Override
-    public String getInfo() {
-        return (info);
-    }
-
 
     /**
      * Register requests for tracking, whenever needed.

@@ -39,7 +39,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Filip Hanik
- * @version $Id: AprLifecycleListener.java 1445210 2013-02-12 15:45:58Z markt $
+ * @version $Id: AprLifecycleListener.java 1445208 2013-02-12 15:43:59Z markt $
  * @since 4.1
  */
 
@@ -71,8 +71,6 @@ public class AprLifecycleListener
     protected static String SSLRandomSeed = "builtin";
     protected static boolean sslInitialized = false;
     protected static boolean aprInitialized = false;
-    @Deprecated
-    protected static boolean sslAvailable = false;
     protected static boolean aprAvailable = false;
     protected static boolean fipsModeActive = false;
 
@@ -151,7 +149,6 @@ public class AprLifecycleListener
         aprAvailable = false;
         aprInitialized = false;
         sslInitialized = false; // Well we cleaned the pool in terminate.
-        sslAvailable = false; // Well we cleaned the pool in terminate.
         fipsModeActive = false;
     }
 
@@ -278,8 +275,6 @@ public class AprLifecycleListener
         }
 
         log.info(sm.getString("aprListener.initializedOpenSSL", SSL.versionString()));
-
-        sslAvailable = true;
     }
 
     public String getSSLEngine() {

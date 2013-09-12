@@ -18,8 +18,9 @@ package org.apache.catalina.tribes.group;
 
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.catalina.tribes.ByteMessage;
 import org.apache.catalina.tribes.Channel;
@@ -53,7 +54,7 @@ import org.apache.juli.logging.LogFactory;
  * The channel has an chain of interceptors that can modify the message or perform other logic.<br>
  * It manages a complete group, both membership and replication.
  * @author Filip Hanik
- * @version $Id: GroupChannel.java 1437908 2013-01-24 08:57:41Z markt $
+ * @version $Id: GroupChannel.java 1505627 2013-07-22 08:42:33Z kfujino $
  */
 public class GroupChannel extends ChannelInterceptorBase implements ManagedChannel {
     private static final Log log = LogFactory.getLog(GroupChannel.class);
@@ -80,7 +81,7 @@ public class GroupChannel extends ChannelInterceptorBase implements ManagedChann
      * - ChannelSender <br>
      * - ChannelReceiver<br>
      */
-    protected ChannelCoordinator coordinator = new ChannelCoordinator();
+    protected final ChannelCoordinator coordinator = new ChannelCoordinator();
 
     /**
      * The first interceptor in the interceptor stack.
@@ -92,12 +93,12 @@ public class GroupChannel extends ChannelInterceptorBase implements ManagedChann
     /**
      * A list of membership listeners that subscribe to membership announcements
      */
-    protected ArrayList<Object> membershipListeners = new ArrayList<Object>();
+    protected final List<Object> membershipListeners = new CopyOnWriteArrayList<>();
 
     /**
      * A list of channel listeners that subscribe to incoming messages
      */
-    protected ArrayList<Object> channelListeners = new ArrayList<Object>();
+    protected final List<Object> channelListeners = new CopyOnWriteArrayList<>();
 
     /**
      * If set to true, the GroupChannel will check to make sure that
@@ -292,7 +293,7 @@ public class GroupChannel extends ChannelInterceptorBase implements ManagedChann
             }
 
         } catch ( Exception x ) {
-            //this could be the channel listener throwing an exception, we should log it 
+            //this could be the channel listener throwing an exception, we should log it
             //as a warning.
             if ( log.isWarnEnabled() ) log.warn("Error receiving message:",x);
             throw new RemoteProcessException("Exception:"+x.getMessage(),x);
@@ -622,7 +623,7 @@ public class GroupChannel extends ChannelInterceptorBase implements ManagedChann
      * @version 1.0
      */
     public static class InterceptorIterator implements Iterator<ChannelInterceptor> {
-        private ChannelInterceptor end;
+        private final ChannelInterceptor end;
         private ChannelInterceptor start;
         public InterceptorIterator(ChannelInterceptor start, ChannelInterceptor end) {
             this.end = end;
@@ -667,8 +668,8 @@ public class GroupChannel extends ChannelInterceptorBase implements ManagedChann
         }
 
         protected volatile boolean doRun = true;
-        protected GroupChannel channel;
-        protected long sleepTime;
+        protected final GroupChannel channel;
+        protected final long sleepTime;
         public HeartbeatThread(GroupChannel channel, long sleepTime) {
             super();
             this.setPriority(MIN_PRIORITY);
@@ -689,7 +690,9 @@ public class GroupChannel extends ChannelInterceptorBase implements ManagedChann
                     Thread.sleep(sleepTime);
                     channel.heartbeat();
                 } catch ( InterruptedException x ) {
-                    interrupted();
+                    // Ignore. Probably triggered by a call to stopHeartbeat().
+                    // In the highly unlikely event it was a different trigger,
+                    // simply ignore it and continue.
                 } catch ( Exception x ) {
                     log.error("Unable to send heartbeat through Tribes interceptor stack. Will try to sleep again.",x);
                 }//catch

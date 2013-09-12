@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,26 +25,25 @@ import javax.management.MBeanFeatureInfo;
 
 
 /**
- * <p>Convenience base class for <code>AttributeInfo</code>,
- * <code>ConstructorInfo</code>, and <code>OperationInfo</code> classes
- * that will be used to collect configuration information for the
- * <code>ModelMBean</code> beans exposed for management.</p>
+ * <p>Convenience base class for <code>AttributeInfo</code> and
+ * <code>OperationInfo</code> classes that will be used to collect configuration
+ * information for the <code>ModelMBean</code> beans exposed for management.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: FeatureInfo.java 939309 2010-04-29 13:54:26Z kkolinko $
+ * @version $Id: FeatureInfo.java 1222798 2011-12-23 19:03:49Z markt $
  */
 
 public class FeatureInfo implements Serializable {
     static final long serialVersionUID = -911529176124712296L;
-    
+
     protected String description = null;
     protected String name = null;
     protected MBeanFeatureInfo info = null;
-    
+
     // all have type except Constructor
     protected String type = null;
 
-    
+
     // ------------------------------------------------------------- Properties
 
     /**

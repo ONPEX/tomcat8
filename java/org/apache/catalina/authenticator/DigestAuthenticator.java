@@ -14,19 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.catalina.authenticator;
-
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -34,14 +31,11 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.Realm;
 import org.apache.catalina.connector.Request;
-import org.apache.catalina.deploy.LoginConfig;
 import org.apache.catalina.util.ConcurrentMessageDigest;
 import org.apache.catalina.util.MD5Encoder;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
-import org.apache.tomcat.util.buf.B2CConverter;
 import org.apache.tomcat.util.http.parser.HttpParser;
-
 
 
 /**
@@ -50,31 +44,14 @@ import org.apache.tomcat.util.http.parser.HttpParser;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: DigestAuthenticator.java 1443407 2013-02-07 11:03:34Z markt $
+ * @version $Id: DigestAuthenticator.java 1508214 2013-07-29 22:17:59Z markt $
  */
-
 public class DigestAuthenticator extends AuthenticatorBase {
 
     private static final Log log = LogFactory.getLog(DigestAuthenticator.class);
 
 
     // -------------------------------------------------------------- Constants
-
-    /**
-     * The MD5 helper object for this class.
-     *
-     * @deprecated  Unused - will be removed in Tomcat 8.0.x
-     */
-    @Deprecated
-    protected static final MD5Encoder md5Encoder = new MD5Encoder();
-
-
-    /**
-     * Descriptive information about this implementation.
-     */
-    protected static final String info =
-        "org.apache.catalina.authenticator.DigestAuthenticator/1.0";
-
 
     /**
      * Tomcat's DIGEST implementation only supports auth quality of protection.
@@ -88,8 +65,9 @@ public class DigestAuthenticator extends AuthenticatorBase {
         super();
         setCache(false);
         try {
-            if (md5Helper == null)
+            if (md5Helper == null) {
                 md5Helper = MessageDigest.getInstance("MD5");
+            }
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }
@@ -161,17 +139,6 @@ public class DigestAuthenticator extends AuthenticatorBase {
 
     // ------------------------------------------------------------- Properties
 
-    /**
-     * Return descriptive information about this Valve implementation.
-     */
-    @Override
-    public String getInfo() {
-
-        return (info);
-
-    }
-
-
     public int getNonceCountWindowSize() {
         return nonceCountWindowSize;
     }
@@ -242,28 +209,26 @@ public class DigestAuthenticator extends AuthenticatorBase {
      *
      * @param request Request we are processing
      * @param response Response we are creating
-     * @param config    Login configuration describing how authentication
-     *              should be performed
      *
      * @exception IOException if an input/output error occurs
      */
     @Override
-    public boolean authenticate(Request request,
-                                HttpServletResponse response,
-                                LoginConfig config)
-        throws IOException {
+    public boolean authenticate(Request request, HttpServletResponse response)
+            throws IOException {
 
         // Have we already authenticated someone?
         Principal principal = request.getUserPrincipal();
         //String ssoId = (String) request.getNote(Constants.REQ_SSOID_NOTE);
         if (principal != null) {
-            if (log.isDebugEnabled())
+            if (log.isDebugEnabled()) {
                 log.debug("Already authenticated '" + principal.getName() + "'");
+            }
             // Associate the session with any existing SSO session in order
             // to get coordinated session invalidation at logout
             String ssoId = (String) request.getNote(Constants.REQ_SSOID_NOTE);
-            if (ssoId != null)
+            if (ssoId != null) {
                 associate(ssoId, request.getSessionInternal(true));
+            }
             return (true);
         }
 
@@ -298,7 +263,7 @@ public class DigestAuthenticator extends AuthenticatorBase {
                 getKey(), nonces, isValidateUri());
         if (authorization != null) {
             if (digestInfo.parse(request, authorization)) {
-                if (digestInfo.validate(request, config)) {
+                if (digestInfo.validate(request)) {
                     principal = digestInfo.authenticate(context.getRealm());
                 }
 
@@ -317,7 +282,7 @@ public class DigestAuthenticator extends AuthenticatorBase {
         // to be unique).
         String nonce = generateNonce(request);
 
-        setAuthenticateHeader(request, response, config, nonce,
+        setAuthenticateHeader(request, response, nonce,
                 principal != null && digestInfo.isNonceStale());
         response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
         return false;
@@ -331,45 +296,6 @@ public class DigestAuthenticator extends AuthenticatorBase {
 
 
     // ------------------------------------------------------ Protected Methods
-
-
-    /**
-     * Parse the username from the specified authorization string.  If none
-     * can be identified, return <code>null</code>
-     *
-     * @param authorization Authorization string to be parsed
-     *
-     * @deprecated  Unused. Will be removed in Tomcat 8.0.x
-     */
-    @Deprecated
-    protected String parseUsername(String authorization) {
-
-        // Validate the authorization credentials format
-        if (authorization == null)
-            return (null);
-        if (!authorization.startsWith("Digest "))
-            return (null);
-        authorization = authorization.substring(7).trim();
-
-        StringTokenizer commaTokenizer =
-            new StringTokenizer(authorization, ",");
-
-        while (commaTokenizer.hasMoreTokens()) {
-            String currentToken = commaTokenizer.nextToken();
-            int equalSign = currentToken.indexOf('=');
-            if (equalSign < 0)
-                return null;
-            String currentTokenName =
-                currentToken.substring(0, equalSign).trim();
-            String currentTokenValue =
-                currentToken.substring(equalSign + 1).trim();
-            if ("username".equals(currentTokenName))
-                return (removeQuotes(currentTokenValue));
-        }
-
-        return (null);
-
-    }
 
 
     /**
@@ -419,7 +345,7 @@ public class DigestAuthenticator extends AuthenticatorBase {
             request.getRemoteAddr() + ":" + currentTime + ":" + getKey();
 
         byte[] buffer = ConcurrentMessageDigest.digestMD5(
-                ipTimeKey.getBytes(B2CConverter.ISO_8859_1));
+                ipTimeKey.getBytes(StandardCharsets.ISO_8859_1));
         String nonce = currentTime + ":" + MD5Encoder.encode(buffer);
 
         NonceInfo info = new NonceInfo(currentTime, getNonceCountWindowSize());
@@ -454,20 +380,14 @@ public class DigestAuthenticator extends AuthenticatorBase {
      *
      * @param request HTTP Servlet request
      * @param response HTTP Servlet response
-     * @param config    Login configuration describing how authentication
-     *              should be performed
      * @param nonce nonce token
      */
     protected void setAuthenticateHeader(HttpServletRequest request,
                                          HttpServletResponse response,
-                                         LoginConfig config,
                                          String nonce,
                                          boolean isNonceStale) {
 
-        // Get the realm name
-        String realmName = config.getRealmName();
-        if (realmName == null)
-            realmName = REALM_NAME;
+        String realmName = getRealmName(context);
 
         String authenticateHeader;
         if (isNonceStale) {
@@ -598,7 +518,7 @@ public class DigestAuthenticator extends AuthenticatorBase {
             return true;
         }
 
-        public boolean validate(Request request, LoginConfig config) {
+        public boolean validate(Request request) {
             if ( (userName == null) || (realmName == null) || (nonce == null)
                  || (uri == null) || (response == null) ) {
                 return false;
@@ -635,10 +555,7 @@ public class DigestAuthenticator extends AuthenticatorBase {
             }
 
             // Validate the Realm name
-            String lcRealm = config.getRealmName();
-            if (lcRealm == null) {
-                lcRealm = REALM_NAME;
-            }
+            String lcRealm = getRealmName(request.getContext());
             if (!lcRealm.equals(realmName)) {
                 return false;
             }
@@ -670,7 +587,7 @@ public class DigestAuthenticator extends AuthenticatorBase {
             String serverIpTimeKey =
                 request.getRemoteAddr() + ":" + nonceTime + ":" + key;
             byte[] buffer = ConcurrentMessageDigest.digestMD5(
-                    serverIpTimeKey.getBytes(B2CConverter.ISO_8859_1));
+                    serverIpTimeKey.getBytes(StandardCharsets.ISO_8859_1));
             String md5ServerIpTimeKey = MD5Encoder.encode(buffer);
             if (!md5ServerIpTimeKey.equals(md5clientIpTimeKey)) {
                 return false;
@@ -729,7 +646,7 @@ public class DigestAuthenticator extends AuthenticatorBase {
             String a2 = method + ":" + uri;
 
             byte[] buffer = ConcurrentMessageDigest.digestMD5(
-                    a2.getBytes(B2CConverter.ISO_8859_1));
+                    a2.getBytes(StandardCharsets.ISO_8859_1));
             String md5a2 = MD5Encoder.encode(buffer);
 
             return realm.authenticate(userName, response, nonce, nc, cnonce,

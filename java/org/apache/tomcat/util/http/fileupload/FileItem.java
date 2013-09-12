@@ -42,7 +42,7 @@ import java.io.UnsupportedEncodingException;
  * implementation of this interface to also implement
  * <code>javax.activation.DataSource</code> with minimal additional work.
  *
- * @version $Id: FileItem.java 1470437 2013-04-22 10:35:10Z markt $
+ * @version $Id: FileItem.java 1470435 2013-04-22 10:33:43Z markt $
  * @since 1.3 additionally implements FileItemHeadersSupport
  */
 public interface FileItem extends FileItemHeadersSupport {

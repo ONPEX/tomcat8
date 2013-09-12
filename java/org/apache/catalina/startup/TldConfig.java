@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,9 +26,9 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import javax.servlet.ServletContext;
+import javax.servlet.descriptor.JspConfigDescriptor;
 import javax.servlet.descriptor.TaglibDescriptor;
 
 import org.apache.catalina.Context;
@@ -36,10 +36,13 @@ import org.apache.catalina.Lifecycle;
 import org.apache.catalina.LifecycleEvent;
 import org.apache.catalina.LifecycleListener;
 import org.apache.catalina.core.StandardContext;
-import org.apache.catalina.deploy.ApplicationListener;
+import org.apache.tomcat.JarScanType;
 import org.apache.tomcat.JarScanner;
 import org.apache.tomcat.JarScannerCallback;
 import org.apache.tomcat.util.ExceptionUtils;
+import org.apache.tomcat.util.descriptor.DigesterFactory;
+import org.apache.tomcat.util.descriptor.XmlErrorHandler;
+import org.apache.tomcat.util.descriptor.web.ApplicationListener;
 import org.apache.tomcat.util.digester.Digester;
 import org.apache.tomcat.util.res.StringManager;
 import org.apache.tomcat.util.scan.Jar;
@@ -60,10 +63,9 @@ public final class TldConfig  implements LifecycleListener {
 
     private static final String TLD_EXT = ".tld";
     private static final String WEB_INF = "/WEB-INF/";
+    private static final String WEB_INF_CLASSES = "/WEB-INF/classes/";
     private static final String WEB_INF_LIB = "/WEB-INF/lib/";
-    
-    // Names of JARs that are known not to contain any TLDs
-    private static volatile Set<String> noTldJars = null;
+
 
     private static final org.apache.juli.logging.Log log=
         org.apache.juli.logging.LogFactory.getLog( TldConfig.class );
@@ -77,7 +79,7 @@ public final class TldConfig  implements LifecycleListener {
     /**
      * The <code>Digester</code>s available to process tld files.
      */
-    private static Digester[] tldDigesters = new Digester[4];
+    private static final Digester[] tldDigesters = new Digester[4];
 
     /**
      * Create (if necessary) and return a Digester configured to process the
@@ -85,7 +87,7 @@ public final class TldConfig  implements LifecycleListener {
      */
     private static Digester createTldDigester(boolean namespaceAware,
             boolean validation) {
-        
+
         Digester digester = null;
         if (!namespaceAware && !validation) {
             if (tldDigesters[0] == null) {
@@ -120,47 +122,6 @@ public final class TldConfig  implements LifecycleListener {
     }
 
 
-    static {
-        // Set the default list of JARs to skip for TLDs
-        StringBuilder jarList = new StringBuilder(System.getProperty(
-                Constants.DEFAULT_JARS_TO_SKIP, ""));
-
-        String tldJars = System.getProperty(Constants.TLD_JARS_TO_SKIP, "");
-        if (tldJars.length() > 0) {
-            if (jarList.length() > 0) {
-                jarList.append(',');
-            }
-            jarList.append(tldJars);
-        }
-
-        if (jarList.length() > 0) {
-            setNoTldJars(jarList.toString());
-        }
-    }
-
-    /**
-     * Sets the list of JARs that are known not to contain any TLDs.
-     *
-     * @param jarNames List of comma-separated names of JAR files that are
-     * known not to contain any TLDs.
-     */
-    public static synchronized void setNoTldJars(String jarNames) {
-        if (jarNames == null) {
-            noTldJars = null;
-        } else {
-            if (noTldJars == null) {
-                noTldJars = new HashSet<String>();
-            } else {
-                noTldJars.clear();
-            }
-            StringTokenizer tokenizer = new StringTokenizer(jarNames, ",");
-            while (tokenizer.hasMoreElements()) {
-                noTldJars.add(tokenizer.nextToken());
-            }
-        }
-    }
-
-
     // ----------------------------------------------------- Instance Variables
 
     /**
@@ -181,11 +142,11 @@ public final class TldConfig  implements LifecycleListener {
      * correct processing priority. Only the TLD associated with the first
      * instance of any URI will be processed.
      */
-    private Set<String> taglibUris = new HashSet<String>();
+    private final Set<String> taglibUris = new HashSet<>();
 
-    private Set<String> webxmlTaglibUris = new HashSet<String>();
+    private final Set<String> webxmlTaglibUris = new HashSet<>();
 
-    private ArrayList<String> listeners = new ArrayList<String>();
+    private final ArrayList<String> listeners = new ArrayList<>();
 
     // --------------------------------------------------------- Public Methods
 
@@ -210,27 +171,12 @@ public final class TldConfig  implements LifecycleListener {
         return webxmlTaglibUris.contains(uri);
     }
 
-    /**
-     * @deprecated  Unused - will be removed in 8.0.x
-     */
-    @Deprecated
-    public Context getContext() {
-        return context;
-    }
-
-    /**
-     * @deprecated  Unused - will be removed in 8.0.x
-     */
-    @Deprecated
-    public void setContext(Context context) {
-        this.context = context;
-    }
-
     public void addApplicationListener( String s ) {
         if(log.isDebugEnabled())
             log.debug( "Add tld listener " + s);
         listeners.add(s);
     }
+
 
     public String[] getTldListeners() {
         String result[]=new String[listeners.size()];
@@ -242,10 +188,10 @@ public final class TldConfig  implements LifecycleListener {
     /**
      * Scan for and configure all tag library descriptors found in this
      * web application.
-     * 
+     *
      * This supports a Tomcat-specific extension to the TLD search
      * order defined in the JSP spec. It allows tag libraries packaged as JAR
-     * files to be shared by web applications by simply dropping them in a 
+     * files to be shared by web applications by simply dropping them in a
      * location that all web applications have access to (e.g.,
      * <CATALINA_HOME>/lib). It also supports some of the weird and
      * wonderful arrangements present when Tomcat gets embedded.
@@ -263,22 +209,21 @@ public final class TldConfig  implements LifecycleListener {
          * 2. web.xml entries
          * 3. JARS in WEB-INF/lib & TLDs under WEB-INF (equal priority)
          * 4. Additional entries from the container
-         * 
+         *
          * Keep processing order in sync with o.a.j.compiler.TldLocationsCache
          */
-        
+
         // Stage 2 - web.xml entries
         tldScanWebXml();
-        
+
         // Stage 3a - TLDs under WEB-INF (not lib or classes)
-        tldScanResourcePaths(WEB_INF);
+        tldScanResourcePaths(WEB_INF, false);
 
         // Stages 3b & 4
         JarScanner jarScanner = context.getJarScanner();
-        jarScanner.scan(context.getServletContext(),
-                context.getLoader().getClassLoader(),
-                new TldJarScannerCallback(), noTldJars);
-        
+        jarScanner.scan(JarScanType.TLD, context.getServletContext(),
+                new TldJarScannerCallback());
+
         // Now add all the listeners we found to the listeners for this context
         String list[] = getTldListeners();
 
@@ -301,16 +246,26 @@ public final class TldConfig  implements LifecycleListener {
     private class TldJarScannerCallback implements JarScannerCallback {
 
         @Override
-        public void scan(JarURLConnection urlConn) throws IOException {
+        public void scan(JarURLConnection urlConn, boolean isWebapp)
+                throws IOException {
+            // Note: TLDs are processed the same way for application and
+            //       container provided JARs.
             tldScanJar(urlConn);
         }
 
         @Override
-        public void scan(File file) {
+        public void scan(File file, boolean isWebapp) {
+            // Note: TLDs are processed the same way for application and
+            //       container provided JARs.
             File metaInf = new File(file, "META-INF");
             if (metaInf.isDirectory()) {
                 tldScanDir(metaInf);
             }
+        }
+
+        @Override
+        public void scanWebInfClasses() throws IOException {
+            tldScanResourcePaths(WEB_INF_CLASSES, true);
         }
     }
 
@@ -319,20 +274,23 @@ public final class TldConfig  implements LifecycleListener {
 
     /**
      * Get the taglib entries from web.xml and add them to the map.
-     * 
+     *
      * This is not kept in sync with o.a.j.compiler.TldLocationsCache as this
      * code needs to scan the TLDs listed in web.xml whereas Jasper only needs
      * the URI to TLD mappings.
      */
     private void tldScanWebXml() {
-        
+
         if (log.isTraceEnabled()) {
             log.trace(sm.getString("tldConfig.webxmlStart"));
         }
 
-        Collection<TaglibDescriptor> descriptors =
-            context.getJspConfigDescriptor().getTaglibs();
+        JspConfigDescriptor jspConfigDescriptor = context.getJspConfigDescriptor();
+        if (jspConfigDescriptor == null) {
+            return;
+        }
 
+        Collection<TaglibDescriptor> descriptors = jspConfigDescriptor.getTaglibs();
         for (TaglibDescriptor descriptor : descriptors) {
             String resourcePath = descriptor.getTaglibLocation();
             // Note: Whilst the Servlet 2.4 DTD implies that the location must
@@ -373,18 +331,19 @@ public final class TldConfig  implements LifecycleListener {
             }
         }
     }
-    
+
     /*
      * Scans the web application's sub-directory identified by startPath,
      * along with its sub-directories, for TLDs.
      *
      * Initially, rootPath equals /WEB-INF/. The /WEB-INF/classes and
      * /WEB-INF/lib sub-directories are excluded from the search, as per the
-     * JSP 2.0 spec.
-     * 
+     * JSP 2.0 spec unless the JarScanner is configured to treat
+     * /WEB-INF/classes/ as an exploded JAR.
+     *
      * Keep in sync with o.a.j.comiler.TldLocationsCache
      */
-    private void tldScanResourcePaths(String startPath) {
+    private void tldScanResourcePaths(String startPath, boolean webInfAsJar) {
 
         if (log.isTraceEnabled()) {
             log.trace(sm.getString("tldConfig.webinfScan", startPath));
@@ -399,7 +358,8 @@ public final class TldConfig  implements LifecycleListener {
                 String path = it.next();
                 if (!path.endsWith(TLD_EXT)
                         && (path.startsWith(WEB_INF_LIB)
-                                || path.startsWith("/WEB-INF/classes/"))) {
+                                || path.startsWith("/WEB-INF/classes/")
+                                   && !webInfAsJar)) {
                     continue;
                 }
                 if (path.endsWith(TLD_EXT)) {
@@ -424,12 +384,12 @@ public final class TldConfig  implements LifecycleListener {
                         }
                     }
                 } else {
-                    tldScanResourcePaths(path);
+                    tldScanResourcePaths(path, false);
                 }
             }
         }
     }
-    
+
     /*
      * Scans the directory identified by startPath, along with its
      * sub-directories, for TLDs.
@@ -477,17 +437,17 @@ public final class TldConfig  implements LifecycleListener {
      * (or a sub-directory of it).
      *
      * @param jarConn The JarURLConnection to the JAR file to scan
-     * 
+     *
      * Keep in sync with o.a.j.comiler.TldLocationsCache
      */
     private void tldScanJar(JarURLConnection jarConn) {
 
         Jar jar = null;
         InputStream is;
-        
+
         try {
             jar = JarFactory.newInstance(jarConn.getURL());
-            
+
             jar.nextEntry();
             String entryName = jar.getEntryName();
             while (entryName != null) {
@@ -523,7 +483,7 @@ public final class TldConfig  implements LifecycleListener {
 
     /*
      * Scan the TLD contents in the specified input stream, and register
-     * any application event listeners found there.  <b>NOTE</b> - This 
+     * any application event listeners found there.  <b>NOTE</b> - This
      * method ensure that the InputStream is correctly closed.
      *
      * @param resourceStream InputStream containing a tag library descriptor
@@ -532,11 +492,11 @@ public final class TldConfig  implements LifecycleListener {
      */
     private XmlErrorHandler tldScanStream(InputStream resourceStream)
             throws IOException {
-        
+
         InputSource source = new InputSource(resourceStream);
-        
+
         XmlErrorHandler result = new XmlErrorHandler();
-        
+
         synchronized (tldDigester) {
             try {
                 tldDigester.setErrorHandler(result);
@@ -561,7 +521,7 @@ public final class TldConfig  implements LifecycleListener {
             log.error(sm.getString("tldConfig.cce", event.getLifecycle()), e);
             return;
         }
-        
+
         if (event.getType().equals(Lifecycle.AFTER_INIT_EVENT)) {
             init();
         } else if (event.getType().equals(Lifecycle.CONFIGURE_START_EVENT)) {
@@ -577,7 +537,7 @@ public final class TldConfig  implements LifecycleListener {
             listeners.clear();
         }
     }
-    
+
     private void init() {
         if (tldDigester == null){
             tldDigester = createTldDigester(context.getTldNamespaceAware(),

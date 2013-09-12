@@ -14,17 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.catalina;
 
-
 import java.beans.PropertyChangeListener;
-import java.io.IOException;
+import java.io.File;
 
 import javax.management.ObjectName;
-import javax.naming.directory.DirContext;
-import javax.servlet.ServletException;
 
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
@@ -80,9 +75,8 @@ import org.apache.juli.logging.Log;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: Container.java 1238006 2012-01-30 20:57:00Z markt $
+ * @version $Id: Container.java 1357413 2012-07-04 21:22:03Z markt $
  */
-
 public interface Container extends Lifecycle {
 
 
@@ -94,15 +88,6 @@ public interface Container extends Lifecycle {
      * by <code>addChild()</code>.
      */
     public static final String ADD_CHILD_EVENT = "addChild";
-
-
-    /**
-     * The ContainerEvent event type sent when a Mapper is added
-     * by <code>addMapper()</code>.
-     * @deprecated Unused. Will be removed in Tomcat 8.0.x.
-     */
-    @Deprecated
-    public static final String ADD_MAPPER_EVENT = "addMapper";
 
 
     /**
@@ -120,15 +105,6 @@ public interface Container extends Lifecycle {
 
 
     /**
-     * The ContainerEvent event type sent when a Mapper is removed
-     * by <code>removeMapper()</code>.
-     * @deprecated Unused. Will be removed in Tomcat 8.0.x.
-     */
-    @Deprecated
-    public static final String REMOVE_MAPPER_EVENT = "removeMapper";
-
-
-    /**
      * The ContainerEvent event type sent when a valve is removed
      * by <code>removeValve()</code>, if this Container supports pipelines.
      */
@@ -136,31 +112,6 @@ public interface Container extends Lifecycle {
 
 
     // ------------------------------------------------------------- Properties
-
-
-    /**
-     * Return descriptive information about this Container implementation and
-     * the corresponding version number, in the format
-     * <code>&lt;description&gt;/&lt;version&gt;</code>.
-     */
-    public String getInfo();
-
-
-    /**
-     * Return the Loader with which this Container is associated.  If there is
-     * no associated Loader, return the Loader associated with our parent
-     * Container (if any); otherwise, return <code>null</code>.
-     */
-    public Loader getLoader();
-
-
-    /**
-     * Set the Loader with which this Container is associated.
-     *
-     * @param loader The newly associated loader
-     */
-    public void setLoader(Loader loader);
-
 
     /**
      * Return the Logger with which this Container is associated.  If there is
@@ -171,32 +122,27 @@ public interface Container extends Lifecycle {
 
 
     /**
-     * Return the Manager with which this Container is associated.  If there is
-     * no associated Manager, return the Manager associated with our parent
-     * Container (if any); otherwise return <code>null</code>.
-     */
-    public Manager getManager();
-
-
-    /**
-     * Set the Manager with which this Container is associated.
-     *
-     * @param manager The newly associated Manager
-     */
-    public void setManager(Manager manager);
-
-
-    /**
-     * Return an object which may be utilized for mapping to this component.
-     */
-    @Deprecated
-    public Object getMappingObject();
-
-
-    /**
      * Return the JMX name associated with this container.
      */
     public ObjectName getObjectName();
+
+
+    /**
+     * Obtain the domain under which this container will be / has been
+     * registered.
+     */
+    public String getDomain();
+
+
+    /**
+     * Calculate the key properties string to be added to an object's
+     * {@link ObjectName} to indicate that it is associated with this container.
+     *
+     * @return          A string suitable for appending to the ObjectName
+     *
+     */
+    public String getMBeanKeyProperties();
+
 
     /**
      * Return the Pipeline object that manages the Valves associated with
@@ -321,22 +267,6 @@ public interface Container extends Lifecycle {
     public void setRealm(Realm realm);
 
 
-    /**
-     * Return the Resources with which this Container is associated.  If there
-     * is no associated Resources object, return the Resources associated with
-     * our parent Container (if any); otherwise return <code>null</code>.
-     */
-    public DirContext getResources();
-
-
-    /**
-     * Set the Resources object with which this Container is associated.
-     *
-     * @param resources The newly associated Resources
-     */
-    public void setResources(DirContext resources);
-
-
     // --------------------------------------------------------- Public Methods
 
 
@@ -406,25 +336,6 @@ public interface Container extends Lifecycle {
      * array is returned.
      */
     public ContainerListener[] findContainerListeners();
-
-
-    /**
-     * Process the specified Request, and generate the corresponding Response,
-     * according to the design of this particular Container.
-     *
-     * @param request Request to be processed
-     * @param response Response to be produced
-     *
-     * @exception IOException if an input/output error occurred while
-     *  processing
-     * @exception ServletException if a ServletException was thrown
-     *  while processing this request
-     *
-     * @deprecated Unused. Will be removed in Tomcat 8.0.x.
-     */
-    @Deprecated
-    public void invoke(Request request, Response response)
-        throws IOException, ServletException;
 
 
     /**
@@ -501,4 +412,10 @@ public interface Container extends Lifecycle {
      * @param   startStopThreads    The new number of threads to be used
      */
     public void setStartStopThreads(int startStopThreads);
+
+
+    /**
+     *
+     */
+    public File getCatalinaBase();
 }

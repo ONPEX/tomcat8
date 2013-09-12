@@ -5,19 +5,16 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.catalina.authenticator;
-
 
 import java.io.IOException;
 import java.security.Principal;
@@ -28,46 +25,18 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.catalina.Globals;
 import org.apache.catalina.connector.Request;
-import org.apache.catalina.deploy.LoginConfig;
 import org.apache.coyote.ActionCode;
-
-
 
 /**
  * An <b>Authenticator</b> and <b>Valve</b> implementation of authentication
  * that utilizes SSL certificates to identify client users.
  *
  * @author Craig R. McClanahan
- * @version $Id: SSLAuthenticator.java 1189224 2011-10-26 14:02:40Z kkolinko $
+ * @version $Id: SSLAuthenticator.java 1241162 2012-02-06 20:32:36Z markt $
  */
-
-public class SSLAuthenticator
-    extends AuthenticatorBase {
-
-
-    // ------------------------------------------------------------- Properties
-
-
-    /**
-     * Descriptive information about this implementation.
-     */
-    protected static final String info =
-        "org.apache.catalina.authenticator.SSLAuthenticator/1.0";
-
-
-    /**
-     * Return descriptive information about this Valve implementation.
-     */
-    @Override
-    public String getInfo() {
-
-        return (info);
-
-    }
-
+public class SSLAuthenticator extends AuthenticatorBase {
 
     // --------------------------------------------------------- Public Methods
-
 
     /**
      * Authenticate the user by checking for the existence of a certificate
@@ -76,28 +45,26 @@ public class SSLAuthenticator
      *
      * @param request Request we are processing
      * @param response Response we are creating
-     * @param config    Login configuration describing how authentication
-     *              should be performed
      *
      * @exception IOException if an input/output error occurs
      */
     @Override
-    public boolean authenticate(Request request,
-                                HttpServletResponse response,
-                                LoginConfig config)
-        throws IOException {
+    public boolean authenticate(Request request, HttpServletResponse response)
+            throws IOException {
 
         // Have we already authenticated someone?
         Principal principal = request.getUserPrincipal();
         //String ssoId = (String) request.getNote(Constants.REQ_SSOID_NOTE);
         if (principal != null) {
-            if (containerLog.isDebugEnabled())
+            if (containerLog.isDebugEnabled()) {
                 containerLog.debug("Already authenticated '" + principal.getName() + "'");
+            }
             // Associate the session with any existing SSO session in order
             // to get coordinated session invalidation at logout
             String ssoId = (String) request.getNote(Constants.REQ_SSOID_NOTE);
-            if (ssoId != null)
+            if (ssoId != null) {
                 associate(ssoId, request.getSessionInternal(true));
+            }
             return (true);
         }
 
@@ -127,8 +94,9 @@ public class SSLAuthenticator
         */
 
         // Retrieve the certificate chain for this client
-        if (containerLog.isDebugEnabled())
+        if (containerLog.isDebugEnabled()) {
             containerLog.debug(" Looking up certificates");
+        }
 
         X509Certificate certs[] = (X509Certificate[])
             request.getAttribute(Globals.CERTIFICATES_ATTR);
@@ -146,8 +114,9 @@ public class SSLAuthenticator
                 request.getAttribute(Globals.CERTIFICATES_ATTR);
         }
         if ((certs == null) || (certs.length < 1)) {
-            if (containerLog.isDebugEnabled())
+            if (containerLog.isDebugEnabled()) {
                 containerLog.debug("  No certificates included with this request");
+            }
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
                                sm.getString("authenticator.certificates"));
             return (false);
@@ -156,8 +125,9 @@ public class SSLAuthenticator
         // Authenticate the specified certificate chain
         principal = context.getRealm().authenticate(certs);
         if (principal == null) {
-            if (containerLog.isDebugEnabled())
+            if (containerLog.isDebugEnabled()) {
                 containerLog.debug("  Realm.authenticate() returned false");
+            }
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
                                sm.getString("authenticator.unauthorized"));
             return (false);

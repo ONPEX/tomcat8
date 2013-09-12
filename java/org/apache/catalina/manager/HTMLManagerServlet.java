@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.ServletException;
@@ -55,7 +54,6 @@ import org.apache.catalina.util.ContextName;
 import org.apache.catalina.util.RequestUtil;
 import org.apache.catalina.util.ServerInfo;
 import org.apache.catalina.util.URLEncoder;
-import org.apache.tomcat.util.http.fileupload.ParameterParser;
 import org.apache.tomcat.util.res.StringManager;
 
 /**
@@ -77,7 +75,7 @@ import org.apache.tomcat.util.res.StringManager;
 * @author Bip Thelin
 * @author Malcolm Edgar
 * @author Glenn L. Nielsen
-* @version $Id: HTMLManagerServlet.java 1428969 2013-01-04 16:45:13Z kkolinko $
+* @version $Id: HTMLManagerServlet.java 1456657 2013-03-14 20:34:32Z markt $
 * @see ManagerServlet
 */
 
@@ -85,19 +83,23 @@ public final class HTMLManagerServlet extends ManagerServlet {
 
     private static final long serialVersionUID = 1L;
 
-    protected static final URLEncoder URL_ENCODER; 
+    protected static final URLEncoder URL_ENCODER;
     protected static final String APPLICATION_MESSAGE = "message";
     protected static final String APPLICATION_ERROR = "error";
-    
-    protected static final String sessionsListJspPath  = "/WEB-INF/jsp/sessionsList.jsp";
-    protected static final String sessionDetailJspPath = "/WEB-INF/jsp/sessionDetail.jsp";
+
+    protected static final String sessionsListJspPath  =
+            "/WEB-INF/jsp/sessionsList.jsp";
+    protected static final String sessionDetailJspPath =
+            "/WEB-INF/jsp/sessionDetail.jsp";
+    protected static final String connectorCiphersJspPath =
+            "/WEB-INF/jsp/connectorCiphers.jsp";
 
     static {
         URL_ENCODER = new URLEncoder();
         // '/' should not be encoded in context paths
         URL_ENCODER.addSafeCharacter('/');
     }
-    
+
     private boolean showProxySessions = false;
 
     // --------------------------------------------------------- Public Methods
@@ -117,7 +119,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
         throws IOException, ServletException {
 
         StringManager smClient = getStringManager(request);
-        
+
         // Identify the request parameters that we need
         // By obtaining the command from the pathInfo, per-command security can
         // be configured in web.xml
@@ -147,6 +149,8 @@ public final class HTMLManagerServlet extends ManagerServlet {
                 message = smClient.getString("managerServlet.exception",
                         e.toString());
             }
+        } else if (command.equals("/sslConnectorCiphers")) {
+            sslConnectorCiphers(request, response);
         } else if (command.equals("/upload") || command.equals("/deploy") ||
                 command.equals("/reload") || command.equals("/undeploy") ||
                 command.equals("/expire") || command.equals("/start") ||
@@ -191,7 +195,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
         ContextName deployCn = null;
         if (deployPath != null) {
             deployCn = new ContextName(deployPath,
-                    request.getParameter("deployVersion")); 
+                    request.getParameter("deployVersion"));
         }
         String deployConfig = request.getParameter("deployConfig");
         String deployWar = request.getParameter("deployWar");
@@ -239,7 +243,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
 
         Collection<Part> parts = request.getParts();
         Iterator<Part> iter = parts.iterator();
-        
+
         try {
             while (iter.hasNext()) {
                 Part part = iter.next();
@@ -256,8 +260,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
                             "htmlManagerServlet.deployUploadNoFile");
                     break;
                 }
-                filename =
-                    extractFilename(warPart.getHeader("Content-Disposition"));
+                filename = warPart.getSubmittedFileName();
                 if (!filename.toLowerCase(Locale.ENGLISH).endsWith(".war")) {
                     message = smClient.getString(
                             "htmlManagerServlet.deployUploadNotWar", filename);
@@ -275,14 +278,14 @@ public final class HTMLManagerServlet extends ManagerServlet {
 
                 // Identify the appBase of the owning Host of this Context
                 // (if any)
-                File file = new File(getAppBase(), filename);
+                File file = new File(host.getAppBaseFile(), filename);
                 if (file.exists()) {
                     message = smClient.getString(
                             "htmlManagerServlet.deployUploadWarExists",
                             filename);
                     break;
                 }
-                
+
                 ContextName cn = new ContextName(filename);
                 String name = cn.getName();
 
@@ -316,35 +319,6 @@ public final class HTMLManagerServlet extends ManagerServlet {
             warPart = null;
         }
         return message;
-    }
-
-    /*
-     * Adapted from FileUploadBase.getFileName()
-     */
-    private String extractFilename(String cd) {
-        String fileName = null;
-        if (cd != null) {
-            String cdl = cd.toLowerCase(Locale.ENGLISH);
-            if (cdl.startsWith("form-data") || cdl.startsWith("attachment")) {
-                ParameterParser parser = new ParameterParser();
-                parser.setLowerCaseNames(true);
-                // Parameter parser can handle null input
-                Map<String,String> params =
-                    parser.parse(cd, ';');
-                if (params.containsKey("filename")) {
-                    fileName = params.get("filename");
-                    if (fileName != null) {
-                        fileName = fileName.trim();
-                    } else {
-                        // Even if there is no value, the parameter is present,
-                        // so we return an empty file name rather than no file
-                        // name.
-                        fileName = "";
-                    }
-                }
-            }
-        }
-        return fileName;
     }
 
     /**
@@ -443,7 +417,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
             contextNames[i] = children[i].getName();
 
         Arrays.sort(contextNames);
-        
+
         String appsStart = smClient.getString("htmlManagerServlet.appsStart");
         String appsStop = smClient.getString("htmlManagerServlet.appsStop");
         String appsReload = smClient.getString("htmlManagerServlet.appsReload");
@@ -459,7 +433,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
 
         for (String contextName : contextNames) {
             Context ctxt = (Context) host.findChild(contextName);
-            
+
             if (ctxt != null) {
                 // Bugzilla 34818, alternating row colors
                 isHighlighted = !isHighlighted;
@@ -490,7 +464,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
                     // Assume false on failure for safety
                     isDeployed = false;
                 }
-                
+
                 args = new Object[7];
                 args[0] = "<a href=\"" + URL_ENCODER.encode(contextPath + "/")
                         + "\">" + RequestUtil.filter(displayPath) + "</a>";
@@ -507,7 +481,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
                 args[3] = Boolean.valueOf(ctxt.getState().isAvailable());
                 args[4] = RequestUtil.filter(response.encodeURL(request.getContextPath() +
                      "/html/sessions?" + pathVersion));
-                Manager manager = ctxt.getManager(); 
+                Manager manager = ctxt.getManager();
                 if (manager instanceof DistributedManager && showProxySessions) {
                     args[5] = Integer.valueOf(
                             ((DistributedManager)manager).getActiveSessionsFull());
@@ -549,7 +523,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
                 }
                 args[12] = smClient.getString("htmlManagerServlet.expire.unit");
                 args[13] = highlightColor;
-                
+
                 if (ctxt.getName().equals(this.context.getName())) {
                     writer.print(MessageFormat.format(
                         MANAGER_APP_ROW_BUTTON_SECTION, args));
@@ -589,13 +563,18 @@ public final class HTMLManagerServlet extends ManagerServlet {
         writer.print(MessageFormat.format(UPLOAD_SECTION, args));
 
         // Diagnostics section
-        args = new Object[5];
+        args = new Object[9];
         args[0] = smClient.getString("htmlManagerServlet.diagnosticsTitle");
         args[1] = smClient.getString("htmlManagerServlet.diagnosticsLeak");
         args[2] = response.encodeURL(
                 request.getContextPath() + "/html/findleaks");
         args[3] = smClient.getString("htmlManagerServlet.diagnosticsLeakWarning");
         args[4] = smClient.getString("htmlManagerServlet.diagnosticsLeakButton");
+        args[5] = smClient.getString("htmlManagerServlet.diagnosticsSsl");
+        args[6] = response.encodeURL(
+                request.getContextPath() + "/html/sslConnectorCiphers");
+        args[7] = smClient.getString("htmlManagerServlet.diagnosticsSslConnectorCipherButton");
+        args[8] = smClient.getString("htmlManagerServlet.diagnosticsSslConnectorCipherText");
         writer.print(MessageFormat.format(DIAGNOSTICS_SECTION, args));
 
         // Server Header Section
@@ -738,8 +717,8 @@ public final class HTMLManagerServlet extends ManagerServlet {
     /**
      * Find potential memory leaks caused by web application reload.
      *
-     * @see ManagerServlet#findleaks(boolean, PrintWriter, StringManager) 
-     * 
+     * @see ManagerServlet#findleaks(boolean, PrintWriter, StringManager)
+     *
      * @param smClient  StringManager for the client's locale
      *
      * @return message String
@@ -764,11 +743,18 @@ public final class HTMLManagerServlet extends ManagerServlet {
         } else {
             msg.append(smClient.getString("htmlManagerServlet.findleaksNone"));
         }
-        
+
         return msg.toString();
     }
-    
-    
+
+
+    protected void sslConnectorCiphers(HttpServletRequest request,
+            HttpServletResponse response) throws ServletException, IOException {
+        request.setAttribute("cipherList", getConnectorCiphers());
+        getServletContext().getRequestDispatcher(
+                connectorCiphersJspPath).forward(request, response);
+    }
+
     /**
      * @see javax.servlet.Servlet#getServletInfo()
      */
@@ -783,19 +769,19 @@ public final class HTMLManagerServlet extends ManagerServlet {
     @Override
     public void init() throws ServletException {
         super.init();
-        
+
         // Set our properties from the initialization parameters
         String value = null;
         value = getServletConfig().getInitParameter("showProxySessions");
         showProxySessions = Boolean.parseBoolean(value);
-    }   
+    }
 
     // ------------------------------------------------ Sessions administration
 
     /**
      *
      * Extract the expiration request parameter
-     * 
+     *
      * @param cn Name of the application from which to expire sessions
      * @param req
      * @param smClient  StringManager for the client's locale
@@ -815,12 +801,12 @@ public final class HTMLManagerServlet extends ManagerServlet {
     }
 
     /**
-     * 
+     *
      * @param req
      * @param resp
      * @param smClient  StringManager for the client's locale
      * @throws ServletException
-     * @throws IOException 
+     * @throws IOException
      */
     protected void doSessions(ContextName cn, HttpServletRequest req,
             HttpServletResponse resp, StringManager smClient)
@@ -873,7 +859,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
                     RequestUtil.filter(cn.getDisplayName())));
         }
         Manager manager = ctxt.getManager();
-        List<Session> sessions = new ArrayList<Session>();
+        List<Session> sessions = new ArrayList<>();
         sessions.addAll(Arrays.asList(manager.findSessions()));
         if (manager instanceof DistributedManager && showProxySessions) {
             // Add dummy proxy sessions
@@ -905,7 +891,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
     }
 
     /**
-     * 
+     *
      * @param cn Name of the application for which the sessions will be listed
      * @param req
      * @param resp
@@ -954,7 +940,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
     }
 
     /**
-     * 
+     *
      * @param req
      * @param resp
      * @param smClient  StringManager for the client's locale
@@ -982,7 +968,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
      * @param sessionIds
      * @param smClient  StringManager for the client's locale
      * @return number of invalidated sessions
-     * @throws IOException 
+     * @throws IOException
      */
     protected int invalidateSessions(ContextName cn, String[] sessionIds,
             StringManager smClient) throws IOException {
@@ -1024,7 +1010,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
      * @param attributeName
      * @param smClient  StringManager for the client's locale
      * @return true if there was an attribute removed, false otherwise
-     * @throws IOException 
+     * @throws IOException
      */
     protected boolean removeSessionAttribute(ContextName cn, String sessionId,
             String attributeName, StringManager smClient) throws IOException {
@@ -1072,10 +1058,10 @@ public final class HTMLManagerServlet extends ManagerServlet {
                 }
             };
         } else if ("MaxInactiveInterval".equalsIgnoreCase(sortBy)) {
-            comparator = new BaseSessionComparator<Date>() {
+            comparator = new BaseSessionComparator<Integer>() {
                 @Override
-                public Comparable<Date> getComparableObject(Session session) {
-                    return new Date(session.getMaxInactiveInterval());
+                public Comparable<Integer> getComparableObject(Session session) {
+                    return Integer.valueOf(session.getMaxInactiveInterval());
                 }
             };
         } else if ("new".equalsIgnoreCase(sortBy)) {
@@ -1341,6 +1327,25 @@ public final class HTMLManagerServlet extends ManagerServlet {
         " </td>\n" +
         " <td class=\"row-left\">\n" +
         "  <small>{3}</small>\n" +
+        " </td>\n" +
+        "</tr>\n" +
+        "</table>\n" +
+        "</form>\n" +
+        "</td>\n" +
+        "</tr>\n" +
+        "<tr>\n" +
+        " <td colspan=\"2\" class=\"header-left\"><small>{5}</small></td>\n" +
+        "</tr>\n" +
+        "<tr>\n" +
+        " <td colspan=\"2\">\n" +
+        "<form method=\"post\" action=\"{6}\">\n" +
+        "<table cellspacing=\"0\" cellpadding=\"3\">\n" +
+        "<tr>\n" +
+        " <td class=\"row-left\">\n" +
+        "  <input type=\"submit\" value=\"{7}\">\n" +
+        " </td>\n" +
+        " <td class=\"row-left\">\n" +
+        "  <small>{8}</small>\n" +
         " </td>\n" +
         "</tr>\n" +
         "</table>\n" +

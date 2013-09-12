@@ -29,17 +29,12 @@ import org.apache.juli.logging.LogFactory;
  * Receive replicated SessionMessage form other cluster node.
  * @author Filip Hanik
  * @author Peter Rossbach
- * @version $Id: ClusterSessionListener.java 1300907 2012-03-15 10:57:17Z markt $
+ * @version $Id: ClusterSessionListener.java 1195407 2011-10-31 10:59:49Z markt $
  */
 public class ClusterSessionListener extends ClusterListener {
 
     private static final Log log =
         LogFactory.getLog(ClusterSessionListener.class);
-    
-    /**
-     * The descriptive information about this implementation.
-     */
-    protected static final String info = "org.apache.catalina.ha.session.ClusterSessionListener/1.1";
 
     //--Constructor---------------------------------------------
 
@@ -50,18 +45,9 @@ public class ClusterSessionListener extends ClusterListener {
     //--Logic---------------------------------------------------
 
     /**
-     * Return descriptive information about this implementation.
-     */
-    public String getInfo() {
-
-        return (info);
-
-    }
-
-    /**
      * Callback from the cluster, when a message is received, The cluster will
      * broadcast it invoking the messageReceived on the receiver.
-     * 
+     *
      * @param myobj
      *            ClusterMessage - the message received from the cluster
      */
@@ -103,6 +89,7 @@ public class ClusterSessionListener extends ClusterListener {
                         cluster.send(replymsg, msg.getAddress());
                     }
                 }
+
             }
         }
         return;
@@ -110,7 +97,7 @@ public class ClusterSessionListener extends ClusterListener {
 
     /**
      * Accept only SessionMessage
-     * 
+     *
      * @param msg
      *            ClusterMessage
      * @return boolean - returns true to indicate that messageReceived should be

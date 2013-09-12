@@ -24,7 +24,7 @@
 // * Read access to the web application's document root directory
 // * Read, write and delete access to the web application's working directory
 //
-// $Id: catalina.policy 1460221 2013-03-23 20:17:29Z kkolinko $
+// $Id: catalina.policy 1460115 2013-03-23 07:53:06Z kkolinko $
 // ============================================================================
 
 

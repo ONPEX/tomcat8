@@ -29,7 +29,7 @@ import java.util.EventObject;
  * Tomcat 3.x.
  *
  * @author Craig R. McClanahan
- * @version $Id: LifecycleEvent.java 1200160 2011-11-10 05:35:13Z kkolinko $
+ * @version $Id: LifecycleEvent.java 1361818 2012-07-15 21:51:26Z markt $
  */
 
 public final class LifecycleEvent extends EventObject {
@@ -60,13 +60,13 @@ public final class LifecycleEvent extends EventObject {
     /**
      * The event data associated with this event.
      */
-    private Object data = null;
+    private final Object data;
 
 
     /**
      * The event type this instance represents.
      */
-    private String type = null;
+    private final String type;
 
 
     // ------------------------------------------------------------- Properties

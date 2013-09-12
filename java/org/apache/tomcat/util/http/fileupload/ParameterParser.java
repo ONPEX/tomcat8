@@ -34,7 +34,7 @@ import org.apache.tomcat.util.http.fileupload.util.mime.MimeUtility;
  *  <code>param1 = value; param2 = "anything goes; really"; param3</code>
  * </p>
  *
- * @version $Id: ParameterParser.java 1456935 2013-03-15 12:47:29Z markt $
+ * @version $Id: ParameterParser.java 1456932 2013-03-15 12:34:48Z markt $
  */
 public class ParameterParser {
 
@@ -230,7 +230,7 @@ public class ParameterParser {
      */
     public Map<String,String> parse(final String str, char[] separators) {
         if (separators == null || separators.length == 0) {
-            return new HashMap<String,String>();
+            return new HashMap<>();
         }
         char separator = separators[0];
         if (str != null) {
@@ -257,7 +257,7 @@ public class ParameterParser {
      */
     public Map<String,String> parse(final String str, char separator) {
         if (str == null) {
-            return new HashMap<String,String>();
+            return new HashMap<>();
         }
         return parse(str.toCharArray(), separator);
     }
@@ -274,7 +274,7 @@ public class ParameterParser {
      */
     public Map<String,String> parse(final char[] chars, char separator) {
         if (chars == null) {
-            return new HashMap<String,String>();
+            return new HashMap<>();
         }
         return parse(chars, 0, chars.length, separator);
     }
@@ -298,9 +298,9 @@ public class ParameterParser {
         char separator) {
 
         if (chars == null) {
-            return new HashMap<String,String>();
+            return new HashMap<>();
         }
-        HashMap<String,String> params = new HashMap<String,String>();
+        HashMap<String,String> params = new HashMap<>();
         this.chars = chars;
         this.pos = offset;
         this.len = length;

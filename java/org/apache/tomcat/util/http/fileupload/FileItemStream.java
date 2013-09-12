@@ -31,7 +31,7 @@ import java.io.InputStream;
  * {@link java.util.Iterator#hasNext()} on the iterator, you discard all data,
  * which hasn't been read so far from the previous data.</p>
  *
- * @version $Id: FileItemStream.java 1456935 2013-03-15 12:47:29Z markt $
+ * @version $Id: FileItemStream.java 1456904 2013-03-15 11:36:53Z markt $
  */
 public interface FileItemStream extends FileItemHeadersSupport {
 

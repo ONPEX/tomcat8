@@ -18,7 +18,7 @@ package org.apache.catalina.valves;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchProviderException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -97,7 +97,7 @@ public class SSLValve extends ValveBase {
             String strcerts = strcert4.concat("\n-----END CERTIFICATE-----\n");
             // ByteArrayInputStream bais = new ByteArrayInputStream(strcerts.getBytes("UTF-8"));
             ByteArrayInputStream bais = new ByteArrayInputStream(
-                    strcerts.getBytes(Charset.defaultCharset()));
+                    strcerts.getBytes(StandardCharsets.ISO_8859_1));
             X509Certificate jsseCerts[] = null;
             String providerName = (String) request.getConnector().getProperty(
                     "clientCertProvider");
@@ -126,7 +126,6 @@ public class SSLValve extends ValveBase {
         strcert0 = mygetHeader(request, "ssl_session_id");
         if (strcert0 != null) {
             request.setAttribute(Globals.SSL_SESSION_ID_ATTR, strcert0);
-            request.setAttribute(Globals.SSL_SESSION_ID_TOMCAT_ATTR, strcert0);
         }
         strcert0 = mygetHeader(request, "ssl_cipher_usekeysize");
         if (strcert0 != null) {

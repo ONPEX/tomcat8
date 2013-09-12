@@ -56,7 +56,7 @@ import org.apache.catalina.connector.Response;
  * of the filtering you wish to perform.
  *
  * @author Craig R. McClanahan
- * @version $Id: RequestFilterValve.java 1202570 2011-11-16 08:02:09Z kkolinko $
+ * @version $Id: RequestFilterValve.java 1202565 2011-11-16 07:49:06Z kkolinko $
  */
 public abstract class RequestFilterValve extends ValveBase {
 
@@ -65,18 +65,8 @@ public abstract class RequestFilterValve extends ValveBase {
         super(true);
     }
 
-    // ----------------------------------------------------- Class Variables
-
-
-    /**
-     * The descriptive information related to this implementation.
-     */
-    private static final String info =
-        "org.apache.catalina.valves.RequestFilterValve/1.0";
-
 
     // ----------------------------------------------------- Instance Variables
-
 
     /**
      * The regular expression used to test for allowed requests.
@@ -232,20 +222,7 @@ public abstract class RequestFilterValve extends ValveBase {
         this.denyStatus = denyStatus;
     }
 
-
-    /**
-     * Return descriptive information about this Valve implementation.
-     */
-    @Override
-    public String getInfo() {
-
-        return (info);
-
-    }
-
-
     // --------------------------------------------------------- Public Methods
-
 
     /**
      * Extract the desired request property, and pass it (along with the

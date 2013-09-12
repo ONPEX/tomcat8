@@ -31,7 +31,7 @@ import javax.servlet.http.HttpSession;
  * between requests for a particular user of a web application.
  *
  * @author Craig R. McClanahan
- * @version $Id: Session.java 1200162 2011-11-10 05:37:57Z kkolinko $
+ * @version $Id: Session.java 1446081 2013-02-14 09:35:42Z markt $
  */
 
 public interface Session {
@@ -135,14 +135,6 @@ public interface Session {
      *                      session has been created?
      */
     public void setId(String id, boolean notify);
-
-
-    /**
-     * Return descriptive information about this Session implementation and
-     * the corresponding version number, in the format
-     * <code>&lt;description&gt;/&lt;version&gt;</code>.
-     */
-    public String getInfo();
 
 
     /**
@@ -333,6 +325,20 @@ public interface Session {
      * @param value Object to be bound to the specified name
      */
     public void setNote(String name, Object value);
+
+
+    /**
+     * Inform the listeners about the change session ID.
+     *
+     * @param newId  new session ID
+     * @param oldId  old session ID
+     * @param notifySessionListeners  Should any associated sessionListeners be
+     *        notified that session ID has been changed?
+     * @param notifyContainerListeners  Should any associated ContainerListeners
+     *        be notified that session ID has been changed?
+     */
+    public void tellChangedSessionId(String newId, String oldId,
+            boolean notifySessionListeners, boolean notifyContainerListeners);
 
 
 }

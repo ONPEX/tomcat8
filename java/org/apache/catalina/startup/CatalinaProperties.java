@@ -5,17 +5,15 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.catalina.startup;
 
 import java.io.File;
@@ -25,20 +23,14 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.Properties;
 
-import org.apache.catalina.Globals;
-
 
 /**
  * Utility class to read the bootstrap Catalina configuration.
  *
  * @author Remy Maucherat
- * @version $Id: CatalinaProperties.java 1364150 2012-07-21 18:57:54Z markt $
+ * @version $Id: CatalinaProperties.java 1364151 2012-07-21 19:00:28Z markt $
  */
-
 public class CatalinaProperties {
-
-
-    // ------------------------------------------------------- Static Variables
 
     private static final org.apache.juli.logging.Log log=
         org.apache.juli.logging.LogFactory.getLog( CatalinaProperties.class );
@@ -47,39 +39,16 @@ public class CatalinaProperties {
 
 
     static {
-
         loadProperties();
-
     }
-
-
-    // --------------------------------------------------------- Public Methods
 
 
     /**
      * Return specified property value.
      */
     public static String getProperty(String name) {
-    
         return properties.getProperty(name);
-
     }
-
-
-    /**
-     * Return specified property value.
-     *
-     * @deprecated  Unused - will be removed in 8.0.x
-     */
-    @Deprecated
-    public static String getProperty(String name, String defaultValue) {
-
-        return properties.getProperty(name, defaultValue);
-
-    }
-
-
-    // --------------------------------------------------------- Public Methods
 
 
     /**
@@ -101,7 +70,7 @@ public class CatalinaProperties {
 
         if (is == null) {
             try {
-                File home = new File(getCatalinaBase());
+                File home = new File(Bootstrap.getCatalinaBase());
                 File conf = new File(home, "conf");
                 File propsFile = new File(conf, "catalina.properties");
                 is = new FileInputStream(propsFile);
@@ -146,24 +115,6 @@ public class CatalinaProperties {
                 System.setProperty(name, value);
             }
         }
-
-    }
-
-
-    /**
-     * Get the value of the catalina.home environment variable.
-     */
-    private static String getCatalinaHome() {
-        return System.getProperty(Globals.CATALINA_HOME_PROP,
-                                  System.getProperty("user.dir"));
-    }
-    
-    
-    /**
-     * Get the value of the catalina.base environment variable.
-     */
-    private static String getCatalinaBase() {
-        return System.getProperty(Globals.CATALINA_BASE_PROP, getCatalinaHome());
     }
 
 
@@ -173,6 +124,7 @@ public class CatalinaProperties {
     private static String getConfigUrl() {
         return System.getProperty("catalina.config");
     }
+
 
     // Copied from ExceptionUtils since that class is not visible during start
     private static void handleThrowable(Throwable t) {
@@ -184,5 +136,4 @@ public class CatalinaProperties {
         }
         // All other instances of Throwable will be silently swallowed
     }
-
 }

@@ -24,9 +24,11 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+import org.apache.catalina.WebResourceRoot;
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
+import org.apache.catalina.webresources.StandardRoot;
 import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestCompositeELResolver extends TomcatBaseTest {
@@ -35,14 +37,17 @@ public class TestCompositeELResolver extends TomcatBaseTest {
     public void testBug50408() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir =  new File("test/webapp-3.0");
+        File appDir =  new File("test/webapp");
         // app dir is relative to server home
         StandardContext ctxt = (StandardContext) tomcat.addWebapp(null,
                 "/test", appDir.getAbsolutePath());
 
         // This test needs the JSTL libraries
         File lib = new File("webapps/examples/WEB-INF/lib");
-        ctxt.setAliases("/WEB-INF/lib=" + lib.getCanonicalPath());
+        ctxt.setResources(new StandardRoot(ctxt));
+        ctxt.getResources().createWebResourceSet(
+                WebResourceRoot.ResourceSetType.POST, lib.getAbsolutePath(),
+                "/WEB-INF/lib", "/");
 
         tomcat.start();
 

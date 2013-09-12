@@ -60,13 +60,13 @@ public class SlowQueryReportJmx extends SlowQueryReport implements NotificationE
 
     public static final String objectNameAttribute = "objectName";
 
-    protected static CompositeType SLOW_QUERY_TYPE;
+    protected static volatile CompositeType SLOW_QUERY_TYPE;
 
     private static final Log log = LogFactory.getLog(SlowQueryReportJmx.class);
 
 
     protected static ConcurrentHashMap<String,SlowQueryReportJmxMBean> mbeans =
-        new ConcurrentHashMap<String,SlowQueryReportJmxMBean>();
+        new ConcurrentHashMap<>();
 
 
     //==============================JMX STUFF========================

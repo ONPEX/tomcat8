@@ -20,11 +20,11 @@ package org.apache.catalina.ssi;
 import java.io.PrintWriter;
 /**
  * Implements the Server-side #set command
- * 
+ *
  * @author Paul Speed
  * @author Dan Sandberg
  * @author David Becker
- * @version $Id: SSISet.java 1138121 2011-06-21 18:32:41Z markt $
+ * @version $Id: SSISet.java 1187798 2011-10-22 21:14:59Z markt $
  */
 public class SSISet implements SSICommand {
     /**

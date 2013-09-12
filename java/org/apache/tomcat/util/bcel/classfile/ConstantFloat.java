@@ -22,12 +22,12 @@ import java.io.IOException;
 
 import org.apache.tomcat.util.bcel.Constants;
 
-/** 
- * This class is derived from the abstract 
- * <A HREF="org.apache.tomcat.util.bcel.classfile.Constant.html">Constant</A> class 
+/**
+ * This class is derived from the abstract
+ * <A HREF="org.apache.tomcat.util.bcel.classfile.Constant.html">Constant</A> class
  * and represents a reference to a float object.
  *
- * @version $Id: ConstantFloat.java 1377533 2012-08-26 22:22:59Z markt $
+ * @version $Id: ConstantFloat.java 1397950 2012-10-13 21:22:37Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Constant
  */
@@ -37,7 +37,7 @@ public final class ConstantFloat extends Constant {
     private float bytes;
 
 
-    /** 
+    /**
      * @param bytes Data
      */
     public ConstantFloat(float bytes) {
@@ -46,7 +46,7 @@ public final class ConstantFloat extends Constant {
     }
 
 
-    /** 
+    /**
      * Initialize instance from file data.
      *
      * @param file Input stream
@@ -56,20 +56,11 @@ public final class ConstantFloat extends Constant {
         this(file.readFloat());
     }
 
-    
+
     /**
      * @return data, i.e., 4 bytes.
      */
     public final float getBytes() {
         return bytes;
-    }
-
-
-    /**
-     * @return String representation.
-     */
-    @Override
-    public final String toString() {
-        return super.toString() + "(bytes = " + bytes + ")";
     }
 }

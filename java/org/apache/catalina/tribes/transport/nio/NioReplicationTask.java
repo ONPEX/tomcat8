@@ -50,7 +50,7 @@ import org.apache.catalina.tribes.util.Logs;
  *
  * @author Filip Hanik
  *
- * @version $Id: NioReplicationTask.java 1142666 2011-07-04 13:54:52Z kkolinko $
+ * @version $Id: NioReplicationTask.java 1370396 2012-08-07 17:50:46Z markt $
  */
 public class NioReplicationTask extends AbstractRxTask {
 
@@ -59,9 +59,9 @@ public class NioReplicationTask extends AbstractRxTask {
     private ByteBuffer buffer = null;
     private SelectionKey key;
     private int rxBufSize;
-    private NioReceiver receiver;
-    public NioReplicationTask (ListenCallback callback, NioReceiver receiver)
-    {
+    private final NioReceiver receiver;
+
+    public NioReplicationTask (ListenCallback callback, NioReceiver receiver) {
         super(callback);
         this.receiver = receiver;
     }

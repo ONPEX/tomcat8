@@ -22,13 +22,13 @@ import java.io.IOException;
 
 import org.apache.tomcat.util.bcel.Constants;
 
-/** 
- * This class is derived from the abstract 
- * <A HREF="org.apache.tomcat.util.bcel.classfile.Constant.html">Constant</A> class 
+/**
+ * This class is derived from the abstract
+ * <A HREF="org.apache.tomcat.util.bcel.classfile.Constant.html">Constant</A> class
  * and represents a reference to the name and signature
  * of a field or method.
  *
- * @version $Id: ConstantNameAndType.java 1377533 2012-08-26 22:22:59Z markt $
+ * @version $Id: ConstantNameAndType.java 1397950 2012-10-13 21:22:37Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Constant
  */
@@ -74,15 +74,5 @@ public final class ConstantNameAndType extends Constant {
      */
     public final int getSignatureIndex() {
         return signature_index;
-    }
-
-
-    /**
-     * @return String representation
-     */
-    @Override
-    public final String toString() {
-        return super.toString() + "(name_index = " + name_index + ", signature_index = "
-                + signature_index + ")";
     }
 }

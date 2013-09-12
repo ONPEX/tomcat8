@@ -20,7 +20,7 @@ package org.apache.tomcat.jni;
 /** SSL Context
  *
  * @author Mladen Turk
- * @version $Id: SSLContext.java 939309 2010-04-29 13:54:26Z kkolinko $
+ * @version $Id: SSLContext.java 1437083 2013-01-22 18:30:45Z schultz $
  */
 
 public final class SSLContext {
@@ -88,6 +88,13 @@ public final class SSLContext {
      * @param options  See SSL.SSL_OP_* for option flags.
      */
     public static native void setOptions(long ctx, int options);
+
+    /**
+     * Clears OpenSSL Options.
+     * @param ctx Server or Client context to use.
+     * @param options  See SSL.SSL_OP_* for option flags.
+     */
+    public static native void clearOptions(long ctx, int options);
 
     /**
      * Sets the "quiet shutdown" flag for <b>ctx</b> to be

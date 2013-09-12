@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,21 +22,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.JarURLConnection;
 import java.net.URL;
-import java.util.HashSet;
+import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import javax.servlet.ServletContext;
+import javax.servlet.descriptor.JspConfigDescriptor;
+import javax.servlet.descriptor.TaglibDescriptor;
 
-import org.apache.jasper.Constants;
 import org.apache.jasper.JasperException;
 import org.apache.jasper.util.ExceptionUtils;
 import org.apache.jasper.xmlparser.ParserUtils;
 import org.apache.jasper.xmlparser.TreeNode;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
+import org.apache.tomcat.JarScanType;
 import org.apache.tomcat.JarScanner;
 import org.apache.tomcat.JarScannerCallback;
 import org.apache.tomcat.util.scan.Jar;
@@ -46,7 +47,7 @@ import org.apache.tomcat.util.scan.JarFactory;
 /**
  * A container for all tag libraries that are defined "globally"
  * for the web application.
- * 
+ *
  * Tag Libraries can be defined globally in one of two ways:
  *   1. Via <taglib> elements in web.xml:
  *      the uri and location of the tag-library are specified in
@@ -90,59 +91,14 @@ public class TldLocationsCache {
     public static final int NOROOT_REL_URI = 2;
 
     private static final String WEB_INF = "/WEB-INF/";
+    private static final String WEB_INF_CLASSES = "/WEB-INF/classes/";
     private static final String WEB_INF_LIB = "/WEB-INF/lib/";
     private static final String JAR_EXT = ".jar";
     private static final String TLD_EXT = ".tld";
 
-    // Names of JARs that are known not to contain any TLDs
-    private static Set<String> noTldJars = null;
-
     // Flag that indicates that an INFO level message has been provided that
     // there are JARs that could be skipped
     private static volatile boolean showTldScanWarning = true;
-
-    static {
-        // Set the default list of JARs to skip for TLDs
-        // Set the default list of JARs to skip for TLDs
-        StringBuilder jarList = new StringBuilder(System.getProperty(
-                Constants.DEFAULT_JAR_SKIP_PROP, ""));
-
-        String tldJars = System.getProperty(Constants.TLD_JAR_SKIP_PROP, "");
-        if (tldJars.length() > 0) {
-            if (jarList.length() > 0) {
-                jarList.append(',');
-            }
-            jarList.append(tldJars);
-        }
-
-        if (jarList.length() > 0) {
-            setNoTldJars(jarList.toString());
-        }
-    }
-
-
-    /**
-     * Sets the list of JARs that are known not to contain any TLDs.
-     *
-     * @param jarNames List of comma-separated names of JAR files that are 
-     * known not to contain any TLDs 
-     */
-    public static synchronized void setNoTldJars(String jarNames) {
-        if (jarNames == null) {
-            noTldJars = null;
-        } else {
-            if (noTldJars == null) {
-                noTldJars = new HashSet<String>();
-            } else {
-                noTldJars.clear();
-            }
-            StringTokenizer tokenizer = new StringTokenizer(jarNames, ",");
-            while (tokenizer.hasMoreElements()) {
-                noTldJars.add(tokenizer.nextToken());
-            }
-        }
-    }
-
 
     /**
      * The mapping of the 'global' tag library URI to the location (resource
@@ -151,10 +107,10 @@ public class TldLocationsCache {
      *    [0] The location
      *    [1] If the location is a jar file, this is the location of the tld.
      */
-    private Hashtable<String, TldLocation> mappings;
+    private final Hashtable<String, TldLocation> mappings;
 
     private volatile boolean initialized;
-    private ServletContext ctxt;
+    private final ServletContext ctxt;
 
     /** Constructor.
      *
@@ -163,7 +119,7 @@ public class TldLocationsCache {
      */
     public TldLocationsCache(ServletContext ctxt) {
         this.ctxt = ctxt;
-        mappings = new Hashtable<String, TldLocation>();
+        mappings = new Hashtable<>();
         initialized = false;
     }
 
@@ -191,7 +147,7 @@ public class TldLocationsCache {
      * in the web application. A tag library is 'exposed' either explicitly in
      * web.xml or implicitly via the uri tag in the TLD of a taglib deployed
      * in a jar file (WEB-INF/lib).
-     * 
+     *
      * @param uri The taglib uri
      *
      * @return An array of two Strings: The first element denotes the real
@@ -207,7 +163,7 @@ public class TldLocationsCache {
         return mappings.get(uri);
     }
 
-    /** 
+    /**
      * Returns the type of a URI:
      *     ABS_URI
      *     ROOT_REL_URI
@@ -228,7 +184,7 @@ public class TldLocationsCache {
      *
      * This supports a Tomcat-specific extension to the TLD search
      * order defined in the JSP spec. It allows tag libraries packaged as JAR
-     * files to be shared by web applications by simply dropping them in a 
+     * files to be shared by web applications by simply dropping them in a
      * location that all web applications have access to (e.g.,
      * <CATALINA_HOME>/lib). It also supports some of the weird and
      * wonderful arrangements present when Tomcat gets embedded.
@@ -238,13 +194,12 @@ public class TldLocationsCache {
         if (initialized) return;
         try {
             tldScanWebXml();
-            tldScanResourcePaths(WEB_INF);
-            
+            tldScanResourcePaths(WEB_INF, false);
+
             JarScanner jarScanner = JarScannerFactory.getJarScanner(ctxt);
             if (jarScanner != null) {
-                jarScanner.scan(ctxt,
-                        Thread.currentThread().getContextClassLoader(),
-                        new TldJarScannerCallback(), noTldJars);
+                jarScanner.scan(JarScanType.TLD, ctxt,
+                        new TldJarScannerCallback());
             }
 
             initialized = true;
@@ -257,76 +212,63 @@ public class TldLocationsCache {
     private class TldJarScannerCallback implements JarScannerCallback {
 
         @Override
-        public void scan(JarURLConnection urlConn) throws IOException {
+        public void scan(JarURLConnection urlConn, boolean isWebapp)
+                throws IOException {
+            // Note: TLDs are processed the same way for application and
+            //       container provided JARs.
             tldScanJar(urlConn);
         }
 
         @Override
-        public void scan(File file) throws IOException {
+        public void scan(File file, boolean isWebapp) throws IOException {
+            // Note: TLDs are processed the same way for application and
+            //       container provided JARs.
             File metaInf = new File(file, "META-INF");
             if (metaInf.isDirectory()) {
                 tldScanDir(metaInf);
             }
         }
+
+        @Override
+        public void scanWebInfClasses() throws IOException {
+            tldScanResourcePaths(WEB_INF_CLASSES, true);
+        }
     }
 
     /*
      * Populates taglib map described in web.xml.
-     * 
-     * This is not kept in sync with o.a.c.startup.TldConfig as the Jasper only
-     * needs the URI to TLD mappings from scan web.xml whereas TldConfig needs
-     * to scan the actual TLD files.
-     */    
+     *
+     * This is not kept in sync with o.a.c.startup.TldConfig as a) Jasper only
+     * needs the URI to TLD mappings and b) Jasper can obtain the information
+     * from the ServletContext.
+     */
     private void tldScanWebXml() throws Exception {
 
-        WebXml webXml = null;
-        try {
-            webXml = new WebXml(ctxt);
-            if (webXml.getInputSource() == null) {
-                return;
-            }
+        JspConfigDescriptor jspConfig = ctxt.getJspConfigDescriptor();
+        if (jspConfig == null) {
+            return;
+        }
 
-            // Parse the web application deployment descriptor
-            TreeNode webtld = null;
-            webtld = new ParserUtils().parseXMLDocument(webXml.getSystemId(),
-                    webXml.getInputSource());
+        Collection<TaglibDescriptor> taglibs = jspConfig.getTaglibs();
 
-            // Allow taglib to be an element of the root or jsp-config (JSP2.0)
-            TreeNode jspConfig = webtld.findChild("jsp-config");
-            if (jspConfig != null) {
-                webtld = jspConfig;
-            }
-            Iterator<TreeNode> taglibs = webtld.findChildren("taglib");
-            while (taglibs.hasNext()) {
+        for (TaglibDescriptor taglib : taglibs) {
 
-                // Parse the next <taglib> element
-                TreeNode taglib = taglibs.next();
-                String tagUri = null;
-                String tagLoc = null;
-                TreeNode child = taglib.findChild("taglib-uri");
-                if (child != null)
-                    tagUri = child.getBody();
-                child = taglib.findChild("taglib-location");
-                if (child != null)
-                    tagLoc = child.getBody();
+            String tagUri = taglib.getTaglibURI();
+            String tagLoc = taglib.getTaglibLocation();
 
-                // Save this location if appropriate
-                if (tagLoc == null)
-                    continue;
-                if (uriType(tagLoc) == NOROOT_REL_URI)
-                    tagLoc = "/WEB-INF/" + tagLoc;
-                TldLocation location;
-                if (tagLoc.endsWith(JAR_EXT)) {
-                    location = new TldLocation("META-INF/taglib.tld", ctxt.getResource(tagLoc).toString());
-                } else {
-                    location = new TldLocation(tagLoc);
-                }
-                mappings.put(tagUri, location);
+            // Save this location if appropriate
+            if (tagLoc == null)
+                continue;
+            if (uriType(tagLoc) == NOROOT_REL_URI)
+                tagLoc = "/WEB-INF/" + tagLoc;
+            TldLocation location;
+            if (tagLoc.endsWith(JAR_EXT)) {
+                location = new TldLocation("META-INF/taglib.tld",
+                        ctxt.getResource(tagLoc).toString());
+            } else {
+                location = new TldLocation(tagLoc);
             }
-        } finally {
-            if (webXml != null) {
-                webXml.close();
-            }
+            mappings.put(tagUri, location);
         }
     }
 
@@ -337,12 +279,13 @@ public class TldLocationsCache {
      *
      * Initially, rootPath equals /WEB-INF/. The /WEB-INF/classes and
      * /WEB-INF/lib sub-directories are excluded from the search, as per the
-     * JSP 2.0 spec.
-     * 
+     * JSP 2.0 spec unless the JarScanner is configured to treat
+     * /WEB-INF/classes/ as an exploded JAR.
+     *
      * Keep code in sync with o.a.c.startup.TldConfig
      */
-    private void tldScanResourcePaths(String startPath)
-            throws Exception {
+    private void tldScanResourcePaths(String startPath, boolean webInfAsJar)
+            throws IOException {
 
         Set<String> dirList = ctxt.getResourcePaths(startPath);
         if (dirList != null) {
@@ -351,7 +294,8 @@ public class TldLocationsCache {
                 String path = it.next();
                 if (!path.endsWith(TLD_EXT)
                         && (path.startsWith(WEB_INF_LIB)
-                                || path.startsWith("/WEB-INF/classes/"))) {
+                                || path.startsWith("/WEB-INF/classes/")
+                                   && !webInfAsJar)) {
                     continue;
                 }
                 if (path.endsWith(TLD_EXT)) {
@@ -372,7 +316,7 @@ public class TldLocationsCache {
                         }
                     }
                 } else {
-                    tldScanResourcePaths(path);
+                    tldScanResourcePaths(path, false);
                 }
             }
         }
@@ -418,7 +362,7 @@ public class TldLocationsCache {
      * map for any TLD that has a <uri> element.
      *
      * @param jarConn The JarURLConnection to the JAR file to scan
-     * 
+     *
      * Keep in sync with o.a.c.startup.TldConfig
      */
     private void tldScanJar(JarURLConnection jarConn) throws IOException {
@@ -426,13 +370,13 @@ public class TldLocationsCache {
         Jar jar = null;
         InputStream is;
         boolean foundTld = false;
-        
+
         URL resourceURL = jarConn.getJarFileURL();
         String resourcePath = resourceURL.toString();
-        
+
         try {
             jar = JarFactory.newInstance(jarConn.getURL());
-            
+
             jar.nextEntry();
             String entryName = jar.getEntryName();
             while (entryName != null) {
@@ -478,7 +422,7 @@ public class TldLocationsCache {
     /*
      * Scan the TLD contents in the specified input stream and add any new URIs
      * to the map.
-     * 
+     *
      * @param resourcePath  Path of the resource
      * @param entryName     If the resource is a JAR file, the name of the entry
      *                      in the JAR file

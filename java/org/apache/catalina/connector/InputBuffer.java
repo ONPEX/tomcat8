@@ -23,6 +23,8 @@ import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 
+import javax.servlet.ReadListener;
+
 import org.apache.catalina.security.SecurityUtil;
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.Request;
@@ -30,7 +32,6 @@ import org.apache.tomcat.util.buf.B2CConverter;
 import org.apache.tomcat.util.buf.ByteChunk;
 import org.apache.tomcat.util.buf.CharChunk;
 import org.apache.tomcat.util.res.StringManager;
-
 
 /**
  * The buffer used by Tomcat request. This is a derivative of the Tomcat 3.3
@@ -106,8 +107,7 @@ public class InputBuffer extends Reader
     /**
      * List of encoders.
      */
-    protected HashMap<String,B2CConverter> encoders =
-        new HashMap<String,B2CConverter>();
+    protected final HashMap<String,B2CConverter> encoders = new HashMap<>();
 
 
     /**
@@ -131,7 +131,7 @@ public class InputBuffer extends Reader
     /**
      * Buffer size.
      */
-    private int size = -1;
+    private final int size;
 
 
     // ----------------------------------------------------------- Constructors
@@ -180,19 +180,7 @@ public class InputBuffer extends Reader
     }
 
 
-    /**
-     * Get associated Coyote request.
-     *
-     * @return the associated Coyote request
-     */
-    @Deprecated
-    public Request getRequest() {
-        return this.coyoteRequest;
-    }
-
-
     // --------------------------------------------------------- Public Methods
-
 
     /**
      * Recycle the output buffer.
@@ -221,7 +209,6 @@ public class InputBuffer extends Reader
 
         gotEnc = false;
         enc = null;
-
     }
 
 
@@ -260,8 +247,30 @@ public class InputBuffer extends Reader
     }
 
 
-    // ------------------------------------------------- Bytes Handling Methods
+    public void setReadListener(ReadListener listener) {
+        coyoteRequest.setReadListener(listener);
+    }
 
+
+    public boolean isFinished() {
+        return available() == 0;
+    }
+
+
+    public boolean isReady() {
+        if (coyoteRequest.getReadListener() == null) {
+            throw new IllegalStateException("not in non blocking mode.");
+        }
+        int available = available();
+        boolean result = available > 0;
+        if (!result) {
+            coyoteRequest.action(ActionCode.NB_READ_INTEREST, null);
+        }
+        return result;
+    }
+
+
+    // ------------------------------------------------- Bytes Handling Methods
 
     /**
      * Reads new bytes in the byte chunk.
@@ -463,7 +472,9 @@ public class InputBuffer extends Reader
         if (closed) {
             throw new IOException(sm.getString("inputBuffer.streamClosed"));
         }
-
+        if (state == INITIAL_STATE) {
+            state = CHAR_STATE;
+        }
         return (available() > 0);
     }
 

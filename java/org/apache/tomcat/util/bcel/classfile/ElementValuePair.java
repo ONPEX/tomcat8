@@ -17,14 +17,11 @@
  */
 package org.apache.tomcat.util.bcel.classfile;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-
 import org.apache.tomcat.util.bcel.Constants;
 
 /**
  * an annotation's element value pair
- * 
+ *
  * @version $Id: ElementValuePair
  * @author <A HREF="mailto:dbrosius@qis.net">D. Brosius</A>
  * @since 5.3
@@ -55,10 +52,5 @@ public class ElementValuePair
     public final ElementValue getValue()
     {
         return elementValue;
-    }
-    
-    protected void dump(DataOutputStream dos) throws IOException {
-        dos.writeShort(elementNameIndex); // u2 name of the element
-        elementValue.dump(dos);
     }
 }

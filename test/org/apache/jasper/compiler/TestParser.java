@@ -24,6 +24,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import org.apache.catalina.startup.Tomcat;
@@ -41,7 +42,7 @@ public class TestParser extends TomcatBaseTest {
         Tomcat tomcat = getTomcatInstance();
 
         File appDir =
-            new File("test/webapp-3.0");
+            new File("test/webapp");
         // app dir is relative to server home
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
@@ -62,7 +63,7 @@ public class TestParser extends TomcatBaseTest {
         Tomcat tomcat = getTomcatInstance();
 
         File appDir =
-            new File("test/webapp-3.0");
+            new File("test/webapp");
         // app dir is relative to server home
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
@@ -107,7 +108,7 @@ public class TestParser extends TomcatBaseTest {
     public void testBug48668b() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         // app dir is relative to server home
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
@@ -124,7 +125,7 @@ public class TestParser extends TomcatBaseTest {
     public void testBug49297NoSpaceStrict() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         // app dir is relative to server home
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
@@ -141,7 +142,7 @@ public class TestParser extends TomcatBaseTest {
     public void testBug49297DuplicateAttr() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         // app dir is relative to server home
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
@@ -159,7 +160,7 @@ public class TestParser extends TomcatBaseTest {
 
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         // app dir is relative to server home
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
@@ -179,7 +180,7 @@ public class TestParser extends TomcatBaseTest {
 
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         // app dir is relative to server home
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
@@ -199,7 +200,7 @@ public class TestParser extends TomcatBaseTest {
 
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         // app dir is relative to server home
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
@@ -218,7 +219,7 @@ public class TestParser extends TomcatBaseTest {
 
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         // app dir is relative to server home
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
@@ -237,7 +238,7 @@ public class TestParser extends TomcatBaseTest {
 
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         // app dir is relative to server home
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
@@ -256,7 +257,7 @@ public class TestParser extends TomcatBaseTest {
 
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         // app dir is relative to server home
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
@@ -275,7 +276,7 @@ public class TestParser extends TomcatBaseTest {
 
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         // app dir is relative to server home
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
@@ -295,7 +296,7 @@ public class TestParser extends TomcatBaseTest {
         Tomcat tomcat = getTomcatInstance();
 
         File appDir =
-            new File("test/webapp-3.0");
+            new File("test/webapp");
         // app dir is relative to server home
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
@@ -310,6 +311,27 @@ public class TestParser extends TomcatBaseTest {
         assertEcho(result, "00 - \\% \\\\% <%");
         assertEcho(result, "01 - <b><%</b>");
         assertEcho(result, "02 - <p>Foo</p><%");
+    }
+
+    @Test
+    public void testBug55198() throws Exception {
+        Tomcat tomcat = getTomcatInstance();
+
+        File appDir = new File("test/webapp");
+        // app dir is relative to server home
+        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+
+        tomcat.start();
+
+        ByteChunk res = getUrl("http://localhost:" + getPort() +
+                "/test/bug5nnnn/bug55198.jsp");
+
+        String result = res.toString();
+
+        Assert.assertTrue(result.contains("&quot;bar&quot;") ||
+                result.contains("&#034;bar&#034;"));
+        Assert.assertTrue(result.contains("&quot;foo&quot;") ||
+                result.contains("&#034;foo&#034;"));
     }
 
     /** Assertion for text printed by tags:echo */

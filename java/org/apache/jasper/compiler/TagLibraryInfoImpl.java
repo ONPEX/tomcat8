@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -53,7 +53,7 @@ import org.apache.juli.logging.LogFactory;
 
 /**
  * Implementation of the TagLibraryInfo class from the JSP spec.
- * 
+ *
  * @author Anil K. Vijendran
  * @author Mandar Raje
  * @author Pierre Delisle
@@ -65,13 +65,13 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
     // Logger
     private final Log log = LogFactory.getLog(TagLibraryInfoImpl.class);
 
-    private JspCompilationContext ctxt;
-    
-    private PageInfo pi;
+    private final JspCompilationContext ctxt;
 
-    private ErrorDispatcher err;
+    private final PageInfo pi;
 
-    private ParserController parserController;
+    private final ErrorDispatcher err;
+
+    private final ParserController parserController;
 
     private final void print(String name, String value, PrintWriter w) {
         if (value != null) {
@@ -200,7 +200,7 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
         Collection<TagLibraryInfo> coll = pi.getTaglibs();
         return coll.toArray(new TagLibraryInfo[0]);
     }
-    
+
     /*
      * @param ctxt The JSP compilation context @param uri The TLD's uri @param
      * in The TLD's input stream @param jarFileUrl The JAR file containing the
@@ -208,9 +208,9 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
      */
     private void parseTLD(String uri, InputStream in, JarResource jarResource)
             throws JasperException {
-        Vector<TagInfo> tagVector = new Vector<TagInfo>();
-        Vector<TagFileInfo> tagFileVector = new Vector<TagFileInfo>();
-        Hashtable<String, FunctionInfo> functionTable = new Hashtable<String, FunctionInfo>();
+        Vector<TagInfo> tagVector = new Vector<>();
+        Vector<TagFileInfo> tagFileVector = new Vector<>();
+        Hashtable<String, FunctionInfo> functionTable = new Hashtable<>();
 
         // Create an iterator over the child elements of our <taglib> element
         ParserUtils pu = new ParserUtils();
@@ -297,12 +297,13 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
 
     /*
      * @param uri The uri of the TLD @param ctxt The compilation context
-     * 
+     *
      * @return String array whose first element denotes the path to the TLD. If
      * the path to the TLD points to a jar file, then the second element denotes
      * the name of the TLD entry in the jar file, which is hardcoded to
      * META-INF/taglib.tld.
      */
+    @SuppressWarnings("null") // url can't be null
     private TldLocation generateTLDLocation(String uri, JspCompilationContext ctxt)
             throws JasperException {
 
@@ -351,8 +352,8 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
         String largeIcon = null;
         boolean dynamicAttributes = false;
 
-        Vector<TagAttributeInfo> attributeVector = new Vector<TagAttributeInfo>();
-        Vector<TagVariableInfo> variableVector = new Vector<TagVariableInfo>();
+        Vector<TagAttributeInfo> attributeVector = new Vector<>();
+        Vector<TagVariableInfo> variableVector = new Vector<>();
         Iterator<TreeNode> list = elem.findChildren();
         while (list.hasNext()) {
             TreeNode element = list.next();
@@ -432,11 +433,11 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
     /*
      * Parses the tag file directives of the given TagFile and turns them into a
      * TagInfo.
-     * 
+     *
      * @param elem The <tag-file> element in the TLD @param uri The location of
      * the TLD, in case the tag file is specified relative to it @param jarFile
      * The JAR file, in case the tag file is packaged in a JAR
-     * 
+     *
      * @return TagInfo corresponding to tag file directives
      */
     private TagFileInfo createTagFileInfo(TreeNode elem, JarResource jarResource)
@@ -457,8 +458,8 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
                 // Ignore <example> element: Bugzilla 33538
             } else if ("tag-extension".equals(tname)) {
                 // Ignore <tag-extension> element: Bugzilla 33538
-            } else if ("icon".equals(tname) 
-                    || "display-name".equals(tname) 
+            } else if ("icon".equals(tname)
+                    || "display-name".equals(tname)
                     || "description".equals(tname)) {
                 // Ignore these elements: Bugzilla 38015
             } else {
@@ -469,7 +470,10 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
             }
         }
 
-        if (path.startsWith("/META-INF/tags")) {
+        if (path == null) {
+            // path is required
+            err.jspError("jsp.error.tagfile.missingPath");
+        } else if (path.startsWith("/META-INF/tags")) {
             // Tag file packaged in JAR
             // See https://issues.apache.org/bugzilla/show_bug.cgi?id=46471
             // This needs to be removed once all the broken code that depends on
@@ -576,7 +580,7 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
             // translation time) the type is fixed at java.lang.String.
             type = "java.lang.String";
         }
-        
+
         return new TagAttributeInfo(name, required, type, rtexprvalue,
                 isFragment, null, deferredValue, deferredMethod, expectedType,
                 methodSignature);
@@ -631,7 +635,7 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
             throws JasperException {
 
         String validatorClass = null;
-        Map<String,Object> initParams = new Hashtable<String,Object>();
+        Map<String,Object> initParams = new Hashtable<>();
 
         Iterator<TreeNode> list = elem.findChildren();
         while (list.hasNext()) {
@@ -728,7 +732,7 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
 
     /**
      * The instance (if any) for the TagLibraryValidator class.
-     * 
+     *
      * @return The TagLibraryValidator instance, if any.
      */
     public TagLibraryValidator getTagLibraryValidator() {
@@ -739,7 +743,7 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
      * Translation-time validation of the XML document associated with the JSP
      * page. This is a convenience method on the associated TagLibraryValidator
      * class.
-     * 
+     *
      * @param thePage
      *            The JSP page object
      * @return A string indicating whether the page is valid or not.
@@ -757,5 +761,5 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
         return tlv.validate(getPrefixString(), uri, thePage);
     }
 
-    protected TagLibraryValidator tagLibraryValidator;
+    private TagLibraryValidator tagLibraryValidator;
 }

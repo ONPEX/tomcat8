@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,30 +21,25 @@ import org.apache.catalina.ha.ClusterMessageBase;
 
 /**
  * Session cluster message
- * 
+ *
  * @author Filip Hanik
  * @author Peter Rossbach
- * 
- * @version $Id: SessionMessageImpl.java 1195393 2011-10-31 10:22:31Z kfujino $
+ *
+ * @version $Id: SessionMessageImpl.java 1361424 2012-07-13 22:31:38Z markt $
  */
 public class SessionMessageImpl extends ClusterMessageBase implements SessionMessage {
-    
-    private static final long serialVersionUID = 1L;
+
+    private static final long serialVersionUID = 2L;
 
 
-    public SessionMessageImpl() {
-    }
-    
-    
     /*
-
      * Private serializable variables to keep the messages state
      */
-    private int mEvtType = -1;
-    private byte[] mSession;
-    private String mSessionID;
+    private final int mEvtType;
+    private final byte[] mSession;
+    private final String mSessionID;
 
-    private String mContextName;
+    private final String mContextName;
     private long serializationTimestamp;
     private boolean timestampSet = false ;
     private String uniqueId;
@@ -120,7 +115,7 @@ public class SessionMessageImpl extends ClusterMessageBase implements SessionMes
      */
     @Override
     public String getSessionID(){ return mSessionID; }
-    
+
     /**
      * set message send time but only the first setting works (one shot)
      */
@@ -133,12 +128,12 @@ public class SessionMessageImpl extends ClusterMessageBase implements SessionMes
             }
         }
     }
-    
+
     @Override
     public long getTimestamp() { return serializationTimestamp;}
-    
+
     /**
-     * clear text event type name (for logging purpose only) 
+     * clear text event type name (for logging purpose only)
      * @return the event type in a string representation, useful for debugging
      */
     @Override
@@ -163,15 +158,12 @@ public class SessionMessageImpl extends ClusterMessageBase implements SessionMes
     public String getContextName() {
        return mContextName;
     }
+
     @Override
     public String getUniqueId() {
         return uniqueId;
     }
-    @Override
-    public void setUniqueId(String uniqueId) {
-        this.uniqueId = uniqueId;
-    }
-    
+
     @Override
     public String toString() {
         return getEventTypeString() + "#" + getContextName() + "#" + getSessionID() ;

@@ -14,8 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.tomcat.util.net;
 
 import java.io.IOException;
@@ -37,7 +35,7 @@ import org.apache.tomcat.util.net.SecureNioChannel.ApplicationBufferHandler;
  * @author Filip Hanik
  * @version 1.0
  */
-public class NioChannel implements ByteChannel{
+public class NioChannel implements ByteChannel {
 
     protected static ByteBuffer emptyBuf = ByteBuffer.allocate(0);
 
@@ -49,11 +47,16 @@ public class NioChannel implements ByteChannel{
 
     protected boolean sendFile = false;
 
-    public NioChannel(SocketChannel channel, ApplicationBufferHandler bufHandler) throws IOException {
+    public NioChannel(SocketChannel channel, ApplicationBufferHandler bufHandler) {
         this.sc = channel;
         this.bufHandler = bufHandler;
     }
 
+    /**
+     * Reset the channel
+     *
+     * @throws IOException If a problem was encountered resetting the channel
+     */
     public void reset() throws IOException {
         bufHandler.getReadBuffer().clear();
         bufHandler.getWriteBuffer().clear();
@@ -186,6 +189,15 @@ public class NioChannel implements ByteChannel{
         return true;
     }
 
+    /**
+     * Performs SSL handshake hence is a no-op for the non-secure
+     * implementation.
+     *
+     * @param read  Unused in non-secure implementation
+     * @param write Unused in non-secure implementation
+     * @return Always returns zero
+     * @throws IOException
+     */
     public int handshake(boolean read, boolean write) throws IOException {
         return 0;
     }

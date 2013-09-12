@@ -16,6 +16,7 @@
  */
 package org.apache.tomcat.util.codec.binary;
 
+import org.apache.tomcat.util.buf.HexUtils;
 import org.apache.tomcat.util.codec.BinaryDecoder;
 import org.apache.tomcat.util.codec.BinaryEncoder;
 import org.apache.tomcat.util.codec.DecoderException;
@@ -28,7 +29,7 @@ import org.apache.tomcat.util.codec.EncoderException;
  * This class is thread-safe.
  * </p>
  *
- * @version $Id: BaseNCodec.java 1459390 2013-03-21 16:38:39Z markt $
+ * @version $Id: BaseNCodec.java 1493615 2013-06-16 23:32:31Z markt $
  */
 public abstract class BaseNCodec implements BinaryEncoder, BinaryDecoder {
 
@@ -97,8 +98,10 @@ public abstract class BaseNCodec implements BinaryEncoder, BinaryDecoder {
         @SuppressWarnings("boxing") // OK to ignore boxing here
         @Override
         public String toString() {
-            return String.format("%s[buffer=%s, currentLinePos=%s, eof=%s, ibitWorkArea=%s, lbitWorkArea=%s, " +
-                    "modulus=%s, pos=%s, readPos=%s]", this.getClass().getSimpleName(), buffer, currentLinePos, eof,
+            return String.format("%s[buffer=%s, currentLinePos=%s, eof=%s, " +
+                    "ibitWorkArea=%s, lbitWorkArea=%s, modulus=%s, pos=%s, " +
+                    "readPos=%s]", this.getClass().getSimpleName(),
+                    HexUtils.toHexString(buffer), currentLinePos, eof,
                     ibitWorkArea, lbitWorkArea, modulus, pos, readPos);
         }
     }

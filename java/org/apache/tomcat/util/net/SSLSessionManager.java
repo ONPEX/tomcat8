@@ -21,7 +21,7 @@ package org.apache.tomcat.util.net;
  * Defines an interface used to manage SSL sessions. The manager operates on a
  * single session.
  *
- * $Id: SSLSessionManager.java 1200170 2011-11-10 05:54:22Z kkolinko $
+ * $Id: SSLSessionManager.java 1187781 2011-10-22 21:02:40Z markt $
  */
 public interface SSLSessionManager {
     /**

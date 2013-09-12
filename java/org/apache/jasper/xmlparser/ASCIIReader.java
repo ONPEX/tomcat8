@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,7 +29,7 @@ import org.apache.jasper.compiler.Localizer;
  *
  * @author Andy Clark, IBM
  *
- * @version $Id: ASCIIReader.java 1081765 2011-03-15 13:10:33Z markt $
+ * @version $Id: ASCIIReader.java 1446966 2013-02-16 22:26:32Z markt $
  */
 public class ASCIIReader extends Reader {
 
@@ -38,17 +38,17 @@ public class ASCIIReader extends Reader {
     //
 
     /** Input stream. */
-    protected InputStream fInputStream;
+    private final InputStream fInputStream;
 
     /** Byte buffer. */
-    protected byte[] fBuffer;
+    private final byte[] fBuffer;
 
     //
     // Constructors
     //
 
-    /** 
-     * Constructs an ASCII reader from the specified input stream 
+    /**
+     * Constructs an ASCII reader from the specified input stream
      * and buffer size.
      *
      * @param inputStream The input stream.

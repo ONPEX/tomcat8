@@ -21,6 +21,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -37,12 +38,12 @@ public class TestCompiler extends TomcatBaseTest {
     public void testBug49726a() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
         tomcat.start();
 
         ByteChunk res = new ByteChunk();
-        Map<String,List<String>> headers = new HashMap<String,List<String>>();
+        Map<String,List<String>> headers = new HashMap<>();
 
         getUrl("http://localhost:" + getPort() + "/test/bug49nnn/bug49726a.jsp",
                 res, headers);
@@ -59,12 +60,12 @@ public class TestCompiler extends TomcatBaseTest {
     public void testBug49726b() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
         tomcat.start();
 
         ByteChunk res = new ByteChunk();
-        Map<String,List<String>> headers = new HashMap<String,List<String>>();
+        Map<String,List<String>> headers = new HashMap<>();
 
         getUrl("http://localhost:" + getPort() + "/test/bug49nnn/bug49726b.jsp",
                 res, headers);
@@ -81,7 +82,7 @@ public class TestCompiler extends TomcatBaseTest {
     public void testBug53257a() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
         tomcat.start();
 
@@ -98,7 +99,7 @@ public class TestCompiler extends TomcatBaseTest {
     public void testBug53257b() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
         tomcat.start();
 
@@ -114,7 +115,7 @@ public class TestCompiler extends TomcatBaseTest {
     public void testBug53257c() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
         tomcat.start();
 
@@ -131,7 +132,7 @@ public class TestCompiler extends TomcatBaseTest {
     public void testBug53257d() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
         tomcat.start();
 
@@ -148,7 +149,7 @@ public class TestCompiler extends TomcatBaseTest {
     public void testBug53257e() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
         tomcat.start();
 
@@ -164,7 +165,7 @@ public class TestCompiler extends TomcatBaseTest {
     public void testBug53257f() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
         tomcat.start();
 
@@ -180,7 +181,7 @@ public class TestCompiler extends TomcatBaseTest {
     public void testBug53257g() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
         tomcat.start();
 
@@ -196,7 +197,7 @@ public class TestCompiler extends TomcatBaseTest {
     public void testBug53257z() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
         tomcat.start();
 
@@ -211,13 +212,34 @@ public class TestCompiler extends TomcatBaseTest {
     public void testBug51584() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0-fragments");
+        File appDir = new File("test/webapp-fragments");
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
         tomcat.start();
 
         // No further tests required. The bug triggers an infinite loop on
         // context start so the test will crash before it reaches this point if
         // it fails
+    }
+
+    @Test
+    public void testBug55262() throws Exception {
+        Tomcat tomcat = getTomcatInstance();
+
+        File appDir = new File("test/webapp");
+        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+        tomcat.start();
+
+        ByteChunk res = getUrl("http://localhost:" + getPort() +
+                "/test/bug5nnnn/bug55262.jsp");
+        String result = res.toString();
+        Pattern prelude = Pattern.compile(
+                "(.*This is a prelude\\.){2}.*",
+                Pattern.MULTILINE | Pattern.DOTALL);
+        Pattern coda = Pattern.compile(
+                "(.*This is a coda\\.){2}.*",
+                Pattern.MULTILINE|Pattern.DOTALL);
+        assertTrue(prelude.matcher(result).matches());
+        assertTrue(coda.matcher(result).matches());
     }
 
     /** Assertion for text printed by tags:echo */

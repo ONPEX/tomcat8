@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,9 +31,9 @@ import org.apache.el.lang.ELSupport;
 
 /**
  * Utilities for Managing Serialization and Reflection
- * 
+ *
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: ReflectionUtil.java 1428408 2013-01-03 15:39:41Z markt $
+ * @version $Id: ReflectionUtil.java 1428403 2013-01-03 15:38:00Z markt $
  */
 public class ReflectionUtil {
 
@@ -125,7 +125,7 @@ public class ReflectionUtil {
 
         String methodName = (property instanceof String) ? (String) property
                 : property.toString();
-        
+
         int paramCount;
         if (paramTypes == null) {
             paramCount = 0;
@@ -134,14 +134,14 @@ public class ReflectionUtil {
         }
 
         Method[] methods = base.getClass().getMethods();
-        Map<Method,Integer> candidates = new HashMap<Method,Integer>();
-        
+        Map<Method,Integer> candidates = new HashMap<>();
+
         for (Method m : methods) {
             if (!m.getName().equals(methodName)) {
                 // Method name doesn't match
                 continue;
             }
-            
+
             Class<?>[] mParamTypes = m.getParameterTypes();
             int mParamCount;
             if (mParamTypes == null) {
@@ -149,14 +149,14 @@ public class ReflectionUtil {
             } else {
                 mParamCount = mParamTypes.length;
             }
-            
+
             // Check the number of parameters
             if (!(paramCount == mParamCount ||
                     (m.isVarArgs() && paramCount >= mParamCount))) {
                 // Method has wrong number of parameters
                 continue;
             }
-            
+
             // Check the parameters match
             int exactMatch = 0;
             boolean noMatch = false;
@@ -197,13 +197,13 @@ public class ReflectionUtil {
             if (noMatch) {
                 continue;
             }
-            
+
             // If a method is found where every parameter matches exactly,
             // return it
             if (exactMatch == paramCount) {
                 return m;
             }
-            
+
             candidates.put(m, Integer.valueOf(exactMatch));
         }
 
@@ -230,7 +230,7 @@ public class ReflectionUtil {
             } else {
                 match = null;
             }
-            
+
             if (match == null) {
                 // If multiple methods have the same matching number of parameters
                 // the match is ambiguous so throw an exception
@@ -239,14 +239,14 @@ public class ReflectionUtil {
                         paramString(paramTypes)));
                 }
         }
-        
+
         // Handle case where no match at all was found
         if (match == null) {
             throw new MethodNotFoundException(MessageFactory.get(
                         "error.method.notfound", base, property,
                         paramString(paramTypes)));
         }
-        
+
         return match;
     }
 
@@ -254,10 +254,10 @@ public class ReflectionUtil {
             Class<?>[] paramTypes) {
         // Identify which parameter isn't an exact match
         Method m = candidates.iterator().next();
-        
+
         int nonMatchIndex = 0;
         Class<?> nonMatchClass = null;
-        
+
         for (int i = 0; i < paramTypes.length; i++) {
             if (m.getParameterTypes()[i] != paramTypes[i]) {
                 nonMatchIndex = i;
@@ -265,7 +265,7 @@ public class ReflectionUtil {
                 break;
             }
         }
-        
+
         if (nonMatchClass == null) {
             // Null will always be ambiguous
             return null;
@@ -279,7 +279,7 @@ public class ReflectionUtil {
                return null;
            }
         }
-        
+
         // Can't be null
         nonMatchClass = nonMatchClass.getSuperclass();
         while (nonMatchClass != null) {
@@ -292,7 +292,7 @@ public class ReflectionUtil {
             }
             nonMatchClass = nonMatchClass.getSuperclass();
         }
-        
+
         return null;
     }
 

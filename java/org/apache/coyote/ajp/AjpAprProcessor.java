@@ -84,13 +84,13 @@ public class AjpAprProcessor extends AbstractAjpProcessor<Long> {
     /**
      * Direct buffer used for input.
      */
-    protected ByteBuffer inputBuffer = null;
+    protected final ByteBuffer inputBuffer;
 
 
     /**
      * Direct buffer used for output.
      */
-    protected ByteBuffer outputBuffer = null;
+    protected final ByteBuffer outputBuffer;
 
 
     // --------------------------------------------------------- Public Methods
@@ -163,7 +163,7 @@ public class AjpAprProcessor extends AbstractAjpProcessor<Long> {
                 log.debug(sm.getString("ajpprocessor.header.error"), t);
                 // 400 - Bad Request
                 response.setStatus(400);
-                adapter.log(request, response, 0);
+                getAdapter().log(request, response, 0);
                 error = true;
             }
 
@@ -177,7 +177,7 @@ public class AjpAprProcessor extends AbstractAjpProcessor<Long> {
                     log.debug(sm.getString("ajpprocessor.request.prepare"), t);
                     // 400 - Internal Server Error
                     response.setStatus(400);
-                    adapter.log(request, response, 0);
+                    getAdapter().log(request, response, 0);
                     error = true;
                 }
             }
@@ -185,7 +185,7 @@ public class AjpAprProcessor extends AbstractAjpProcessor<Long> {
             if (!error && !cping && endpoint.isPaused()) {
                 // 503 - Service unavailable
                 response.setStatus(503);
-                adapter.log(request, response, 0);
+                getAdapter().log(request, response, 0);
                 error = true;
             }
             cping = false;
@@ -194,7 +194,7 @@ public class AjpAprProcessor extends AbstractAjpProcessor<Long> {
             if (!error) {
                 try {
                     rp.setStage(org.apache.coyote.Constants.STAGE_SERVICE);
-                    adapter.service(request, response);
+                    getAdapter().service(request, response);
                 } catch (InterruptedIOException e) {
                     error = true;
                 } catch (Throwable t) {
@@ -202,7 +202,7 @@ public class AjpAprProcessor extends AbstractAjpProcessor<Long> {
                     log.error(sm.getString("ajpprocessor.request.process"), t);
                     // 500 - Internal Server Error
                     response.setStatus(500);
-                    adapter.log(request, response, 0);
+                    getAdapter().log(request, response, 0);
                     error = true;
                 }
             }
@@ -261,7 +261,7 @@ public class AjpAprProcessor extends AbstractAjpProcessor<Long> {
         if (actionCode == ActionCode.ASYNC_COMPLETE) {
             if (asyncStateMachine.asyncComplete()) {
                 ((AprEndpoint)endpoint).processSocketAsync(this.socket,
-                        SocketStatus.OPEN);
+                        SocketStatus.OPEN_READ);
             }
         } else if (actionCode == ActionCode.ASYNC_SETTIMEOUT) {
             if (param == null) return;
@@ -270,7 +270,7 @@ public class AjpAprProcessor extends AbstractAjpProcessor<Long> {
         } else if (actionCode == ActionCode.ASYNC_DISPATCH) {
             if (asyncStateMachine.asyncDispatch()) {
                 ((AprEndpoint)endpoint).processSocketAsync(this.socket,
-                        SocketStatus.OPEN);
+                        SocketStatus.OPEN_READ);
             }
         }
     }
@@ -283,9 +283,9 @@ public class AjpAprProcessor extends AbstractAjpProcessor<Long> {
     protected void output(byte[] src, int offset, int length)
             throws IOException {
         outputBuffer.put(src, offset, length);
-        
+
         long socketRef = socket.getSocket().longValue();
-        
+
         if (outputBuffer.position() > 0) {
             if ((socketRef != 0) && Socket.sendbb(socketRef, 0, outputBuffer.position()) < 0) {
                 // There are no re-tries so clear the buffer to prevent a

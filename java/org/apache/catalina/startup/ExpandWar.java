@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,7 +32,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.ZipException;
 
-import org.apache.catalina.Globals;
 import org.apache.catalina.Host;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
@@ -45,7 +44,7 @@ import org.apache.tomcat.util.res.StringManager;
  * @author Craig R. McClanahan
  * @author Remy Maucherat
  * @author Glenn L. Nielsen
- * @version $Revision: 1359986 $
+ * @version $Revision: 1402667 $
  */
 
 public class ExpandWar {
@@ -78,18 +77,7 @@ public class ExpandWar {
         throws IOException {
 
         // Make sure that there is no such directory already existing
-        File appBase = new File(host.getAppBase());
-        if (!appBase.isAbsolute()) {
-            appBase = new File(System.getProperty(Globals.CATALINA_BASE_PROP),
-                               host.getAppBase());
-        }
-        if (!appBase.exists() || !appBase.isDirectory()) {
-            throw new IOException
-                (sm.getString("hostConfig.appBase",
-                              appBase.getAbsolutePath()));
-        }
-        
-        File docBase = new File(appBase, pathname);
+        File docBase = new File(host.getAppBaseFile(), pathname);
         if (docBase.exists()) {
             // War file is already installed
             return (docBase.getAbsolutePath());
@@ -157,23 +145,23 @@ public class ExpandWar {
             throw e;
         } finally {
             if (!success) {
-                // If something went wrong, delete expanded dir to keep things 
+                // If something went wrong, delete expanded dir to keep things
                 // clean
                 deleteDir(docBase);
             }
             if (input != null) {
                 try {
                     input.close();
-                } catch (Throwable t) {
-                    ExceptionUtils.handleThrowable(t);
+                } catch (IOException ioe) {
+                    // Ignore
                 }
                 input = null;
             }
             if (jarFile != null) {
                 try {
                     jarFile.close();
-                } catch (Throwable t) {
-                    ExceptionUtils.handleThrowable(t);
+                } catch (IOException ioe) {
+                    // Ignore
                 }
                 jarFile = null;
             }
@@ -201,14 +189,7 @@ public class ExpandWar {
     public static void validate(Host host, URL war, String pathname)
         throws IOException {
 
-        // Make the appBase absolute
-        File appBase = new File(host.getAppBase());
-        if (!appBase.isAbsolute()) {
-            appBase = new File(System.getProperty(Globals.CATALINA_BASE_PROP),
-                               host.getAppBase());
-        }
-        
-        File docBase = new File(appBase, pathname);
+        File docBase = new File(host.getAppBaseFile(), pathname);
 
         // Calculate the document base directory
         String canonicalDocBasePrefix = docBase.getCanonicalPath();
@@ -257,9 +238,9 @@ public class ExpandWar {
      * @param dest File object representing the destination
      */
     public static boolean copy(File src, File dest) {
-        
+
         boolean result = true;
-        
+
         String files[] = null;
         if (src.isDirectory()) {
             files = src.list();
@@ -304,10 +285,10 @@ public class ExpandWar {
             }
         }
         return result;
-        
+
     }
-    
-    
+
+
     /**
      * Delete the specified directory, including all of its contents and
      * sub-directories recursively. Any failure will be logged.
@@ -344,8 +325,8 @@ public class ExpandWar {
         }
         return result;
     }
-    
-    
+
+
     /**
      * Delete the specified directory, including all of its contents and
      * sub-directories recursively. Any failure will be logged.
@@ -385,12 +366,12 @@ public class ExpandWar {
         } else {
             result = true;
         }
-        
+
         if (logFailure && !result) {
             log.error(sm.getString(
                     "expandWar.deleteFailed", dir.getAbsolutePath()));
         }
-        
+
         return result;
 
     }
@@ -408,7 +389,7 @@ public class ExpandWar {
         throws IOException {
         BufferedOutputStream output = null;
         try {
-            output = 
+            output =
                 new BufferedOutputStream(new FileOutputStream(file));
             byte buffer[] = new byte[2048];
             while (true) {

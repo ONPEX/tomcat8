@@ -18,6 +18,7 @@ package org.apache.catalina.valves;
 
 
 import java.io.BufferedWriter;
+import java.io.CharArrayWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -26,6 +27,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -52,6 +54,7 @@ import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.buf.B2CConverter;
+import org.apache.tomcat.util.collections.SynchronizedStack;
 
 
 /**
@@ -156,7 +159,7 @@ import org.apache.tomcat.util.buf.B2CConverter;
  * @author Takayuki Kaneko
  * @author Peter Rossbach
  *
- * @version $Id: AccessLogValve.java 1495888 2013-06-23 20:25:46Z markt $
+ * @version $Id: AccessLogValve.java 1508214 2013-07-29 22:17:59Z markt $
  */
 
 public class AccessLogValve extends ValveBase implements AccessLog {
@@ -185,13 +188,6 @@ public class AccessLogValve extends ValveBase implements AccessLog {
 
 
     /**
-     * The descriptive information about this implementation.
-     */
-    protected static final String info =
-        "org.apache.catalina.valves.AccessLogValve/2.2";
-
-
-    /**
      * enabled this component
      */
     protected boolean enabled = true;
@@ -205,7 +201,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
     /**
      * The prefix that is added to log file filenames.
      */
-    protected String prefix = "access_log.";
+    protected String prefix = "access_log";
 
 
     /**
@@ -418,7 +414,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         private final Locale cacheDefaultLocale;
         private final DateFormatCache parent;
         protected final Cache cLFCache;
-        private final HashMap<String, Cache> formatCache = new HashMap<String, Cache>();
+        private final HashMap<String, Cache> formatCache = new HashMap<>();
 
         protected DateFormatCache(int size, Locale loc, DateFormatCache parent) {
             cacheSize = size;
@@ -484,7 +480,8 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      * The system time when we last updated the Date that this valve
      * uses for log lines.
      */
-    private static final ThreadLocal<Date> localDate = new ThreadLocal<Date>() {
+    private static final ThreadLocal<Date> localDate =
+            new ThreadLocal<Date>() {
         @Override
         protected Date initialValue() {
             return new Date();
@@ -497,12 +494,6 @@ public class AccessLogValve extends ValveBase implements AccessLog {
     private static enum FormatType {
         CLF, SEC, MSEC, MSEC_FRAC, SDF
     }
-
-    /**
-     * Resolve hosts.
-     */
-    private boolean resolveHosts = false;
-
 
     /**
      * Instant when the log daily rotation was last checked.
@@ -531,7 +522,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
     /**
      * Date format to place in log file name.
      */
-    protected String fileDateFormat = "yyyy-MM-dd";
+    protected String fileDateFormat = ".yyyy-MM-dd";
 
 
     /**
@@ -564,13 +555,29 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      */
     protected boolean requestAttributesEnabled = false;
 
-    // ------------------------------------------------------------- Properties
+    /**
+     * Buffer pool used for log message generation. Pool used to reduce garbage
+     * generation.
+     */
+    private SynchronizedStack<CharArrayWriter> charArrayWriters =
+            new SynchronizedStack<>();
 
     /**
-     * @return Returns the enabled.
+     * Log message buffers are usually recycled and re-used. To prevent
+     * excessive memory usage, if a buffer grows beyond this size it will be
+     * discarded. The default is 256 characters. This should be set to larger
+     * than the typical access log message size.
      */
-    public boolean getEnabled() {
-        return enabled;
+    private int maxLogMessageBufferSize = 256;
+
+    // ------------------------------------------------------------- Properties
+
+    public int getMaxLogMessageBufferSize() {
+        return maxLogMessageBufferSize;
+    }
+
+    public void setMaxLogMessageBufferSize(int maxLogMessageBufferSize) {
+        this.maxLogMessageBufferSize = maxLogMessageBufferSize;
     }
 
     /**
@@ -587,6 +594,13 @@ public class AccessLogValve extends ValveBase implements AccessLog {
     @Override
     public boolean getRequestAttributesEnabled() {
         return requestAttributesEnabled;
+    }
+
+    /**
+     * @return Returns the enabled.
+     */
+    public boolean getEnabled() {
+        return enabled;
     }
 
     /**
@@ -612,15 +626,6 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      */
     public void setDirectory(String directory) {
         this.directory = directory;
-    }
-
-
-    /**
-     * Return descriptive information about this implementation.
-     */
-    @Override
-    public String getInfo() {
-        return (info);
     }
 
 
@@ -762,30 +767,6 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      */
     public void setSuffix(String suffix) {
         this.suffix = suffix;
-    }
-
-
-    /**
-     * Set the resolve hosts flag.
-     *
-     * @param resolveHosts The new resolve hosts value
-     * @deprecated Unused, removed in Tomcat 8.
-     * See org.apache.catalina.connector.Connector.setEnableLookups(boolean).
-     */
-    @Deprecated
-    public void setResolveHosts(boolean resolveHosts) {
-        this.resolveHosts = resolveHosts;
-    }
-
-
-    /**
-     * Get the value of the resolve hosts flag.
-     * @deprecated Unused, removed in Tomcat 8.
-     * See org.apache.catalina.connector.Connector.setEnableLookups(boolean).
-     */
-    @Deprecated
-    public boolean isResolveHosts() {
-        return resolveHosts;
     }
 
 
@@ -973,13 +954,21 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         long start = request.getCoyoteRequest().getStartTime();
         Date date = getDate(start + time);
 
-        StringBuilder result = new StringBuilder(128);
+        CharArrayWriter result = charArrayWriters.pop();
+        if (result == null) {
+            result = new CharArrayWriter(128);
+        }
 
         for (int i = 0; i < logElements.length; i++) {
             logElements[i].addElement(result, date, request, response, time);
         }
 
-        log(result.toString());
+        log(result);
+
+        if (result.size() <= maxLogMessageBufferSize) {
+            result.reset();
+            charArrayWriters.push(result);
+        }
     }
 
 
@@ -1060,7 +1049,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         // Create the directory if necessary
         File dir = new File(directory);
         if (!dir.isAbsolute()) {
-            dir = new File(System.getProperty(Globals.CATALINA_BASE_PROP), directory);
+            dir = new File(getContainer().getCatalinaBase(), directory);
         }
         if (!dir.mkdirs() && !dir.isDirectory()) {
             log.error(sm.getString("accessLogValve.openDirFail", dir));
@@ -1141,7 +1130,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      *
      * @param message Message to be logged
      */
-    public void log(String message) {
+    public void log(CharArrayWriter message) {
 
         rotate();
 
@@ -1166,15 +1155,20 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         }
 
         // Log this message
-        synchronized(this) {
-            if (writer != null) {
-                writer.println(message);
-                if (!buffered) {
-                    writer.flush();
+        try {
+            synchronized(this) {
+                if (writer != null) {
+                    message.writeTo(writer);
+                    writer.println("");
+                    if (!buffered) {
+                        writer.flush();
+                    }
                 }
             }
+        } catch (IOException ioe) {
+            log.warn(sm.getString(
+                    "accessLogValve.writeFail", message.toString()), ioe);
         }
-
     }
 
 
@@ -1196,7 +1190,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
             }
         }
         if (charset == null) {
-            charset = Charset.defaultCharset();
+            charset = StandardCharsets.ISO_8859_1;
         }
 
         try {
@@ -1213,8 +1207,11 @@ public class AccessLogValve extends ValveBase implements AccessLog {
     }
 
     /**
-     * This method returns a ThreadLocal Date object that is set to the
-     * specified time. This saves creating a new Date object for every request.
+     * This method returns a Date object that is accurate to within one second.
+     * If a thread calls this method to get a Date and it's been less than 1
+     * second since a new Date was created, this method simply gives out the
+     * same Date again so that the system doesn't spend time creating Date
+     * objects unnecessarily.
      *
      * @return Date
      */
@@ -1285,7 +1282,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      * AccessLogElement writes the partial message into the buffer.
      */
     protected interface AccessLogElement {
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time);
 
     }
@@ -1295,7 +1292,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      */
     protected static class ThreadNameElement implements AccessLogElement {
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             RequestInfo info = request.getCoyoteRequest().getRequestProcessor();
             if(info != null) {
@@ -1325,7 +1322,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         }
 
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             buf.append(LOCAL_ADDR_VALUE);
         }
@@ -1336,14 +1333,14 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      */
     protected class RemoteAddrElement implements AccessLogElement {
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             if (requestAttributesEnabled) {
                 Object addr = request.getAttribute(REMOTE_ADDR_ATTRIBUTE);
                 if (addr == null) {
                     buf.append(request.getRemoteAddr());
                 } else {
-                    buf.append(addr);
+                    buf.append(addr.toString());
                 }
             } else {
                 buf.append(request.getRemoteAddr());
@@ -1356,7 +1353,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      */
     protected class HostElement implements AccessLogElement {
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             String value = null;
             if (requestAttributesEnabled) {
@@ -1380,7 +1377,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      */
     protected static class LogicalUserNameElement implements AccessLogElement {
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             buf.append('-');
         }
@@ -1391,14 +1388,14 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      */
     protected class ProtocolElement implements AccessLogElement {
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             if (requestAttributesEnabled) {
                 Object proto = request.getAttribute(PROTOCOL_ATTRIBUTE);
                 if (proto == null) {
                     buf.append(request.getProtocol());
                 } else {
-                    buf.append(proto);
+                    buf.append(proto.toString());
                 }
             } else {
                 buf.append(request.getProtocol());
@@ -1411,7 +1408,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      */
     protected static class UserElement implements AccessLogElement {
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             if (request != null) {
                 String value = request.getRemoteUser();
@@ -1470,11 +1467,11 @@ public class AccessLogValve extends ValveBase implements AccessLog {
             msecPattern + msecPattern + msecPattern;
 
         /* Our format description string, null if CLF */
-        private String format = null;
+        private final String format;
         /* Whether to use begin of request or end of response as the timestamp */
-        private boolean usesBegin = false;
+        private final boolean usesBegin;
         /* The format type */
-        private FormatType type = FormatType.CLF;
+        private final FormatType type;
         /* Whether we need to postprocess by adding milliseconds */
         private boolean usesMsecs = false;
 
@@ -1510,7 +1507,10 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         }
 
         protected DateAndTimeElement(String header) {
-            format = header;
+            String format = header;
+            boolean usesBegin = false;
+            FormatType type = FormatType.CLF;
+
             if (format != null) {
                 if (format.equals(requestStartPrefix)) {
                     usesBegin = true;
@@ -1538,10 +1538,13 @@ public class AccessLogValve extends ValveBase implements AccessLog {
                     format = tidyFormat(format);
                 }
             }
+            this.format = format;
+            this.usesBegin = usesBegin;
+            this.type = type;
         }
 
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             long timestamp = date.getTime();
             long frac;
@@ -1553,10 +1556,10 @@ public class AccessLogValve extends ValveBase implements AccessLog {
                 buf.append(localDateCache.get().getFormat(timestamp));
                 break;
             case SEC:
-                buf.append(timestamp / 1000);
+                buf.append(Long.toString(timestamp / 1000));
                 break;
             case MSEC:
-                buf.append(timestamp);
+                buf.append(Long.toString(timestamp));
                 break;
             case MSEC_FRAC:
                 frac = timestamp % 1000;
@@ -1568,7 +1571,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
                         buf.append('0');
                     }
                 }
-                buf.append(frac);
+                buf.append(Long.toString(frac));
                 break;
             case SDF:
                 String temp = localDateCache.get().getFormat(format, locale, timestamp);
@@ -1598,7 +1601,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      */
     protected static class RequestElement implements AccessLogElement {
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             if (request != null) {
                 String method = request.getMethod();
@@ -1627,10 +1630,18 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      */
     protected static class HttpStatusCodeElement implements AccessLogElement {
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             if (response != null) {
-                buf.append(response.getStatus());
+                // This approach is used to reduce GC from toString conversion
+                int status = response.getStatus();
+                if (100 <= status && status < 1000) {
+                    buf.append((char) ('0' + (status / 100)))
+                            .append((char) ('0' + ((status / 10) % 10)))
+                            .append((char) ('0' + (status % 10)));
+                } else {
+                   buf.append(Integer.toString(status));
+                }
             } else {
                 buf.append('-');
             }
@@ -1642,17 +1653,17 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      */
     protected class LocalPortElement implements AccessLogElement {
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             if (requestAttributesEnabled) {
                 Object port = request.getAttribute(SERVER_PORT_ATTRIBUTE);
                 if (port == null) {
-                    buf.append(request.getServerPort());
+                    buf.append(Integer.toString(request.getServerPort()));
                 } else {
-                    buf.append(port);
+                    buf.append(port.toString());
                 }
             } else {
-                buf.append(request.getServerPort());
+                buf.append(Integer.toString(request.getServerPort()));
             }
         }
     }
@@ -1671,7 +1682,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         }
 
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             // Don't need to flush since trigger for log message is after the
             // response has been committed
@@ -1693,7 +1704,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
             if (length <= 0 && conversion) {
                 buf.append('-');
             } else {
-                buf.append(length);
+                buf.append(Long.toString(length));
             }
         }
     }
@@ -1703,7 +1714,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      */
     protected static class MethodElement implements AccessLogElement {
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             if (request != null) {
                 buf.append(request.getMethod());
@@ -1726,19 +1737,19 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         }
 
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             if (millis) {
-                buf.append(time);
+                buf.append(Long.toString(time));
             } else {
                 // second
-                buf.append(time / 1000);
+                buf.append(Long.toString(time / 1000));
                 buf.append('.');
                 int remains = (int) (time % 1000);
-                buf.append(remains / 100);
+                buf.append(Long.toString(remains / 100));
                 remains = remains % 100;
-                buf.append(remains / 10);
-                buf.append(remains % 10);
+                buf.append(Long.toString(remains / 10));
+                buf.append(Long.toString(remains % 10));
             }
         }
     }
@@ -1748,14 +1759,12 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      */
     protected static class FirstByteTimeElement implements AccessLogElement {
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
-                Response response, long time) {
+        public void addElement(CharArrayWriter buf, Date date, Request request, Response response, long time) {
             long commitTime = response.getCoyoteResponse().getCommitTime();
             if (commitTime == -1) {
                 buf.append('-');
             } else {
-                long delta =
-                        commitTime - request.getCoyoteRequest().getStartTime();
+                long delta = commitTime - request.getCoyoteRequest().getStartTime();
                 buf.append(Long.toString(delta));
             }
         }
@@ -1766,7 +1775,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      */
     protected static class QueryElement implements AccessLogElement {
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             String query = null;
             if (request != null) {
@@ -1784,7 +1793,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      */
     protected static class SessionIdElement implements AccessLogElement {
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             if (request == null) {
                 buf.append('-');
@@ -1804,7 +1813,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      */
     protected static class RequestURIElement implements AccessLogElement {
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             if (request != null) {
                 buf.append(request.getRequestURI());
@@ -1819,7 +1828,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      */
     protected static class LocalServerNameElement implements AccessLogElement {
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             buf.append(request.getServerName());
         }
@@ -1836,7 +1845,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         }
 
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             buf.append(str);
         }
@@ -1853,7 +1862,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         }
 
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             Enumeration<String> iter = request.getHeaders(header);
             if (iter.hasMoreElements()) {
@@ -1878,7 +1887,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         }
 
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             String value = "-";
             Cookie[] c = request.getCookies();
@@ -1905,7 +1914,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         }
 
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             if (null != response) {
                 Iterator<String> iter = response.getHeaders(header).iterator();
@@ -1932,7 +1941,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         }
 
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             Object value = null;
             if (request != null) {
@@ -1963,7 +1972,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
         }
 
         @Override
-        public void addElement(StringBuilder buf, Date date, Request request,
+        public void addElement(CharArrayWriter buf, Date date, Request request,
                 Response response, long time) {
             Object value = null;
             if (null != request) {
@@ -1991,7 +2000,7 @@ public class AccessLogValve extends ValveBase implements AccessLog {
      * parse pattern string and create the array of AccessLogElement
      */
     protected AccessLogElement[] createLogElements() {
-        List<AccessLogElement> list = new ArrayList<AccessLogElement>();
+        List<AccessLogElement> list = new ArrayList<>();
         boolean replace = false;
         StringBuilder buf = new StringBuilder();
         for (int i = 0; i < pattern.length(); i++) {

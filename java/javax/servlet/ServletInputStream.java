@@ -31,7 +31,7 @@ import java.io.InputStream;
  * <p>
  * This is an abstract class that a servlet container implements. Subclasses of
  * this class must implement the <code>java.io.InputStream.read()</code> method.
- * 
+ *
  * @author Various
  * @version $Version$
  * @see ServletRequest
@@ -52,7 +52,7 @@ public abstract class ServletInputStream extends InputStream {
      * <p>
      * This method returns -1 if it reaches the end of the input stream before
      * reading the maximum number of bytes.
-     * 
+     *
      * @param b
      *            an array of bytes into which data is read
      * @param off
@@ -81,4 +81,39 @@ public abstract class ServletInputStream extends InputStream {
         }
         return count > 0 ? count : -1;
     }
+
+    /**
+     * Returns <code>true</code> if all the data has been read from the stream,
+     * else <code>false</code>.
+     *
+     * @since Servlet 3.1
+     */
+    public abstract boolean isFinished();
+
+    /**
+     * Returns <code>true</code> if data can be read without blocking, else
+     * <code>false</code>. If this method is called and returns false, the
+     * container will invoke {@link ReadListener#onDataAvailable()} when data is
+     * available.
+     *
+     * @since Servlet 3.1
+     */
+    public abstract boolean isReady();
+
+    /**
+     * Sets the {@link ReadListener} for this {@link ServletInputStream} and
+     * thereby switches to non-blocking IO. It is only valid to switch to
+     * non-blocking IO within async processing or HTTP upgrade processing.
+     *
+     * @param listener  The non-blocking IO read listener
+     *
+     * @throws IllegalStateException    If this method is called if neither
+     *                                  async nor HTTP upgrade is in progress or
+     *                                  if the {@link ReadListener} has already
+     *                                  been set
+     * @throws NullPointerException     If listener is null
+     *
+     * @since Servlet 3.1
+     */
+    public abstract void setReadListener(ReadListener listener);
 }

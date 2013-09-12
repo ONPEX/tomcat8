@@ -120,6 +120,7 @@
         If this attribute is "on", <b>SSLEngine</b> must be enabled as well.
         The default value is <code>off</code>.</p>
       </attribute>
+
     </attributes>
 
   </subsection>
@@ -176,12 +177,10 @@
       <attribute name="appContextProtection" required="false">
         <p>Enables protection so that calls to
         <code>sun.awt.AppContext.getAppContext()</code> triggered by a web
-        application do not result in a memory leak. Note that a call to this
-        method will be triggered as part of the web application stop process
-        when running on Java 6 and earlier. It is therefore strongly recommended
-        that this protection is enabled when running on Java 6 and earlier. The
-        default is <code>true</code> for Java 6 and earlier versions. The
-        default is <code>false</code> for Java 7 and later versions.</p>
+        application do not result in a memory leak. Note that enabling this
+        protection will trigger a requirement for a graphical environment unless
+        Java is started in head-less mode. The default is <code>false</code>.
+        </p>
       </attribute>
 
       <attribute name="AWTThreadProtection" required="false">
@@ -346,13 +345,13 @@
 
     <p>The <strong>UserConfig</strong> provides feature of User Web Applications.
     User Web Applications map a request URI starting with a tilde character ("~")
-    and a username to a directory (commonly named public_html) in that user's 
+    and a username to a directory (commonly named public_html) in that user's
     home directory on the server.</p>
 
     <p>See the <a href="host.html#User_Web_Applications">User Web Applications</a>
     special feature on the <strong>Host</strong> element for more information.</p>
 
-    <p>The following additional attributes are supported by the 
+    <p>The following additional attributes are supported by the
     <strong>UserConfig</strong>:</p>
 
     <attributes>
@@ -364,22 +363,22 @@
 
       <attribute name="userClass" required="false">
         <p>The class name of the user database class.
-        There are currently two user database, the 
+        There are currently two user database, the
         <code>org.apache.catalina.startup.PasswdUserDatabase</code> is used on a
         Unix system that uses the /etc/passwd file to identify valid users.
-        The <code>org.apache.catalina.startup.HomesUserDatabase</code> is used on 
-        a server where /etc/passwd is not in use. HomesUserDatabase deploy all 
+        The <code>org.apache.catalina.startup.HomesUserDatabase</code> is used on
+        a server where /etc/passwd is not in use. HomesUserDatabase deploy all
         directories found in a specified base directory.</p>
       </attribute>
 
       <attribute name="homeBase" required="false">
-        <p>The base directory containing user home directories.This is effective 
-        only when <code>org.apache.catalina.startup.HomesUserDatabase</code> is 
+        <p>The base directory containing user home directories.This is effective
+        only when <code>org.apache.catalina.startup.HomesUserDatabase</code> is
         used.</p>
       </attribute>
 
       <attribute name="allow" required="false">
-        <p>A regular expression defining user who deployment is allowed. If this 
+        <p>A regular expression defining user who deployment is allowed. If this
         attribute is specified, the user to deploy must match for this pattern.
         If this attribute is not specified, all users will be deployed unless the
         user matches a deny pattern.</p>
@@ -395,7 +394,7 @@
     </attributes>
 
   </subsection>
-  
+
 </section>
 
 <section name="Additional Implementations">

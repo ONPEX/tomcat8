@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,7 +43,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * of <code>UserDatabase</code> that we should consult.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: UserDatabaseRealm.java 1079405 2011-03-08 15:58:53Z markt $
+ * @version $Id: UserDatabaseRealm.java 1361768 2012-07-15 19:34:05Z markt $
  * @since 4.1
  */
 
@@ -64,13 +64,6 @@ public class UserDatabaseRealm
     /**
      * Descriptive information about this Realm implementation.
      */
-    protected static final String info =
-        "org.apache.catalina.realm.UserDatabaseRealm/1.0";
-
-
-    /**
-     * Descriptive information about this Realm implementation.
-     */
     protected static final String name = "UserDatabaseRealm";
 
 
@@ -82,20 +75,6 @@ public class UserDatabaseRealm
 
 
     // ------------------------------------------------------------- Properties
-
-
-    /**
-     * Return descriptive information about this Realm implementation and
-     * the corresponding version number, in the format
-     * <code>&lt;description&gt;/&lt;version&gt;</code>.
-     */
-    @Override
-    public String getInfo() {
-
-        return info;
-
-    }
-
 
     /**
      * Return the global JNDI name of the <code>UserDatabase</code> resource
@@ -129,7 +108,7 @@ public class UserDatabaseRealm
      * security role, within the context of this Realm; otherwise return
      * <code>false</code>. This implementation returns <code>true</code>
      * if the <code>User</code> has the role, or if any <code>Group</code>
-     * that the <code>User</code> is a member of has the role. 
+     * that the <code>User</code> is a member of has the role.
      *
      * @param principal Principal for whom the role is to be checked
      * @param role Security role to be checked
@@ -160,7 +139,7 @@ public class UserDatabaseRealm
         User user = (User)principal;
         Role dbrole = database.findRole(role);
         if(dbrole == null) {
-            return false; 
+            return false;
         }
         if(user.isInRole(dbrole)) {
             return true;
@@ -199,7 +178,7 @@ public class UserDatabaseRealm
 
         if (user == null) {
             return null;
-        } 
+        }
 
         return (user.getPassword());
 
@@ -217,7 +196,7 @@ public class UserDatabaseRealm
             return null;
         }
 
-        List<String> roles = new ArrayList<String>();
+        List<String> roles = new ArrayList<>();
         Iterator<Role> uroles = user.getRoles();
         while(uroles.hasNext()) {
             Role role = uroles.next();

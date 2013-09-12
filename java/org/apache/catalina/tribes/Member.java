@@ -27,10 +27,8 @@ package org.apache.catalina.tribes;
  * since a member that has crashed and the starts up again on the same port/host is
  * not guaranteed to be the same member, so no state transfers will ever be confused
  * @author Filip Hanik
- * @version $Id: Member.java 939305 2010-04-29 13:43:39Z kkolinko $
+ * @version $Id: Member.java 1430602 2013-01-08 22:46:52Z markt $
  */
-
-
 public interface Member {
 
     /**
@@ -81,6 +79,8 @@ public interface Member {
      */
     public long getMemberAliveTime();
 
+    public void setMemberAliveTime(long memberAliveTime);
+
     /**
      * The current state of the member
      * @return boolean - true if the member is functioning correctly
@@ -111,15 +111,40 @@ public interface Member {
      */
     public byte[] getPayload();
 
+    public void setPayload(byte[] payload);
+
     /**
      * returns the command associated with this member
      * @return byte[]
      */
     public byte[] getCommand();
 
+    public void setCommand(byte[] command);
+
     /**
      * Domain for this cluster
      * @return byte[]
      */
     public byte[] getDomain();
+
+    /**
+     * Highly optimized version of serializing a member into a byte array
+     * Returns a cached byte[] reference, do not modify this data
+     * @param getalive  calculate memberAlive time
+     */
+    public byte[] getData(boolean getalive);
+
+    /**
+     * Highly optimized version of serializing a member into a byte array
+     * Returns a cached byte[] reference, do not modify this data
+     * @param getalive  calculate memberAlive time
+     * @param reset     reset the cached data package, and create a new one
+     */
+    public byte[] getData(boolean getalive, boolean reset);
+
+    /**
+     * Length of a message obtained by {@link #getData(boolean)} or
+     * {@link #getData(boolean, boolean)}.
+     */
+    public int getDataLength();
 }

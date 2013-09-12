@@ -14,10 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.catalina;
-
 
 import java.net.URL;
 import java.util.Locale;
@@ -26,23 +23,21 @@ import java.util.Set;
 
 import javax.servlet.ServletContainerInitializer;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletRegistration;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletSecurityElement;
 import javax.servlet.descriptor.JspConfigDescriptor;
 
-import org.apache.catalina.core.ApplicationServletRegistration;
-import org.apache.catalina.deploy.ApplicationListener;
-import org.apache.catalina.deploy.ApplicationParameter;
-import org.apache.catalina.deploy.ErrorPage;
-import org.apache.catalina.deploy.FilterDef;
-import org.apache.catalina.deploy.FilterMap;
-import org.apache.catalina.deploy.LoginConfig;
-import org.apache.catalina.deploy.NamingResources;
-import org.apache.catalina.deploy.SecurityConstraint;
-import org.apache.catalina.util.CharsetMapper;
+import org.apache.catalina.deploy.NamingResourcesImpl;
+import org.apache.tomcat.InstanceManager;
 import org.apache.tomcat.JarScanner;
-import org.apache.tomcat.util.http.mapper.Mapper;
-
+import org.apache.tomcat.util.descriptor.web.ApplicationListener;
+import org.apache.tomcat.util.descriptor.web.ApplicationParameter;
+import org.apache.tomcat.util.descriptor.web.ErrorPage;
+import org.apache.tomcat.util.descriptor.web.FilterDef;
+import org.apache.tomcat.util.descriptor.web.FilterMap;
+import org.apache.tomcat.util.descriptor.web.LoginConfig;
+import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
 
 /**
  * A <b>Context</b> is a Container that represents a servlet context, and
@@ -61,21 +56,12 @@ import org.apache.tomcat.util.http.mapper.Mapper;
  * <p>
  *
  * @author Craig R. McClanahan
- * @version $Id: Context.java 1492415 2013-06-12 20:41:33Z markt $
+ * @version $Id: Context.java 1505199 2013-07-20 20:22:41Z jboynes $
  */
-
 public interface Context extends Container {
 
 
     // ----------------------------------------------------- Manifest Constants
-
-
-    /**
-     * The LifecycleEvent type sent when a context is reloaded.
-     * @deprecated Will be removed in Tomcat 8.0.x onwards.
-     */
-    @Deprecated
-    public static final String RELOAD_EVENT = "reload";
 
     /**
      * Container event for adding a welcome file.
@@ -96,6 +82,7 @@ public interface Context extends Container {
      * Container event for changing the ID of a session.
      */
     public static final String CHANGE_SESSION_ID_EVENT = "changeSessionId";
+
 
     // ------------------------------------------------------------- Properties
 
@@ -162,36 +149,6 @@ public interface Context extends Container {
      * @param listeners The set of instantiated listener objects.
      */
     public void setApplicationLifecycleListeners(Object listeners[]);
-
-
-    /**
-     * Return the application available flag for this Context.
-     *
-     * @deprecated  This will be removed in Tomcat 8.0.x onwards. Use
-     *              {@link #getState()}.{@link LifecycleState#isAvailable()
-     *              isAvailable()} instead
-     */
-    @Deprecated
-    public boolean getAvailable();
-
-
-    /**
-     * Return the Locale to character set mapper for this Context.
-     * @deprecated Use {@link #getCharset(Locale)}
-     */
-    @Deprecated
-    public CharsetMapper getCharsetMapper();
-
-
-    /**
-     * Set the Locale to character set mapper for this Context.
-     *
-     * @param mapper The new mapper
-     *
-     * @deprecated
-     */
-    @Deprecated
-    public void setCharsetMapper(CharsetMapper mapper);
 
 
     /**
@@ -372,6 +329,20 @@ public interface Context extends Container {
 
 
     /**
+     * Return the deny-uncovered-http-methods flag for this web application.
+     */
+    public boolean getDenyUncoveredHttpMethods();
+
+
+    /**
+     * Set the deny-uncovered-http-methods flag for this web application.
+     *
+     * @param denyUncoveredHttpMethods The new deny-uncovered-http-methods flag
+     */
+    public void setDenyUncoveredHttpMethods(boolean denyUncoveredHttpMethods);
+
+
+    /**
      * Return the display name of this web application.
      */
     public String getDisplayName();
@@ -451,15 +422,9 @@ public interface Context extends Container {
 
 
     /**
-     * Get the request dispatcher mapper.
-     */
-    public Mapper getMapper();
-
-
-    /**
      * Return the naming resources associated with this web application.
      */
-    public NamingResources getNamingResources();
+    public NamingResourcesImpl getNamingResources();
 
 
     /**
@@ -467,7 +432,7 @@ public interface Context extends Container {
      *
      * @param namingResources The new naming resources
      */
-    public void setNamingResources(NamingResources namingResources);
+    public void setNamingResources(NamingResourcesImpl namingResources);
 
 
     /**
@@ -712,6 +677,16 @@ public interface Context extends Container {
      */
     public boolean getLogEffectiveWebXml();
 
+    /**
+     * Get the instance manager associated with this context.
+     */
+    public InstanceManager getInstanceManager();
+
+    /**
+     * Set the instance manager associated with this context.
+     */
+    public void setInstanceManager(InstanceManager instanceManager);
+
     // --------------------------------------------------------- Public Methods
 
 
@@ -722,18 +697,6 @@ public interface Context extends Container {
      * @param listener Java class name of a listener class
      */
     public void addApplicationListener(ApplicationListener listener);
-
-
-    /**
-     * Add a new Listener class name to the set of Listeners
-     * configured for this application.
-     *
-     * @param listener Java class name of a listener class
-     * 
-     * @deprecated Use {@link #addApplicationListener(ApplicationListener)}
-     */
-    @Deprecated
-    public void addApplicationListener(String listener);
 
 
     /**
@@ -910,12 +873,8 @@ public interface Context extends Container {
     /**
      * Return the set of application listener class names configured
      * for this application.
-     * 
-     * @deprecated  The return type of this method will be changing to
-     *              {@link ApplicationListener}[] in Tomcat 8 
      */
-    @Deprecated
-    public String[] findApplicationListeners();
+    public ApplicationListener[] findApplicationListeners();
 
 
     /**
@@ -1318,17 +1277,15 @@ public interface Context extends Container {
 
     /**
      * Obtain the JSP configuration for this context.
+     * Will be null if there is no JSP configuration.
      */
     public JspConfigDescriptor getJspConfigDescriptor();
 
-
     /**
-     * Add a URL for a JAR that contains static resources in a
-     * META-INF/resources directory that should be included in the static
-     * resources for this context.
+     * Set the JspConfigDescriptor for this context.
+     * A null value indicates there is not JSP configuration.
      */
-    public void addResourceJarUrl(URL url);
-
+    public void setJspConfigDescriptor(JspConfigDescriptor descriptor);
 
     /**
      * Add a ServletContainerInitializer instance to this web application.
@@ -1359,7 +1316,7 @@ public interface Context extends Container {
      * @return urls currently mapped to this registration that are already
      *         present in web.xml
      */
-    Set<String> addServletSecurity(ApplicationServletRegistration registration,
+    Set<String> addServletSecurity(ServletRegistration.Dynamic registration,
             ServletSecurityElement servletSecurityElement);
 
     /**
@@ -1442,6 +1399,60 @@ public interface Context extends Container {
      * part of a redirect response.
      */
     public boolean getSendRedirectBody();
+
+    /**
+     * Return the Loader with which this Context is associated.
+     */
+    public Loader getLoader();
+
+    /**
+     * Set the Loader with which this Context is associated.
+     *
+     * @param loader The newly associated loader
+     */
+    public void setLoader(Loader loader);
+
+    /**
+     * Return the Resources with which this Context is associated.
+     */
+    public WebResourceRoot getResources();
+
+    /**
+     * Set the Resources object with which this Context is associated.
+     *
+     * @param resources The newly associated Resources
+     */
+    public void setResources(WebResourceRoot resources);
+
+    /**
+     * Return the Manager with which this Context is associated.  If there is
+     * no associated Manager, return <code>null</code>.
+     */
+    public Manager getManager();
+
+
+    /**
+     * Set the Manager with which this Context is associated.
+     *
+     * @param manager The newly associated Manager
+     */
+    public void setManager(Manager manager);
+
+    /**
+     * Sets the flag that indicates if /WEB-INF/classes should be treated like
+     * an exploded JAR and JAR resources made available as if they were in a
+     * JAR.
+     *
+     * @param addWebinfClassesResources The new value for the flag
+     */
+    public void setAddWebinfClassesResources(boolean addWebinfClassesResources);
+
+    /**
+     * Gets the flag that indicates if /WEB-INF/classes should be treated like
+     * an exploded JAR and JAR resources made available as if they were in a
+     * JAR.
+     */
+    public boolean getAddWebinfClassesResources();
 
     /**
      * Add a post construct method definition for the given class, if there is

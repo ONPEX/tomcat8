@@ -31,7 +31,7 @@
         classname="org.apache.catalina.ant.ReloadTask" />
   <typedef
         name="stop"
-        classname="org.apache.catalina.ant.StopTask" />        
+        classname="org.apache.catalina.ant.StopTask" />
   <typedef
         name="undeploy"
         classname="org.apache.catalina.ant.UndeployTask" />
@@ -42,9 +42,6 @@
         name="sessions"
         classname="org.apache.catalina.ant.SessionsTask" />
   <!-- Jk Task -->
-  <typedef
-        name="jkstatus"
-        classname="org.apache.catalina.ant.JKStatusUpdateTask" />
   <typedef
         name="jkupdate"
         classname="org.apache.catalina.ant.JKStatusUpdateTask" />
@@ -67,9 +64,6 @@
         classname="org.apache.catalina.ant.ValidatorTask" />
   <typedef
         name="jasper"
-        classname="org.apache.jasper.JspC" />
-  <typedef
-        name="jasper2"
         classname="org.apache.jasper.JspC" />
 -->
 </antlib>

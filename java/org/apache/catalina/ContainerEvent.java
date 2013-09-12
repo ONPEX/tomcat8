@@ -14,21 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.catalina;
 
 
 import java.util.EventObject;
 
-
 /**
  * General event for notifying listeners of significant changes on a Container.
  *
  * @author Craig R. McClanahan
- * @version $Id: ContainerEvent.java 1200158 2011-11-10 05:32:22Z kkolinko $
+ * @version $Id: ContainerEvent.java 1237988 2012-01-30 20:43:09Z markt $
  */
-
 public final class ContainerEvent extends EventObject {
 
     private static final long serialVersionUID = 1L;
@@ -36,13 +32,13 @@ public final class ContainerEvent extends EventObject {
     /**
      * The event data associated with this event.
      */
-    private Object data = null;
+    private final Object data;
 
 
     /**
      * The event type this instance represents.
      */
-    private String type = null;
+    private final String type;
 
 
     /**
@@ -53,11 +49,9 @@ public final class ContainerEvent extends EventObject {
      * @param data Event data
      */
     public ContainerEvent(Container container, String type, Object data) {
-
         super(container);
         this.type = type;
         this.data = data;
-
     }
 
 
@@ -65,9 +59,7 @@ public final class ContainerEvent extends EventObject {
      * Return the event data of this event.
      */
     public Object getData() {
-
         return (this.data);
-
     }
 
 
@@ -75,9 +67,7 @@ public final class ContainerEvent extends EventObject {
      * Return the Container on which this event occurred.
      */
     public Container getContainer() {
-
         return (Container) getSource();
-
     }
 
 
@@ -85,9 +75,7 @@ public final class ContainerEvent extends EventObject {
      * Return the event type of this event.
      */
     public String getType() {
-
         return (this.type);
-
     }
 
 
@@ -96,11 +84,7 @@ public final class ContainerEvent extends EventObject {
      */
     @Override
     public String toString() {
-
         return ("ContainerEvent['" + getContainer() + "','" +
                 getType() + "','" + getData() + "']");
-
     }
-
-
 }

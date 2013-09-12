@@ -34,7 +34,7 @@ public class TestAsyncQueue {
 
     @Before
     public void setUp() throws Exception {
-        this.queue = new FairBlockingQueue<Object>();
+        this.queue = new FairBlockingQueue<>();
     }
 
     @After
@@ -84,7 +84,9 @@ public class TestAsyncQueue {
         public void run() {
             try {
                 sleep(delay);
-            }catch (Exception ignore){}
+            } catch (Exception ignore){
+                // Ignore
+            }
             offered = true;
             TestAsyncQueue.this.queue.offer(item);
         }

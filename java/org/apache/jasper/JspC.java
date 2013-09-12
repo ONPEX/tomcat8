@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.jasper;
 
 import java.io.BufferedReader;
@@ -30,7 +29,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.Writer;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -132,8 +130,8 @@ public class JspC extends Task implements Options {
     protected static final int ALL_WEBXML = 20;
     protected static final int DEFAULT_DIE_LEVEL = 1;
     protected static final int NO_DIE_LEVEL = 0;
-    protected static final Set<String> insertBefore = new HashSet<String>();
-    
+    protected static final Set<String> insertBefore = new HashSet<>();
+
     static {
         insertBefore.add("</web-app>");
         insertBefore.add("<servlet-mapping>");
@@ -171,8 +169,7 @@ public class JspC extends Task implements Options {
     protected boolean smapSuppressed = true;
     protected boolean smapDumped = false;
     protected boolean caching = true;
-    protected final Map<String, TagLibraryInfo> cache =
-        new HashMap<String, TagLibraryInfo>();
+    protected final Map<String, TagLibraryInfo> cache = new HashMap<>();
 
     protected String compiler = null;
 
@@ -196,7 +193,7 @@ public class JspC extends Task implements Options {
     /**
      * The pages.
      */
-    protected final List<String> pages = new Vector<String>();
+    protected final List<String> pages = new Vector<>();
 
     /**
      * Needs better documentation, this data member does.
@@ -274,7 +271,7 @@ public class JspC extends Task implements Options {
 
     /**
      * Apply command-line arguments.
-     * 
+     *
      * @param arg
      *            The arguments
      */
@@ -334,7 +331,7 @@ public class JspC extends Task implements Options {
                     caching = false;
                 } else {
                     caching = true;
-                }            
+                }
             } else if (tok.equals(SWITCH_CLASSPATH)) {
                 setClassPath(nextArg());
             } else if (tok.startsWith(SWITCH_DIE)) {
@@ -510,7 +507,7 @@ public class JspC extends Task implements Options {
 
     /**
      * Sets the option to enable caching.
-     * 
+     *
      * @see Options#isCaching()
      */
     public void setCaching(boolean caching) {
@@ -552,8 +549,8 @@ public class JspC extends Task implements Options {
     public boolean getRecompileOnFail() {
         return false;
     }
-    
-    
+
+
     /**
      * In JspC this always returns <code>false</code>.
      * {@inheritDoc}
@@ -588,14 +585,14 @@ public class JspC extends Task implements Options {
 
     /**
      * Sets smapDumped flag.
-     * 
+     *
      * @see Options#isSmapDumped()
      */
     public void setSmapDumped(boolean smapDumped) {
         this.smapDumped = smapDumped;
     }
 
-    
+
     /**
      * Determines whether text strings are to be generated as char arrays,
      * which improves performance in some cases.
@@ -618,7 +615,7 @@ public class JspC extends Task implements Options {
     /**
      * Sets the class-id value to be sent to Internet Explorer when using
      * &lt;jsp:plugin&gt; tags.
-     * 
+     *
      * @param ieClassId
      *            Class-id value
      */
@@ -652,7 +649,7 @@ public class JspC extends Task implements Options {
 
     /**
      * Sets the option to determine what compiler to use.
-     * 
+     *
      * @see Options#getCompiler()
      */
     public void setCompiler(String c) {
@@ -677,7 +674,7 @@ public class JspC extends Task implements Options {
 
     /**
      * Sets the compiler target VM.
-     * 
+     *
      * @see Options#getCompilerTargetVM()
      */
     public void setCompilerTargetVM(String vm) {
@@ -694,7 +691,7 @@ public class JspC extends Task implements Options {
 
      /**
       * Sets the compiler source VM.
-      * 
+      *
       * @see Options#getCompilerSourceVM()
       */
     public void setCompilerSourceVM(String vm) {
@@ -775,7 +772,7 @@ public class JspC extends Task implements Options {
     protected void addExtension(final String extension) {
         if(extension != null) {
             if(extensions == null) {
-                extensions = new Vector<String>();
+                extensions = new Vector<>();
             }
 
             extensions.add(extension);
@@ -892,11 +889,11 @@ public class JspC extends Task implements Options {
 
     /**
      * Sets the encoding to be used to read and write web.xml files.
-     * 
+     *
      * <p>
      * If not specified, defaults to the platform default encoding.
      * </p>
-     * 
+     *
      * @param encoding
      *            Encoding, e.g. "UTF-8".
      */
@@ -907,7 +904,7 @@ public class JspC extends Task implements Options {
     /**
      * Sets the option to merge generated web.xml fragment into the
      * WEB-INF/web.xml file of the web application that we were processing.
-     * 
+     *
      * @param b
      *            <code>true</code> to merge the fragment into the existing
      *            web.xml file of the processed web application
@@ -952,7 +949,7 @@ public class JspC extends Task implements Options {
     /**
      * Adds servlet declaration and mapping for the JSP page servlet to the
      * generated web.xml fragment.
-     * 
+     *
      * @param file
      *            Context-relative path to the JSP file, e.g.
      *            <code>/index.jsp</code>
@@ -1083,21 +1080,21 @@ public class JspC extends Task implements Options {
         if(!webXml2.delete() && log.isDebugEnabled())
             log.debug(Localizer.getMessage("jspc.delete.fail",
                     webXml2.toString()));
-        
+
         if (!(new File(webxmlFile)).delete() && log.isDebugEnabled())
             log.debug(Localizer.getMessage("jspc.delete.fail", webxmlFile));
 
     }
-    
+
     /*
      * Assumes valid xml
      */
     private String getElement(Reader reader) throws IOException {
         StringBuilder result = new StringBuilder();
         result.append('<');
-        
+
         boolean done = false;
-        
+
         while (!done) {
             int current = reader.read();
             while (current != '>') {
@@ -1108,7 +1105,7 @@ public class JspC extends Task implements Options {
                 current = reader.read();
             }
             result.append((char) current);
-            
+
             int len = result.length();
             if (len > 4 && result.substring(0, 4).equals("<!--")) {
                 // This is a comment - make sure we are at the end
@@ -1119,8 +1116,8 @@ public class JspC extends Task implements Options {
                 done = true;
             }
         }
-        
-        
+
+
         return result.toString();
     }
 
@@ -1221,8 +1218,8 @@ public class JspC extends Task implements Options {
      * Locate all jsp files in the webapp. Used if no explicit
      * jsps are specified.
      */
-    public void scanFiles( File base ) throws JasperException {
-        Stack<String> dirs = new Stack<String>();
+    public void scanFiles( File base ) {
+        Stack<String> dirs = new Stack<>();
         dirs.push(base.toString());
 
         // Make sure default extensions are always included
@@ -1257,8 +1254,6 @@ public class JspC extends Task implements Options {
 
     /**
      * Executes the compilation.
-     *
-     * @throws JasperException If an error occurs
      */
     @Override
     public void execute() {
@@ -1293,7 +1288,7 @@ public class JspC extends Task implements Options {
                     Localizer.getMessage("jsp.error.jspc.uriroot_not_dir"));
             }
 
-            if(context == null) {
+            if (context == null) {
                 initServletContext();
             }
 
@@ -1412,20 +1407,18 @@ public class JspC extends Task implements Options {
                 }
                 mapout.close();
             } catch (IOException ioe) {
-                // noting to do if it fails since we are done with it
+                // nothing to do if it fails since we are done with it
             }
         }
     }
 
-    protected void initServletContext() {
-        try {
-            context =new JspCServletContext
-                (new PrintWriter(System.out),
-                 new URL("file:" + uriRoot.replace('\\','/') + '/'));
-            tldLocationsCache = TldLocationsCache.getInstance(context);
-        } catch (MalformedURLException me) {
-            System.out.println("**" + me);
-        }
+    protected void initServletContext() throws IOException, JasperException {
+        // TODO: should we use the Ant Project's log?
+        PrintWriter log = new PrintWriter(System.out);
+        URL resourceBase = new File(uriRoot).getCanonicalFile().toURI().toURL();
+
+        context = new JspCServletContext(log, resourceBase);
+        tldLocationsCache = TldLocationsCache.getInstance(context);
         rctxt = new JspRuntimeContext(context, this);
         jspConfig = new JspConfig(context);
         tagPluginManager = new TagPluginManager(context);
@@ -1450,7 +1443,7 @@ public class JspC extends Task implements Options {
         }
 
         // Turn the classPath into URLs
-        ArrayList<URL> urls = new ArrayList<URL>();
+        ArrayList<URL> urls = new ArrayList<>();
         StringTokenizer tokenizer = new StringTokenizer(classPath,
                                                         File.pathSeparator);
         while (tokenizer.hasMoreTokens()) {

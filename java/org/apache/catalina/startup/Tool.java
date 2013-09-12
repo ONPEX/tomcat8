@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -69,14 +69,14 @@ import org.apache.tomcat.util.ExceptionUtils;
  * </ul>
  *
  * @author Craig R. McClanahan
- * @version $Id: Tool.java 1201569 2011-11-14 01:36:07Z kkolinko $
+ * @version $Id: Tool.java 1364147 2012-07-21 18:52:54Z markt $
  */
 
 public final class Tool {
 
 
     private static final Log log = LogFactory.getLog(Tool.class);
-    
+
     // ------------------------------------------------------- Static Variables
 
 
@@ -89,7 +89,8 @@ public final class Tool {
     /**
      * The pathname of our installation base directory.
      */
-    private static String catalinaHome = System.getProperty(Globals.CATALINA_HOME_PROP);
+    private static final String catalinaHome =
+            System.getProperty(Globals.CATALINA_HOME_PROP);
 
 
     /**
@@ -158,8 +159,8 @@ public final class Tool {
         // Construct the class loader we will be using
         ClassLoader classLoader = null;
         try {
-            ArrayList<File> packed = new ArrayList<File>();
-            ArrayList<File> unpacked = new ArrayList<File>();
+            ArrayList<File> packed = new ArrayList<>();
+            ArrayList<File> unpacked = new ArrayList<>();
             unpacked.add(new File(catalinaHome, "classes"));
             packed.add(new File(catalinaHome, "lib"));
             if (common) {

@@ -48,7 +48,7 @@ public class TestAbstractHttp11Processor extends TomcatBaseTest {
         Tomcat tomcat = getTomcatInstance();
 
         // Use the normal Tomcat ROOT context
-        File root = new File("test/webapp-3.0");
+        File root = new File("test/webapp");
         tomcat.addWebapp("", root.getAbsolutePath());
 
         tomcat.start();
@@ -76,7 +76,7 @@ public class TestAbstractHttp11Processor extends TomcatBaseTest {
         Tomcat tomcat = getTomcatInstance();
 
         // Use the normal Tomcat ROOT context
-        File root = new File("test/webapp-3.0");
+        File root = new File("test/webapp");
         tomcat.addWebapp("", root.getAbsolutePath());
 
         tomcat.start();
@@ -105,7 +105,7 @@ public class TestAbstractHttp11Processor extends TomcatBaseTest {
         Tomcat tomcat = getTomcatInstance();
 
         // Use the normal Tomcat ROOT context
-        File root = new File("test/webapp-3.0");
+        File root = new File("test/webapp");
         tomcat.addWebapp("", root.getAbsolutePath());
 
         tomcat.start();
@@ -136,7 +136,7 @@ public class TestAbstractHttp11Processor extends TomcatBaseTest {
         Tomcat tomcat = getTomcatInstance();
 
         // Use the normal Tomcat ROOT context
-        File root = new File("test/webapp-3.0");
+        File root = new File("test/webapp");
         tomcat.addWebapp("", root.getAbsolutePath());
 
         tomcat.start();
@@ -165,7 +165,7 @@ public class TestAbstractHttp11Processor extends TomcatBaseTest {
         Tomcat tomcat = getTomcatInstance();
 
         // Use the normal Tomcat ROOT context
-        File root = new File("test/webapp-3.0");
+        File root = new File("test/webapp");
         tomcat.addWebapp("", root.getAbsolutePath());
 
         tomcat.start();
@@ -265,8 +265,7 @@ public class TestAbstractHttp11Processor extends TomcatBaseTest {
         tomcat.start();
 
         ByteChunk responseBody = new ByteChunk();
-        Map<String,List<String>> responseHeaders =
-                new HashMap<String,List<String>>();
+        Map<String,List<String>> responseHeaders = new HashMap<>();
         int rc = getUrl("http://localhost:" + getPort() + "/test", responseBody,
                 responseHeaders);
 
@@ -295,8 +294,7 @@ public class TestAbstractHttp11Processor extends TomcatBaseTest {
         tomcat.start();
 
         ByteChunk responseBody = new ByteChunk();
-        Map<String,List<String>> responseHeaders =
-                new HashMap<String,List<String>>();
+        Map<String,List<String>> responseHeaders = new HashMap<>();
         int rc = getUrl("http://localhost:" + getPort() + "/test", responseBody,
                 responseHeaders);
 
@@ -336,8 +334,7 @@ public class TestAbstractHttp11Processor extends TomcatBaseTest {
         tomcat.start();
 
         ByteChunk responseBody = new ByteChunk();
-        Map<String,List<String>> responseHeaders =
-                new HashMap<String,List<String>>();
+        Map<String,List<String>> responseHeaders = new HashMap<>();
         int rc = getUrl("http://localhost:" + getPort() + "/test", responseBody,
                 responseHeaders);
 

@@ -72,11 +72,6 @@
                description="The format for the date for date based log rotation"
                type="java.lang.String"/>
 
-    <attribute name="info"
-               description="Information about this implementation"
-               type="java.lang.String"
-               writeable="false"/>
-
     <attribute name="locale"
                description="The locale used to format timestamps in the access log lines"
                type="java.lang.String"/>
@@ -88,11 +83,6 @@
     <attribute name="prefix"
                description="The prefix that is added to log file filenames"
                type="java.lang.String"/>
-
-    <attribute name="resolveHosts"
-               description="Resolve hosts"
-               is="true"
-               type="boolean"/>
 
     <attribute name="rotatable"
                description="Flag to indicate automatic log rotation."
@@ -184,11 +174,6 @@
                type="java.lang.String"
                writeable="false"/>
 
-    <attribute name="info"
-               description="Information about this implementation"
-               type="java.lang.String"
-               writeable="false"/>
-
     <attribute name="stateName"
                description="The name of the LifecycleState that this component is currently in"
                type="java.lang.String"
@@ -251,11 +236,6 @@
                description="The format for the date date based log rotation."
                type="java.lang.String"/>
 
-    <attribute name="info"
-               description="Information about this implementation"
-               type="java.lang.String"
-               writeable="false"/>
-
     <attribute name="locale"
                description="The locale used to format timestamps in the access log lines"
                type="java.lang.String"/>
@@ -267,11 +247,6 @@
     <attribute name="prefix"
                description="The prefix that is added to log file filenames"
                type="java.lang.String"/>
-
-    <attribute name="resolveHosts"
-               description="Resolve hosts"
-               is="true"
-               type="boolean"/>
 
     <attribute name="rotatable"
                description="Flag to indicate automatic log rotation."
@@ -332,11 +307,6 @@
                description="Use a fair semaphore"
                type="boolean"/>
 
-    <attribute name="info"
-               description="Information about this implementation"
-               type="java.lang.String"
-               writeable="false"/>
-
     <attribute name="interruptible"
                description="Should this be blocked interruptibly until a permit is availabl?"
                type="boolean"/>
@@ -386,11 +356,6 @@
                description="Becomes false if assigned value of deny expression is not syntactically correct"
                is="true"
                type="boolean"
-               writeable="false"/>
-
-    <attribute name="info"
-               description="Information about this implementation"
-               type="java.lang.String"
                writeable="false"/>
 
     <attribute name="stateName"
@@ -448,11 +413,6 @@
                type="boolean"
                writeable="false"/>
 
-    <attribute name="info"
-               description="Information about this implementation"
-               type="java.lang.String"
-               writeable="false"/>
-
     <attribute name="stateName"
                description="The name of the LifecycleState that this component is currently in"
                type="java.lang.String"
@@ -488,11 +448,6 @@
                description="Value returned by ServletRequest.getServerPort() when the protocolHeader indicates https protocol"
                type="java.lang.String"
                writeable="false" />
-
-    <attribute name="info"
-               description="Information about this implementation"
-               type="java.lang.String"
-               writeable="false"/>
 
     <attribute name="internalProxies"
                description="Regular expression that matches IP addresses of internal proxies"
@@ -544,11 +499,6 @@
 
     <attribute name="className"
                description="Fully qualified class name of the managed object"
-               type="java.lang.String"
-               writeable="false"/>
-
-    <attribute name="info"
-               description="Information about this implementation"
                type="java.lang.String"
                writeable="false"/>
 

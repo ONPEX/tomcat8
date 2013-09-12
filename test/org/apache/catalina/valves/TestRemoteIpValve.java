@@ -100,7 +100,7 @@ public class TestRemoteIpValve {
 
     @Test
     public void testListToCommaDelimitedStringEmptyList() {
-        List<String> elements = new ArrayList<String>();
+        List<String> elements = new ArrayList<>();
         String actual = RemoteIpValve.listToCommaDelimitedString(elements);
         assertEquals("", actual);
     }
@@ -721,9 +721,9 @@ public class TestRemoteIpValve {
         }
         assertNotNull(actual);
         assertEquals(expected.length, actual.length);
-        List<String> e = new ArrayList<String>();
+        List<String> e = new ArrayList<>();
         e.addAll(Arrays.asList(expected));
-        List<String> a = new ArrayList<String>();
+        List<String> a = new ArrayList<>();
         a.addAll(Arrays.asList(actual));
 
         for (String entry : e) {

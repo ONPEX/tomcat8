@@ -45,7 +45,7 @@ import javax.servlet.descriptor.JspConfigDescriptor;
  * The <code>ServletContext</code> object is contained within the
  * {@link ServletConfig} object, which the Web server provides the servlet when
  * the servlet is initialized.
- * 
+ *
  * @author Various
  * @version $Version$
  * @see Servlet#getServletConfig
@@ -60,6 +60,8 @@ public interface ServletContext {
      */
     public static final String ORDERED_LIBS = "javax.servlet.context.orderedLibs";
 
+    public String getContextPath();
+
     /**
      * Returns a <code>ServletContext</code> object that corresponds to a
      * specified URL on the server.
@@ -72,7 +74,7 @@ public interface ServletContext {
      * <p>
      * In a security conscious environment, the servlet container may return
      * <code>null</code> for a given URL.
-     * 
+     *
      * @param uripath
      *            a <code>String</code> specifying the context path of another
      *            web application in the container.
@@ -83,23 +85,21 @@ public interface ServletContext {
      */
     public ServletContext getContext(String uripath);
 
-    public String getContextPath();
-
     /**
      * Returns the major version of the Java Servlet API that this servlet
-     * container supports. All implementations that comply with Version 3.0 must
+     * container supports. All implementations that comply with Version 3.1 must
      * have this method return the integer 3.
-     * 
+     *
      * @return 3
      */
     public int getMajorVersion();
 
     /**
      * Returns the minor version of the Servlet API that this servlet container
-     * supports. All implementations that comply with Version 3.0 must have this
-     * method return the integer 0.
-     * 
-     * @return 0
+     * supports. All implementations that comply with Version 3.1 must have this
+     * method return the integer 1.
+     *
+     * @return 1
      */
     public int getMinorVersion();
 
@@ -136,7 +136,7 @@ public interface ServletContext {
      * of the servlet container, and may be specified in a web application
      * deployment descriptor. Common MIME types are <code>"text/html"</code> and
      * <code>"image/gif"</code>.
-     * 
+     *
      * @param file
      *            a <code>String</code> specifying the name of a file
      * @return a <code>String</code> specifying the file's MIME type
@@ -163,7 +163,7 @@ public interface ServletContext {
      * "/customer/", "/WEB-INF/"}<br>
      * getResourcePaths("/catalog/") returns {"/catalog/index.html",
      * "/catalog/products.html", "/catalog/offers/"}.<br>
-     * 
+     *
      * @param path
      *            the partial path used to match the resources, which must start
      *            with a /
@@ -201,7 +201,7 @@ public interface ServletContext {
      * This method has a different purpose than
      * <code>java.lang.Class.getResource</code>, which looks up resources based
      * on a class loader. This method does not use class loaders.
-     * 
+     *
      * @param path
      *            a <code>String</code> specifying the path to the resource
      * @return the resource located at the named path, or <code>null</code> if
@@ -231,7 +231,7 @@ public interface ServletContext {
      * <code>java.lang.Class.getResourceAsStream</code>, which uses a class
      * loader. This method allows servlet containers to make a resource
      * available to a servlet from any location, without using a class loader.
-     * 
+     *
      * @param path
      *            a <code>String</code> specifying the path to the resource
      * @return the <code>InputStream</code> returned to the servlet, or
@@ -250,7 +250,7 @@ public interface ServletContext {
      * <code>RequestDispatcher</code> for resources in foreign contexts. This
      * method returns <code>null</code> if the <code>ServletContext</code>
      * cannot return a <code>RequestDispatcher</code>.
-     * 
+     *
      * @param path
      *            a <code>String</code> specifying the pathname to the resource
      * @return a <code>RequestDispatcher</code> object that acts as a wrapper for
@@ -273,7 +273,7 @@ public interface ServletContext {
      * <p>
      * This method returns <code>null</code> if the <code>ServletContext</code>
      * cannot return a <code>RequestDispatcher</code> for any reason.
-     * 
+     *
      * @param name
      *            a <code>String</code> specifying the name of a servlet to wrap
      * @return a <code>RequestDispatcher</code> object that acts as a wrapper for
@@ -336,7 +336,7 @@ public interface ServletContext {
      * Writes the specified message to a servlet log file, usually an event log.
      * The name and type of the servlet log file is specific to the servlet
      * container.
-     * 
+     *
      * @param msg
      *            a <code>String</code> specifying the message to be written to
      *            the log file
@@ -360,7 +360,7 @@ public interface ServletContext {
      * <code>Throwable</code> exception to the servlet log file. The name and
      * type of the servlet log file is specific to the servlet container,
      * usually an event log.
-     * 
+     *
      * @param message
      *            a <code>String</code> that describes the error or exception
      * @param throwable
@@ -381,7 +381,7 @@ public interface ServletContext {
      * servlet container cannot translate the virtual path to a real path for
      * any reason (such as when the content is being made available from a
      * <code>.war</code> archive).
-     * 
+     *
      * @param path
      *            a <code>String</code> specifying a virtual path
      * @return a <code>String</code> specifying the real path, or null if the
@@ -401,7 +401,7 @@ public interface ServletContext {
      * The servlet container may return other optional information after the
      * primary string in parentheses, for example,
      * <code>JavaServer Web Dev Kit/1.0 (JDK 1.1.6; Windows NT 4.0 x86)</code>.
-     * 
+     *
      * @return a <code>String</code> containing at least the servlet container
      *         name and version number
      */
@@ -415,7 +415,7 @@ public interface ServletContext {
      * This method can make available configuration information useful to an
      * entire "web application". For example, it can provide a webmaster's email
      * address or the name of a system that holds critical data.
-     * 
+     *
      * @param name
      *            a <code>String</code> containing the name of the parameter
      *            whose value is requested
@@ -429,7 +429,7 @@ public interface ServletContext {
      * Returns the names of the context's initialization parameters as an
      * <code>Enumeration</code> of <code>String</code> objects, or an empty
      * <code>Enumeration</code> if the context has no initialization parameters.
-     * 
+     *
      * @return an <code>Enumeration</code> of <code>String</code> objects
      *         containing the names of the context's initialization parameters
      * @see ServletConfig#getInitParameter
@@ -465,7 +465,7 @@ public interface ServletContext {
      * subclass. Attribute names should follow the same convention as package
      * names. The Java Servlet API specification reserves names matching
      * <code>java.*</code>, <code>javax.*</code>, and <code>sun.*</code>.
-     * 
+     *
      * @param name
      *            a <code>String</code> specifying the name of the attribute
      * @return an <code>Object</code> containing the value of the attribute, or
@@ -478,7 +478,7 @@ public interface ServletContext {
      * Returns an <code>Enumeration</code> containing the attribute names
      * available within this servlet context. Use the {@link #getAttribute}
      * method with an attribute name to get the value of an attribute.
-     * 
+     *
      * @return an <code>Enumeration</code> of attribute names
      * @see #getAttribute
      */
@@ -498,7 +498,7 @@ public interface ServletContext {
      * Attribute names should follow the same convention as package names. The
      * Java Servlet API specification reserves names matching
      * <code>java.*</code>, <code>javax.*</code>, and <code>sun.*</code>.
-     * 
+     *
      * @param name
      *            a <code>String</code> specifying the name of the attribute
      * @param object
@@ -513,7 +513,7 @@ public interface ServletContext {
      * <p>
      * If listeners are configured on the <code>ServletContext</code> the
      * container notifies them accordingly.
-     * 
+     *
      * @param name
      *            a <code>String</code> specifying the name of the attribute to
      *            be removed
@@ -524,7 +524,7 @@ public interface ServletContext {
      * Returns the name of this web application corresponding to this
      * ServletContext as specified in the deployment descriptor for this web
      * application by the display-name element.
-     * 
+     *
      * @return The name of the web application or null if no name has been
      *         declared in the deployment descriptor.
      * @since Servlet 2.3
@@ -762,8 +762,7 @@ public interface ServletContext {
      * @since Servlet 3.0 TODO SERVLET3 - Add comments
      */
     public void setSessionTrackingModes(
-            Set<SessionTrackingMode> sessionTrackingModes)
-            throws IllegalStateException, IllegalArgumentException;
+            Set<SessionTrackingMode> sessionTrackingModes);
 
     /**
      * @return TODO
@@ -849,7 +848,7 @@ public interface ServletContext {
             throws ServletException;
 
     /**
-     * @param roleNames
+     * @return TODO
      * @throws UnsupportedOperationException    If called from a
      *    {@link ServletContextListener#contextInitialized(ServletContextEvent)}
      *    method of a {@link ServletContextListener} that was not defined in a
@@ -857,11 +856,9 @@ public interface ServletContext {
      *    {@link javax.servlet.annotation.WebListener}. For example, a
      *    {@link ServletContextListener} defined in a TLD would not be able to
      *    use this method.
-     * @throws IllegalArgumentException
-     * @throws IllegalStateException
      * @since Servlet 3.0 TODO SERVLET3 - Add comments
      */
-    public void declareRoles(String... roleNames);
+    public JspConfigDescriptor getJspConfigDescriptor();
 
     /**
      * @return TODO
@@ -878,7 +875,7 @@ public interface ServletContext {
     public ClassLoader getClassLoader();
 
     /**
-     * @return TODO
+     * @param roleNames
      * @throws UnsupportedOperationException    If called from a
      *    {@link ServletContextListener#contextInitialized(ServletContextEvent)}
      *    method of a {@link ServletContextListener} that was not defined in a
@@ -886,7 +883,15 @@ public interface ServletContext {
      *    {@link javax.servlet.annotation.WebListener}. For example, a
      *    {@link ServletContextListener} defined in a TLD would not be able to
      *    use this method.
+     * @throws IllegalArgumentException
+     * @throws IllegalStateException
      * @since Servlet 3.0 TODO SERVLET3 - Add comments
      */
-    public JspConfigDescriptor getJspConfigDescriptor();
+    public void declareRoles(String... roleNames);
+
+    /**
+     * Returns the primary name of the virtual host on which this context is
+     * deployed. The name may or may not be a valid host name.
+     */
+    public String getVirtualServerName();
 }

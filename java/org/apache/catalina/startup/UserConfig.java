@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,7 +43,7 @@ import org.apache.tomcat.util.res.StringManager;
  * xxxxx is the username of the owning user for that web application
  *
  * @author Craig R. McClanahan
- * @version $Id: UserConfig.java 1310164 2012-04-06 04:27:41Z kfujino $
+ * @version $Id: UserConfig.java 1364147 2012-07-21 18:52:54Z markt $
  */
 
 public final class UserConfig
@@ -53,7 +53,7 @@ public final class UserConfig
     private static final org.apache.juli.logging.Log log=
         org.apache.juli.logging.LogFactory.getLog( UserConfig.class );
 
-    
+
     // ----------------------------------------------------- Instance Variables
 
 
@@ -221,7 +221,7 @@ public final class UserConfig
     }
 
     /**
-     * Return the regular expression used to test for user who deployment is allowed. 
+     * Return the regular expression used to test for user who deployment is allowed.
      */
     public String getAllow() {
         if (allow == null) return null;
@@ -317,7 +317,7 @@ public final class UserConfig
         }
 
         ExecutorService executor = host.getStartStopExecutor();
-        List<Future<?>> results = new ArrayList<Future<?>>();
+        List<Future<?>> results = new ArrayList<>();
 
         // Deploy the web application (if any) for each defined user
         Enumeration<String> users = database.getUsers();

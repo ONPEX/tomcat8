@@ -133,9 +133,9 @@
       <attribute name="fileDateFormat" required="false">
         <p>Allows a customized timestamp in the access log file name.
            The file is rotated whenever the formatted timestamp changes.
-           The default value is <code>yyyy-MM-dd</code>.
+           The default value is <code>.yyyy-MM-dd</code>.
            If you wish to rotate every hour, then set this value
-           to <code>yyyy-MM-dd.HH</code>.
+           to <code>.yyyy-MM-dd.HH</code>.
            The date format will always be localized
            using the locale <code>en_US</code>.
         </p>
@@ -234,6 +234,13 @@
            If set to <code>false</code>, then access logging will be written after each
            request. Default value: <code>true</code>
         </p>
+      </attribute>
+
+      <attribute name="maxLogMessageBufferSize" required="false">
+        <p>Log message buffers are usually recycled and re-used. To prevent
+           excessive memory usage, if a buffer grows beyond this size it will be
+           discarded. The default is <code>256</code> characters. This should be
+           set to larger than the typical access log message size.</p>
       </attribute>
 
       <attribute name="resolveHosts" required="false">

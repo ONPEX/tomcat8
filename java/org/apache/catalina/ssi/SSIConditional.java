@@ -21,8 +21,8 @@ import java.io.PrintWriter;
 import java.text.ParseException;
 /**
  * SSI command that handles all conditional directives.
- * 
- * @version $Revision: 1138121 $
+ *
+ * @version $Revision: 1187798 $
  * @author Paul Speed
  * @author David Becker
  */

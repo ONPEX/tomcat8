@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,15 +22,15 @@ package org.apache.catalina.filters;
  *
  *
  * @author Craig R. McClanahan
- * @version $Id: Constants.java 1300888 2012-03-15 10:33:31Z markt $
+ * @version $Id: Constants.java 1188823 2011-10-25 17:43:47Z markt $
  */
 public final class Constants {
 
     public static final String Package = "org.apache.catalina.filters";
-    
+
     public static final String CSRF_NONCE_SESSION_ATTR_NAME =
         "org.apache.catalina.filters.CSRF_NONCE";
-    
+
     public static final String CSRF_NONCE_REQUEST_PARAM =
         "org.apache.catalina.filters.CSRF_NONCE";
 

@@ -35,9 +35,11 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import org.apache.catalina.WebResourceRoot;
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
+import org.apache.catalina.webresources.StandardRoot;
 import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestGenerator extends TomcatBaseTest {
@@ -47,7 +49,7 @@ public class TestGenerator extends TomcatBaseTest {
         Tomcat tomcat = getTomcatInstance();
 
         File appDir =
-            new File("test/webapp-3.0");
+            new File("test/webapp");
         // app dir is relative to server home
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
@@ -76,7 +78,7 @@ public class TestGenerator extends TomcatBaseTest {
         Tomcat tomcat = getTomcatInstance();
 
         File appDir =
-            new File("test/webapp-3.0");
+            new File("test/webapp");
         // app dir is relative to server home
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
@@ -93,7 +95,7 @@ public class TestGenerator extends TomcatBaseTest {
         Tomcat tomcat = getTomcatInstance();
 
         File appDir =
-            new File("test/webapp-3.0");
+            new File("test/webapp");
         // app dir is relative to server home
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
@@ -110,14 +112,17 @@ public class TestGenerator extends TomcatBaseTest {
         Tomcat tomcat = getTomcatInstance();
 
         File appDir =
-            new File("test/webapp-3.0");
+            new File("test/webapp");
         // app dir is relative to server home
         StandardContext ctxt = (StandardContext) tomcat.addWebapp(null,
                 "/test", appDir.getAbsolutePath());
 
         // This test needs the JSTL libraries
         File lib = new File("webapps/examples/WEB-INF/lib");
-        ctxt.setAliases("/WEB-INF/lib=" + lib.getCanonicalPath());
+        ctxt.setResources(new StandardRoot(ctxt));
+        ctxt.getResources().createWebResourceSet(
+                WebResourceRoot.ResourceSetType.POST, lib.getAbsolutePath(),
+                "/WEB-INF/lib", "/");
 
         tomcat.start();
 
@@ -151,7 +156,7 @@ public class TestGenerator extends TomcatBaseTest {
         Tomcat tomcat = getTomcatInstance();
 
         File appDir =
-            new File("test/webapp-3.0");
+            new File("test/webapp");
         // app dir is relative to server home
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
@@ -225,12 +230,12 @@ public class TestGenerator extends TomcatBaseTest {
 
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
+        File appDir = new File("test/webapp");
         tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
         tomcat.start();
 
         ByteChunk res = new ByteChunk();
-        Map<String,List<String>> headers = new HashMap<String,List<String>>();
+        Map<String,List<String>> headers = new HashMap<>();
 
         getUrl("http://localhost:" + getPort() + "/test/bug49nnn/bug49799.jsp",
                 res, headers);

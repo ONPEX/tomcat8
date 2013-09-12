@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,10 +28,10 @@ import org.apache.tomcat.util.res.StringManager;
 
 public class SessionIdGenerator {
 
-    private static Log log = LogFactory.getLog(SessionIdGenerator.class);
+    private static final Log log = LogFactory.getLog(SessionIdGenerator.class);
 
 
-    private static StringManager sm =
+    private static final StringManager sm =
         StringManager.getManager("org.apache.catalina.util");
 
 
@@ -42,8 +42,7 @@ public class SessionIdGenerator {
      * designed this way since random number generators use a sync to make them
      * thread-safe and the sync makes using a a single object slow(er).
      */
-    private Queue<SecureRandom> randoms =
-        new ConcurrentLinkedQueue<SecureRandom>();
+    private final Queue<SecureRandom> randoms = new ConcurrentLinkedQueue<>();
 
 
     /**
@@ -88,7 +87,7 @@ public class SessionIdGenerator {
 
     /**
      * Specify a non-default @{link {@link SecureRandom} implementation to use.
-     * 
+     *
      * @param secureRandomClass The fully-qualified class name
      */
     public void setSecureRandomClass(String secureRandomClass) {
@@ -98,7 +97,7 @@ public class SessionIdGenerator {
 
     /**
      * Specify a non-default algorithm to use to generate random numbers.
-     * 
+     *
      * @param secureRandomAlgorithm The name of the algorithm
      */
     public void setSecureRandomAlgorithm(String secureRandomAlgorithm) {
@@ -108,7 +107,7 @@ public class SessionIdGenerator {
 
     /**
      * Specify a non-default provider to use to generate random numbers.
-     * 
+     *
      * @param secureRandomProvider  The name of the provider
      */
     public void setSecureRandomProvider(String secureRandomProvider) {
@@ -119,7 +118,7 @@ public class SessionIdGenerator {
     /**
      * Specify the node identifier associated with this node which will be
      * included in the generated session ID.
-     * 
+     *
      * @param jvmRoute  The node identifier
      */
     public void setJvmRoute(String jvmRoute) {
@@ -129,7 +128,7 @@ public class SessionIdGenerator {
 
     /**
      * Specify the number of bytes for a session ID
-     * 
+     *
      * @param sessionIdLength   Number of bytes
      */
     public void setSessionIdLength(int sessionIdLength) {
@@ -174,8 +173,8 @@ public class SessionIdGenerator {
 
         return buffer.toString();
     }
-    
-    
+
+
     private void getRandomBytes(byte bytes[]) {
 
         SecureRandom random = randoms.poll();
@@ -185,8 +184,8 @@ public class SessionIdGenerator {
         random.nextBytes(bytes);
         randoms.add(random);
     }
-    
-    
+
+
     /**
      * Create a new random number generator instance we should use for
      * generating session identifiers.
@@ -194,7 +193,7 @@ public class SessionIdGenerator {
     private SecureRandom createSecureRandom() {
 
         SecureRandom result = null;
-        
+
         long t1 = System.currentTimeMillis();
         if (secureRandomClass != null) {
             try {
@@ -236,7 +235,7 @@ public class SessionIdGenerator {
                         secureRandomAlgorithm), e);
             }
         }
-        
+
         if (result == null) {
             // Nothing works - use platform default
             result = new SecureRandom();
@@ -244,7 +243,7 @@ public class SessionIdGenerator {
 
         // Force seeding to take place
         result.nextInt();
-        
+
         long t2=System.currentTimeMillis();
         if( (t2-t1) > 100 )
             log.info(sm.getString("sessionIdGenerator.createRandom",

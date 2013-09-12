@@ -79,10 +79,14 @@
     </property>
 
     <property name="org.apache.el.parser. COERCE_TO_ZERO">
-      <p>If <code>true</code>, when coercing expressions to numbers
-      <code>""</code> and <code>null</code> will be coerced to zero as required
-      by the specification.</p>
-      <p>If not specified, the default value of <code>true</code> will be used.</p>
+      <p>If <code>true</code>, when coercing <code>null</code>s to objects of
+      type Number, Character or Boolean the result will be <code>0</code> for
+      Number and Character types and <code>false</code> for Boolean as required
+      by the EL 2.2 and earlier specifications. If this property is
+      <code>false</code> the result of the coercion will be <code>null</code> as
+      required by the EL 3.0 specification.</p>
+      <p>If not specified, the default value of <code>false</code> will be
+      used.</p>
     </property>
 
     <property name="org.apache.el.parser. SKIP_IDENTIFIER_CHECK">
@@ -268,7 +272,7 @@
 </section>
 
 
-<section name="Specification">
+<section name="Specifications">
 
   <properties>
 
@@ -335,6 +339,16 @@
       <p>If <code>org.apache.catalina.STRICT_SERVLET_COMPLIANCE</code> is set to
       <code>true</code>, the default of this setting will be <code>true</code>,
       else the default value will be <code>false</code>.</p>
+    </property>
+
+    <property name="org.apache.tomcat.websocket. STRICT_SPEC_COMPLIANCE">
+      <p>The default value of this system property is <code>false</code>.</p>
+      <p>If this is <code>true</code> the default values will be changed for:
+      <ul>
+        <li><code>org.apache.tomcat.websocket.server#isEnforceNoAddAfterHandshake</code>
+        (default changes from <code>false</code> to <code>true</code>)</li>
+      </ul>
+      </p>
     </property>
 
     <property
@@ -581,7 +595,7 @@
     <property name="javax.sql.DataSource.Factory">
       <p>The class name of the factory to use to create resources of type
       <code>javax.sql.DataSource</code>. If not specified the default of
-      <code>org.apache.tomcat.dbcp.dbcp.BasicDataSourceFactory</code> is used
+      <code>org.apache.tomcat.dbcp.dbcp2.BasicDataSourceFactory</code> is used
       which is a package renamed (to avoid conflictions) copy of
       <a href="http://commons.apache.org/dbcp">Apache Commons DBCP</a>.</p>
     </property>

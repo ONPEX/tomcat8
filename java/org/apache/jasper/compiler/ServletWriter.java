@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,22 +19,22 @@ package org.apache.jasper.compiler;
 import java.io.PrintWriter;
 
 /**
- * This is what is used to generate servlets. 
+ * This is what is used to generate servlets.
  *
  * @author Anil K. Vijendran
  * @author Kin-man Chung
  */
 public class ServletWriter {
-    public static final int TAB_WIDTH = 2;
-    public static final String SPACES = "                              ";
+    private static final int TAB_WIDTH = 2;
+    private static final String SPACES = "                              ";
 
     // Current indent level:
     private int indent = 0;
     private int virtual_indent = 0;
 
     // The sink writer:
-    PrintWriter writer;
-    
+    private final PrintWriter writer;
+
     // servlet line numbers start from 1
     private int javaLine = 1;
 
@@ -47,7 +47,7 @@ public class ServletWriter {
         writer.close();
     }
 
-    
+
     // -------------------- Access informations --------------------
 
     public int getJavaLine() {

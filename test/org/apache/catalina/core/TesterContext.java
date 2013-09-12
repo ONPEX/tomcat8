@@ -17,17 +17,18 @@
 package org.apache.catalina.core;
 
 import java.beans.PropertyChangeListener;
-import java.io.IOException;
+import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 import javax.management.ObjectName;
-import javax.naming.directory.DirContext;
 import javax.servlet.ServletContainerInitializer;
 import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
+import javax.servlet.ServletRegistration.Dynamic;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletSecurityElement;
 import javax.servlet.descriptor.JspConfigDescriptor;
@@ -45,26 +46,65 @@ import org.apache.catalina.Loader;
 import org.apache.catalina.Manager;
 import org.apache.catalina.Pipeline;
 import org.apache.catalina.Realm;
+import org.apache.catalina.WebResourceRoot;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
-import org.apache.catalina.deploy.ApplicationListener;
-import org.apache.catalina.deploy.ApplicationParameter;
-import org.apache.catalina.deploy.ErrorPage;
-import org.apache.catalina.deploy.FilterDef;
-import org.apache.catalina.deploy.FilterMap;
-import org.apache.catalina.deploy.LoginConfig;
-import org.apache.catalina.deploy.NamingResources;
-import org.apache.catalina.deploy.SecurityConstraint;
-import org.apache.catalina.util.CharsetMapper;
+import org.apache.catalina.deploy.NamingResourcesImpl;
 import org.apache.juli.logging.Log;
+import org.apache.tomcat.InstanceManager;
 import org.apache.tomcat.JarScanner;
-import org.apache.tomcat.util.http.mapper.Mapper;
+import org.apache.tomcat.util.descriptor.web.ApplicationListener;
+import org.apache.tomcat.util.descriptor.web.ApplicationParameter;
+import org.apache.tomcat.util.descriptor.web.ErrorPage;
+import org.apache.tomcat.util.descriptor.web.FilterDef;
+import org.apache.tomcat.util.descriptor.web.FilterMap;
+import org.apache.tomcat.util.descriptor.web.LoginConfig;
+import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
 
 /**
  * Minimal implementation for use in unit tests.
  */
 public class TesterContext implements Context {
+
+    private List<String> securityRoles = new ArrayList<>();
+    @Override
+    public void addSecurityRole(String role) {
+        securityRoles.add(role);
+    }
+
+    @Override
+    public boolean findSecurityRole(String role) {
+        return securityRoles.contains(role);
+    }
+
+    @Override
+    public String[] findSecurityRoles() {
+        return securityRoles.toArray(new String[securityRoles.size()]);
+    }
+
+    @Override
+    public void removeSecurityRole(String role) {
+        securityRoles.remove(role);
+    }
+
+    private List<SecurityConstraint> securityConstraints = new ArrayList<>();
+    @Override
+    public void addConstraint(SecurityConstraint constraint) {
+        securityConstraints.add(constraint);
+    }
+
+    @Override
+    public SecurityConstraint[] findConstraints() {
+        return securityConstraints.toArray(
+                new SecurityConstraint[securityConstraints.size()]);
+    }
+
+    @Override
+    public void removeConstraint(SecurityConstraint constraint) {
+        securityConstraints.remove(constraint);
+    }
+
 
     @Override
     public Log getLogger() {
@@ -73,6 +113,16 @@ public class TesterContext implements Context {
 
     @Override
     public ObjectName getObjectName() {
+        return null;
+    }
+
+    @Override
+    public String getDomain() {
+        return null;
+    }
+
+    @Override
+    public String getMBeanKeyProperties() {
         return null;
     }
 
@@ -103,7 +153,7 @@ public class TesterContext implements Context {
 
     @Override
     public String getName() {
-        return "/test";
+        return null;
     }
 
     @Override
@@ -215,6 +265,11 @@ public class TesterContext implements Context {
     @Override
     public void setStartStopThreads(int startStopThreads) {
         // NO-OP
+    }
+
+    @Override
+    public File getCatalinaBase() {
+        return null;
     }
 
     @Override
@@ -400,6 +455,16 @@ public class TesterContext implements Context {
     }
 
     @Override
+    public boolean getDenyUncoveredHttpMethods() {
+        return false;
+    }
+
+    @Override
+    public void setDenyUncoveredHttpMethods(boolean denyUncoveredHttpMethods) {
+        // NO-OP
+    }
+
+    @Override
     public String getDisplayName() {
         return null;
     }
@@ -455,12 +520,12 @@ public class TesterContext implements Context {
     }
 
     @Override
-    public NamingResources getNamingResources() {
+    public NamingResourcesImpl getNamingResources() {
         return null;
     }
 
     @Override
-    public void setNamingResources(NamingResources namingResources) {
+    public void setNamingResources(NamingResourcesImpl namingResources) {
         // NO-OP
     }
 
@@ -630,17 +695,7 @@ public class TesterContext implements Context {
     }
 
     @Override
-    public void addApplicationListener(String listener) {
-        // NO-OP
-    }
-
-    @Override
     public void addApplicationParameter(ApplicationParameter parameter) {
-        // NO-OP
-    }
-
-    @Override
-    public void addConstraint(SecurityConstraint constraint) {
         // NO-OP
     }
 
@@ -690,11 +745,6 @@ public class TesterContext implements Context {
     }
 
     @Override
-    public void addSecurityRole(String role) {
-        // NO-OP
-    }
-
-    @Override
     public void addServletMapping(String pattern, String name) {
         // NO-OP
     }
@@ -731,17 +781,12 @@ public class TesterContext implements Context {
     }
 
     @Override
-    public String[] findApplicationListeners() {
+    public ApplicationListener[] findApplicationListeners() {
         return null;
     }
 
     @Override
     public ApplicationParameter[] findApplicationParameters() {
-        return null;
-    }
-
-    @Override
-    public SecurityConstraint[] findConstraints() {
         return null;
     }
 
@@ -802,16 +847,6 @@ public class TesterContext implements Context {
 
     @Override
     public String findRoleMapping(String role) {
-        return null;
-    }
-
-    @Override
-    public boolean findSecurityRole(String role) {
-        return false;
-    }
-
-    @Override
-    public String[] findSecurityRoles() {
         return null;
     }
 
@@ -886,11 +921,6 @@ public class TesterContext implements Context {
     }
 
     @Override
-    public void removeConstraint(SecurityConstraint constraint) {
-        // NO-OP
-    }
-
-    @Override
     public void removeErrorPage(ErrorPage errorPage) {
         // NO-OP
     }
@@ -922,11 +952,6 @@ public class TesterContext implements Context {
 
     @Override
     public void removeRoleMapping(String role) {
-        // NO-OP
-    }
-
-    @Override
-    public void removeSecurityRole(String role) {
         // NO-OP
     }
 
@@ -986,6 +1011,11 @@ public class TesterContext implements Context {
     }
 
     @Override
+    public void setJspConfigDescriptor(JspConfigDescriptor descriptor) {
+        // NO-OP
+    }
+
+    @Override
     public void addServletContainerInitializer(ServletContainerInitializer sci,
             Set<Class<?>> classes) {
         // NO-OP
@@ -999,6 +1029,12 @@ public class TesterContext implements Context {
     @Override
     public boolean isServlet22() {
         return false;
+    }
+
+    @Override
+    public Set<String> addServletSecurity(Dynamic registration,
+            ServletSecurityElement servletSecurityElement) {
+        return null;
     }
 
     @Override
@@ -1072,6 +1108,16 @@ public class TesterContext implements Context {
     }
 
     @Override
+    public WebResourceRoot getResources() {
+        return null;
+    }
+
+    @Override
+    public void setResources(WebResourceRoot resources) {
+        // NO-OP
+    }
+
+    @Override
     public Manager getManager() {
         return null;
     }
@@ -1079,6 +1125,16 @@ public class TesterContext implements Context {
     @Override
     public void setManager(Manager manager) {
         // NO-OP
+    }
+
+    @Override
+    public void setAddWebinfClassesResources(boolean addWebinfClassesResources) {
+        // NO-OP
+    }
+
+    @Override
+    public boolean getAddWebinfClassesResources() {
+        return false;
     }
 
     @Override
@@ -1122,64 +1178,12 @@ public class TesterContext implements Context {
     }
 
     @Override
-    public String getInfo() {
+    public InstanceManager getInstanceManager() {
         return null;
     }
 
     @Override
-    @Deprecated
-    public Object getMappingObject() {
-        return null;
-    }
-
-    @Override
-    public DirContext getResources() {
-        return null;
-    }
-
-    @Override
-    public void setResources(DirContext resources) {
-        //NO-OP
-    }
-
-    @Override
-    @Deprecated
-    public void invoke(Request request, Response response) throws IOException,
-            ServletException {
+    public void setInstanceManager(InstanceManager instanceManager) {
         // NO-OP
-    }
-
-    @Override
-    @Deprecated
-    public boolean getAvailable() {
-        return false;
-    }
-
-    @Override
-    @Deprecated
-    public CharsetMapper getCharsetMapper() {
-        return null;
-    }
-
-    @Override
-    @Deprecated
-    public void setCharsetMapper(CharsetMapper mapper) {
-        // NO-OP
-    }
-
-    @Override
-    public Mapper getMapper() {
-        return null;
-    }
-
-    @Override
-    public void addResourceJarUrl(URL url) {
-    }
-
-    @Override
-    public Set<String> addServletSecurity(
-            ApplicationServletRegistration registration,
-            ServletSecurityElement servletSecurityElement) {
-        return null;
     }
 }

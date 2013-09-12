@@ -39,7 +39,7 @@
 #                   It can also be used to update the XML parser implementation.
 #                   Defaults to $CATALINA_HOME/endorsed.
 #
-# $Id: tool-wrapper.sh 1138835 2011-06-23 11:27:57Z rjung $
+# $Id: tool-wrapper.sh 1302376 2012-03-19 11:16:16Z markt $
 # -----------------------------------------------------------------------------
 
 # OS specific support.  $var _must_ be set to either true or false.

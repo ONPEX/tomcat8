@@ -29,7 +29,7 @@ public class MediaTypeCache {
     private final ConcurrentCache<String,String[]> cache;
 
     public MediaTypeCache(int size) {
-        cache = new ConcurrentCache<String,String[]>(size);
+        cache = new ConcurrentCache<>(size);
     }
 
     /**

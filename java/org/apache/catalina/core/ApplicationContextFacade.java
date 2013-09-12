@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -55,24 +55,24 @@ import org.apache.tomcat.util.ExceptionUtils;
  *
  * @author Remy Maucherat
  * @author Jean-Francois Arcand
- * @version $Id: ApplicationContextFacade.java 1201569 2011-11-14 01:36:07Z kkolinko $
+ * @version $Id: ApplicationContextFacade.java 1460675 2013-03-25 14:20:35Z markt $
  */
 
 public class ApplicationContextFacade implements ServletContext {
-        
+
     // ---------------------------------------------------------- Attributes
     /**
      * Cache Class object used for reflection.
      */
-    private HashMap<String,Class<?>[]> classCache;
-    
-    
+    private final HashMap<String,Class<?>[]> classCache;
+
+
     /**
      * Cache method object.
      */
-    private HashMap<String,Method> objectCache;
-    
-    
+    private final HashMap<String,Method> objectCache;
+
+
     // ----------------------------------------------------------- Constructors
 
 
@@ -85,13 +85,13 @@ public class ApplicationContextFacade implements ServletContext {
     public ApplicationContextFacade(ApplicationContext context) {
         super();
         this.context = context;
-        
-        classCache = new HashMap<String,Class<?>[]>();
-        objectCache = new HashMap<String,Method>();
+
+        classCache = new HashMap<>();
+        objectCache = new HashMap<>();
         initClassCache();
     }
-    
-    
+
+
     private void initClassCache(){
         Class<?>[] clazz = new Class[]{String.class};
         classCache.put("getContext", clazz);
@@ -127,7 +127,7 @@ public class ApplicationContextFacade implements ServletContext {
     /**
      * Wrapped application context.
      */
-    private ApplicationContext context = null;
+    private final ApplicationContext context;
 
 
     // ------------------------------------------------- ServletContext Methods
@@ -188,7 +188,7 @@ public class ApplicationContextFacade implements ServletContext {
         throws MalformedURLException {
         if (Globals.IS_SECURITY_ENABLED) {
             try {
-                return (URL) invokeMethod(context, "getResource", 
+                return (URL) invokeMethod(context, "getResource",
                                           new Object[]{path});
             } catch(Throwable t) {
                 ExceptionUtils.handleThrowable(t);
@@ -206,7 +206,7 @@ public class ApplicationContextFacade implements ServletContext {
     @Override
     public InputStream getResourceAsStream(String path) {
         if (SecurityUtil.isPackageProtectionEnabled()) {
-            return (InputStream) doPrivileged("getResourceAsStream", 
+            return (InputStream) doPrivileged("getResourceAsStream",
                                               new Object[]{path});
         } else {
             return context.getResourceAsStream(path);
@@ -217,7 +217,7 @@ public class ApplicationContextFacade implements ServletContext {
     @Override
     public RequestDispatcher getRequestDispatcher(final String path) {
         if (SecurityUtil.isPackageProtectionEnabled()) {
-            return (RequestDispatcher) doPrivileged("getRequestDispatcher", 
+            return (RequestDispatcher) doPrivileged("getRequestDispatcher",
                                                     new Object[]{path});
         } else {
             return context.getRequestDispatcher(path);
@@ -228,7 +228,7 @@ public class ApplicationContextFacade implements ServletContext {
     @Override
     public RequestDispatcher getNamedDispatcher(String name) {
         if (SecurityUtil.isPackageProtectionEnabled()) {
-            return (RequestDispatcher) doPrivileged("getNamedDispatcher", 
+            return (RequestDispatcher) doPrivileged("getNamedDispatcher",
                                                     new Object[]{name});
         } else {
             return context.getNamedDispatcher(name);
@@ -245,7 +245,7 @@ public class ApplicationContextFacade implements ServletContext {
         throws ServletException {
         if (SecurityUtil.isPackageProtectionEnabled()) {
             try {
-                return (Servlet) invokeMethod(context, "getServlet", 
+                return (Servlet) invokeMethod(context, "getServlet",
                                               new Object[]{name});
             } catch (Throwable t) {
                 ExceptionUtils.handleThrowable(t);
@@ -308,7 +308,7 @@ public class ApplicationContextFacade implements ServletContext {
     @Deprecated
     public void log(Exception exception, String msg) {
         if (SecurityUtil.isPackageProtectionEnabled()) {
-            doPrivileged("log", new Class[]{Exception.class, String.class}, 
+            doPrivileged("log", new Class[]{Exception.class, String.class},
                          new Object[]{exception,msg});
         } else {
             context.log(exception, msg);
@@ -319,7 +319,7 @@ public class ApplicationContextFacade implements ServletContext {
     @Override
     public void log(String message, Throwable throwable) {
         if (SecurityUtil.isPackageProtectionEnabled()) {
-            doPrivileged("log", new Class[]{String.class, Throwable.class}, 
+            doPrivileged("log", new Class[]{String.class, Throwable.class},
                          new Object[]{message, throwable});
         } else {
             context.log(message, throwable);
@@ -350,7 +350,7 @@ public class ApplicationContextFacade implements ServletContext {
     @Override
     public String getInitParameter(String name) {
         if (SecurityUtil.isPackageProtectionEnabled()) {
-            return (String) doPrivileged("getInitParameter", 
+            return (String) doPrivileged("getInitParameter",
                                          new Object[]{name});
         } else {
             return context.getInitParameter(name);
@@ -421,7 +421,7 @@ public class ApplicationContextFacade implements ServletContext {
         }
     }
 
-       
+
     @Override
     public String getContextPath() {
         if (SecurityUtil.isPackageProtectionEnabled()) {
@@ -431,7 +431,7 @@ public class ApplicationContextFacade implements ServletContext {
         }
     }
 
-       
+
     @Override
     public FilterRegistration.Dynamic addFilter(String filterName,
             String className) {
@@ -473,7 +473,7 @@ public class ApplicationContextFacade implements ServletContext {
     throws ServletException {
         if (SecurityUtil.isPackageProtectionEnabled()) {
             try {
-                return (T) invokeMethod(context, "createFilter", 
+                return (T) invokeMethod(context, "createFilter",
                                               new Object[]{c});
             } catch (Throwable t) {
                 ExceptionUtils.handleThrowable(t);
@@ -497,8 +497,8 @@ public class ApplicationContextFacade implements ServletContext {
             return context.getFilterRegistration(filterName);
         }
     }
-    
-    
+
+
     @Override
     public ServletRegistration.Dynamic addServlet(String servletName,
             String className) {
@@ -541,7 +541,7 @@ public class ApplicationContextFacade implements ServletContext {
     throws ServletException {
         if (SecurityUtil.isPackageProtectionEnabled()) {
             try {
-                return (T) invokeMethod(context, "createServlet", 
+                return (T) invokeMethod(context, "createServlet",
                                               new Object[]{c});
             } catch (Throwable t) {
                 ExceptionUtils.handleThrowable(t);
@@ -555,7 +555,7 @@ public class ApplicationContextFacade implements ServletContext {
         }
     }
 
-    
+
     @Override
     public ServletRegistration getServletRegistration(String servletName) {
         if (SecurityUtil.isPackageProtectionEnabled()) {
@@ -565,8 +565,8 @@ public class ApplicationContextFacade implements ServletContext {
             return context.getServletRegistration(servletName);
         }
     }
-    
-    
+
+
     @Override
     @SuppressWarnings("unchecked") // doPrivileged() returns the correct type
     public Set<SessionTrackingMode> getDefaultSessionTrackingModes() {
@@ -663,7 +663,7 @@ public class ApplicationContextFacade implements ServletContext {
             throws ServletException {
         if (SecurityUtil.isPackageProtectionEnabled()) {
             try {
-                return (T) invokeMethod(context, "createListener", 
+                return (T) invokeMethod(context, "createListener",
                                               new Object[]{c});
             } catch (Throwable t) {
                 ExceptionUtils.handleThrowable(t);
@@ -756,8 +756,19 @@ public class ApplicationContextFacade implements ServletContext {
         }
     }
 
+
+    @Override
+    public String getVirtualServerName() {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            return (String) doPrivileged("getVirtualServerName", null);
+        } else  {
+            return context.getVirtualServerName();
+        }
+    }
+
+
     /**
-     * Use reflection to invoke the requested method. Cache the method object 
+     * Use reflection to invoke the requested method. Cache the method object
      * to speed up the process
      * @param methodName The method to call.
      * @param params The arguments passed to the called method.
@@ -771,9 +782,9 @@ public class ApplicationContextFacade implements ServletContext {
         }
     }
 
-    
+
     /**
-     * Use reflection to invoke the requested method. Cache the method object 
+     * Use reflection to invoke the requested method. Cache the method object
      * to speed up the process
      * @param appContext The AppliationContext object on which the method
      *                   will be invoked
@@ -781,8 +792,8 @@ public class ApplicationContextFacade implements ServletContext {
      * @param params The arguments passed to the called method.
      */
     private Object invokeMethod(ApplicationContext appContext,
-                                final String methodName, 
-                                Object[] params) 
+                                final String methodName,
+                                Object[] params)
         throws Throwable{
 
         try{
@@ -792,7 +803,7 @@ public class ApplicationContextFacade implements ServletContext {
                     .getMethod(methodName, classCache.get(methodName));
                 objectCache.put(methodName, method);
             }
-            
+
             return executeMethod(method,appContext,params);
         } catch (Exception ex){
             handleException(ex);
@@ -801,15 +812,15 @@ public class ApplicationContextFacade implements ServletContext {
             params = null;
         }
     }
-    
+
     /**
-     * Use reflection to invoke the requested method. Cache the method object 
+     * Use reflection to invoke the requested method. Cache the method object
      * to speed up the process
      * @param methodName The method to invoke.
      * @param clazz The class where the method is.
      * @param params The arguments passed to the called method.
-     */    
-    private Object doPrivileged(final String methodName, 
+     */
+    private Object doPrivileged(final String methodName,
                                 final Class<?>[] clazz,
                                 Object[] params) {
 
@@ -828,8 +839,8 @@ public class ApplicationContextFacade implements ServletContext {
             params = null;
         }
     }
-    
-    
+
+
     /**
      * Executes the method of the specified <code>ApplicationContext</code>
      * @param method The method object to be invoked.
@@ -837,13 +848,13 @@ public class ApplicationContextFacade implements ServletContext {
      *                   will be invoked
      * @param params The arguments passed to the called method.
      */
-    private Object executeMethod(final Method method, 
+    private Object executeMethod(final Method method,
                                  final ApplicationContext context,
-                                 final Object[] params) 
-            throws PrivilegedActionException, 
+                                 final Object[] params)
+            throws PrivilegedActionException,
                    IllegalAccessException,
                    InvocationTargetException {
-                                     
+
         if (SecurityUtil.isPackageProtectionEnabled()){
            return AccessController.doPrivileged(new PrivilegedExceptionAction<Object>(){
                 @Override
@@ -853,10 +864,10 @@ public class ApplicationContextFacade implements ServletContext {
             });
         } else {
             return method.invoke(context, params);
-        }        
+        }
     }
 
-    
+
     /**
      *
      * Throw the real exception.
@@ -866,11 +877,11 @@ public class ApplicationContextFacade implements ServletContext {
         throws Throwable {
 
         Throwable realException;
-        
+
         if (ex instanceof PrivilegedActionException) {
             ex = ((PrivilegedActionException) ex).getException();
         }
-        
+
         if (ex instanceof InvocationTargetException) {
             realException = ex.getCause();
             if (realException == null) {
@@ -878,9 +889,8 @@ public class ApplicationContextFacade implements ServletContext {
             }
         } else {
             realException = ex;
-        }   
-        
+        }
+
         throw realException;
     }
-
 }

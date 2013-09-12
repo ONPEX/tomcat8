@@ -29,7 +29,7 @@ import org.apache.tomcat.util.net.SocketWrapper;
 
 /**
  * Output buffer.
- * 
+ *
  * @author <a href="mailto:remm@apache.org">Remy Maucherat</a>
  */
 public class InternalOutputBuffer extends AbstractOutputBuffer<Socket>
@@ -42,22 +42,12 @@ public class InternalOutputBuffer extends AbstractOutputBuffer<Socket>
      */
     public InternalOutputBuffer(Response response, int headerBufferSize) {
 
-        this.response = response;
-
-        buf = new byte[headerBufferSize];
+        super(response, headerBufferSize);
 
         outputStreamOutputBuffer = new OutputStreamOutputBuffer();
 
-        filterLibrary = new OutputFilter[0];
-        activeFilters = new OutputFilter[0];
-        lastActiveFilter = -1;
-
         socketBuffer = new ByteChunk();
         socketBuffer.setByteOutputChannel(this);
-
-        committed = false;
-        finished = false;
-
     }
 
     /**
@@ -69,18 +59,19 @@ public class InternalOutputBuffer extends AbstractOutputBuffer<Socket>
     /**
      * Socket buffer.
      */
-    private ByteChunk socketBuffer;
+    private final ByteChunk socketBuffer;
 
 
     /**
      * Socket buffer (extra buffering to reduce number of packets sent).
      */
-    private boolean useSocketBuffer = false;    
-    
+    private boolean useSocketBuffer = false;
+
 
     /**
      * Set the socket buffer size.
      */
+    @Override
     public void setSocketBuffer(int socketBufferSize) {
 
         if (socketBufferSize > 500) {
@@ -89,7 +80,6 @@ public class InternalOutputBuffer extends AbstractOutputBuffer<Socket>
         } else {
             useSocketBuffer = false;
         }
-
     }
 
 
@@ -104,26 +94,7 @@ public class InternalOutputBuffer extends AbstractOutputBuffer<Socket>
 
 
     /**
-     * Flush the response.
-     * 
-     * @throws IOException an underlying I/O error occurred
-     */
-    @Override
-    public void flush()
-        throws IOException {
-
-        super.flush();
-        
-        // Flush the current buffer
-        if (useSocketBuffer) {
-            socketBuffer.flushBuffer();
-        }
-
-    }
-
-
-    /**
-     * Recycle the output buffer. This should be called when closing the 
+     * Recycle the output buffer. This should be called when closing the
      * connection.
      */
     @Override
@@ -135,7 +106,7 @@ public class InternalOutputBuffer extends AbstractOutputBuffer<Socket>
 
     /**
      * End processing of current HTTP request.
-     * Note: All bytes of the current request should have been already 
+     * Note: All bytes of the current request should have been already
      * consumed. This method only resets all the pointers so that we are ready
      * to parse the next HTTP request.
      */
@@ -146,23 +117,7 @@ public class InternalOutputBuffer extends AbstractOutputBuffer<Socket>
     }
 
 
-    /**
-     * End request.
-     * 
-     * @throws IOException an underlying I/O error occurred
-     */
-    @Override
-    public void endRequest()
-        throws IOException {
-        super.endRequest();
-        if (useSocketBuffer) {
-            socketBuffer.flushBuffer();
-        }
-    }
-
-
     // ------------------------------------------------ HTTP/1.1 Output Methods
-
 
     /**
      * Send an acknowledgment.
@@ -182,7 +137,7 @@ public class InternalOutputBuffer extends AbstractOutputBuffer<Socket>
 
     /**
      * Commit the response.
-     * 
+     *
      * @throws IOException an underlying I/O error occurred
      */
     @Override
@@ -196,9 +151,9 @@ public class InternalOutputBuffer extends AbstractOutputBuffer<Socket>
         if (pos > 0) {
             // Sending the response header buffer
             if (useSocketBuffer) {
-                socketBuffer.append(buf, 0, pos);
+                socketBuffer.append(headerBuffer, 0, pos);
             } else {
-                outputStream.write(buf, 0, pos);
+                outputStream.write(headerBuffer, 0, pos);
             }
         }
 
@@ -217,14 +172,43 @@ public class InternalOutputBuffer extends AbstractOutputBuffer<Socket>
     }
 
 
-    // ----------------------------------- OutputStreamOutputBuffer Inner Class
+    //-------------------------------------------------- Non-blocking IO methods
 
+    @Override
+    protected boolean hasMoreDataToFlush() {
+        // The blocking connector always blocks until the previous write is
+        // complete so there is never data remaining to flush. This effectively
+        // allows non-blocking code to work with the blocking connector but -
+        // obviously - every write will always block.
+        return false;
+    }
+
+
+    @Override
+    protected void registerWriteInterest() {
+        // NO-OP for non-blocking connector
+    }
+
+
+    @Override
+    protected boolean flushBuffer(boolean block) throws IOException {
+        // Blocking connector so ignore block parameter as this will always use
+        // blocking IO.
+        if (useSocketBuffer) {
+            socketBuffer.flushBuffer();
+        }
+        // Always blocks so never any data left over.
+        return false;
+    }
+
+
+    // ----------------------------------- OutputStreamOutputBuffer Inner Class
 
     /**
      * This class is an output buffer which will write data to an output
      * stream.
      */
-    protected class OutputStreamOutputBuffer 
+    protected class OutputStreamOutputBuffer
         implements OutputBuffer {
 
 
@@ -232,15 +216,15 @@ public class InternalOutputBuffer extends AbstractOutputBuffer<Socket>
          * Write chunk.
          */
         @Override
-        public int doWrite(ByteChunk chunk, Response res) 
+        public int doWrite(ByteChunk chunk, Response res)
             throws IOException {
 
             int length = chunk.getLength();
             if (useSocketBuffer) {
-                socketBuffer.append(chunk.getBuffer(), chunk.getStart(), 
+                socketBuffer.append(chunk.getBuffer(), chunk.getStart(),
                                     length);
             } else {
-                outputStream.write(chunk.getBuffer(), chunk.getStart(), 
+                outputStream.write(chunk.getBuffer(), chunk.getStart(),
                                    length);
             }
             byteCount += chunk.getLength();

@@ -23,7 +23,7 @@ package org.apache.catalina;
  * Global constants that are applicable to multiple packages within Catalina.
  *
  * @author Craig R. McClanahan
- * @version $Id: Globals.java 1301255 2012-03-15 22:47:40Z markt $
+ * @version $Id: Globals.java 1239298 2012-02-01 20:11:26Z markt $
  */
 
 public final class Globals {
@@ -99,13 +99,7 @@ public final class Globals {
      */
     public static final String SSL_SESSION_ID_ATTR =
         "javax.servlet.request.ssl_session_id";
-    /**
-     * Tomcat specific attribute as used in Tomcat 6.
-     * @deprecated
-     */
-    @Deprecated
-    public static final String SSL_SESSION_ID_TOMCAT_ATTR =
-        "javax.servlet.request.ssl_session";
+
 
     /**
      * The request attribute key for the session manager.
@@ -113,26 +107,6 @@ public final class Globals {
      */
     public static final String SSL_SESSION_MGR_ATTR =
         "javax.servlet.request.ssl_session_mgr";
-
-
-    /**
-     * The servlet context attribute under which the managed bean Registry
-     * will be stored for privileged contexts (if enabled).
-     * @deprecated Unused. Will be removed in Tomcat 8.0.x.
-     */
-    @Deprecated
-    public static final String MBEAN_REGISTRY_ATTR =
-        "org.apache.catalina.Registry";
-
-
-    /**
-     * The servlet context attribute under which the MBeanServer will be stored
-     * for privileged contexts (if enabled).
-     * @deprecated Unused. Will be removed in Tomcat 8.0.x.
-     */
-    @Deprecated
-    public static final String MBEAN_SERVER_ATTR =
-        "org.apache.catalina.MBeanServer";
 
 
     /**
@@ -163,17 +137,6 @@ public final class Globals {
 
     public static final String GSS_CREDENTIAL_ATTR =
         "org.apache.catalina.realm.GSS_CREDENTIAL";
-
-
-    /**
-     * All request attributes which names start with this prefix are used by
-     * connector implementations. They are passed down to coyoteRequest and back
-     * up. See <code>Request.setAttribute(String, Object)</code>.
-     * @deprecated Unused. Will be removed in Tomcat 8.0.x.
-     */
-    @Deprecated
-    public static final String TOMCAT_CONNECTOR_ATTR_PREFIX =
-        "org.apache.tomcat.";
 
 
     /**

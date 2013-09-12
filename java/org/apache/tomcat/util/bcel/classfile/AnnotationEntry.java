@@ -18,9 +18,7 @@
 package org.apache.tomcat.util.bcel.classfile;
 
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,33 +26,31 @@ import org.apache.tomcat.util.bcel.Constants;
 
 /**
  * represents one annotation in the annotation table
- * 
+ *
  * @version $Id: AnnotationEntry
  * @author  <A HREF="mailto:dbrosius@mebigfatguy.com">D. Brosius</A>
  * @since 5.3
  */
-public class AnnotationEntry implements Constants, Serializable {
+public class AnnotationEntry implements Constants {
 
-    private static final long serialVersionUID = 1L;
-    
     private final int type_index;
     private final ConstantPool constant_pool;
 
     private List<ElementValuePair> element_value_pairs;
-    
+
     /**
      * Factory method to create an AnnotionEntry from a DataInputStream
-     * 
+     *
      * @param file
      * @param constant_pool
      * @return the entry
      * @throws IOException
      */
     public static AnnotationEntry read(DataInputStream file, ConstantPool constant_pool) throws IOException {
-        
+
         final AnnotationEntry annotationEntry = new AnnotationEntry(file.readUnsignedShort(), constant_pool);
         final int num_element_value_pairs = (file.readUnsignedShort());
-        annotationEntry.element_value_pairs = new ArrayList<ElementValuePair>();
+        annotationEntry.element_value_pairs = new ArrayList<>();
         for (int i = 0; i < num_element_value_pairs; i++) {
             annotationEntry.element_value_pairs.add(new ElementValuePair(file.readUnsignedShort(), ElementValue.readElementValue(file, constant_pool),
                     constant_pool));
@@ -66,7 +62,7 @@ public class AnnotationEntry implements Constants, Serializable {
         this.type_index = type_index;
         this.constant_pool = constant_pool;
     }
-    
+
     /**
      * @return the annotation type name
      */
@@ -81,15 +77,5 @@ public class AnnotationEntry implements Constants, Serializable {
     public ElementValuePair[] getElementValuePairs() {
         // TODO return List
         return element_value_pairs.toArray(new ElementValuePair[element_value_pairs.size()]);
-    }
-
-    public void dump(DataOutputStream dos) throws IOException {
-        dos.writeShort(type_index); // u2 index of type name in cpool
-        dos.writeShort(element_value_pairs.size()); // u2 element_value pair
-        // count
-        for (int i = 0; i < element_value_pairs.size(); i++) {
-            final ElementValuePair envp = element_value_pairs.get(i);
-            envp.dump(dos);
-        }
     }
 }

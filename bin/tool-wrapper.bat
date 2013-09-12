@@ -39,7 +39,7 @@ rem                   created outside of the JCP (i.e. DOM and SAX from W3C).
 rem                   It can also be used to update the XML parser implementation.
 rem                   Defaults to $CATALINA_HOME/endorsed.
 rem
-rem $Id: tool-wrapper.bat 1138835 2011-06-23 11:27:57Z rjung $
+rem $Id: tool-wrapper.bat 1302376 2012-03-19 11:16:16Z markt $
 rem ---------------------------------------------------------------------------
 
 rem Guess CATALINA_HOME if not defined

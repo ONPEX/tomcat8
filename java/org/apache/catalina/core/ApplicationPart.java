@@ -69,7 +69,7 @@ public class ApplicationPart implements Part {
     @Override
     public Collection<String> getHeaderNames() {
         if (fileItem instanceof DiskFileItem) {
-            HashSet<String> headerNames = new HashSet<String>();
+            HashSet<String> headerNames = new HashSet<>();
             Iterator<String> iter =
                 ((DiskFileItem) fileItem).getHeaders().getHeaderNames();
             while (iter.hasNext()) {
@@ -83,7 +83,7 @@ public class ApplicationPart implements Part {
     @Override
     public Collection<String> getHeaders(String name) {
         if (fileItem instanceof DiskFileItem) {
-            HashSet<String> headers = new HashSet<String>();
+            HashSet<String> headers = new HashSet<>();
             Iterator<String> iter =
                 ((DiskFileItem) fileItem).getHeaders().getHeaders(name);
             while (iter.hasNext()) {
@@ -126,21 +126,10 @@ public class ApplicationPart implements Part {
         return fileItem.getString(encoding);
     }
 
-    /**
-     * Calls {@link #getSubmittedFileName()}.
-     *
-     * @deprecated Use {@link #getSubmittedFileName()} from Servlet 3.1 instead.
-     *             This method will be removed in Tomcat 8.
+    /*
+     * Adapted from FileUploadBase.getFileName()
      */
-    @Deprecated
-    public String getFilename() {
-        return getSubmittedFileName();
-    }
-
-    /**
-     * Adapted from FileUploadBase.getFileName(). Method name chosen to be
-     * consistent with Servlet 3.1.
-     */
+    @Override
     public String getSubmittedFileName() {
         String fileName = null;
         String cd = getHeader("Content-Disposition");

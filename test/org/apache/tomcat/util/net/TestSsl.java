@@ -35,9 +35,12 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
+import org.apache.catalina.Context;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
 import org.apache.tomcat.util.buf.ByteChunk;
+import org.apache.tomcat.util.descriptor.web.ApplicationListener;
+import org.apache.tomcat.websocket.server.WsListener;
 
 /**
  * The keys and certificates used in this file are all available in svn and were
@@ -53,7 +56,10 @@ public class TestSsl extends TomcatBaseTest {
         Tomcat tomcat = getTomcatInstance();
 
         File appDir = new File(getBuildDirectory(), "webapps/examples");
-        tomcat.addWebapp(null, "/examples", appDir.getAbsolutePath());
+        org.apache.catalina.Context ctxt  = tomcat.addWebapp(
+                null, "/examples", appDir.getAbsolutePath());
+        ctxt.addApplicationListener(new ApplicationListener(
+                WsListener.class.getName(), false));
 
         TesterSupport.initSsl(tomcat);
 
@@ -70,7 +76,10 @@ public class TestSsl extends TomcatBaseTest {
         Tomcat tomcat = getTomcatInstance();
 
         File appDir = new File(getBuildDirectory(), "webapps/examples");
-        tomcat.addWebapp(null, "/examples", appDir.getAbsolutePath());
+        org.apache.catalina.Context ctxt  = tomcat.addWebapp(
+                null, "/examples", appDir.getAbsolutePath());
+        ctxt.addApplicationListener(new ApplicationListener(
+                WsListener.class.getName(), false));
 
         TesterSupport.initSsl(tomcat, "localhost-copy1.jks", "changeit",
                 "tomcatpass");
@@ -162,7 +171,10 @@ public class TestSsl extends TomcatBaseTest {
 
         File appDir = new File(getBuildDirectory(), "webapps/examples");
         // app dir is relative to server home
-        tomcat.addWebapp(null, "/examples", appDir.getAbsolutePath());
+        Context ctxt = tomcat.addWebapp(null, "/examples",
+                appDir.getAbsolutePath());
+        ctxt.addApplicationListener(new ApplicationListener(
+                WsListener.class.getName(), false));
 
         TesterSupport.initSsl(tomcat);
 
@@ -193,8 +205,14 @@ public class TestSsl extends TomcatBaseTest {
         BufferedReader br = new BufferedReader(r);
         String line = br.readLine();
         while (line != null) {
-            // For testing System.out.println(line);
-            line = br.readLine();
+            // For debugging System.out.println(line);
+            // Linux clients see a Connection Reset in some circumstances and a
+            // clean close in others.
+            try {
+                line = br.readLine();
+            } catch (IOException ioe) {
+                line = null;
+            }
         }
     }
 

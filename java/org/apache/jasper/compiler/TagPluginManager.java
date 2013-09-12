@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,8 +44,7 @@ public class TagPluginManager {
 
     private boolean initialized = false;
     private HashMap<String, TagPlugin> tagPlugins = null;
-    private ServletContext ctxt;
-    private PageInfo pageInfo;
+    private final ServletContext ctxt;
 
     public TagPluginManager(ServletContext ctxt) {
         this.ctxt = ctxt;
@@ -59,24 +58,14 @@ public class TagPluginManager {
             return;
         }
 
-        this.pageInfo = pageInfo;
-
-        page.visit(new Node.Visitor() {
-            @Override
-            public void visit(Node.CustomTag n)
-                    throws JasperException {
-                invokePlugin(n);
-                visitBody(n);
-            }
-        });
-
+        page.visit(new NodeVisitor(this, pageInfo));
     }
- 
+
     private void init(ErrorDispatcher err) throws JasperException {
         if (initialized)
             return;
 
-        tagPlugins = new HashMap<String, TagPlugin>();
+        tagPlugins = new HashMap<>();
 
         Enumeration<URL> urls = null;
         try {
@@ -89,38 +78,20 @@ public class TagPluginManager {
         if (urls != null) {
             while(urls.hasMoreElements()) {
                 URL url = urls.nextElement();
-                InputStream is = null;
-                try {
-                    is = url.openStream();
+                try (InputStream is = url.openStream()){
                     loadTagPlugins(err, is);
                 } catch(IOException ioe) {
                     throw new JasperException(ioe);
-                } finally {
-                    if (is != null) {
-                        try {
-                            is.close();
-                        } catch (IOException ioe) {
-                            throw new JasperException(ioe);
-                        }
-                    }
                 }
             }
         }
 
-        InputStream is = null;
-        try {
-            is = ctxt.getResourceAsStream(TAG_PLUGINS_XML);
+        try (InputStream is = ctxt.getResourceAsStream(TAG_PLUGINS_XML)) {
             if (is != null) {
                 loadTagPlugins(err, is);
             }
-        } finally {
-            try {
-                if (is != null) {
-                    is.close();
-                }
-            } catch (IOException ioe) {
-                throw new JasperException(ioe);
-            }
+        } catch (IOException ioe) {
+            throw new JasperException(ioe);
         }
 
         initialized = true;
@@ -141,7 +112,7 @@ public class TagPluginManager {
                          TAG_PLUGINS_ROOT_ELEM);
         }
 
-        tagPlugins = new HashMap<String, TagPlugin>();
+        tagPlugins = new HashMap<>();
         Iterator<TreeNode> pluginList = root.findChildren("tag-plugin");
         while (pluginList.hasNext()) {
             TreeNode pluginNode = pluginList.next();
@@ -175,12 +146,12 @@ public class TagPluginManager {
     }
 
     /**
-     * Invoke tag plugin for the given custom tag, if a plugin exists for 
+     * Invoke tag plugin for the given custom tag, if a plugin exists for
      * the custom tag's tag handler.
      *
      * The given custom tag node will be manipulated by the plugin.
      */
-    private void invokePlugin(Node.CustomTag n) {
+    private void invokePlugin(Node.CustomTag n, PageInfo pageInfo) {
         TagPlugin tagPlugin = tagPlugins.get(n.getTagHandlerClass().getName());
         if (tagPlugin == null) {
             return;
@@ -191,11 +162,27 @@ public class TagPluginManager {
         tagPlugin.doTag(tagPluginContext);
     }
 
-    static class TagPluginContextImpl implements TagPluginContext {
-        private Node.CustomTag node;
-        private Node.Nodes curNodes;
+    private static class NodeVisitor extends Node.Visitor {
+        private TagPluginManager manager;
         private PageInfo pageInfo;
-        private HashMap<String, Object> pluginAttributes;
+
+        public NodeVisitor(TagPluginManager manager, PageInfo pageInfo) {
+            this.manager = manager;
+            this.pageInfo = pageInfo;
+        }
+
+        @Override
+        public void visit(Node.CustomTag n) throws JasperException {
+            manager.invokePlugin(n, pageInfo);
+            visitBody(n);
+        }
+    }
+
+    private static class TagPluginContextImpl implements TagPluginContext {
+        private final Node.CustomTag node;
+        private Node.Nodes curNodes;
+        private final PageInfo pageInfo;
+        private final HashMap<String, Object> pluginAttributes;
 
         TagPluginContextImpl(Node.CustomTag n, PageInfo pageInfo) {
             this.node = n;
@@ -205,7 +192,7 @@ public class TagPluginManager {
             curNodes = new Node.Nodes();
             n.setAtSTag(curNodes);
             n.setUseTagPlugin(true);
-            pluginAttributes = new HashMap<String, Object>();
+            pluginAttributes = new HashMap<>();
         }
 
         @Override
@@ -291,7 +278,7 @@ public class TagPluginManager {
 
         @Override
         public void generateBody() {
-            // Since we'll generate the body anyway, this is really a nop, 
+            // Since we'll generate the body anyway, this is really a nop,
             // except for the fact that it lets us put the Java sources the
             // plugins produce in the correct order (w.r.t the body).
             curNodes = node.getAtETag();

@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,6 @@ package org.apache.catalina.core;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,9 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.naming.Binding;
 import javax.naming.NamingException;
-import javax.naming.directory.DirContext;
 import javax.servlet.Filter;
 import javax.servlet.FilterRegistration;
 import javax.servlet.RequestDispatcher;
@@ -53,6 +50,7 @@ import javax.servlet.SessionCookieConfig;
 import javax.servlet.SessionTrackingMode;
 import javax.servlet.descriptor.JspConfigDescriptor;
 import javax.servlet.http.HttpSessionAttributeListener;
+import javax.servlet.http.HttpSessionIdListener;
 import javax.servlet.http.HttpSessionListener;
 
 import org.apache.catalina.Container;
@@ -62,18 +60,16 @@ import org.apache.catalina.Globals;
 import org.apache.catalina.Host;
 import org.apache.catalina.LifecycleState;
 import org.apache.catalina.Service;
+import org.apache.catalina.WebResourceRoot;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.Connector;
-import org.apache.catalina.deploy.FilterDef;
-import org.apache.catalina.util.ResourceSet;
+import org.apache.catalina.mapper.MappingData;
 import org.apache.catalina.util.ServerInfo;
-import org.apache.naming.resources.DirContextURLStreamHandler;
-import org.apache.naming.resources.Resource;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.buf.CharChunk;
 import org.apache.tomcat.util.buf.MessageBytes;
+import org.apache.tomcat.util.descriptor.web.FilterDef;
 import org.apache.tomcat.util.http.RequestUtil;
-import org.apache.tomcat.util.http.mapper.MappingData;
 import org.apache.tomcat.util.res.StringManager;
 
 
@@ -84,7 +80,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: ApplicationContext.java 1493015 2013-06-14 10:00:57Z markt $
+ * @version $Id: ApplicationContext.java 1505199 2013-07-20 20:22:41Z jboynes $
  */
 
 public class ApplicationContext
@@ -97,7 +93,7 @@ public class ApplicationContext
 
     static {
         STRICT_SERVLET_COMPLIANCE = Globals.STRICT_SERVLET_COMPLIANCE;
-        
+
         String requireSlash = System.getProperty(
                 "org.apache.catalina.core.ApplicationContext.GET_RESOURCE_REQUIRE_SLASH");
         if (requireSlash == null) {
@@ -120,6 +116,7 @@ public class ApplicationContext
     public ApplicationContext(StandardContext context) {
         super();
         this.context = context;
+        this.service = ((Engine) context.getParent().getParent()).getService();
         this.sessionCookieConfig = new ApplicationSessionCookieConfig(context);
 
         // Populate session tracking modes
@@ -133,27 +130,33 @@ public class ApplicationContext
     /**
      * The context attributes for this context.
      */
-    protected Map<String,Object> attributes =
-        new ConcurrentHashMap<String,Object>();
+    protected Map<String,Object> attributes = new ConcurrentHashMap<>();
 
 
     /**
      * List of read only attributes for this context.
      */
-    private Map<String,String> readOnlyAttributes =
-        new ConcurrentHashMap<String,String>();
+    private final Map<String,String> readOnlyAttributes =
+            new ConcurrentHashMap<>();
 
 
     /**
      * The Context instance with which we are associated.
      */
-    private StandardContext context = null;
+    private final StandardContext context;
+
+
+    /**
+     * The Service instance with which we are associated.
+     */
+    private final Service service;
 
 
     /**
      * Empty String collection to serve as the basis for empty enumerations.
      */
     private static final List<String> emptyString = Collections.emptyList();
+
 
     /**
      * Empty Servlet collection to serve as the basis for empty enumerations.
@@ -164,14 +167,14 @@ public class ApplicationContext
     /**
      * The facade around this object.
      */
-    private ServletContext facade = new ApplicationContextFacade(this);
+    private final ServletContext facade = new ApplicationContextFacade(this);
 
 
     /**
      * The merged context initialization parameters for this Context.
      */
     private final ConcurrentHashMap<String,String> parameters =
-        new ConcurrentHashMap<String,String>();
+            new ConcurrentHashMap<>();
 
 
     /**
@@ -184,8 +187,7 @@ public class ApplicationContext
     /**
      * Thread local data used during request dispatch.
      */
-    private ThreadLocal<DispatchData> dispatchData =
-        new ThreadLocal<DispatchData>();
+    private final ThreadLocal<DispatchData> dispatchData = new ThreadLocal<>();
 
 
     /**
@@ -207,24 +209,8 @@ public class ApplicationContext
      */
     private boolean newServletContextListenerAllowed = true;
 
-    // --------------------------------------------------------- Public Methods
-
-
-    /**
-     * Return the resources object that is mapped to a specified path.
-     * The path must begin with a "/" and is interpreted as relative to the
-     * current context root.
-     */
-    @Deprecated
-    public DirContext getResources() {
-
-        return context.getResources();
-
-    }
-
 
     // ------------------------------------------------- ServletContext Methods
-
 
     /**
      * Return the value of the specified context attribute, if any;
@@ -246,7 +232,7 @@ public class ApplicationContext
      */
     @Override
     public Enumeration<String> getAttributeNames() {
-        Set<String> names = new HashSet<String>();
+        Set<String> names = new HashSet<>();
         names.addAll(attributes.keySet());
         return Collections.enumeration(names);
     }
@@ -302,7 +288,7 @@ public class ApplicationContext
         }
     }
 
-    
+
     /**
      * Return the main path associated with this context.
      */
@@ -310,7 +296,7 @@ public class ApplicationContext
     public String getContextPath() {
         return context.getPath();
     }
-    
+
 
     /**
      * Return the value of the specified initialization parameter, or
@@ -395,7 +381,7 @@ public class ApplicationContext
         Wrapper wrapper = (Wrapper) context.findChild(name);
         if (wrapper == null)
             return (null);
-        
+
         return new ApplicationDispatcher(wrapper, null, null, null, null, name);
 
     }
@@ -444,7 +430,7 @@ public class ApplicationContext
         if (normalizedPath == null)
             return (null);
 
-        pos = normalizedPath.length(); 
+        pos = normalizedPath.length();
 
         // Use the thread local URI and mapping data
         DispatchData dd = dispatchData.get();
@@ -472,7 +458,7 @@ public class ApplicationContext
                 semicolon = -1;
             }
             uriCC.append(normalizedPath, 0, semicolon > 0 ? semicolon : pos);
-            context.getMapper().map(uriMB, mappingData);
+            service.getMapper().map(context, uriMB, mappingData);
             if (mappingData.wrapper == null) {
                 return (null);
             }
@@ -490,15 +476,15 @@ public class ApplicationContext
             return (null);
         }
 
-        Wrapper wrapper = (Wrapper) mappingData.wrapper;
+        Wrapper wrapper = mappingData.wrapper;
         String wrapperPath = mappingData.wrapperPath.toString();
         String pathInfo = mappingData.pathInfo.toString();
 
         mappingData.recycle();
-        
+
         // Construct a RequestDispatcher to process this request
         return new ApplicationDispatcher
-            (wrapper, uriCC.toString(), wrapperPath, pathInfo, 
+            (wrapper, uriCC.toString(), wrapperPath, pathInfo,
              queryString, null);
 
     }
@@ -523,32 +509,17 @@ public class ApplicationContext
                 !path.startsWith("/") && GET_RESOURCE_REQUIRE_SLASH)
             throw new MalformedURLException(sm.getString(
                     "applicationContext.requestDispatcher.iae", path));
-        
+
         String normPath = RequestUtil.normalize(path);
         if (normPath == null)
             return (null);
 
-        DirContext resources = context.getResources();
+        WebResourceRoot resources = context.getResources();
         if (resources != null) {
-            String fullPath = context.getPath() + normPath;
-            String hostName = context.getParent().getName();
-            try {
-                resources.lookup(normPath);
-                URI uri = new URI("jndi", null, "", -1,
-                        getJNDIUri(hostName, fullPath), null, null);
-                return new URL(null, uri.toString(),
-                        new DirContextURLStreamHandler(resources));
-            } catch (NamingException e) {
-                // Ignore
-            } catch (Exception e) {
-                // Unexpected
-                log(sm.getString("applicationContext.lookup.error", path,
-                        getContextPath()), e);
-            }
+            return resources.getResource(normPath).getURL();
         }
 
-        return (null);
-
+        return null;
     }
 
 
@@ -573,29 +544,20 @@ public class ApplicationContext
         if (normalizedPath == null)
             return (null);
 
-        DirContext resources = context.getResources();
+        WebResourceRoot resources = context.getResources();
         if (resources != null) {
-            try {
-                Object resource = resources.lookup(normalizedPath);
-                if (resource instanceof Resource)
-                    return (((Resource) resource).streamContent());
-            } catch (NamingException e) {
-                // Ignore
-            } catch (Exception e) {
-                // Unexpected
-                log(sm.getString("applicationContext.lookup.error", path,
-                        getContextPath()), e);
-            }
+            return resources.getResource(normalizedPath).getInputStream();
         }
-        return (null);
 
+        return null;
     }
 
 
     /**
      * Return a Set containing the resource paths of resources member of the
      * specified collection. Each path will be a String starting with
-     * a "/" character. The returned set is immutable.
+     * a "/" character. Paths representing directories will end with a "/"
+     * character. The returned set is immutable.
      *
      * @param path Collection path
      */
@@ -615,33 +577,12 @@ public class ApplicationContext
         if (normalizedPath == null)
             return (null);
 
-        DirContext resources = context.getResources();
+        WebResourceRoot resources = context.getResources();
         if (resources != null) {
-            return (getResourcePathsInternal(resources, normalizedPath));
+            return resources.listWebAppPaths(normalizedPath);
         }
-        return (null);
 
-    }
-
-
-    /**
-     * Internal implementation of getResourcesPath() logic.
-     *
-     * @param resources Directory context to search
-     * @param path Collection path
-     */
-    private Set<String> getResourcePathsInternal(DirContext resources,
-            String path) {
-
-        ResourceSet<String> set = new ResourceSet<String>();
-        try {
-            listCollectionPaths(set, resources, path);
-        } catch (NamingException e) {
-            return (null);
-        }
-        set.setLocked(true);
-        return (set);
-
+        return null;
     }
 
 
@@ -724,7 +665,7 @@ public class ApplicationContext
     @Override
     @Deprecated
     public void log(Exception exception, String message) {
-        
+
         context.getLogger().error(message, exception);
 
     }
@@ -738,7 +679,7 @@ public class ApplicationContext
      */
     @Override
     public void log(String message, Throwable throwable) {
-        
+
         context.getLogger().error(message, throwable);
 
     }
@@ -893,11 +834,11 @@ public class ApplicationContext
     @Override
     public FilterRegistration.Dynamic addFilter(String filterName,
             String filterClass) throws IllegalStateException {
-        
+
         return addFilter(filterName, filterClass, null);
     }
 
-    
+
     /**
      * Add filter to context.
      * @param   filterName  Name of filter to add
@@ -915,11 +856,11 @@ public class ApplicationContext
     @Override
     public FilterRegistration.Dynamic addFilter(String filterName,
             Filter filter) throws IllegalStateException {
-        
+
         return addFilter(filterName, null, filter);
     }
 
-    
+
     /**
      * Add filter to context.
      * @param   filterName  Name of filter to add
@@ -937,13 +878,13 @@ public class ApplicationContext
     @Override
     public FilterRegistration.Dynamic addFilter(String filterName,
             Class<? extends Filter> filterClass) throws IllegalStateException {
-        
+
         return addFilter(filterName, filterClass.getName(), null);
     }
 
     private FilterRegistration.Dynamic addFilter(String filterName,
             String filterClass, Filter filter) throws IllegalStateException {
-        
+
         if (filterName == null || filterName.equals("")) {
             throw new IllegalArgumentException(sm.getString(
                     "applicationContext.invalidFilterName", filterName));
@@ -957,7 +898,7 @@ public class ApplicationContext
         }
 
         FilterDef filterDef = context.findFilterDef(filterName);
-        
+
         // Assume a 'complete' FilterRegistration is one that has a class and
         // a name
         if (filterDef == null) {
@@ -977,10 +918,10 @@ public class ApplicationContext
             filterDef.setFilterClass(filter.getClass().getName());
             filterDef.setFilter(filter);
         }
-        
+
         return new ApplicationFilterRegistration(filterDef, context);
-    } 
-    
+    }
+
     @Override
     public <T extends Filter> T createFilter(Class<T> c)
     throws ServletException {
@@ -1011,7 +952,7 @@ public class ApplicationContext
         return new ApplicationFilterRegistration(filterDef, context);
     }
 
-    
+
     /**
      * Add servlet to context.
      * @param   servletName  Name of servlet to add
@@ -1029,7 +970,7 @@ public class ApplicationContext
     @Override
     public ServletRegistration.Dynamic addServlet(String servletName,
             String servletClass) throws IllegalStateException {
-        
+
         return addServlet(servletName, servletClass, null);
     }
 
@@ -1055,7 +996,7 @@ public class ApplicationContext
         return addServlet(servletName, null, servlet);
     }
 
-    
+
     /**
      * Add servlet to context.
      * @param   servletName  Name of servlet to add
@@ -1080,7 +1021,7 @@ public class ApplicationContext
 
     private ServletRegistration.Dynamic addServlet(String servletName,
             String servletClass, Servlet servlet) throws IllegalStateException {
-        
+
         if (servletName == null || servletName.equals("")) {
             throw new IllegalArgumentException(sm.getString(
                     "applicationContext.invalidServletName", servletName));
@@ -1092,9 +1033,9 @@ public class ApplicationContext
                     sm.getString("applicationContext.addServlet.ise",
                             getContextPath()));
         }
-        
+
         Wrapper wrapper = (Wrapper) context.findChild(servletName);
-        
+
         // Assume a 'complete' ServletRegistration is one that has a class and
         // a name
         if (wrapper == null) {
@@ -1151,10 +1092,10 @@ public class ApplicationContext
         if (wrapper == null) {
             return null;
         }
-        
+
         return new ApplicationServletRegistration(wrapper, context);
     }
-    
+
 
     /**
      * By default {@link SessionTrackingMode#URL} is always supported, {@link
@@ -1171,15 +1112,15 @@ public class ApplicationContext
 
     private void populateSessionTrackingModes() {
         // URL re-writing is always enabled by default
-        defaultSessionTrackingModes = EnumSet.of(SessionTrackingMode.URL); 
+        defaultSessionTrackingModes = EnumSet.of(SessionTrackingMode.URL);
         supportedSessionTrackingModes = EnumSet.of(SessionTrackingMode.URL);
-        
+
         if (context.getCookies()) {
             defaultSessionTrackingModes.add(SessionTrackingMode.COOKIE);
             supportedSessionTrackingModes.add(SessionTrackingMode.COOKIE);
         }
 
-        // SSL not enabled by default as it can only used on its own 
+        // SSL not enabled by default as it can only used on its own
         // Context > Host > Engine > Service
         Service s = ((Engine) context.getParent().getParent()).getService();
         Connector[] connectors = s.findConnectors();
@@ -1189,7 +1130,7 @@ public class ApplicationContext
                 supportedSessionTrackingModes.add(SessionTrackingMode.SSL);
                 break;
             }
-        } 
+        }
     }
 
     /**
@@ -1226,7 +1167,7 @@ public class ApplicationContext
                     sm.getString("applicationContext.setSessionTracking.ise",
                             getContextPath()));
         }
-        
+
         // Check that only supported tracking modes have been requested
         for (SessionTrackingMode sessionTrackingMode : sessionTrackingModes) {
             if (!supportedSessionTrackingModes.contains(sessionTrackingMode)) {
@@ -1244,7 +1185,7 @@ public class ApplicationContext
                         getContextPath()));
             }
         }
-        
+
         this.sessionTrackingModes = sessionTrackingModes;
     }
 
@@ -1253,8 +1194,8 @@ public class ApplicationContext
     public boolean setInitParameter(String name, String value) {
         return parameters.putIfAbsent(name, value) == null;
     }
-    
-    
+
+
     @Override
     public void addListener(Class<? extends EventListener> listenerClass) {
         EventListener listener;
@@ -1271,7 +1212,7 @@ public class ApplicationContext
 
     @Override
     public void addListener(String className) {
-        
+
         try {
             Object obj = context.getInstanceManager().newInstance(className);
 
@@ -1305,7 +1246,7 @@ public class ApplicationContext
                     "applicationContext.addListener.iae.cnfe", className),
                     e);
         }
-        
+
     }
 
 
@@ -1321,11 +1262,12 @@ public class ApplicationContext
         if (t instanceof ServletContextAttributeListener ||
                 t instanceof ServletRequestListener ||
                 t instanceof ServletRequestAttributeListener ||
+                t instanceof HttpSessionIdListener ||
                 t instanceof HttpSessionAttributeListener) {
             context.addApplicationEventListener(t);
             match = true;
         }
-        
+
         if (t instanceof HttpSessionListener
                 || (t instanceof ServletContextListener &&
                         newServletContextListenerAllowed)) {
@@ -1334,9 +1276,9 @@ public class ApplicationContext
             context.addApplicationLifecycleListener(t);
             match = true;
         }
-        
+
         if (match) return;
-        
+
         if (t instanceof ServletContextListener) {
             throw new IllegalArgumentException(sm.getString(
                     "applicationContext.addListener.iae.sclNotAllowed",
@@ -1354,12 +1296,13 @@ public class ApplicationContext
             throws ServletException {
         try {
             T listener =
-                (T) context.getInstanceManager().newInstance(c.getName());
+                (T) context.getInstanceManager().newInstance(c);
             if (listener instanceof ServletContextListener ||
                     listener instanceof ServletContextAttributeListener ||
                     listener instanceof ServletRequestListener ||
                     listener instanceof ServletRequestAttributeListener ||
                     listener instanceof HttpSessionListener ||
+                    listener instanceof HttpSessionIdListener ||
                     listener instanceof HttpSessionAttributeListener) {
                 return listener;
             }
@@ -1375,27 +1318,26 @@ public class ApplicationContext
             throw new ServletException(e);
         } catch (InstantiationException e) {
             throw new ServletException(e);
-        } catch (ClassNotFoundException e) {
-            throw new ServletException(e);
-        }    }
+        }
+    }
 
 
     @Override
     public void declareRoles(String... roleNames) {
-        
+
         if (!context.getState().equals(LifecycleState.STARTING_PREP)) {
             //TODO Spec breaking enhancement to ignore this restriction
             throw new IllegalStateException(
                     sm.getString("applicationContext.addRole.ise",
                             getContextPath()));
         }
-        
+
         if (roleNames == null) {
             throw new IllegalArgumentException(
                     sm.getString("applicationContext.roles.iae",
                             getContextPath()));
         }
-        
+
         for (String role : roleNames) {
             if (role == null || "".equals(role)) {
                 throw new IllegalArgumentException(
@@ -1424,7 +1366,7 @@ public class ApplicationContext
                         new RuntimePermission("getClassLoader"));
             }
         }
-        
+
         return result;
     }
 
@@ -1443,9 +1385,8 @@ public class ApplicationContext
 
     @Override
     public Map<String, ? extends FilterRegistration> getFilterRegistrations() {
-        Map<String, ApplicationFilterRegistration> result =
-            new HashMap<String, ApplicationFilterRegistration>();
-        
+        Map<String, ApplicationFilterRegistration> result = new HashMap<>();
+
         FilterDef[] filterDefs = context.findFilterDefs();
         for (FilterDef filterDef : filterDefs) {
             result.put(filterDef.getFilterName(),
@@ -1458,22 +1399,14 @@ public class ApplicationContext
 
     @Override
     public JspConfigDescriptor getJspConfigDescriptor() {
-        JspConfigDescriptor jspConfigDescriptor = context
-                .getJspConfigDescriptor();
-        if (jspConfigDescriptor.getJspPropertyGroups().isEmpty()
-                && jspConfigDescriptor.getTaglibs().isEmpty()) {
-            return null;
-        } else {
-            return jspConfigDescriptor;
-        }
+        return context.getJspConfigDescriptor();
     }
 
 
     @Override
     public Map<String, ? extends ServletRegistration> getServletRegistrations() {
-        Map<String, ApplicationServletRegistration> result =
-            new HashMap<String, ApplicationServletRegistration>();
-        
+        Map<String, ApplicationServletRegistration> result = new HashMap<>();
+
         Container[] wrappers = context.findChildren();
         for (Container wrapper : wrappers) {
             result.put(((Wrapper) wrapper).getName(),
@@ -1484,23 +1417,26 @@ public class ApplicationContext
         return result;
     }
 
-    
+
+    @Override
+    public String getVirtualServerName() {
+        // Constructor will fail if context or its parent is null
+        return ((Host) context.getParent()).getName();
+    }
+
+
     // -------------------------------------------------------- Package Methods
     protected StandardContext getContext() {
         return this.context;
     }
-    
-    @Deprecated
-    protected Map<String,String> getReadonlyAttributes() {
-        return this.readOnlyAttributes;
-    }
+
     /**
      * Clear all application-created attributes.
      */
     protected void clearAttributes() {
 
         // Create list of attributes to be removed
-        ArrayList<String> list = new ArrayList<String>();
+        ArrayList<String> list = new ArrayList<>();
         Iterator<String> iter = attributes.keySet().iterator();
         while (iter.hasNext()) {
             list.add(iter.next());
@@ -1513,10 +1449,10 @@ public class ApplicationContext
             String key = keys.next();
             removeAttribute(key);
         }
-        
+
     }
-    
-    
+
+
     /**
      * Return the facade associated with this ApplicationContext.
      */
@@ -1541,47 +1477,6 @@ public class ApplicationContext
     protected void setNewServletContextListenerAllowed(boolean allowed) {
         this.newServletContextListenerAllowed = allowed;
     }
-    
-    /**
-     * List resource paths (recursively), and store all of them in the given
-     * Set.
-     */
-    private static void listCollectionPaths(Set<String> set,
-            DirContext resources, String path) throws NamingException {
-
-        Enumeration<Binding> childPaths = resources.listBindings(path);
-        while (childPaths.hasMoreElements()) {
-            Binding binding = childPaths.nextElement();
-            String name = binding.getName();
-            StringBuilder childPath = new StringBuilder(path);
-            if (!"/".equals(path) && !path.endsWith("/"))
-                childPath.append("/");
-            childPath.append(name);
-            Object object = binding.getObject();
-            if (object instanceof DirContext) {
-                childPath.append("/");
-            }
-            set.add(childPath.toString());
-        }
-
-    }
-
-
-    /**
-     * Get full path, based on the host name and the context path.
-     */
-    private static String getJNDIUri(String hostName, String path) {
-        String result;
-        
-        if (path.startsWith("/")) {
-            result = "/" + hostName + path;
-        } else {
-            result = "/" + hostName + "/" + path;
-        }
-        
-        return result;
-    }
-
 
     /**
      * Internal class used as thread-local storage when doing path
@@ -1599,6 +1494,4 @@ public class ApplicationContext
             mappingData = new MappingData();
         }
     }
-
-
 }

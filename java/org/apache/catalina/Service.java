@@ -19,6 +19,7 @@
 package org.apache.catalina;
 
 import org.apache.catalina.connector.Connector;
+import org.apache.catalina.mapper.Mapper;
 
 /**
  * A <strong>Service</strong> is a group of one or more
@@ -31,7 +32,7 @@ import org.apache.catalina.connector.Connector;
  * and classes on the system class path.
  *
  * @author Craig R. McClanahan
- * @version $Id: Service.java 1200162 2011-11-10 05:37:57Z kkolinko $
+ * @version $Id: Service.java 1367329 2012-07-30 21:53:56Z markt $
  */
 
 public interface Service extends Lifecycle {
@@ -52,13 +53,6 @@ public interface Service extends Lifecycle {
      * @param container The new Container
      */
     public void setContainer(Container container);
-
-    /**
-     * Return descriptive information about this Service implementation and
-     * the corresponding version number, in the format
-     * <code>&lt;description&gt;/&lt;version&gt;</code>.
-     */
-    public String getInfo();
 
     /**
      * Return the name of this Service.
@@ -98,8 +92,14 @@ public interface Service extends Lifecycle {
      */
     public void setParentClassLoader(ClassLoader parent);
 
-    // --------------------------------------------------------- Public Methods
+    /**
+     * Obtain the domain under which this container will be / has been
+     * registered.
+     */
+    public String getDomain();
 
+
+    // --------------------------------------------------------- Public Methods
 
     /**
      * Add a new Connector to the set of defined Connectors, and associate it
@@ -148,4 +148,8 @@ public interface Service extends Lifecycle {
      */
     public void removeExecutor(Executor ex);
 
+    /**
+     * The mapper associated with this Service.
+     */
+    Mapper getMapper();
 }

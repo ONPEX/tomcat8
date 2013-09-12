@@ -25,7 +25,7 @@ import java.security.cert.X509Certificate;
 
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
-import org.apache.catalina.deploy.SecurityConstraint;
+import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
 import org.ietf.jgss.GSSContext;
 /**
  * A <b>Realm</b> is a read-only facade for an underlying security realm
@@ -35,7 +35,7 @@ import org.ietf.jgss.GSSContext;
  * Container.
  *
  * @author Craig R. McClanahan
- * @version $Id: Realm.java 1200160 2011-11-10 05:35:13Z kkolinko $
+ * @version $Id: Realm.java 1500964 2013-07-08 21:24:05Z markt $
  */
 
 public interface Realm {
@@ -58,17 +58,7 @@ public interface Realm {
     public void setContainer(Container container);
 
 
-    /**
-     * Return descriptive information about this Realm implementation and
-     * the corresponding version number, in the format
-     * <code>&lt;description&gt;/&lt;version&gt;</code>.
-     */
-    public String getInfo();
-
-
     // --------------------------------------------------------- Public Methods
-
-    
     /**
      * Add a property change listener to this component.
      *

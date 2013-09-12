@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -57,7 +57,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  *
  * @author Craig R. McClanahan
  * @author Jean-Francois Arcand
- * @version $Id: StandardManager.java 1301272 2012-03-15 23:41:08Z markt $
+ * @version $Id: StandardManager.java 1361802 2012-07-15 21:18:36Z markt $
  */
 
 public class StandardManager extends ManagerBase {
@@ -97,13 +97,6 @@ public class StandardManager extends ManagerBase {
 
     // ----------------------------------------------------- Instance Variables
 
-
-    /**
-     * The descriptive information about this implementation.
-     */
-    protected static final String info = "StandardManager/1.0";
-
-
     /**
      * The descriptive name of this Manager implementation (for logging).
      */
@@ -122,20 +115,6 @@ public class StandardManager extends ManagerBase {
 
 
     // ------------------------------------------------------------- Properties
-
-
-    /**
-     * Return descriptive information about this Manager implementation and
-     * the corresponding version number, in the format
-     * <code>&lt;description&gt;/&lt;version&gt;</code>.
-     */
-    @Override
-    public String getInfo() {
-
-        return (info);
-
-    }
-
 
     /**
      * Return the descriptive short name of this Manager implementation.
@@ -236,8 +215,9 @@ public class StandardManager extends ManagerBase {
         try {
             fis = new FileInputStream(file.getAbsolutePath());
             bis = new BufferedInputStream(fis);
-            if (container != null)
-                loader = container.getLoader();
+            Context c = getContext();
+            if (c != null)
+                loader = c.getLoader();
             if (loader != null)
                 classLoader = loader.getClassLoader();
             if (classLoader != null) {
@@ -362,6 +342,7 @@ public class StandardManager extends ManagerBase {
      *
      * @exception IOException if an input/output error occurs
      */
+    @SuppressWarnings("null")
     protected void doUnload() throws IOException {
 
         if (log.isDebugEnabled())
@@ -417,11 +398,12 @@ public class StandardManager extends ManagerBase {
         }
 
         // Write the number of active sessions, followed by the details
-        ArrayList<StandardSession> list = new ArrayList<StandardSession>();
+        ArrayList<StandardSession> list = new ArrayList<>();
         synchronized (sessions) {
             if (log.isDebugEnabled())
                 log.debug("Unloading " + sessions.size() + " sessions");
             try {
+                // oos can't be null here
                 oos.writeObject(new Integer(sessions.size()));
                 Iterator<Session> elements = sessions.values().iterator();
                 while (elements.hasNext()) {
@@ -512,7 +494,7 @@ public class StandardManager extends ManagerBase {
             log.debug("Stopping");
 
         setState(LifecycleState.STOPPING);
-        
+
         // Write out sessions
         try {
             unload();
@@ -556,9 +538,9 @@ public class StandardManager extends ManagerBase {
             return (null);
         File file = new File(pathname);
         if (!file.isAbsolute()) {
-            if (container instanceof Context) {
-                ServletContext servletContext =
-                    ((Context) container).getServletContext();
+            Context context = getContext();
+            if (context != null) {
+                ServletContext servletContext = context.getServletContext();
                 File tempdir = (File)
                     servletContext.getAttribute(ServletContext.TEMPDIR);
                 if (tempdir != null)

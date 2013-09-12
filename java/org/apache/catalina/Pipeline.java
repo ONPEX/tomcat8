@@ -36,7 +36,7 @@ package org.apache.catalina;
  *
  * @author Craig R. McClanahan
  * @author Peter Donald
- * @version $Id: Pipeline.java 1200160 2011-11-10 05:35:13Z kkolinko $
+ * @version $Id: Pipeline.java 1187801 2011-10-22 21:16:40Z markt $
  */
 
 public interface Pipeline {

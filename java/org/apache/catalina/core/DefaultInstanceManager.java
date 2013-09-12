@@ -16,7 +16,6 @@
  */
 package org.apache.catalina.core;
 
-import java.beans.Introspector;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
@@ -55,7 +54,7 @@ import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.res.StringManager;
 
 /**
- * @version $Id: DefaultInstanceManager.java 1437338 2013-01-23 11:02:35Z markt $
+ * @version $Id: DefaultInstanceManager.java 1459028 2013-03-20 20:10:41Z remm $
  */
 public class DefaultInstanceManager implements InstanceManager {
 
@@ -73,13 +72,13 @@ public class DefaultInstanceManager implements InstanceManager {
     private final Map<String, Map<String, String>> injectionMap;
     protected final ClassLoader classLoader;
     protected final ClassLoader containerClassLoader;
-    protected boolean privileged;
-    protected boolean ignoreAnnotations;
+    protected final boolean privileged;
+    protected final boolean ignoreAnnotations;
     private final Properties restrictedFilters = new Properties();
     private final Properties restrictedListeners = new Properties();
     private final Properties restrictedServlets = new Properties();
     private final Map<Class<?>, AnnotationCacheEntry[]> annotationCache =
-        new WeakHashMap<Class<?>, AnnotationCacheEntry[]>();
+        new WeakHashMap<>();
     private final Map<String, String> postConstructMethods;
     private final Map<String, String> preDestroyMethods;
 
@@ -133,6 +132,11 @@ public class DefaultInstanceManager implements InstanceManager {
     }
 
     @Override
+    public Object newInstance(Class<?> clazz) throws IllegalAccessException, InvocationTargetException, NamingException, InstantiationException {
+        return newInstance(clazz.newInstance(), clazz);
+    }
+
+    @Override
     public Object newInstance(String className) throws IllegalAccessException, InvocationTargetException, NamingException, InstantiationException, ClassNotFoundException {
         Class<?> clazz = loadClassMaybePrivileged(className, classLoader);
         return newInstance(clazz.newInstance(), clazz);
@@ -161,7 +165,7 @@ public class DefaultInstanceManager implements InstanceManager {
     }
 
     private Map<String, String> assembleInjectionsFromClassHierarchy(Class<?> clazz) {
-        Map<String, String> injections = new HashMap<String, String>();
+        Map<String, String> injections = new HashMap<>();
         Map<String, String> currentInjections = null;
         while (clazz != null) {
             currentInjections = this.injectionMap.get(clazz.getName());
@@ -286,7 +290,7 @@ public class DefaultInstanceManager implements InstanceManager {
             }
             if (annotationsArray == null) {
                 if (annotations == null) {
-                    annotations = new ArrayList<AnnotationCacheEntry>();
+                    annotations = new ArrayList<>();
                 } else {
                     annotations.clear();
                 }
@@ -629,13 +633,6 @@ public class DefaultInstanceManager implements InstanceManager {
             method.invoke(instance, lookedupResource);
             method.setAccessible(accessibility);
         }
-    }
-
-    @Deprecated
-    public static String getName(Method setter) {
-        // Note: method signature has already been checked for correctness.
-        // The method name always starts with "set".
-        return Introspector.decapitalize(setter.getName().substring(3));
     }
 
     private static String normalize(String jndiName){

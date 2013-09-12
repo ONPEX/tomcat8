@@ -30,6 +30,8 @@ import org.junit.Test;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
 import org.apache.tomcat.util.buf.ByteChunk;
+import org.apache.tomcat.util.descriptor.web.ApplicationListener;
+import org.apache.tomcat.websocket.server.WsListener;
 
 public class TestWebdavServlet extends TomcatBaseTest {
 
@@ -93,6 +95,8 @@ public class TestWebdavServlet extends TomcatBaseTest {
 
         Tomcat.addServlet(ctx, "webdav", new WebdavServlet());
         ctx.addServletMapping("/webdav/*", "webdav");
+        ctx.addApplicationListener(new ApplicationListener(
+                WsListener.class.getName(), false));
 
         tomcat.start();
 

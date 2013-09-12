@@ -20,20 +20,17 @@ package org.apache.tomcat.util.bcel.classfile;
 import java.io.DataInput;
 import java.io.IOException;
 
-import org.apache.tomcat.util.bcel.Constants;
-
 /**
  * This class is derived from <em>Attribute</em> and represents a reference
  * to a GJ attribute.
  *
- * @version $Id: Signature.java 1377533 2012-08-26 22:22:59Z markt $
+ * @version $Id: Signature.java 1397988 2012-10-14 01:00:48Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Attribute
  */
 public final class Signature extends Attribute {
 
     private static final long serialVersionUID = 7493781777025829964L;
-    private int signature_index;
 
 
     /**
@@ -46,46 +43,7 @@ public final class Signature extends Attribute {
      */
     Signature(int name_index, int length, DataInput file, ConstantPool constant_pool)
             throws IOException {
-        this(name_index, length, file.readUnsignedShort(), constant_pool);
-    }
-
-
-    /**
-     * @param name_index Index in constant pool to CONSTANT_Utf8
-     * @param length Content length in bytes
-     * @param signature_index Index in constant pool to CONSTANT_Utf8
-     * @param constant_pool Array of constants
-     */
-    public Signature(int name_index, int length, int signature_index, ConstantPool constant_pool) {
-        super(Constants.ATTR_SIGNATURE, name_index, length, constant_pool);
-        this.signature_index = signature_index;
-    }
-
-
-    /**
-     * @return GJ signature.
-     */
-    public final String getSignature() {
-        ConstantUtf8 c = (ConstantUtf8) constant_pool.getConstant(signature_index,
-                Constants.CONSTANT_Utf8);
-        return c.getBytes();
-    }
-
-    /**
-     * @return String representation
-     */
-    @Override
-    public final String toString() {
-        String s = getSignature();
-        return "Signature(" + s + ")";
-    }
-
-
-    /**
-     * @return deep copy of this attribute
-     */
-    @Override
-    public Attribute copy( ConstantPool _constant_pool ) {
-        return (Signature) clone();
+        super(name_index, length, constant_pool);
+        file.readUnsignedShort();   // Unused signature_index
     }
 }

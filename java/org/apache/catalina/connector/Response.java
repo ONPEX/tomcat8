@@ -16,9 +16,7 @@
  */
 package org.apache.catalina.connector;
 
-
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.security.AccessController;
@@ -45,7 +43,6 @@ import org.apache.catalina.Globals;
 import org.apache.catalina.Session;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.security.SecurityUtil;
-import org.apache.catalina.util.DateTool;
 import org.apache.catalina.util.RequestUtil;
 import org.apache.catalina.util.SessionConfig;
 import org.apache.tomcat.util.buf.CharChunk;
@@ -62,7 +59,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: Response.java 1489561 2013-06-04 18:54:24Z kkolinko $
+ * @version $Id: Response.java 1493729 2013-06-17 12:23:51Z markt $
  */
 
 public class Response
@@ -98,14 +95,6 @@ public class Response
 
     // ----------------------------------------------------- Class Variables
 
-
-    /**
-     * Descriptive information about this Response implementation.
-     */
-    protected static final String info =
-        "org.apache.coyote.catalina.CoyoteResponse/1.0";
-
-
     /**
      * The string manager for this package.
      */
@@ -123,29 +112,12 @@ public class Response
 
     // ------------------------------------------------------------- Properties
 
-
-    /**
-     * Associated Catalina connector.
-     * @deprecated  Unused
-     */
-    @Deprecated
-    protected Connector connector;
-
-    /**
-     * Return the Connector through which this Request was received.
-     */
-    @Deprecated
-    public Connector getConnector() {
-        return (this.connector);
-    }
-
     /**
      * Set the Connector through which this Request was received.
      *
      * @param connector The new connector
      */
     public void setConnector(Connector connector) {
-        this.connector = connector;
         if("AJP/1.3".equals(connector.getProtocol())) {
             // default size to size of one ajp-packet
             outputBuffer = new OutputBuffer(8184);
@@ -176,7 +148,7 @@ public class Response
      * Get the Coyote response.
      */
     public org.apache.coyote.Response getCoyoteResponse() {
-        return (coyoteResponse);
+        return this.coyoteResponse;
     }
 
 
@@ -185,19 +157,6 @@ public class Response
      */
     public Context getContext() {
         return (request.getContext());
-    }
-
-    /**
-     * Set the Context within which this Request is being processed.  This
-     * must be called as soon as the appropriate Context is identified, because
-     * it identifies the value to be returned by <code>getContextPath()</code>,
-     * and thus enables parsing of the request URI.
-     *
-     * @param context The newly associated Context
-     */
-    @Deprecated
-    public void setContext(Context context) {
-        request.setContext(context);
     }
 
 
@@ -257,13 +216,13 @@ public class Response
     /**
      * URL encoder.
      */
-    protected UEncoder urlEncoder = new UEncoder();
+    protected final UEncoder urlEncoder = new UEncoder();
 
 
     /**
      * Recyclable buffer to hold the redirect URL.
      */
-    protected CharChunk redirectURLCC = new CharChunk();
+    protected final CharChunk redirectURLCC = new CharChunk();
 
 
     // --------------------------------------------------------- Public Methods
@@ -360,37 +319,6 @@ public class Response
 
 
     /**
-     * Return the "processing inside an include" flag.
-     */
-    @Deprecated
-    public boolean getIncluded() {
-        return included;
-    }
-
-
-    /**
-     * Set the "processing inside an include" flag.
-     *
-     * @param included <code>true</code> if we are currently inside a
-     *  RequestDispatcher.include(), else <code>false</code>
-     */
-    @Deprecated
-    public void setIncluded(boolean included) {
-        this.included = included;
-    }
-
-
-    /**
-     * Return descriptive information about this Response implementation and
-     * the corresponding version number, in the format
-     * <code>&lt;description&gt;/&lt;version&gt;</code>.
-     */
-    public String getInfo() {
-        return (info);
-    }
-
-
-    /**
      * The request with which this response is associated.
      */
     protected Request request = null;
@@ -426,18 +354,6 @@ public class Response
             facade = new ResponseFacade(this);
         }
         return (facade);
-    }
-
-
-    /**
-     * Return the output stream associated with this Response.
-     */
-    @Deprecated
-    public OutputStream getStream() {
-        if (outputStream == null) {
-            outputStream = new CoyoteOutputStream(outputBuffer);
-        }
-        return outputStream;
     }
 
 
@@ -480,23 +396,6 @@ public class Response
      */
     public boolean isError() {
         return error;
-    }
-
-
-    /**
-     * Create and return a ServletOutputStream to write the content
-     * associated with this Response.
-     *
-     * @exception IOException if an input/output error occurs
-     */
-    @Deprecated
-    public ServletOutputStream createOutputStream()
-        throws IOException {
-        // Probably useless
-        if (outputStream == null) {
-            outputStream = new CoyoteOutputStream(outputBuffer);
-        }
-        return outputStream;
     }
 
 
@@ -766,6 +665,16 @@ public class Response
     @Override
     public void setContentLength(int length) {
 
+        setContentLengthLong(length);
+    }
+
+
+
+    /**
+     * TODO SERVLET 3.1
+     */
+    @Override
+    public void setContentLengthLong(long length) {
         if (isCommitted()) {
             return;
         }
@@ -903,7 +812,7 @@ public class Response
 
         MimeHeaders headers = coyoteResponse.getMimeHeaders();
         int n = headers.size();
-        List<String> result = new ArrayList<String>(n);
+        List<String> result = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
             result.add(headers.getName(i).toString());
         }
@@ -917,7 +826,7 @@ public class Response
 
         Enumeration<String> enumeration =
             coyoteResponse.getMimeHeaders().values(name);
-        Vector<String> result = new Vector<String>();
+        Vector<String> result = new Vector<>();
         while (enumeration.hasMoreElements()) {
             result.addElement(enumeration.nextElement());
         }
@@ -940,22 +849,7 @@ public class Response
     }
 
 
-    /**
-     * Reset this response, and specify the values for the HTTP status code
-     * and corresponding message.
-     *
-     * @exception IllegalStateException if this response has already been
-     *  committed
-     */
-    @Deprecated
-    public void reset(int status, String message) {
-        reset();
-        setStatus(status, message);
-    }
-
-
     // -------------------------------------------- HttpServletResponse Methods
-
 
     /**
      * Add the specified Cookie to those that will be included with
@@ -1062,7 +956,7 @@ public class Response
         }
 
         if (format == null) {
-            format = new SimpleDateFormat(DateTool.HTTP_RESPONSE_DATE_HEADER,
+            format = new SimpleDateFormat(FastHttpDateFormat.RFC1123_DATE,
                                           Locale.US);
             format.setTimeZone(TimeZone.getTimeZone("GMT"));
         }
@@ -1106,8 +1000,8 @@ public class Response
 
     /**
      * An extended version of this exists in {@link org.apache.coyote.Response}.
-     * This check is required here to ensure that the usingWriter checks in
-     * {@link #setContentType(String)} are applied since usingWriter is not
+     * This check is required here to ensure that the usingWriter check in
+     * {@link #setContentType(String)} is applied since usingWriter is not
      * visible to {@link org.apache.coyote.Response}
      *
      * Called from set/addHeader.
@@ -1350,7 +1244,15 @@ public class Response
     @Override
     public void sendRedirect(String location)
         throws IOException {
+        sendRedirect(location, SC_FOUND);
+    }
 
+    /**
+     * Internal method that allows a redirect to be sent with a status other
+     * than {@link HttpServletResponse#SC_FOUND} (302). No attempt is made to
+     * validate the status code.
+     */
+    public void sendRedirect(String location, int status) throws IOException {
         if (isCommitted()) {
             throw new IllegalStateException
                 (sm.getString("coyoteResponse.sendRedirect.ise"));
@@ -1367,7 +1269,7 @@ public class Response
         // Generate a temporary redirect to the specified location
         try {
             String absolute = toAbsolute(location);
-            setStatus(SC_FOUND);
+            setStatus(status);
             setHeader("Location", absolute);
             if (getContext().getSendRedirectBody()) {
                 PrintWriter writer = getWriter();
@@ -1408,7 +1310,7 @@ public class Response
         }
 
         if (format == null) {
-            format = new SimpleDateFormat(DateTool.HTTP_RESPONSE_DATE_HEADER,
+            format = new SimpleDateFormat(FastHttpDateFormat.RFC1123_DATE,
                                           Locale.US);
             format.setTimeZone(TimeZone.getTimeZone("GMT"));
         }

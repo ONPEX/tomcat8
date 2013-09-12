@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,7 @@ import org.apache.tomcat.util.digester.RuleSetBase;
  * <code>ContextRuleSet</code>.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: HostRuleSet.java 996114 2010-09-11 10:17:07Z markt $
+ * @version $Id: HostRuleSet.java 1364147 2012-07-21 18:52:54Z markt $
  */
 
 public class HostRuleSet extends RuleSetBase {
@@ -42,7 +42,7 @@ public class HostRuleSet extends RuleSetBase {
     /**
      * The matching pattern prefix to use for recognizing our elements.
      */
-    protected String prefix = null;
+    protected final String prefix;
 
 
     // ------------------------------------------------------------ Constructor
@@ -53,9 +53,7 @@ public class HostRuleSet extends RuleSetBase {
      * matching pattern prefix.
      */
     public HostRuleSet() {
-
         this("");
-
     }
 
 
@@ -67,11 +65,8 @@ public class HostRuleSet extends RuleSetBase {
      *  trailing slash character)
      */
     public HostRuleSet(String prefix) {
-
-        super();
         this.namespaceURI = null;
         this.prefix = prefix;
-
     }
 
 
