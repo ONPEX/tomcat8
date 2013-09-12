@@ -24,7 +24,7 @@ Description: Servlet and JSP engine -- common files
  server environment for Java code to run.
  .
  This package contains common files needed by the tomcat8 and tomcat8-user
- packages (Tomcat 6 scripts and libraries). 
+ packages (Tomcat 8 scripts and libraries). 
 
 Package: tomcat8
 Architecture: all
