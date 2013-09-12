@@ -1,6 +1,6 @@
 #!/bin/sh
 
-NAME=tomcat7
+NAME=tomcat8
 DEFAULT=/etc/default/$NAME
 LOGEXT=log
 

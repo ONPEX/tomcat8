@@ -1,4 +1,0 @@
-debian/context/manager.xml /etc/tomcat7/Catalina/localhost/
-output/build/webapps/manager /usr/share/tomcat7-admin/
-debian/context/host-manager.xml /etc/tomcat7/Catalina/localhost/
-output/build/webapps/host-manager /usr/share/tomcat7-admin/

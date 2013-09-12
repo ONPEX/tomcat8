@@ -115,21 +115,21 @@ mkdir "${TARGET}/logs"
 mkdir "${TARGET}/webapps"
 mkdir "${TARGET}/work"
 mkdir "${TARGET}/temp"
-cp -r /usr/share/tomcat7/skel/* "${TARGET}"
+cp -r /usr/share/tomcat8/skel/* "${TARGET}"
 
 sed -i -e "s/Connector port=\"8080\"/Connector port=\"${HPORT}\"/;s/Server port=\"8005\" shutdown=\"SHUTDOWN\"/Server port=\"${CPORT}\" shutdown=\"${CWORD}\"/" "${TARGET}/conf/server.xml"
 
 cat > "${TARGET}/bin/startup.sh" << EOT
 #!/bin/sh
 export CATALINA_BASE="${FULLTARGET}"
-/usr/share/tomcat7/bin/startup.sh
+/usr/share/tomcat8/bin/startup.sh
 echo "Tomcat started"
 EOT
 
 cat > "${TARGET}/bin/shutdown.sh" << EOT
 #!/bin/sh
 export CATALINA_BASE="${FULLTARGET}"
-/usr/share/tomcat7/bin/shutdown.sh
+/usr/share/tomcat8/bin/shutdown.sh
 echo "Tomcat stopped"
 EOT
 

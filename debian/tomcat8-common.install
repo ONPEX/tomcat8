@@ -1,0 +1,2 @@
+output/build/bin/bootstrap.jar /usr/share/tomcat8/bin/
+bin/* /usr/share/tomcat8/bin/

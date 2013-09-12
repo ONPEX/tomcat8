@@ -77,7 +77,7 @@ clean:
 	rm -rf "output/"
 	rm -rf webapps/examples/WEB-INF/lib/*.jar
 	rm -f build-stamp modules/jdbc-pool/output/resources/MANIFEST.MF
-	rm -f debian/tomcat7.postrm
+	rm -f debian/tomcat8.postrm
 	dh_clean
 	mh_clean
 
@@ -92,7 +92,7 @@ binary-indep: build install
 	dh_testroot
 	dh_installchangelogs
 	dh_installdocs
-	dh_installman -ptomcat7-user debian/tomcat7-instance-create.1
+	dh_installman -ptomcat8-user debian/tomcat8-instance-create.1
 	dh_installexamples
 	dh_installinit --error-handler=true -- defaults 92 08
 	dh_installdebconf
@@ -113,45 +113,45 @@ binary-indep: build install
 	              debian/javaxpoms/jsp-api.pom
 	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/$(T_VER)/' \
 	              debian/poms/*.pom
-	mh_installpoms -plibtomcat7-java
+	mh_installpoms -plibtomcat8-java
 	for i in $(T_MAVENIZED_JARS); \
 	do \
-		mh_installjar -plibtomcat7-java -l           \
+		mh_installjar -plibtomcat8-java -l           \
 	                      debian/poms/tomcat-$$i.pom     \
 	                      $(BLDLIB)/$$i.jar              \
-	                      usr/share/tomcat7/lib/$$i.jar; \
+	                      usr/share/tomcat8/lib/$$i.jar; \
 	done
-	mh_installjar -plibtomcat7-java -l --usj-name=catalina-tribes \
+	mh_installjar -plibtomcat8-java -l --usj-name=catalina-tribes \
 	              debian/poms/tomcat-tribes.pom \
 	              $(BLDLIB)/catalina-tribes.jar \
-	              usr/share/tomcat7/lib/catalina-tribes.jar
-	mh_installjar -plibtomcat7-java -l --usj-name=tomcat-api \
+	              usr/share/tomcat8/lib/catalina-tribes.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-api \
 	              debian/poms/tomcat-api.pom \
 	              $(BLDLIB)/tomcat-api.jar \
-	              usr/share/tomcat7/lib/tomcat-api.jar
-	mh_installjar -plibtomcat7-java -l --usj-name=tomcat-coyote \
+	              usr/share/tomcat8/lib/tomcat-api.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-coyote \
 	              debian/poms/tomcat-coyote.pom \
 	              $(BLDLIB)/tomcat-coyote.jar \
-	              usr/share/tomcat7/lib/tomcat-coyote.jar
-	mh_installjar -plibtomcat7-java -l --usj-name=tomcat-juli \
+	              usr/share/tomcat8/lib/tomcat-coyote.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-juli \
 	              debian/poms/tomcat-juli.pom \
 	              $(BLDBIN)/tomcat-juli.jar
-	mh_installjar -plibtomcat7-java -l --usj-name=tomcat-util \
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-util \
 	              debian/poms/tomcat-util.pom \
 	              $(BLDLIB)/tomcat-util.jar \
-	              usr/share/tomcat7/lib/tomcat-util.jar
-	mh_installjar -plibtomcat7-java -l --usj-name=tomcat-jdbc \
+	              usr/share/tomcat8/lib/tomcat-util.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-jdbc \
 				  debian/poms/tomcat-jdbc.pom \
 			  	  output/jdbc-pool/tomcat-jdbc.jar \
-				  usr/share/tomcat7/lib/tomcat-jdbc.jar
+				  usr/share/tomcat8/lib/tomcat-jdbc.jar
 	for i in $(T_JARS); do \
 		mv $(BLDLIB)/$$i.jar $(BLDLIB)/$$i-$(T_VER).jar && \
-		dh_install -plibtomcat7-java \
+		dh_install -plibtomcat8-java \
 			$(BLDLIB)/$$i-$(T_VER).jar usr/share/java && \
-		dh_link -plibtomcat7-java usr/share/java/$$i-$(T_VER).jar \
+		dh_link -plibtomcat8-java usr/share/java/$$i-$(T_VER).jar \
 			usr/share/java/$$i.jar && \
-		dh_link -ptomcat7-common usr/share/java/$$i-$(T_VER).jar \
-			usr/share/tomcat7/lib/$$i.jar; done
+		dh_link -ptomcat8-common usr/share/java/$$i-$(T_VER).jar \
+			usr/share/tomcat8/lib/$$i.jar; done
 	dh_install --exclude=.bat --exclude=Thumbs.db
 	dh_link
 	mh_installpoms -plibservlet3.0-java
@@ -175,15 +175,15 @@ binary-indep: build install
                       output/build/lib/el-api.jar
 	rm -r debian/poms
 	rm -rf \
-           debian/tomcat7/usr/share/tomcat7/webapps/default_root/.svn \
-	   debian/tomcat7/usr/share/tomcat7/webapps/default_root/META-INF/.svn
-	chmod a+x debian/tomcat7-common/usr/share/tomcat7/bin/*.sh
-	chmod a+x debian/tomcat7-user/usr/bin/tomcat7-instance-create
-	chmod a+x debian/tomcat7-user/usr/share/tomcat7/skel/bin/*.sh
+           debian/tomcat8/usr/share/tomcat8/webapps/default_root/.svn \
+	   debian/tomcat8/usr/share/tomcat8/webapps/default_root/META-INF/.svn
+	chmod a+x debian/tomcat8-common/usr/share/tomcat8/bin/*.sh
+	chmod a+x debian/tomcat8-user/usr/bin/tomcat8-instance-create
+	chmod a+x debian/tomcat8-user/usr/share/tomcat8/skel/bin/*.sh
 	# update the checksum for the root webapp
 	unset rwmd5sum \
 		&& rwmd5sum=`cat $(RWFILES) | md5sum - 2>/dev/null | cut -d " " -f1` \
-		&& sed "s/\@ROOT_WEBAPP_MD5SUM\@/$$rwmd5sum/" debian/tomcat7.postrm.in > debian/tomcat7.postrm
+		&& sed "s/\@ROOT_WEBAPP_MD5SUM\@/$$rwmd5sum/" debian/tomcat8.postrm.in > debian/tomcat8.postrm
 	jh_manifest
 	dh_compress
 	dh_fixperms

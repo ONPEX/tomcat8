@@ -1,3 +1,0 @@
-debian/context/examples.xml /etc/tomcat7/Catalina/localhost/
-output/build/webapps/examples /usr/share/tomcat7-examples/
-debian/policy/examples/*.policy /etc/tomcat7/policy.d/

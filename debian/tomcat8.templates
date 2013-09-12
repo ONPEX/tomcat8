@@ -1,23 +1,23 @@
-Template: tomcat7/username
+Template: tomcat8/username
 Type: string
-Default: tomcat7
-_Description: Dedicated system account for the tomcat7 daemon:
- The tomcat7 server must use a dedicated account for its operation so that
+Default: tomcat8
+_Description: Dedicated system account for the tomcat8 daemon:
+ The tomcat8 server must use a dedicated account for its operation so that
  the system's security is not compromised by running it with superuser
  privileges.
 
-Template: tomcat7/groupname
+Template: tomcat8/groupname
 Type: string
-Default: tomcat7
-_Description: Dedicated system group for the tomcat7 daemon:
- The tomcat7 server must use a dedicated group for its operation so that
+Default: tomcat8
+_Description: Dedicated system group for the tomcat8 daemon:
+ The tomcat8 server must use a dedicated group for its operation so that
  the system's security is not compromised by running it with superuser
  privileges.
 
-Template: tomcat7/javaopts
+Template: tomcat8/javaopts
 Type: string
 Default: -Djava.awt.headless=true -Xmx128m -XX:+UseConcMarkSweepGC
-_Description: Please choose the tomcat7 JVM Java options:
+_Description: Please choose the tomcat8 JVM Java options:
  Tomcat's JVM will be launched with a specific set of Java options.
  .
  Note that if you use -XX:+UseConcMarkSweepGC you should add the

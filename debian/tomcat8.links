@@ -1,0 +1,4 @@
+/etc/tomcat8 /var/lib/tomcat8/conf
+/var/cache/tomcat8 /var/lib/tomcat8/work
+/var/log/tomcat8 /var/lib/tomcat8/logs
+/usr/share/doc/tomcat8-common/README.Debian /usr/share/doc/tomcat8/README.Debian

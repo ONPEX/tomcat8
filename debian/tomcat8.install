@@ -1,0 +1,9 @@
+conf/catalina.properties /etc/tomcat8/
+debian/logging.properties /etc/tomcat8/
+conf/*.xml /etc/tomcat8/
+debian/policy/*.policy /etc/tomcat8/policy.d/
+debian/default_root /usr/share/tomcat8-root/
+debian/defaults.template /usr/share/tomcat8/
+debian/defaults.md5sum /usr/share/tomcat8/
+debian/logrotate.template /usr/share/tomcat8/
+debian/logrotate.md5sum /usr/share/tomcat8/

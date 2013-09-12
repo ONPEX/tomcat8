@@ -1,4 +1,4 @@
-Source: tomcat7
+Source: tomcat8
 Section: java
 Priority: optional
 Maintainer: Debian Java Maintainers <pkg-java-maintainers@lists.alioth.debian.org>
@@ -10,31 +10,31 @@ Build-Depends: default-jdk, ant-optional, debhelper (>= 9), po-debconf, libhamcr
 Build-Depends-Indep: maven-repo-helper, libecj-java, javahelper,
  junit4, libjstl1.1-java, libjakarta-taglibs-standard-java
 Standards-Version: 3.9.4
-Vcs-Git: git://anonscm.debian.org/pkg-java/tomcat7.git
-Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-java/tomcat7.git
+Vcs-Git: git://anonscm.debian.org/pkg-java/tomcat8.git
+Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-java/tomcat8.git
 Homepage: http://tomcat.apache.org
 
-Package: tomcat7-common
+Package: tomcat8-common
 Architecture: all
-Depends: libtomcat7-java (>= ${source:Version}), ${misc:Depends},
+Depends: libtomcat8-java (>= ${source:Version}), ${misc:Depends},
  default-jre-headless | java6-runtime-headless | java6-runtime | java-6-runtime
 Description: Servlet and JSP engine -- common files
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Sun Microsystems, and provides a "pure Java" HTTP web
  server environment for Java code to run.
  .
- This package contains common files needed by the tomcat7 and tomcat7-user
+ This package contains common files needed by the tomcat8 and tomcat8-user
  packages (Tomcat 6 scripts and libraries). 
 
-Package: tomcat7
+Package: tomcat8
 Architecture: all
-Depends: tomcat7-common (>= ${source:Version}), ucf,
+Depends: tomcat8-common (>= ${source:Version}), ucf,
 	adduser, ${misc:Depends}
 Recommends: authbind
-Suggests: tomcat7-docs (>= ${source:Version}),
-	tomcat7-admin (>= ${source:Version}),
-	tomcat7-examples (>= ${source:Version}),
-	tomcat7-user (>= ${source:Version}),
+Suggests: tomcat8-docs (>= ${source:Version}),
+	tomcat8-admin (>= ${source:Version}),
+	tomcat8-examples (>= ${source:Version}),
+	tomcat8-user (>= ${source:Version}),
 	libtcnative-1 (>= 1.1.24)
 Description: Servlet and JSP engine
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
@@ -43,18 +43,18 @@ Description: Servlet and JSP engine
  .
  This package contains only the startup scripts for the system-wide daemon.
  No documentation or web applications are included here, please install
- the tomcat7-docs and tomcat7-examples packages if you want them.
+ the tomcat8-docs and tomcat8-examples packages if you want them.
  Install the authbind package if you need to use Tomcat on ports 1-1023.
- Install tomcat7-user instead of this package if you don't want Tomcat to
+ Install tomcat8-user instead of this package if you don't want Tomcat to
  start as a service.
 
-Package: tomcat7-user
+Package: tomcat8-user
 Architecture: all
-Depends: tomcat7-common (>= ${source:Version}), netcat, ${misc:Depends}
-Suggests: tomcat7-docs (>= ${source:Version}),
-	tomcat7-admin (>= ${source:Version}),
-	tomcat7-examples (>= ${source:Version}),
-	tomcat7 (>= ${source:Version})
+Depends: tomcat8-common (>= ${source:Version}), netcat, ${misc:Depends}
+Suggests: tomcat8-docs (>= ${source:Version}),
+	tomcat8-admin (>= ${source:Version}),
+	tomcat8-examples (>= ${source:Version}),
+	tomcat8 (>= ${source:Version})
 Description: Servlet and JSP engine -- tools to create user instances
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Sun Microsystems, and provides a "pure Java" HTTP web
@@ -64,14 +64,14 @@ Description: Servlet and JSP engine -- tools to create user instances
  This user Tomcat instance can be started and stopped using the scripts
  provided in the Tomcat instance directory.
 
-Package: libtomcat7-java
+Package: libtomcat8-java
 Architecture: all
 Depends: libecj-java,
          libcommons-pool-java,
          libcommons-dbcp-java,
          libservlet3.0-java (>= ${source:Version}), ${misc:Depends}
 Conflicts: libtomcat6-java
-Suggests: tomcat7 (>= ${source:Version})
+Suggests: tomcat8 (>= ${source:Version})
 Description: Servlet and JSP engine -- core libraries
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Sun Microsystems, and provides a "pure Java" HTTP web
@@ -102,9 +102,9 @@ Description: Servlet 3.0 and JSP 2.2 Java API documentation
  .
  This package contains the documentation for the Java Servlet and JSP library.
 
-Package: tomcat7-admin
+Package: tomcat8-admin
 Architecture: all
-Depends: tomcat7-common (>= ${source:Version}), ${misc:Depends}
+Depends: tomcat8-common (>= ${source:Version}), ${misc:Depends}
 Description: Servlet and JSP engine -- admin web applications
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Sun Microsystems, and provides a "pure Java" HTTP web
@@ -112,9 +112,9 @@ Description: Servlet and JSP engine -- admin web applications
  .
  This package contains the administrative web interfaces.
 
-Package: tomcat7-examples
+Package: tomcat8-examples
 Architecture: all
-Depends: tomcat7-common (>= ${source:Version}), ${misc:Depends},
+Depends: tomcat8-common (>= ${source:Version}), ${misc:Depends},
  libjstl1.1-java, libjakarta-taglibs-standard-java
 Description: Servlet and JSP engine -- example web applications
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
@@ -123,10 +123,10 @@ Description: Servlet and JSP engine -- example web applications
  .
  This package contains the default Tomcat example webapps.
 
-Package: tomcat7-docs
+Package: tomcat8-docs
 Section: doc
 Architecture: all
-Depends: tomcat7-common (>= ${source:Version}), ${misc:Depends}
+Depends: tomcat8-common (>= ${source:Version}), ${misc:Depends}
 Description: Servlet and JSP engine -- documentation
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Sun Microsystems, and provides a "pure Java" HTTP web
