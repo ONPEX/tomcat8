@@ -1,6 +1,6 @@
 /usr/share/java/tomcat-juli.jar /usr/share/tomcat8/bin/tomcat-juli.jar
 /usr/share/java/commons-dbcp.jar /usr/share/tomcat8/lib/commons-dbcp.jar
 /usr/share/java/commons-pool.jar /usr/share/tomcat8/lib/commons-pool.jar
-/usr/share/java/tomcat-el-api-2.2.jar /usr/share/tomcat8/lib/el-api.jar
-/usr/share/java/tomcat-jsp-api-2.2.jar /usr/share/tomcat8/lib/jsp-api.jar
-/usr/share/java/tomcat-servlet-api-3.0.jar /usr/share/tomcat8/lib/servlet-api.jar
+/usr/share/java/tomcat-el-api-3.0.jar /usr/share/tomcat8/lib/el-api.jar
+/usr/share/java/tomcat-jsp-api-2.3.jar /usr/share/tomcat8/lib/jsp-api.jar
+/usr/share/java/tomcat-servlet-api-3.1.jar /usr/share/tomcat8/lib/servlet-api.jar
