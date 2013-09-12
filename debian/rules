@@ -34,12 +34,12 @@ ANT_ARGS := -Dcompile.debug=true \
 	-Djunit.jar=/usr/share/java/junit4.jar \
 	-Dhamcrest.jar=/usr/share/java/hamcrest-core.jar \
 	-Dversion=$(T_VER) \
-    -Dversion.major="$(T_VER_MAJOR)" \
-    -Dversion.minor="$(T_VER_MINOR)" \
-    -Dversion.build="$(T_VER_BUILD)" \
-    -Dversion.patch="0" \
-    -Dversion.suffix="" \
-    -Dno.build.dbcp=true
+	-Dversion.major="$(T_VER_MAJOR)" \
+	-Dversion.minor="$(T_VER_MINOR)" \
+	-Dversion.build="$(T_VER_BUILD)" \
+	-Dversion.patch="0" \
+	-Dversion.suffix="" \
+	-Dno.build.dbcp=true
 
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	ANT_ARGS += -Dcompile.optimize=false
@@ -47,8 +47,7 @@ else
 	ANT_ARGS += -Dcompile.optimize=true
 endif
 
-ANT_INVOKE := $(JAVA_CMD) -classpath "$(DEB_CLASSPATH)" \
-	org.apache.tools.ant.Main $(ANT_ARGS)
+ANT_INVOKE := $(JAVA_CMD) -classpath "$(DEB_CLASSPATH)" org.apache.tools.ant.Main $(ANT_ARGS)
 
 build: build-arch build-indep
 build-arch: build-stamp
@@ -96,22 +95,17 @@ binary-indep: build install
 	dh_installinit --error-handler=true -- defaults 92 08
 	dh_installdebconf
 	dh_installcron
+	
 	mkdir -p debian/poms
 	cp res/maven/*.pom debian/poms
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.1/'      \
-	              debian/poms/tomcat-servlet-api.pom
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.1/'      \
-	              debian/javaxpoms/servlet-api.pom
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.0/'      \
-	              debian/poms/tomcat-el-api.pom
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.0/'      \
-	              debian/javaxpoms/el-api.pom
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/2.3/'      \
-	              debian/poms/tomcat-jsp-api.pom
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/2.3/'      \
-	              debian/javaxpoms/jsp-api.pom
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/$(T_VER)/' \
-	              debian/poms/*.pom
+	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.1/'      debian/poms/tomcat-servlet-api.pom
+	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.1/'      debian/javaxpoms/servlet-api.pom
+	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.0/'      debian/poms/tomcat-el-api.pom
+	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.0/'      debian/javaxpoms/el-api.pom
+	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/2.3/'      debian/poms/tomcat-jsp-api.pom
+	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/2.3/'      debian/javaxpoms/jsp-api.pom
+	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/$(T_VER)/' debian/poms/*.pom
+	
 	mh_installpoms -plibtomcat8-java
 	for i in $(T_MAVENIZED_JARS); \
 	do \
@@ -120,58 +114,32 @@ binary-indep: build install
 	                      $(BLDLIB)/$$i.jar              \
 	                      usr/share/tomcat8/lib/$$i.jar; \
 	done
-	mh_installjar -plibtomcat8-java -l --usj-name=catalina-tribes \
-	              debian/poms/tomcat-tribes.pom \
-	              $(BLDLIB)/catalina-tribes.jar \
-	              usr/share/tomcat8/lib/catalina-tribes.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-api \
-	              debian/poms/tomcat-api.pom \
-	              $(BLDLIB)/tomcat-api.jar \
-	              usr/share/tomcat8/lib/tomcat-api.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-coyote \
-	              debian/poms/tomcat-coyote.pom \
-	              $(BLDLIB)/tomcat-coyote.jar \
-	              usr/share/tomcat8/lib/tomcat-coyote.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-juli \
-	              debian/poms/tomcat-juli.pom \
-	              $(BLDBIN)/tomcat-juli.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-util \
-	              debian/poms/tomcat-util.pom \
-	              $(BLDLIB)/tomcat-util.jar \
-	              usr/share/tomcat8/lib/tomcat-util.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-jdbc \
-				  debian/poms/tomcat-jdbc.pom \
-			  	  output/jdbc-pool/tomcat-jdbc.jar \
-				  usr/share/tomcat8/lib/tomcat-jdbc.jar
+	
+	mh_installjar -plibtomcat8-java -l --usj-name=catalina-tribes debian/poms/tomcat-tribes.pom $(BLDLIB)/catalina-tribes.jar usr/share/tomcat8/lib/catalina-tribes.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-api      debian/poms/tomcat-api.pom    $(BLDLIB)/tomcat-api.jar      usr/share/tomcat8/lib/tomcat-api.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-coyote   debian/poms/tomcat-coyote.pom $(BLDLIB)/tomcat-coyote.jar   usr/share/tomcat8/lib/tomcat-coyote.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-juli     debian/poms/tomcat-juli.pom   $(BLDBIN)/tomcat-juli.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-util     debian/poms/tomcat-util.pom   $(BLDLIB)/tomcat-util.jar     usr/share/tomcat8/lib/tomcat-util.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-jdbc     debian/poms/tomcat-jdbc.pom   output/jdbc-pool/tomcat-jdbc.jar  usr/share/tomcat8/lib/tomcat-jdbc.jar
+	
 	for i in $(T_JARS); do \
 		mv $(BLDLIB)/$$i.jar $(BLDLIB)/$$i-$(T_VER).jar && \
-		dh_install -plibtomcat8-java \
-			$(BLDLIB)/$$i-$(T_VER).jar usr/share/java && \
-		dh_link -plibtomcat8-java usr/share/java/$$i-$(T_VER).jar \
-			usr/share/java/$$i.jar && \
-		dh_link -ptomcat8-common usr/share/java/$$i-$(T_VER).jar \
-			usr/share/tomcat8/lib/$$i.jar; done
+		dh_install -plibtomcat8-java $(BLDLIB)/$$i-$(T_VER).jar      usr/share/java && \
+		dh_link -plibtomcat8-java    usr/share/java/$$i-$(T_VER).jar usr/share/java/$$i.jar && \
+		dh_link -ptomcat8-common     usr/share/java/$$i-$(T_VER).jar usr/share/tomcat8/lib/$$i.jar; \
+	done
+	
 	dh_install --exclude=.bat --exclude=Thumbs.db
 	dh_link
+	
 	mh_installpoms -plibservlet3.1-java
-	mh_installjar -plibservlet3.1-java -l -s         \
-	              debian/poms/tomcat-servlet-api.pom \
-	              output/build/lib/servlet-api.jar
-	mh_installjar -plibservlet3.1-java -l -s         \
-	              debian/javaxpoms/servlet-api.pom \
-	              output/build/lib/servlet-api.jar
-	mh_installjar -plibservlet3.1-java -l -s         \
-	              debian/poms/tomcat-jsp-api.pom     \
-	              output/build/lib/jsp-api.jar
-	mh_installjar -plibservlet3.1-java -l -s         \
-	              debian/javaxpoms/jsp-api.pom     \
-	              output/build/lib/jsp-api.jar
-	mh_installjar -plibservlet3.1-java -l -s         \
-                      debian/poms/tomcat-el-api.pom      \
-                      output/build/lib/el-api.jar
-	mh_installjar -plibservlet3.1-java -l -s         \
-                      debian/javaxpoms/el-api.pom      \
-                      output/build/lib/el-api.jar
+	mh_installjar -plibservlet3.1-java -l -s  debian/poms/tomcat-servlet-api.pom  output/build/lib/servlet-api.jar
+	mh_installjar -plibservlet3.1-java -l -s  debian/javaxpoms/servlet-api.pom    output/build/lib/servlet-api.jar
+	mh_installjar -plibservlet3.1-java -l -s  debian/poms/tomcat-jsp-api.pom      output/build/lib/jsp-api.jar
+	mh_installjar -plibservlet3.1-java -l -s  debian/javaxpoms/jsp-api.pom        output/build/lib/jsp-api.jar
+	mh_installjar -plibservlet3.1-java -l -s  debian/poms/tomcat-el-api.pom       output/build/lib/el-api.jar
+	mh_installjar -plibservlet3.1-java -l -s  debian/javaxpoms/el-api.pom         output/build/lib/el-api.jar
+	
 	rm -r debian/poms
 	rm -rf \
            debian/tomcat8/usr/share/tomcat8/webapps/default_root/.svn \
@@ -179,10 +147,12 @@ binary-indep: build install
 	chmod a+x debian/tomcat8-common/usr/share/tomcat8/bin/*.sh
 	chmod a+x debian/tomcat8-user/usr/bin/tomcat8-instance-create
 	chmod a+x debian/tomcat8-user/usr/share/tomcat8/skel/bin/*.sh
+	
 	# update the checksum for the root webapp
 	unset rwmd5sum \
 		&& rwmd5sum=`cat $(RWFILES) | md5sum - 2>/dev/null | cut -d " " -f1` \
 		&& sed "s/\@ROOT_WEBAPP_MD5SUM\@/$$rwmd5sum/" debian/tomcat8.postrm.in > debian/tomcat8.postrm
+	
 	jh_manifest
 	dh_compress
 	dh_fixperms
