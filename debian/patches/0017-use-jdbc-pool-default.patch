@@ -9,38 +9,37 @@ Description: Make jdbc-pool module default
 Author: James Page <james.page@ubuntu.com>
 Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/tomcat7/+bug/1071817
 Forwarded: not-needed
----
-This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
-
 --- a/java/org/apache/naming/factory/Constants.java
 +++ b/java/org/apache/naming/factory/Constants.java
-@@ -49,7 +49,7 @@ public final class Constants {
+@@ -49,7 +49,7 @@
          Package + ".HandlerFactory";
  
-     public static final String DBCP_DATASOURCE_FACTORY = 
--        "org.apache.tomcat.dbcp.dbcp.BasicDataSourceFactory";
+     public static final String DBCP_DATASOURCE_FACTORY =
+-        "org.apache.tomcat.dbcp.dbcp2.BasicDataSourceFactory";
 +        "org.apache.tomcat.jdbc.pool.DataSourceFactory";
  
-     public static final String OPENEJB_EJB_FACTORY = 
+     public static final String OPENEJB_EJB_FACTORY =
          Package + ".OpenEjbFactory";
 --- a/webapps/docs/config/systemprops.xml
 +++ b/webapps/docs/config/systemprops.xml
-@@ -581,7 +581,7 @@
+@@ -595,9 +595,7 @@
      <property name="javax.sql.DataSource.Factory">
        <p>The class name of the factory to use to create resources of type
        <code>javax.sql.DataSource</code>. If not specified the default of
--      <code>org.apache.tomcat.dbcp.dbcp.BasicDataSourceFactory</code> is used
-+      <code>org.apache.tomcat.jdbc.pool.DataSourceFactory</code> is used
-       which is a package renamed (to avoid conflictions) copy of
-       <a href="http://commons.apache.org/dbcp">Apache Commons DBCP</a>.</p>
+-      <code>org.apache.tomcat.dbcp.dbcp2.BasicDataSourceFactory</code> is used
+-      which is a package renamed (to avoid conflictions) copy of
+-      <a href="http://commons.apache.org/dbcp">Apache Commons DBCP</a>.</p>
++      <code>org.apache.tomcat.jdbc.pool.DataSourceFactory</code> is used.</p>
      </property>
+ 
+     <property name="javax.mail.Session.Factory">
 --- a/webapps/docs/jndi-resources-howto.xml
 +++ b/webapps/docs/jndi-resources-howto.xml
-@@ -684,7 +684,7 @@ conn.close();
+@@ -684,7 +684,7 @@
  
      <p>The configuration properties for Tomcat's standard data source
      resource factory
--    (<code>org.apache.tomcat.dbcp.dbcp.BasicDataSourceFactory</code>) are
+-    (<code>org.apache.tomcat.dbcp.dbcp2.BasicDataSourceFactory</code>) are
 +    (<code>org.apache.tomcat.jdbc.pool.DataSourceFactory</code>) are
      as follows:</p>
      <ul>

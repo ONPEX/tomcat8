@@ -1,11 +1,6 @@
 From: Debian Java Maintainers <pkg-java-maintainers@lists.alioth.debian.org>
 Date: Mon, 28 Jun 2010 21:32:57 +0200
 Subject: [PATCH] add JARs below /var to class loader
-
----
- conf/catalina.properties |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
 --- a/conf/catalina.properties
 +++ b/conf/catalina.properties
 @@ -44,7 +44,7 @@
@@ -33,5 +28,5 @@ Subject: [PATCH] add JARs below /var to class loader
 -shared.loader=
 +shared.loader=${catalina.home}/shared/classes,${catalina.home}/shared/*.jar
  
- # List of JAR files that should not be scanned using the JarScanner
+ # Default list of JAR files that should not be scanned using the JarScanner
  # functionality. This is typically used to scan JARs for configuration

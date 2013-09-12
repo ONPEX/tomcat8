@@ -1,4 +1,4 @@
-Description: Compatibility patch to support compilation of tomcat7
+Description: Compatibility patch to support compilation of tomcat8
  using openjdk-7
 Author: James Page <james.page@ubuntu.com>
 Forwarded: not-needed

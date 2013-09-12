@@ -1,41 +1,39 @@
-DESCRIPTION: this patch changes the manager path from webapps/manager to
-../tomcat7-admin/manager
-
+Description: This patch changes the manager path from webapps/manager to
+ ../tomcat8-admin/manager
 Author: TJ <ubuntu@iam.tj>, Gianfranco Costamagna <costamagnagianfranco@yahoo.it>
 Bug-Ubuntu: https://bugs.launchpad.net/bugs/1128067
 Reviewed-By: Gianfranco Costamagna <costamagnagianfranco@yahoo.it>
-Last-Update: <2013-08-01>
-
---- tomcat7-7.0.42.orig/webapps/host-manager/manager.xml
-+++ tomcat7-7.0.42/webapps/host-manager/manager.xml
+Last-Update: 2013-08-01
+--- a/webapps/host-manager/manager.xml
++++ b/webapps/host-manager/manager.xml
 @@ -24,7 +24,7 @@
  -->
  
  
 -<Context docBase="${catalina.home}/webapps/manager"
-+<Context docBase="${catalina.home}/../tomcat7-admin/manager"
++<Context docBase="${catalina.home}/../tomcat8-admin/manager"
           privileged="true" antiResourceLocking="false" antiJARLocking="false">
  
  </Context>
---- tomcat7-7.0.42.orig/webapps/docs/manager-howto.xml
-+++ tomcat7-7.0.42/webapps/docs/manager-howto.xml
-@@ -72,7 +72,7 @@ Manager web application <code>Context</c
+--- a/webapps/docs/manager-howto.xml
++++ b/webapps/docs/manager-howto.xml
+@@ -72,7 +72,7 @@
  example:</p>
  <pre>
  &lt;Context privileged="true" antiResourceLocking="false"
 -         docBase="${catalina.home}/webapps/manager"&gt;
-+         docBase="${catalina.home}/../tomcat7-admin/manager"&gt;
++         docBase="${catalina.home}/../tomcat8-admin/manager"&gt;
    &lt;Valve className="org.apache.catalina.valves.RemoteAddrValve"
           allow="127\.0\.0\.1" /&gt;
  &lt;/Context&gt;
---- tomcat7-7.0.42.orig/conf/catalina.policy
-+++ tomcat7-7.0.42/conf/catalina.policy
-@@ -196,14 +196,14 @@ grant {
+--- a/conf/catalina.policy
++++ b/conf/catalina.policy
+@@ -196,14 +196,14 @@
  // - default CATALINA_HOME == CATALINA_BASE
  // - CATALINA_HOME != CATALINA_BASE, per instance Manager in CATALINA_BASE
  // - CATALINA_HOME != CATALINA_BASE, shared Manager in CATALINA_HOME
 -grant codeBase "file:${catalina.base}/webapps/manager/-" {
-+grant codeBase "file:${catalina.base}/../tomcat7-admin/manager/-" {
++grant codeBase "file:${catalina.base}/../tomcat8-admin/manager/-" {
      permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina";
      permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.ha.session";
      permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.manager";
@@ -43,7 +41,7 @@ Last-Update: <2013-08-01>
      permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.util";
  };
 -grant codeBase "file:${catalina.home}/webapps/manager/-" {
-+grant codeBase "file:${catalina.home}/../tomcat7-admin/manager/-" {
++grant codeBase "file:${catalina.home}/../tomcat8-admin/manager/-" {
      permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina";
      permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.ha.session";
      permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.manager";

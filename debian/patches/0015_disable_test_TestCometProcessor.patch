@@ -1,6 +1,6 @@
 --- a/test/org/apache/catalina/comet/TestCometProcessor.java
 +++ b/test/org/apache/catalina/comet/TestCometProcessor.java
-@@ -34,6 +34,7 @@ import static org.junit.Assert.fail;
+@@ -34,6 +34,7 @@
  
  import org.junit.Assert;
  import org.junit.Test;
@@ -8,7 +8,7 @@
  
  import org.apache.catalina.Context;
  import org.apache.catalina.Wrapper;
-@@ -191,6 +192,7 @@ public class TestCometProcessor extends
+@@ -191,6 +192,7 @@
      }
  
      @Test

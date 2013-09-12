@@ -1,20 +1,15 @@
 From: Adam Guthrie <asguthrie@gmail.com>
 Date: Mon, 28 Jun 2010 21:53:50 +0200
 Subject: [PATCH] Use java.security.policy file in catalina.sh
-
-Make sure catalina.sh uses the Debian/Ubuntu java.security.policy
-file location when Tomcat is started with a security manager.
+ Make sure catalina.sh uses the Debian/Ubuntu java.security.policy
+ file location when Tomcat is started with a security manager.
 
 Bug-Ubuntu: https://bugs.launchpad.net/bugs/591802
 Bug-Debian: http://bugs.debian.org/585379
 Forwarded: not-needed
----
- bin/catalina.sh |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
 --- a/bin/catalina.sh
 +++ b/bin/catalina.sh
-@@ -285,7 +285,7 @@ if [ "$1" = "debug" ] ; then
+@@ -285,7 +285,7 @@
          -Djava.endorsed.dirs="$JAVA_ENDORSED_DIRS" -classpath "$CLASSPATH" \
          -sourcepath "$CATALINA_HOME"/../../java \
          -Djava.security.manager \
@@ -23,21 +18,21 @@ Forwarded: not-needed
          -Dcatalina.base="$CATALINA_BASE" \
          -Dcatalina.home="$CATALINA_HOME" \
          -Djava.io.tmpdir="$CATALINA_TMPDIR" \
-@@ -312,7 +312,7 @@ elif [ "$1" = "run" ]; then
-     eval exec \"$_RUNJAVA\" \"$LOGGING_CONFIG\" $LOGGING_MANAGER $JAVA_OPTS $CATALINA_OPTS \
-       -Djava.endorsed.dirs=\"$JAVA_ENDORSED_DIRS\" -classpath \"$CLASSPATH\" \
+@@ -312,7 +312,7 @@
+     eval exec "\"$_RUNJAVA\"" "\"$LOGGING_CONFIG\"" $LOGGING_MANAGER $JAVA_OPTS $CATALINA_OPTS \
+       -Djava.endorsed.dirs="\"$JAVA_ENDORSED_DIRS\"" -classpath "\"$CLASSPATH\"" \
        -Djava.security.manager \
--      -Djava.security.policy==\"$CATALINA_BASE/conf/catalina.policy\" \
-+      -Djava.security.policy==\"$CATALINA_BASE/work/catalina.policy\" \
-       -Dcatalina.base=\"$CATALINA_BASE\" \
-       -Dcatalina.home=\"$CATALINA_HOME\" \
-       -Djava.io.tmpdir=\"$CATALINA_TMPDIR\" \
-@@ -376,7 +376,7 @@ elif [ "$1" = "start" ] ; then
-     eval \"$_RUNJAVA\" \"$LOGGING_CONFIG\" $LOGGING_MANAGER $JAVA_OPTS $CATALINA_OPTS \
-       -Djava.endorsed.dirs=\"$JAVA_ENDORSED_DIRS\" -classpath \"$CLASSPATH\" \
+-      -Djava.security.policy=="\"$CATALINA_BASE/conf/catalina.policy\"" \
++      -Djava.security.policy=="\"$CATALINA_BASE/work/catalina.policy\"" \
+       -Dcatalina.base="\"$CATALINA_BASE\"" \
+       -Dcatalina.home="\"$CATALINA_HOME\"" \
+       -Djava.io.tmpdir="\"$CATALINA_TMPDIR\"" \
+@@ -376,7 +376,7 @@
+     eval "\"$_RUNJAVA\"" "\"$LOGGING_CONFIG\"" $LOGGING_MANAGER $JAVA_OPTS $CATALINA_OPTS \
+       -Djava.endorsed.dirs="\"$JAVA_ENDORSED_DIRS\"" -classpath "\"$CLASSPATH\"" \
        -Djava.security.manager \
--      -Djava.security.policy==\"$CATALINA_BASE/conf/catalina.policy\" \
-+      -Djava.security.policy==\"$CATALINA_BASE/work/catalina.policy\" \
-       -Dcatalina.base=\"$CATALINA_BASE\" \
-       -Dcatalina.home=\"$CATALINA_HOME\" \
-       -Djava.io.tmpdir=\"$CATALINA_TMPDIR\" \
+-      -Djava.security.policy=="\"$CATALINA_BASE/conf/catalina.policy\"" \
++      -Djava.security.policy=="\"$CATALINA_BASE/work/catalina.policy\"" \
+       -Dcatalina.base="\"$CATALINA_BASE\"" \
+       -Dcatalina.home="\"$CATALINA_HOME\"" \
+       -Djava.io.tmpdir="\"$CATALINA_TMPDIR\"" \

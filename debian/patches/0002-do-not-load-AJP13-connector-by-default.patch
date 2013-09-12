@@ -1,11 +1,5 @@
-From: Thierry Carrez <thierry.carrez@ubuntu.com>
-Date: Mon, 28 Jun 2010 21:32:21 +0200
-Subject: [PATCH] do not load AJP13 connector by default
-
----
- conf/server.xml |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
+Description: Do not load AJP13 connector by default
+Author: Thierry Carrez <thierry.carrez@ubuntu.com>
 --- a/conf/server.xml
 +++ b/conf/server.xml
 @@ -89,7 +89,9 @@

@@ -1,11 +1,5 @@
-From: Thomas Koch <thomas@koch.ro>
-Date: Mon, 28 Jun 2010 21:32:15 +0200
-Subject: [PATCH] set UTF-8 as default character encoding
-
----
- conf/server.xml |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
+Description: Set UTF-8 as default character encoding
+Author: Thomas Koch <thomas@koch.ro>
 --- a/conf/server.xml
 +++ b/conf/server.xml
 @@ -69,6 +69,7 @@
