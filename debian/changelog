@@ -1,3 +1,15 @@
+tomcat8 (8.0.0~RC1-1) UNRELEASED; urgency=low
+
+  * Team upload.
+  * New upstream release
+    - Updated the version of the Servlet, JSP and EL APIs
+    - Switch to Java 7
+    - Updated the watch file to match the Tomcat 8 releases
+  * Use XZ compression for the upstream tarball
+  * Replaced Sun Microsystems with Oracle
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Thu, 12 Sep 2013 16:10:10 +0200
+
 tomcat7 (7.0.42-2) UNRELEASED; urgency=low
 
   * Removed -Djava.net.preferIPv4Stack=true
