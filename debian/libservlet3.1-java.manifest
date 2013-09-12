@@ -16,7 +16,7 @@ usr/share/java/jsp-api-2.3.jar:
  Bundle-Version: 2.3.0.v201103241327
  Bundle-SymbolicName: javax.servlet.jsp
  Bundle-Name: Java Server Pages API Bundle
- Bundle-RequiredExecutionEnvironment: CDC-1.0/Foundation-1.0,JavaSE-1.6
+ Bundle-RequiredExecutionEnvironment: CDC-1.0/Foundation-1.0,JavaSE-1.7
  Bundle-Localization: plugin
  Bundle-Vendor: Apache Software Foundation
 
@@ -26,6 +26,6 @@ usr/share/java/servlet-api-3.1.jar:
  Bundle-Version: 3.1.0.v201103241327
  Bundle-SymbolicName: javax.servlet
  Bundle-Name: Servlet API Bundle
- Bundle-RequiredExecutionEnvironment: CDC-1.0/Foundation-1.0,JavaSE-1.6
+ Bundle-RequiredExecutionEnvironment: CDC-1.0/Foundation-1.0,JavaSE-1.7
  Bundle-Localization: plugin
  Bundle-Vendor: Apache Software Foundation
