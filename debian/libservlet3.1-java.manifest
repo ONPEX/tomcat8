@@ -1,0 +1,31 @@
+usr/share/java/el-api-3.0.jar:
+ Bundle-ManifestVersion: 2 
+ Bundle-Vendor: Apache Software Foundation
+ Bundle-Version: 3.0.0
+ Bundle-Localization: plugin
+ Bundle-RequiredExecutionEnvironment: J2SE-1.5
+ Bundle-Name: Javax Expression Language Bundle
+ Bundle-SymbolicName: javax.el
+ Export-Package: javax.el;version="3.0.0"
+ Import-Package: javax.servlet;version="2.6.0",javax.servlet.http;version="3.1.0"
+
+usr/share/java/jsp-api-2.3.jar:
+ Import-Package: javax.servlet;version="3.1.0",javax.servlet.http;version="3.1.0",javax.servlet.resources;version="3.1.0",javax.el;version="3.0.0"
+ Bundle-ManifestVersion: 2
+ Export-Package: javax.servlet.jsp; version=2.3,javax.servlet.jsp.el; version=2.3,javax.servlet.jsp.resources; version=2.3,javax.servlet.jsp.tagext; version=2.3
+ Bundle-Version: 2.3.0.v201103241327
+ Bundle-SymbolicName: javax.servlet.jsp
+ Bundle-Name: Java Server Pages API Bundle
+ Bundle-RequiredExecutionEnvironment: CDC-1.0/Foundation-1.0,JavaSE-1.6
+ Bundle-Localization: plugin
+ Bundle-Vendor: Apache Software Foundation
+
+usr/share/java/servlet-api-3.1.jar:
+ Bundle-ManifestVersion: 2
+ Export-Package: javax.servlet;version="3.1.0",javax.servlet.annotation;version="3.1.0",javax.servlet.descriptor;version="3.1.0",javax.servlet.http;version="3.1.0",javax.servlet.resources;version="3.1.0"
+ Bundle-Version: 3.1.0.v201103241327
+ Bundle-SymbolicName: javax.servlet
+ Bundle-Name: Servlet API Bundle
+ Bundle-RequiredExecutionEnvironment: CDC-1.0/Foundation-1.0,JavaSE-1.6
+ Bundle-Localization: plugin
+ Bundle-Vendor: Apache Software Foundation

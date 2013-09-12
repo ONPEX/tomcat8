@@ -99,17 +99,17 @@ binary-indep: build install
 	dh_installcron
 	mkdir -p debian/poms
 	cp res/maven/*.pom debian/poms
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.0/'      \
+	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.1/'      \
 	              debian/poms/tomcat-servlet-api.pom
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.0/'      \
+	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.1/'      \
 	              debian/javaxpoms/servlet-api.pom
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/2.2/'      \
+	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.0/'      \
 	              debian/poms/tomcat-el-api.pom
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/2.2/'      \
+	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.0/'      \
 	              debian/javaxpoms/el-api.pom
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/2.2/'      \
+	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/2.3/'      \
 	              debian/poms/tomcat-jsp-api.pom
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/2.2/'      \
+	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/2.3/'      \
 	              debian/javaxpoms/jsp-api.pom
 	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/$(T_VER)/' \
 	              debian/poms/*.pom
@@ -154,23 +154,23 @@ binary-indep: build install
 			usr/share/tomcat8/lib/$$i.jar; done
 	dh_install --exclude=.bat --exclude=Thumbs.db
 	dh_link
-	mh_installpoms -plibservlet3.0-java
-	mh_installjar -plibservlet3.0-java -l -s         \
+	mh_installpoms -plibservlet3.1-java
+	mh_installjar -plibservlet3.1-java -l -s         \
 	              debian/poms/tomcat-servlet-api.pom \
 	              output/build/lib/servlet-api.jar
-	mh_installjar -plibservlet3.0-java -l -s         \
+	mh_installjar -plibservlet3.1-java -l -s         \
 	              debian/javaxpoms/servlet-api.pom \
 	              output/build/lib/servlet-api.jar
-	mh_installjar -plibservlet3.0-java -l -s         \
+	mh_installjar -plibservlet3.1-java -l -s         \
 	              debian/poms/tomcat-jsp-api.pom     \
 	              output/build/lib/jsp-api.jar
-	mh_installjar -plibservlet3.0-java -l -s         \
+	mh_installjar -plibservlet3.1-java -l -s         \
 	              debian/javaxpoms/jsp-api.pom     \
 	              output/build/lib/jsp-api.jar
-	mh_installjar -plibservlet3.0-java -l -s         \
+	mh_installjar -plibservlet3.1-java -l -s         \
                       debian/poms/tomcat-el-api.pom      \
                       output/build/lib/el-api.jar
-	mh_installjar -plibservlet3.0-java -l -s         \
+	mh_installjar -plibservlet3.1-java -l -s         \
                       debian/javaxpoms/el-api.pom      \
                       output/build/lib/el-api.jar
 	rm -r debian/poms
