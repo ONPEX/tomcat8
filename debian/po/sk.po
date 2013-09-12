@@ -1,12 +1,12 @@
-# Slovak translation of tomcat7 debconf templates.
+# Slovak translation of tomcat8 debconf templates.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the tomcat7 package.
+# This file is distributed under the same license as the tomcat8 package.
 # Ivan Masár <helix84@centrum.sk>, 2012.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: tomcat7\n"
-"Report-Msgid-Bugs-To: tomcat7@packages.debian.org\n"
+"Project-Id-Version: tomcat8\n"
+"Report-Msgid-Bugs-To: tomcat8@packages.debian.org\n"
 "POT-Creation-Date: 2010-08-06 04:08+0200\n"
 "PO-Revision-Date: 2012-06-17 20:17+0100\n"
 "Last-Translator: Ivan Masár <helix84@centrum.sk>\n"
@@ -18,43 +18,43 @@ msgstr ""
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:1001
-msgid "Dedicated system account for the tomcat7 daemon:"
-msgstr "Vyhradený systémový účet pre démona tomcat7:"
+#: ../tomcat8.templates:1001
+msgid "Dedicated system account for the tomcat8 daemon:"
+msgstr "Vyhradený systémový účet pre démona tomcat8:"
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:1001
-msgid "The tomcat7 server must use a dedicated account for its operation so that the system's security is not compromised by running it with superuser privileges."
-msgstr "Server tomcat7 musí používať na svoju prevádzku vyhradený účet, aby nebola kompromitovaná bezpečnosť systému, keď sa spúšťa s oprávneniami superpoužívateľa."
+#: ../tomcat8.templates:1001
+msgid "The tomcat8 server must use a dedicated account for its operation so that the system's security is not compromised by running it with superuser privileges."
+msgstr "Server tomcat8 musí používať na svoju prevádzku vyhradený účet, aby nebola kompromitovaná bezpečnosť systému, keď sa spúšťa s oprávneniami superpoužívateľa."
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:2001
-msgid "Dedicated system group for the tomcat7 daemon:"
-msgstr "Vyhradená systémová skupina pre démona tomcat7:"
+#: ../tomcat8.templates:2001
+msgid "Dedicated system group for the tomcat8 daemon:"
+msgstr "Vyhradená systémová skupina pre démona tomcat8:"
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:2001
-msgid "The tomcat7 server must use a dedicated group for its operation so that the system's security is not compromised by running it with superuser privileges."
-msgstr "Server tomcat7 musí používať na svoju prevádzku vyhradenú skupinu, aby nebola kompromitovaná bezpečnosť systému, keď sa spúšťa s oprávneniami superpoužívateľa."
+#: ../tomcat8.templates:2001
+msgid "The tomcat8 server must use a dedicated group for its operation so that the system's security is not compromised by running it with superuser privileges."
+msgstr "Server tomcat8 musí používať na svoju prevádzku vyhradenú skupinu, aby nebola kompromitovaná bezpečnosť systému, keď sa spúšťa s oprávneniami superpoužívateľa."
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:3001
-msgid "Please choose the tomcat7 JVM Java options:"
-msgstr "Prosím, vyberte voľby JVM Java tomcat7:"
+#: ../tomcat8.templates:3001
+msgid "Please choose the tomcat8 JVM Java options:"
+msgstr "Prosím, vyberte voľby JVM Java tomcat8:"
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:3001
+#: ../tomcat8.templates:3001
 msgid "Tomcat's JVM will be launched with a specific set of Java options."
 msgstr "JVM Tomcatu bude spustený s určenou sadou volieb Javy."
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:3001
+#: ../tomcat8.templates:3001
 msgid "Note that if you use -XX:+UseConcMarkSweepGC you should add the -XX:+CMSIncrementalMode option if you run Tomcat on a machine with exactly one CPU chip that contains one or two cores."
 msgstr "Pamätajte, že ak použijete -XX:+UseConcMarkSweepGC, mali by ste pridať voľby -XX:+CMSIncrementalMode ak spúšťate Tomcat na počítači s práve jedným CPU, ktorý obsahuje jedno alebo dve jadrá."
 

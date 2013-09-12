@@ -1,4 +1,4 @@
-# Swedish translation of debconf messages for tomcat7.
+# Swedish translation of debconf messages for tomcat8.
 # Copyright © 2010 Martin Bagge <brother@bsnet.se>
 # This file is distributed under the same license as the schroot package.
 #
@@ -6,8 +6,8 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Tomcat 7\n"
-"Report-Msgid-Bugs-To: tomcat7@packages.debian.org\n"
+"Project-Id-Version: tomcat8\n"
+"Report-Msgid-Bugs-To: tomcat8@packages.debian.org\n"
 "POT-Creation-Date: 2010-08-06 04:08+0200\n"
 "PO-Revision-Date: 2010-08-20 10:08+0100\n"
 "Last-Translator: Martin Bagge / brother <brother@bsnet.se>\n"
@@ -20,53 +20,53 @@ msgstr ""
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:1001
-msgid "Dedicated system account for the tomcat7 daemon:"
-msgstr "Systemanvändare för tomcat7-tjänsten:"
+#: ../tomcat8.templates:1001
+msgid "Dedicated system account for the tomcat8 daemon:"
+msgstr "Systemanvändare för tomcat8-tjänsten:"
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:1001
+#: ../tomcat8.templates:1001
 msgid ""
-"The tomcat7 server must use a dedicated account for its operation so that "
+"The tomcat8 server must use a dedicated account for its operation so that "
 "the system's security is not compromised by running it with superuser "
 "privileges."
 msgstr ""
-"Tomcat7-servern måste köra som en systemanvändare så att systemets säkerhet "
+"tomcat8-servern måste köra som en systemanvändare så att systemets säkerhet "
 "inte äventyras genom att köra tjänsten med superanvändarens rättigheter."
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:2001
-msgid "Dedicated system group for the tomcat7 daemon:"
-msgstr "Systemgrupp för tomcat7-tjänsten:"
+#: ../tomcat8.templates:2001
+msgid "Dedicated system group for the tomcat8 daemon:"
+msgstr "Systemgrupp för tomcat8-tjänsten:"
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:2001
+#: ../tomcat8.templates:2001
 msgid ""
-"The tomcat7 server must use a dedicated group for its operation so that the "
+"The tomcat8 server must use a dedicated group for its operation so that the "
 "system's security is not compromised by running it with superuser privileges."
 msgstr ""
-"Tomcat7-servern måste köra ha en systemgrupp så att systemets säkerhet inte "
+"tomcat8-servern måste köra ha en systemgrupp så att systemets säkerhet inte "
 "äventyras genom att köra tjänsten med superanvändarens rättigheter."
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:3001
-msgid "Please choose the tomcat7 JVM Java options:"
-msgstr "Ange Java-flaggor för tomcat7 JVM:"
+#: ../tomcat8.templates:3001
+msgid "Please choose the tomcat8 JVM Java options:"
+msgstr "Ange Java-flaggor för tomcat8 JVM:"
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:3001
+#: ../tomcat8.templates:3001
 msgid "Tomcat's JVM will be launched with a specific set of Java options."
 msgstr ""
 "Tomcats JVM kommer att startas med en särskild uppsättning Java-flaggor."
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:3001
+#: ../tomcat8.templates:3001
 msgid ""
 "Note that if you use -XX:+UseConcMarkSweepGC you should add the -XX:"
 "+CMSIncrementalMode option if you run Tomcat on a machine with exactly one "

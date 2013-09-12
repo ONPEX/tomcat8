@@ -1,12 +1,12 @@
-# Translation of tomcat7 debconf templates to german.
+# Translation of tomcat8 debconf templates to german.
 # Copyright (C) 2010, Holger Wansing.
-# This file is distributed under the same license as the tomcat7 package.
+# This file is distributed under the same license as the tomcat8 package.
 # Holger Wansing <linux@wansing-online.de>, 2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: tomcat7 7.0.12-1\n"
-"Report-Msgid-Bugs-To: tomcat7@packages.debian.org\n"
+"Project-Id-Version: tomcat8\n"
+"Report-Msgid-Bugs-To: tomcat8@packages.debian.org\n"
 "POT-Creation-Date: 2010-08-06 04:08+0200\n"
 "PO-Revision-Date: 2010-08-15 12:59+0200\n"
 "Last-Translator: Holger Wansing <linux@wansing-online.de>\n"
@@ -17,54 +17,54 @@ msgstr ""
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:1001
-msgid "Dedicated system account for the tomcat7 daemon:"
-msgstr "Eigenes Systemkonto für den Tomcat6-Daemon:"
+#: ../tomcat8.templates:1001
+msgid "Dedicated system account for the tomcat8 daemon:"
+msgstr "Eigenes Systemkonto für den Tomcat8-Daemon:"
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:1001
+#: ../tomcat8.templates:1001
 msgid ""
-"The tomcat7 server must use a dedicated account for its operation so that "
+"The tomcat8 server must use a dedicated account for its operation so that "
 "the system's security is not compromised by running it with superuser "
 "privileges."
 msgstr ""
-"Der Tomcat6-Server muss ein eigenes Konto für seinen Betrieb verwenden, um "
+"Der Tomcat8-Server muss ein eigenes Konto für seinen Betrieb verwenden, um "
 "die Sicherheit des Systems nicht durch die Ausführung mit Superuser-Rechten "
 "zu kompromittieren."
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:2001
-msgid "Dedicated system group for the tomcat7 daemon:"
-msgstr "Eigene Systemgruppe für den Tomcat6-Daemon:"
+#: ../tomcat8.templates:2001
+msgid "Dedicated system group for the tomcat8 daemon:"
+msgstr "Eigene Systemgruppe für den Tomcat8-Daemon:"
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:2001
+#: ../tomcat8.templates:2001
 msgid ""
-"The tomcat7 server must use a dedicated group for its operation so that the "
+"The tomcat8 server must use a dedicated group for its operation so that the "
 "system's security is not compromised by running it with superuser privileges."
 msgstr ""
-"Der Tomcat6-Server muss eine eigene Gruppe für seinen Betrieb verwenden, um "
+"Der Tomcat8-Server muss eine eigene Gruppe für seinen Betrieb verwenden, um "
 "die Sicherheit des Systems nicht durch die Ausführung mit Superuser-Rechten "
 "zu kompromittieren."
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:3001
-msgid "Please choose the tomcat7 JVM Java options:"
-msgstr "Bitte wählen Sie die Java-Optionen für die Tomcat6-JVM:"
+#: ../tomcat8.templates:3001
+msgid "Please choose the tomcat8 JVM Java options:"
+msgstr "Bitte wählen Sie die Java-Optionen für die Tomcat8-JVM:"
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:3001
+#: ../tomcat8.templates:3001
 msgid "Tomcat's JVM will be launched with a specific set of Java options."
 msgstr "Die Tomcat-JVM wird mit speziellen Java-Optionen gestartet."
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:3001
+#: ../tomcat8.templates:3001
 msgid ""
 "Note that if you use -XX:+UseConcMarkSweepGC you should add the -XX:"
 "+CMSIncrementalMode option if you run Tomcat on a machine with exactly one "

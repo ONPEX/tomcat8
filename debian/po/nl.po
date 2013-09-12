@@ -1,12 +1,12 @@
-# Dutch translation of tomcat7 debconf templates.
+# Dutch translation of tomcat8 debconf templates.
 # Copyright (C) 2011 THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the tomcat7 package.
+# This file is distributed under the same license as the tomcat8 package.
 # Jeroen Schot <schot@a-eskwadraat.nl>, 2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: tomcat7 7.0.23-1\n"
-"Report-Msgid-Bugs-To: tomcat7@packages.debian.org\n"
+"Project-Id-Version: tomcat8\n"
+"Report-Msgid-Bugs-To: tomcat8@packages.debian.org\n"
 "POT-Creation-Date: 2010-08-06 04:08+0200\n"
 "PO-Revision-Date: 2011-12-06 12:25+0100\n"
 "Last-Translator: Jeroen Schot <schot@a-eskwadraat.nl>\n"
@@ -18,54 +18,54 @@ msgstr ""
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:1001
-msgid "Dedicated system account for the tomcat7 daemon:"
-msgstr "Speciale systeemaccount voor de tomcat7-achtergronddienst:"
+#: ../tomcat8.templates:1001
+msgid "Dedicated system account for the tomcat8 daemon:"
+msgstr "Speciale systeemaccount voor de tomcat8-achtergronddienst:"
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:1001
+#: ../tomcat8.templates:1001
 msgid ""
-"The tomcat7 server must use a dedicated account for its operation so that "
+"The tomcat8 server must use a dedicated account for its operation so that "
 "the system's security is not compromised by running it with superuser "
 "privileges."
 msgstr ""
-"De tomcat7-server moet een speciale account gebruiken voor zijn "
+"De tomcat8-server moet een speciale account gebruiken voor zijn "
 "werkzaamheden, want als hij met beheerdersrechten wordt uitgevoerd kan dit "
 "de beveiliging van het systeem in gevaar brengen."
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:2001
-msgid "Dedicated system group for the tomcat7 daemon:"
-msgstr "Speciale systeemgroep voor de tomcat7-achtergronddienst:"
+#: ../tomcat8.templates:2001
+msgid "Dedicated system group for the tomcat8 daemon:"
+msgstr "Speciale systeemgroep voor de tomcat8-achtergronddienst:"
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:2001
+#: ../tomcat8.templates:2001
 msgid ""
-"The tomcat7 server must use a dedicated group for its operation so that the "
+"The tomcat8 server must use a dedicated group for its operation so that the "
 "system's security is not compromised by running it with superuser privileges."
 msgstr ""
-"De tomcat7-server moet een speciale groep gebruiken voor zijn werkzaamheden, "
+"De tomcat8-server moet een speciale groep gebruiken voor zijn werkzaamheden, "
 "want als hij met beheerdersrechten wordt uitgevoerd kan dit de beveiliging "
 "van het systeem in gevaar brengen."
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:3001
-msgid "Please choose the tomcat7 JVM Java options:"
-msgstr "Kies de tomcat7 JVM Java-opties:"
+#: ../tomcat8.templates:3001
+msgid "Please choose the tomcat8 JVM Java options:"
+msgstr "Kies de tomcat8 JVM Java-opties:"
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:3001
+#: ../tomcat8.templates:3001
 msgid "Tomcat's JVM will be launched with a specific set of Java options."
 msgstr "Tomcat's JVM wordt met een specifieke set Java-opties gelanceerd."
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:3001
+#: ../tomcat8.templates:3001
 msgid ""
 "Note that if you use -XX:+UseConcMarkSweepGC you should add the -XX:"
 "+CMSIncrementalMode option if you run Tomcat on a machine with exactly one "

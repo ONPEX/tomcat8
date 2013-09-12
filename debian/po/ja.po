@@ -1,11 +1,11 @@
 # Copyright (C) Debian Java Maintainers <pkg-java-maintainers@lists.alioth.debian.org>
-# This file is distributed under the same license as the tomcat7 package.
+# This file is distributed under the same license as the tomcat8 package.
 # Hideki Yamane <henrich@debian.org>, 2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: tomcat7 7.0.12-1\n"
-"Report-Msgid-Bugs-To: tomcat7@packages.debian.org\n"
+"Project-Id-Version: tomcat8\n"
+"Report-Msgid-Bugs-To: tomcat8@packages.debian.org\n"
 "POT-Creation-Date: 2010-08-06 04:08+0200\n"
 "PO-Revision-Date: 2010-08-10 08:04-0400\n"
 "Last-Translator: Hideki Yamane <henrich@debian.org>\n"
@@ -17,54 +17,54 @@ msgstr ""
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:1001
-msgid "Dedicated system account for the tomcat7 daemon:"
-msgstr "tomcat7 デーモン専用のシステムアカウント:"
+#: ../tomcat8.templates:1001
+msgid "Dedicated system account for the tomcat8 daemon:"
+msgstr "tomcat8 デーモン専用のシステムアカウント:"
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:1001
+#: ../tomcat8.templates:1001
 msgid ""
-"The tomcat7 server must use a dedicated account for its operation so that "
+"The tomcat8 server must use a dedicated account for its operation so that "
 "the system's security is not compromised by running it with superuser "
 "privileges."
 msgstr ""
-"tomcat7 サーバは、動作するのに専用アカウントを利用する必要があります。"
+"tomcat8 サーバは、動作するのに専用アカウントを利用する必要があります。"
 "これによって、システムのセキュリティは特権ユーザ権限で動作させることによる"
 "侵害を受けなくなります。"
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:2001
-msgid "Dedicated system group for the tomcat7 daemon:"
-msgstr "tomcat7 デーモン専用のシステムグループ:"
+#: ../tomcat8.templates:2001
+msgid "Dedicated system group for the tomcat8 daemon:"
+msgstr "tomcat8 デーモン専用のシステムグループ:"
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:2001
+#: ../tomcat8.templates:2001
 msgid ""
-"The tomcat7 server must use a dedicated group for its operation so that the "
+"The tomcat8 server must use a dedicated group for its operation so that the "
 "system's security is not compromised by running it with superuser privileges."
 msgstr ""
-"tomcat7 サーバは、動作するのに専用グループを利用する必要があります。"
+"tomcat8 サーバは、動作するのに専用グループを利用する必要があります。"
 "これによって、システムのセキュリティは特権ユーザ権限で動作させることによる"
 "侵害を受けなくなります。"
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:3001
-msgid "Please choose the tomcat7 JVM Java options:"
-msgstr "tomcat7 JVM Java オプションを選択してください:"
+#: ../tomcat8.templates:3001
+msgid "Please choose the tomcat8 JVM Java options:"
+msgstr "tomcat8 JVM Java オプションを選択してください:"
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:3001
+#: ../tomcat8.templates:3001
 msgid "Tomcat's JVM will be launched with a specific set of Java options."
 msgstr "Tomcat の JVM は特定の Java オプションを指定して起動されます。"
 
 #. Type: string
 #. Description
-#: ../tomcat7.templates:3001
+#: ../tomcat8.templates:3001
 msgid ""
 "Note that if you use -XX:+UseConcMarkSweepGC you should add the -XX:"
 "+CMSIncrementalMode option if you run Tomcat on a machine with exactly one "
