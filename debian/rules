@@ -40,7 +40,8 @@ ANT_ARGS := -Dcompile.debug=true \
     -Dversion.minor="$(T_VER_MINOR)" \
     -Dversion.build="$(T_VER_BUILD)" \
     -Dversion.patch="0" \
-    -Dversion.suffix="" 
+    -Dversion.suffix="" \
+    -Dno.build.dbcp=true
 
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	ANT_ARGS += -Dcompile.optimize=false
