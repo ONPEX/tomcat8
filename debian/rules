@@ -30,8 +30,6 @@ RWLOC := debian/default_root
 RWFILES := $(RWLOC)/index.html $(RWLOC)/META-INF/context.xml
 
 ANT_ARGS := -Dcompile.debug=true \
-	-Dant.build.javac.source=1.6 \
-	-Dant.build.javac.target=1.6 \
 	-Djdt.jar=/usr/share/java/ecj.jar \
 	-Djunit.jar=/usr/share/java/junit4.jar \
 	-Dhamcrest.jar=/usr/share/java/hamcrest-core.jar \
