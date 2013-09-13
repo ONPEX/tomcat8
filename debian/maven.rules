@@ -2,7 +2,36 @@
 javax.servlet servlet-api jar s/.*/3.1/
 javax.servlet.jsp jsp-api jar s/.*/2.3/
 javax.el el-api jar s/.*/3.0/
+
 # Convert tomcat version of the standard apis to the javax apis
 #s/org.apache.tomcat/javax.servlet/ s/tomcat-servlet-api/servlet-api/ jar s/.*/3.1/
 #s/org.apache.tomcat/javax.servlet.jsp/ s/tomcat-jsp-api/jsp-api/ jar s/.*/2.3/
 #s/org.apache.tomcat/javax.el/ s/tomcat-el-api/el-api/ jar s/.*/3.0/
+
+# Publish 8.x instead of 'debian' artifacts to avoid conflicts with other versions of Tomcat
+org.apache.tomcat tomcat * s/.*/8.x/
+org.apache.tomcat tomcat-annotations-api * s/.*/8.x/
+org.apache.tomcat tomcat-api * s/.*/8.x/
+org.apache.tomcat tomcat-catalina * s/.*/8.x/
+org.apache.tomcat tomcat-catalina-ant * s/.*/8.x/
+org.apache.tomcat tomcat-catalina-ha * s/.*/8.x/
+org.apache.tomcat tomcat-catalina-jmx-remote * s/.*/8.x/
+org.apache.tomcat tomcat-catalina-ws * s/.*/8.x/
+org.apache.tomcat tomcat-coyote * s/.*/8.x/
+org.apache.tomcat tomcat-dbcp * s/.*/8.x/
+org.apache.tomcat tomcat-el-api * s/.*/8.x/
+org.apache.tomcat tomcat-i18n-es * s/.*/8.x/
+org.apache.tomcat tomcat-i18n-fr * s/.*/8.x/
+org.apache.tomcat tomcat-i18n-ja * s/.*/8.x/
+org.apache.tomcat tomcat-jasper * s/.*/8.x/
+org.apache.tomcat tomcat-jasper-el * s/.*/8.x/
+org.apache.tomcat tomcat-jdbc * s/.*/8.x/
+org.apache.tomcat tomcat-jni * s/.*/8.x/
+org.apache.tomcat tomcat-jsp-api * s/.*/8.x/
+org.apache.tomcat tomcat-juli * s/.*/8.x/
+org.apache.tomcat tomcat-servlet-api * s/.*/8.x/
+org.apache.tomcat tomcat-spdy * s/.*/8.x/
+org.apache.tomcat tomcat-tribes * s/.*/8.x/
+org.apache.tomcat tomcat-util * s/.*/8.x/
+org.apache.tomcat tomcat-websocket * s/.*/8.x/
+org.apache.tomcat tomcat-websocket-api * s/.*/8.x/

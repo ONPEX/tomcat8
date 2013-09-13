@@ -11,6 +11,8 @@ tomcat8 (8.0.0~RC1-1) UNRELEASED; urgency=low
   * Use XZ compression for the upstream tarball
   * Replaced Sun Microsystems with Oracle
   * Mentioned 'Apache Tomcat' in the packages descriptions
+  * Deploy the Tomcat artifacts in the Maven repository with the 8.x version
+    instead of 'debian' to avoid conflicts with other versions of Tomcat.
 
  -- Emmanuel Bourg <ebourg@apache.org>  Thu, 12 Sep 2013 16:10:10 +0200
 
