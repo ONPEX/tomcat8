@@ -10,7 +10,7 @@ Last-Update: 2011-05-16
    </target>
  
 -  <target name="compile" depends="download-compile,validate">
-+  <target name="compile" depends="build-prepare,compile-prepare">
++  <target name="compile" depends="validate">
      <!-- Compile internal server components -->
      <javac srcdir="java" destdir="${tomcat.classes}"
             debug="${compile.debug}"
