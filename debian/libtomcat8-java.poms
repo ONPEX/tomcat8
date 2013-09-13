@@ -9,3 +9,7 @@ debian/poms/tomcat-juli.pom
 debian/poms/tomcat-tribes.pom
 debian/poms/tomcat-util.pom
 debian/poms/tomcat-jdbc.pom
+debian/poms/tomcat-jni.pom
+debian/poms/tomcat-spdy.pom
+debian/poms/tomcat-websocket-api.pom
+debian/poms/tomcat-websocket.pom

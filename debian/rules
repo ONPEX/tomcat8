@@ -17,10 +17,16 @@ DEB_CLASSPATH = $(shell for jar in $(DEB_JARS); do \
 	if [ -f "$(JAVA_HOME)/lib/tools.jar" ]; then \
 		echo -n "$(JAVA_HOME)/lib/tools.jar"; fi)
 
+# Upstream version
 T_VER := $(shell dpkg-parsechangelog | egrep '^Version:' \
 	| cut -f 2 -d ' ' | cut -f 2 -d ' ' | sed 's/-[^-]*$$//' | sed 's/~/-/')
+
+# The Tomcat jars linked to /usr/share/tomcat8/lib in the tomcat-common package
 T_JARS := tomcat-i18n-fr tomcat-i18n-es tomcat-i18n-ja catalina-ant
-T_MAVENIZED_JARS := jasper-el annotations-api jasper catalina-ha catalina 
+
+# The Tomcat jars without the tomcat- prefix generated in the BLDLIB directory
+T_MAVENIZED_JARS := jasper-el annotations-api jasper catalina-ha catalina websocket-api
+
 T_VER_MAJOR := $(shell echo $(T_VER) | cut -d'.' -f1)
 T_VER_MINOR := $(shell echo $(T_VER) | cut -d'.' -f2)
 T_VER_BUILD := $(shell echo $(T_VER) | cut -d'.' -f3)
@@ -113,12 +119,15 @@ binary-indep: build install
 	                      usr/share/tomcat8/lib/$$i.jar; \
 	done
 	
-	mh_installjar -plibtomcat8-java -l --usj-name=catalina-tribes debian/poms/tomcat-tribes.pom $(BLDLIB)/catalina-tribes.jar usr/share/tomcat8/lib/catalina-tribes.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-api      debian/poms/tomcat-api.pom    $(BLDLIB)/tomcat-api.jar      usr/share/tomcat8/lib/tomcat-api.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-coyote   debian/poms/tomcat-coyote.pom $(BLDLIB)/tomcat-coyote.jar   usr/share/tomcat8/lib/tomcat-coyote.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-juli     debian/poms/tomcat-juli.pom   $(BLDBIN)/tomcat-juli.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-util     debian/poms/tomcat-util.pom   $(BLDLIB)/tomcat-util.jar     usr/share/tomcat8/lib/tomcat-util.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-jdbc     debian/poms/tomcat-jdbc.pom   output/jdbc-pool/tomcat-jdbc.jar  usr/share/tomcat8/lib/tomcat-jdbc.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=catalina-tribes  debian/poms/tomcat-tribes.pom $(BLDLIB)/catalina-tribes.jar usr/share/tomcat8/lib/catalina-tribes.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-api       debian/poms/tomcat-api.pom    $(BLDLIB)/tomcat-api.jar      usr/share/tomcat8/lib/tomcat-api.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-coyote    debian/poms/tomcat-coyote.pom $(BLDLIB)/tomcat-coyote.jar   usr/share/tomcat8/lib/tomcat-coyote.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-juli      debian/poms/tomcat-juli.pom   $(BLDBIN)/tomcat-juli.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-util      debian/poms/tomcat-util.pom   $(BLDLIB)/tomcat-util.jar     usr/share/tomcat8/lib/tomcat-util.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-jni       debian/poms/tomcat-jni.pom    $(BLDLIB)/tomcat-jni.jar      usr/share/tomcat8/lib/tomcat-jni.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-spdy      debian/poms/tomcat-spdy.pom   $(BLDLIB)/tomcat-spdy.jar     usr/share/tomcat8/lib/tomcat-spdy.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-websocket debian/poms/tomcat-websocket.pom $(BLDLIB)/tomcat-websocket.jar usr/share/tomcat8/lib/tomcat-websocket.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat-jdbc      debian/poms/tomcat-jdbc.pom   output/jdbc-pool/tomcat-jdbc.jar  usr/share/tomcat8/lib/tomcat-jdbc.jar
 	
 	for i in $(T_JARS); do \
 		mv $(BLDLIB)/$$i.jar $(BLDLIB)/$$i-$(T_VER).jar && \
