@@ -70,7 +70,6 @@ Depends: libecj-java,
          libcommons-pool-java,
          libcommons-dbcp-java,
          libservlet3.1-java (>= ${source:Version}), ${misc:Depends}
-Conflicts: libtomcat6-java, libtomcat7-java
 Suggests: tomcat8 (>= ${source:Version})
 Description: Apache Tomcat 8 - Servlet and JSP engine -- core libraries
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
