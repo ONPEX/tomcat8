@@ -18,7 +18,7 @@ Package: tomcat8-common
 Architecture: all
 Depends: libtomcat8-java (>= ${source:Version}), ${misc:Depends},
  default-jre-headless | java7-runtime-headless | java7-runtime | java-7-runtime
-Description: Servlet and JSP engine -- common files
+Description: Apache Tomcat 8 - Servlet and JSP engine -- common files
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Oracle, and provides a "pure Java" HTTP web
  server environment for Java code to run.
@@ -32,11 +32,11 @@ Depends: tomcat8-common (>= ${source:Version}), ucf,
 	adduser, ${misc:Depends}
 Recommends: authbind
 Suggests: tomcat8-docs (>= ${source:Version}),
-	tomcat8-admin (>= ${source:Version}),
-	tomcat8-examples (>= ${source:Version}),
-	tomcat8-user (>= ${source:Version}),
-	libtcnative-1 (>= 1.1.24)
-Description: Servlet and JSP engine
+          tomcat8-admin (>= ${source:Version}),
+          tomcat8-examples (>= ${source:Version}),
+          tomcat8-user (>= ${source:Version}),
+          libtcnative-1 (>= 1.1.24)
+Description: Apache Tomcat 8 - Servlet and JSP engine
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Oracle, and provides a "pure Java" HTTP web
  server environment for Java code to run.
@@ -52,10 +52,10 @@ Package: tomcat8-user
 Architecture: all
 Depends: tomcat8-common (>= ${source:Version}), netcat, ${misc:Depends}
 Suggests: tomcat8-docs (>= ${source:Version}),
-	tomcat8-admin (>= ${source:Version}),
-	tomcat8-examples (>= ${source:Version}),
-	tomcat8 (>= ${source:Version})
-Description: Servlet and JSP engine -- tools to create user instances
+          tomcat8-admin (>= ${source:Version}),
+          tomcat8-examples (>= ${source:Version}),
+          tomcat8 (>= ${source:Version})
+Description: Apache Tomcat 8 - Servlet and JSP engine -- tools to create user instances
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Oracle, and provides a "pure Java" HTTP web
  server environment for Java code to run.
@@ -72,7 +72,7 @@ Depends: libecj-java,
          libservlet3.1-java (>= ${source:Version}), ${misc:Depends}
 Conflicts: libtomcat6-java, libtomcat7-java
 Suggests: tomcat8 (>= ${source:Version})
-Description: Servlet and JSP engine -- core libraries
+Description: Apache Tomcat 8 - Servlet and JSP engine -- core libraries
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Oracle, and provides a "pure Java" HTTP web
  server environment for Java code to run.
@@ -83,7 +83,7 @@ Description: Servlet and JSP engine -- core libraries
 Package: libservlet3.1-java
 Architecture: all
 Depends: ${misc:Depends}
-Description: Servlet 3.1 and JSP 2.3 Java API classes
+Description: Servlet 3.1, JSP 2.3 and EL 3.0 Java API classes
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Oracle, and provides a "pure Java" HTTP web
  server environment for Java code to run.
@@ -95,7 +95,7 @@ Section: doc
 Architecture: all
 Depends: ${misc:Depends}
 Suggests: libservlet3.1-java (>= ${source:Version})
-Description: Servlet 3.1 and JSP 2.3 Java API documentation
+Description: Servlet 3.1, JSP 2.3 and EL 3.0 Java API documentation
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Oracle, and provides a "pure Java" HTTP web
  server environment for Java code to run.
@@ -105,7 +105,7 @@ Description: Servlet 3.1 and JSP 2.3 Java API documentation
 Package: tomcat8-admin
 Architecture: all
 Depends: tomcat8-common (>= ${source:Version}), ${misc:Depends}
-Description: Servlet and JSP engine -- admin web applications
+Description: Apache Tomcat 8 - Servlet and JSP engine -- admin web applications
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Oracle, and provides a "pure Java" HTTP web
  server environment for Java code to run.
@@ -116,7 +116,7 @@ Package: tomcat8-examples
 Architecture: all
 Depends: tomcat8-common (>= ${source:Version}), ${misc:Depends},
  libjstl1.1-java, libjakarta-taglibs-standard-java
-Description: Servlet and JSP engine -- example web applications
+Description: Apache Tomcat 8 - Servlet and JSP engine -- example web applications
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Oracle, and provides a "pure Java" HTTP web
  server environment for Java code to run.
@@ -127,7 +127,7 @@ Package: tomcat8-docs
 Section: doc
 Architecture: all
 Depends: tomcat8-common (>= ${source:Version}), ${misc:Depends}
-Description: Servlet and JSP engine -- documentation
+Description: Apache Tomcat 8 - Servlet and JSP engine -- documentation
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Oracle, and provides a "pure Java" HTTP web
  server environment for Java code to run.

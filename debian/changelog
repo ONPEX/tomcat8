@@ -10,6 +10,7 @@ tomcat8 (8.0.0~RC1-1) UNRELEASED; urgency=low
   * Marked libtomcat8-java as conflicting with libtomcat7-java
   * Use XZ compression for the upstream tarball
   * Replaced Sun Microsystems with Oracle
+  * Mentioned 'Apache Tomcat' in the packages descriptions
 
  -- Emmanuel Bourg <ebourg@apache.org>  Thu, 12 Sep 2013 16:10:10 +0200
 
