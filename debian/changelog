@@ -21,6 +21,8 @@ tomcat8 (8.0.0~RC1-1) UNRELEASED; urgency=low
     artifacts available on Maven central.
   * Renamed the jars in /usr/share/java to tomcat8-xxx to avoid conflicts
     with other versions of Tomcat
+  * Removed libservlet3.1-java.links defining the tomcat-* links
+    in /usr/share/java with the specifications versions
 
  -- Emmanuel Bourg <ebourg@apache.org>  Thu, 12 Sep 2013 16:10:10 +0200
 
