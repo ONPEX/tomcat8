@@ -1,7 +1,7 @@
 tomcat8 (8.0.0~RC1-1) UNRELEASED; urgency=low
 
   * Team upload.
-  * New upstream release
+  * New upstream release (Closes: #722675)
     - Updated the version of the Servlet, JSP and EL APIs
     - Switched to Java 7
     - Updated the watch file to match the Tomcat 8 releases
