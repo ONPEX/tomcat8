@@ -18,7 +18,7 @@ DEB_CLASSPATH = $(shell for jar in $(DEB_JARS); do \
 		echo -n "$(JAVA_HOME)/lib/tools.jar"; fi)
 
 T_VER := $(shell dpkg-parsechangelog | egrep '^Version:' \
-	| cut -f 2 -d ' ' | cut -f 2 -d ' '|sed 's/-[^-]*$$//')
+	| cut -f 2 -d ' ' | cut -f 2 -d ' ' | sed 's/-[^-]*$$//' | sed 's/~/-/')
 T_JARS := tomcat-i18n-fr tomcat-i18n-es tomcat-i18n-ja catalina-ant
 T_MAVENIZED_JARS := jasper-el annotations-api jasper catalina-ha catalina 
 T_VER_MAJOR := $(shell echo $(T_VER) | cut -d'.' -f1)
