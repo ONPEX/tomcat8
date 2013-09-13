@@ -153,11 +153,12 @@ binary-indep: build install
 	
 	mh_installpoms -plibservlet3.1-java
 	mh_installjar -plibservlet3.1-java -l -s  debian/poms/tomcat-servlet-api.pom  output/build/lib/servlet-api.jar
-	mh_installjar -plibservlet3.1-java -l -s  debian/poms/servlet-api.pom         output/build/lib/servlet-api.jar
 	mh_installjar -plibservlet3.1-java -l -s  debian/poms/tomcat-jsp-api.pom      output/build/lib/jsp-api.jar
-	mh_installjar -plibservlet3.1-java -l -s  debian/poms/jsp-api.pom             output/build/lib/jsp-api.jar
 	mh_installjar -plibservlet3.1-java -l -s  debian/poms/tomcat-el-api.pom       output/build/lib/el-api.jar
-	mh_installjar -plibservlet3.1-java -l -s  debian/poms/el-api.pom              output/build/lib/el-api.jar
+	
+	mh_installjar -plibservlet3.1-java -l -s --usj-name=servlet-api debian/poms/servlet-api.pom output/build/lib/servlet-api.jar
+	mh_installjar -plibservlet3.1-java -l -s --usj-name=jsp-api     debian/poms/jsp-api.pom     output/build/lib/jsp-api.jar
+	mh_installjar -plibservlet3.1-java -l -s --usj-name=el-api      debian/poms/el-api.pom      output/build/lib/el-api.jar
 	
 	rm -r debian/poms
 	rm -rf \
