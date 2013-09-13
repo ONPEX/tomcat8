@@ -175,6 +175,7 @@ binary-indep: build install
 	jh_manifest
 	dh_compress
 	dh_fixperms
+	dh_lintian
 	dh_installdeb
 	dh_gencontrol
 	dh_md5sums
