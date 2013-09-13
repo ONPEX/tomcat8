@@ -15,6 +15,9 @@ tomcat8 (8.0.0~RC1-1) UNRELEASED; urgency=low
     instead of 'debian' to avoid conflicts with other versions of Tomcat.
   * No longer alter the poms in debian/javaxpoms during the build. They are
     copied and transformed in the temporary debian/poms directory.
+  * The spec jars under the org.apache.tomcat groupId are now deployed with
+    the upstream version instead of the specification version to match the
+    artifacts available on Maven central.
 
  -- Emmanuel Bourg <ebourg@apache.org>  Thu, 12 Sep 2013 16:10:10 +0200
 

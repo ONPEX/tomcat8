@@ -99,11 +99,8 @@ binary-indep: build install
 	mkdir -p debian/poms
 	cp res/maven/*.pom debian/poms
 	cp debian/javaxpoms/*.pom debian/poms
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.1/'      debian/poms/tomcat-servlet-api.pom
 	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.1/'      debian/poms/servlet-api.pom
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.0/'      debian/poms/tomcat-el-api.pom
 	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.0/'      debian/poms/el-api.pom
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/2.3/'      debian/poms/tomcat-jsp-api.pom
 	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/2.3/'      debian/poms/jsp-api.pom
 	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/$(T_VER)/' debian/poms/*.pom
 	
