@@ -98,12 +98,13 @@ binary-indep: build install
 	
 	mkdir -p debian/poms
 	cp res/maven/*.pom debian/poms
+	cp debian/javaxpoms/*.pom debian/poms
 	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.1/'      debian/poms/tomcat-servlet-api.pom
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.1/'      debian/javaxpoms/servlet-api.pom
+	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.1/'      debian/poms/servlet-api.pom
 	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.0/'      debian/poms/tomcat-el-api.pom
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.0/'      debian/javaxpoms/el-api.pom
+	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.0/'      debian/poms/el-api.pom
 	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/2.3/'      debian/poms/tomcat-jsp-api.pom
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/2.3/'      debian/javaxpoms/jsp-api.pom
+	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/2.3/'      debian/poms/jsp-api.pom
 	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/$(T_VER)/' debian/poms/*.pom
 	
 	mh_installpoms -plibtomcat8-java
@@ -134,11 +135,11 @@ binary-indep: build install
 	
 	mh_installpoms -plibservlet3.1-java
 	mh_installjar -plibservlet3.1-java -l -s  debian/poms/tomcat-servlet-api.pom  output/build/lib/servlet-api.jar
-	mh_installjar -plibservlet3.1-java -l -s  debian/javaxpoms/servlet-api.pom    output/build/lib/servlet-api.jar
+	mh_installjar -plibservlet3.1-java -l -s  debian/poms/servlet-api.pom         output/build/lib/servlet-api.jar
 	mh_installjar -plibservlet3.1-java -l -s  debian/poms/tomcat-jsp-api.pom      output/build/lib/jsp-api.jar
-	mh_installjar -plibservlet3.1-java -l -s  debian/javaxpoms/jsp-api.pom        output/build/lib/jsp-api.jar
+	mh_installjar -plibservlet3.1-java -l -s  debian/poms/jsp-api.pom             output/build/lib/jsp-api.jar
 	mh_installjar -plibservlet3.1-java -l -s  debian/poms/tomcat-el-api.pom       output/build/lib/el-api.jar
-	mh_installjar -plibservlet3.1-java -l -s  debian/javaxpoms/el-api.pom         output/build/lib/el-api.jar
+	mh_installjar -plibservlet3.1-java -l -s  debian/poms/el-api.pom              output/build/lib/el-api.jar
 	
 	rm -r debian/poms
 	rm -rf \

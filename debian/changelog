@@ -13,6 +13,8 @@ tomcat8 (8.0.0~RC1-1) UNRELEASED; urgency=low
   * Mentioned 'Apache Tomcat' in the packages descriptions
   * Deploy the Tomcat artifacts in the Maven repository with the 8.x version
     instead of 'debian' to avoid conflicts with other versions of Tomcat.
+  * No longer alter the poms in debian/javaxpoms during the build. They are
+    copied and transformed in the temporary debian/poms directory.
 
  -- Emmanuel Bourg <ebourg@apache.org>  Thu, 12 Sep 2013 16:10:10 +0200
 
