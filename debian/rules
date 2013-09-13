@@ -136,6 +136,12 @@ binary-indep: build install
 		dh_link -ptomcat8-common     usr/share/java/tomcat8-$$i-$(T_VER).jar usr/share/tomcat8/lib/tomcat-$$i.jar; \
 	done
 	
+	# Install catalina-storeconfig.jar
+	mv $(BLDLIB)/catalina-storeconfig.jar $(BLDLIB)/tomcat8-catalina-storeconfig-$(T_VER).jar
+	dh_install -plibtomcat8-java $(BLDLIB)/tomcat8-catalina-storeconfig-$(T_VER).jar      usr/share/java
+	dh_link -plibtomcat8-java    usr/share/java/tomcat8-catalina-storeconfig-$(T_VER).jar usr/share/java/tomcat8-catalina-storeconfig.jar
+	dh_link -plibtomcat8-java    usr/share/java/tomcat8-catalina-storeconfig-$(T_VER).jar usr/share/tomcat8/lib/catalina-storeconfig.jar
+	
 	# Install catalina-ant.jar
 	mv $(BLDLIB)/catalina-ant.jar $(BLDLIB)/tomcat8-catalina-ant-$(T_VER).jar
 	dh_install -plibtomcat8-java $(BLDLIB)/tomcat8-catalina-ant-$(T_VER).jar      usr/share/java

@@ -3,11 +3,11 @@ tomcat8 (8.0.0~RC1-1) UNRELEASED; urgency=low
   * Team upload.
   * New upstream release
     - Updated the version of the Servlet, JSP and EL APIs
-    - Switch to Java 7
+    - Switched to Java 7
     - Updated the watch file to match the Tomcat 8 releases
     - Refreshed the patches
     - Updated debian/copyright
-    - Installed the new jars (spdy, jni, websocket and websocket-api)
+    - Installed the new jars (spdy, jni, websocket, websocket-api, storeconfig)
   * Marked libtomcat8-java as conflicting with libtomcat7-java
   * Use XZ compression for the upstream tarball
   * Replaced Sun Microsystems with Oracle
