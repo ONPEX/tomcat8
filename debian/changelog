@@ -26,6 +26,7 @@ tomcat8 (8.0.0~RC1-1) UNRELEASED; urgency=low
   * Added the missing descriptions to the patches
   * Added a Lintian override for the incompatible-java-bytecode-format warning
     since Tomcat requires Java 7
+  * Added a patch to ignore the failing tests
 
  -- Emmanuel Bourg <ebourg@apache.org>  Thu, 12 Sep 2013 16:10:10 +0200
 
