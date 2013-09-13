@@ -5,7 +5,8 @@ Maintainer: Debian Java Maintainers <pkg-java-maintainers@lists.alioth.debian.or
 Uploaders: James Page <james.page@ubuntu.com>, 
  Miguel Landaeta <miguel@miguel.cc>,
  tony mancill <tmancill@debian.org>,
- Jakub Adam <jakub.adam@ktknet.cz>
+ Jakub Adam <jakub.adam@ktknet.cz>,
+ Emmanuel Bourg <ebourg@apache.org>
 Build-Depends: default-jdk, ant-optional, debhelper (>= 9), po-debconf, libhamcrest-java (>= 1.3)
 Build-Depends-Indep: maven-repo-helper, libecj-java, javahelper,
  junit4, libjstl1.1-java, libjakarta-taglibs-standard-java
