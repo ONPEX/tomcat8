@@ -1,3 +1,8 @@
+Description: Ensures the compatibility with older versions of ecj. This patch
+ is no longer required with ecj 3.8 in Jessie, we keep it to facilitate
+ a backport to Wheezy.
+Author: tony mancill <tmancill@debian.org>
+Forwarded: not-needed
 --- a/java/org/apache/jasper/compiler/JDTCompiler.java
 +++ b/java/org/apache/jasper/compiler/JDTCompiler.java
 @@ -165,7 +165,7 @@

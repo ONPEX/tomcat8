@@ -1,3 +1,5 @@
+Description: Disables TestCometProcessor.testConnectionClose()
+Author: tony mancill <tmancill@debian.org>
 --- a/test/org/apache/catalina/comet/TestCometProcessor.java
 +++ b/test/org/apache/catalina/comet/TestCometProcessor.java
 @@ -34,6 +34,7 @@
