@@ -6,7 +6,7 @@ tomcat8 (8.0.0~RC1-1) UNRELEASED; urgency=low
     - Switched to Java 7
     - Updated the watch file to match the Tomcat 8 releases
     - Refreshed the patches
-    - Updated debian/copyright
+    - Updated debian/copyright, documented the xsd files licensed under the CDDL
     - Installed the new jars (spdy, jni, websocket, websocket-api, storeconfig)
     - Updated the artifactId of the specification jars to include
       the new javax prefix
