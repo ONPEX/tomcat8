@@ -19,7 +19,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>javax.servlet.jsp</groupId>
   <artifactId>javax.servlet.jsp-api</artifactId>
-  <version>@MAVEN.DEPLOY.VERSION@</version>
+  <version>2.3</version>
   <description>JSP package</description>
   <url>http://tomcat.apache.org/</url>
   <licenses>
@@ -33,13 +33,13 @@
     <dependency>
       <groupId>javax.el</groupId>
       <artifactId>javax.el-api</artifactId>
-      <version>@MAVEN.DEPLOY.VERSION@</version>
+      <version>3.0</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId>
-      <version>@MAVEN.DEPLOY.VERSION@</version>
+      <version>3.1</version>
       <scope>compile</scope>
     </dependency>
   </dependencies>

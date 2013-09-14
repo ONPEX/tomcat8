@@ -101,10 +101,6 @@ binary-indep: build install
 	
 	mkdir -p debian/poms
 	cp res/maven/*.pom debian/poms
-	cp debian/javaxpoms/*.pom debian/poms
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.1/'      debian/poms/servlet-api.pom
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/3.0/'      debian/poms/el-api.pom
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/2.3/'      debian/poms/jsp-api.pom
 	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/$(T_VER)/' debian/poms/*.pom
 	
 	mh_installpoms -plibtomcat8-java
@@ -155,9 +151,9 @@ binary-indep: build install
 	dh_link
 	
 	mh_installpoms -plibservlet3.1-java
-	mh_installjar -plibservlet3.1-java -l -s --usj-name=servlet-api debian/poms/servlet-api.pom $(BLDLIB)/servlet-api.jar
-	mh_installjar -plibservlet3.1-java -l -s --usj-name=jsp-api     debian/poms/jsp-api.pom     $(BLDLIB)/jsp-api.jar
-	mh_installjar -plibservlet3.1-java -l -s --usj-name=el-api      debian/poms/el-api.pom      $(BLDLIB)/el-api.jar
+	mh_installjar -plibservlet3.1-java -l -s --usj-name=servlet-api debian/javaxpoms/servlet-api.pom $(BLDLIB)/servlet-api.jar
+	mh_installjar -plibservlet3.1-java -l -s --usj-name=jsp-api     debian/javaxpoms/jsp-api.pom     $(BLDLIB)/jsp-api.jar
+	mh_installjar -plibservlet3.1-java -l -s --usj-name=el-api      debian/javaxpoms/el-api.pom      $(BLDLIB)/el-api.jar
 	
 	rm -r debian/poms
 	rm -rf \
