@@ -29,6 +29,8 @@ tomcat8 (8.0.0~RC1-1) UNRELEASED; urgency=low
   * Added a Lintian override for the incompatible-java-bytecode-format warning
     since Tomcat requires Java 7
   * Added a patch to ignore the failing tests
+  * Moved the tomcat-{servlet|jsp|el}-api artifacts from libservlet3.1-java
+    to libtomcat8-java
 
  -- Emmanuel Bourg <ebourg@apache.org>  Thu, 12 Sep 2013 16:10:10 +0200
 

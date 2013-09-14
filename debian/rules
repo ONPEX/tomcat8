@@ -117,16 +117,19 @@ binary-indep: build install
 	                      usr/share/tomcat8/lib/$$i.jar; \
 	done
 	
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-tribes    debian/poms/tomcat-tribes.pom $(BLDLIB)/catalina-tribes.jar usr/share/tomcat8/lib/catalina-tribes.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-api       debian/poms/tomcat-api.pom    $(BLDLIB)/tomcat-api.jar      usr/share/tomcat8/lib/tomcat-api.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-coyote    debian/poms/tomcat-coyote.pom $(BLDLIB)/tomcat-coyote.jar   usr/share/tomcat8/lib/tomcat-coyote.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-juli      debian/poms/tomcat-juli.pom   $(BLDBIN)/tomcat-juli.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-util      debian/poms/tomcat-util.pom   $(BLDLIB)/tomcat-util.jar     usr/share/tomcat8/lib/tomcat-util.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-jni       debian/poms/tomcat-jni.pom    $(BLDLIB)/tomcat-jni.jar      usr/share/tomcat8/lib/tomcat-jni.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-spdy      debian/poms/tomcat-spdy.pom   $(BLDLIB)/tomcat-spdy.jar     usr/share/tomcat8/lib/tomcat-spdy.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-websocket debian/poms/tomcat-websocket.pom $(BLDLIB)/tomcat-websocket.jar usr/share/tomcat8/lib/tomcat-websocket.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-jdbc      debian/poms/tomcat-jdbc.pom   output/jdbc-pool/tomcat-jdbc.jar  usr/share/tomcat8/lib/tomcat-jdbc.jar
-	
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-tribes      debian/poms/tomcat-tribes.pom      $(BLDLIB)/catalina-tribes.jar  usr/share/tomcat8/lib/catalina-tribes.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-api         debian/poms/tomcat-api.pom         $(BLDLIB)/tomcat-api.jar       usr/share/tomcat8/lib/tomcat-api.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-coyote      debian/poms/tomcat-coyote.pom      $(BLDLIB)/tomcat-coyote.jar    usr/share/tomcat8/lib/tomcat-coyote.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-juli        debian/poms/tomcat-juli.pom        $(BLDBIN)/tomcat-juli.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-util        debian/poms/tomcat-util.pom        $(BLDLIB)/tomcat-util.jar      usr/share/tomcat8/lib/tomcat-util.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-jni         debian/poms/tomcat-jni.pom         $(BLDLIB)/tomcat-jni.jar       usr/share/tomcat8/lib/tomcat-jni.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-spdy        debian/poms/tomcat-spdy.pom        $(BLDLIB)/tomcat-spdy.jar      usr/share/tomcat8/lib/tomcat-spdy.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-websocket   debian/poms/tomcat-websocket.pom   $(BLDLIB)/tomcat-websocket.jar usr/share/tomcat8/lib/tomcat-websocket.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-servlet-api debian/poms/tomcat-servlet-api.pom $(BLDLIB)/servlet-api.jar      usr/share/tomcat8/lib/servlet-api.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-jsp-api     debian/poms/tomcat-jsp-api.pom     $(BLDLIB)/jsp-api.jar          usr/share/tomcat8/lib/jsp-api.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-el-api      debian/poms/tomcat-el-api.pom      $(BLDLIB)/el-api.jar           usr/share/tomcat8/lib/el-api.jar
+	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-jdbc        debian/poms/tomcat-jdbc.pom   output/jdbc-pool/tomcat-jdbc.jar    usr/share/tomcat8/lib/tomcat-jdbc.jar
+		
 	# Install the i18n jars	
 	for i in i18n-fr i18n-es i18n-ja; \
 	do \
@@ -152,13 +155,9 @@ binary-indep: build install
 	dh_link
 	
 	mh_installpoms -plibservlet3.1-java
-	mh_installjar -plibservlet3.1-java -l -s  debian/poms/tomcat-servlet-api.pom  output/build/lib/servlet-api.jar
-	mh_installjar -plibservlet3.1-java -l -s  debian/poms/tomcat-jsp-api.pom      output/build/lib/jsp-api.jar
-	mh_installjar -plibservlet3.1-java -l -s  debian/poms/tomcat-el-api.pom       output/build/lib/el-api.jar
-	
-	mh_installjar -plibservlet3.1-java -l -s --usj-name=servlet-api debian/poms/servlet-api.pom output/build/lib/servlet-api.jar
-	mh_installjar -plibservlet3.1-java -l -s --usj-name=jsp-api     debian/poms/jsp-api.pom     output/build/lib/jsp-api.jar
-	mh_installjar -plibservlet3.1-java -l -s --usj-name=el-api      debian/poms/el-api.pom      output/build/lib/el-api.jar
+	mh_installjar -plibservlet3.1-java -l -s --usj-name=servlet-api debian/poms/servlet-api.pom $(BLDLIB)/servlet-api.jar
+	mh_installjar -plibservlet3.1-java -l -s --usj-name=jsp-api     debian/poms/jsp-api.pom     $(BLDLIB)/jsp-api.jar
+	mh_installjar -plibservlet3.1-java -l -s --usj-name=el-api      debian/poms/el-api.pom      $(BLDLIB)/el-api.jar
 	
 	rm -r debian/poms
 	rm -rf \
