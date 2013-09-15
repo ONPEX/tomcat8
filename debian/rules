@@ -40,12 +40,6 @@ ANT_ARGS := -Dcompile.debug=true \
 	-Dversion.suffix="" \
 	-Dno.build.dbcp=true
 
-ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
-	ANT_ARGS += -Dcompile.optimize=false
-else
-	ANT_ARGS += -Dcompile.optimize=true
-endif
-
 ANT_INVOKE := $(JAVA_CMD) -classpath "$(DEB_CLASSPATH)" org.apache.tools.ant.Main $(ANT_ARGS)
 
 build: build-arch build-indep
