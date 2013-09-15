@@ -1,4 +1,4 @@
-debian/javaxpoms/servlet-api.pom --no-rules
-debian/javaxpoms/jsp-api.pom --no-rules
-debian/javaxpoms/el-api.pom --no-rules
-debian/javaxpoms/websocket-api.pom --no-rules
+debian/javaxpoms/servlet-api.pom   --java-lib -s --usj-name=servlet-api   --artifact=output/build/lib/servlet-api.jar
+debian/javaxpoms/jsp-api.pom       --java-lib -s --usj-name=jsp-api       --artifact=output/build/lib/jsp-api.jar
+debian/javaxpoms/el-api.pom        --java-lib -s --usj-name=el-api        --artifact=output/build/lib/el-api.jar
+debian/javaxpoms/websocket-api.pom --java-lib -s --usj-name=websocket-api --artifact=output/build/lib/websocket-api.jar

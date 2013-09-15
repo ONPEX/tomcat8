@@ -3,7 +3,6 @@
 JAVA_HOME := /usr/lib/jvm/default-java
 JAVA_CMD := $(JAVA_HOME)/bin/java
 BLDLIB := output/build/lib
-BLDBIN := output/build/bin
 DEB_JARS_BASE := /usr/share/java
 DEB_JARS := ant ant-launcher ant-trax ant-nodeps ant-junit4 ant-junit junit4 hamcrest-1.3
 DEB_CLASSPATH = $(shell for jar in $(DEB_JARS); do \
@@ -20,9 +19,6 @@ DEB_CLASSPATH = $(shell for jar in $(DEB_JARS); do \
 # Upstream version
 T_VER := $(shell dpkg-parsechangelog | egrep '^Version:' \
 	| cut -f 2 -d ' ' | cut -f 2 -d ' ' | sed 's/-[^-]*$$//' | sed 's/~/-/')
-
-# The Tomcat jars without the tomcat- prefix generated in the BLDLIB directory
-T_MAVENIZED_JARS := jasper-el annotations-api jasper catalina-ha catalina websocket-api
 
 T_VER_MAJOR := $(shell echo $(T_VER) | cut -d'.' -f1)
 T_VER_MINOR := $(shell echo $(T_VER) | cut -d'.' -f2)
@@ -103,58 +99,16 @@ binary-indep: build install
 	cp res/maven/*.pom debian/poms
 	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/$(T_VER)/' debian/poms/*.pom
 	
-	mh_installpoms -plibtomcat8-java
-	for i in $(T_MAVENIZED_JARS); \
-	do \
-		mh_installjar -plibtomcat8-java -l           \
-	                      --usj-name=tomcat8-$$i         \
-	                      debian/poms/tomcat-$$i.pom     \
-	                      $(BLDLIB)/$$i.jar              \
-	                      usr/share/tomcat8/lib/$$i.jar; \
-	done
+	mh_install -plibservlet3.1-java
+	mh_install -plibtomcat8-java
 	
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-tribes      debian/poms/tomcat-tribes.pom      $(BLDLIB)/catalina-tribes.jar  usr/share/tomcat8/lib/catalina-tribes.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-api         debian/poms/tomcat-api.pom         $(BLDLIB)/tomcat-api.jar       usr/share/tomcat8/lib/tomcat-api.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-coyote      debian/poms/tomcat-coyote.pom      $(BLDLIB)/tomcat-coyote.jar    usr/share/tomcat8/lib/tomcat-coyote.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-juli        debian/poms/tomcat-juli.pom        $(BLDBIN)/tomcat-juli.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-util        debian/poms/tomcat-util.pom        $(BLDLIB)/tomcat-util.jar      usr/share/tomcat8/lib/tomcat-util.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-jni         debian/poms/tomcat-jni.pom         $(BLDLIB)/tomcat-jni.jar       usr/share/tomcat8/lib/tomcat-jni.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-spdy        debian/poms/tomcat-spdy.pom        $(BLDLIB)/tomcat-spdy.jar      usr/share/tomcat8/lib/tomcat-spdy.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-websocket   debian/poms/tomcat-websocket.pom   $(BLDLIB)/tomcat-websocket.jar usr/share/tomcat8/lib/tomcat-websocket.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-servlet-api debian/poms/tomcat-servlet-api.pom $(BLDLIB)/servlet-api.jar      usr/share/tomcat8/lib/servlet-api.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-jsp-api     debian/poms/tomcat-jsp-api.pom     $(BLDLIB)/jsp-api.jar          usr/share/tomcat8/lib/jsp-api.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-el-api      debian/poms/tomcat-el-api.pom      $(BLDLIB)/el-api.jar           usr/share/tomcat8/lib/el-api.jar
-	mh_installjar -plibtomcat8-java -l --usj-name=tomcat8-jdbc        debian/poms/tomcat-jdbc.pom   output/jdbc-pool/tomcat-jdbc.jar    usr/share/tomcat8/lib/tomcat-jdbc.jar
-		
-	# Install the i18n jars	
-	for i in i18n-fr i18n-es i18n-ja; \
-	do \
-		mv $(BLDLIB)/tomcat-$$i.jar $(BLDLIB)/tomcat8-$$i-$(T_VER).jar && \
-		dh_install -plibtomcat8-java $(BLDLIB)/tomcat8-$$i-$(T_VER).jar      usr/share/java && \
-		dh_link -plibtomcat8-java    usr/share/java/tomcat8-$$i-$(T_VER).jar usr/share/java/tomcat8-$$i.jar && \
-		dh_link -ptomcat8-common     usr/share/java/tomcat8-$$i-$(T_VER).jar usr/share/tomcat8/lib/tomcat-$$i.jar; \
-	done
-	
-	# Install catalina-storeconfig.jar
+	# Install catalina-storeconfig.jar (no pom available)
 	mv $(BLDLIB)/catalina-storeconfig.jar $(BLDLIB)/tomcat8-catalina-storeconfig-$(T_VER).jar
 	dh_install -plibtomcat8-java $(BLDLIB)/tomcat8-catalina-storeconfig-$(T_VER).jar      usr/share/java
 	dh_link -plibtomcat8-java    usr/share/java/tomcat8-catalina-storeconfig-$(T_VER).jar usr/share/java/tomcat8-catalina-storeconfig.jar
-	dh_link -plibtomcat8-java    usr/share/java/tomcat8-catalina-storeconfig-$(T_VER).jar usr/share/tomcat8/lib/catalina-storeconfig.jar
-	
-	# Install catalina-ant.jar
-	mv $(BLDLIB)/catalina-ant.jar $(BLDLIB)/tomcat8-catalina-ant-$(T_VER).jar
-	dh_install -plibtomcat8-java $(BLDLIB)/tomcat8-catalina-ant-$(T_VER).jar      usr/share/java
-	dh_link -plibtomcat8-java    usr/share/java/tomcat8-catalina-ant-$(T_VER).jar usr/share/java/tomcat8-catalina-ant.jar
-	dh_link -ptomcat8-common     usr/share/java/tomcat8-catalina-ant-$(T_VER).jar usr/share/tomcat8/lib/catalina-ant.jar
 	
 	dh_install --exclude=.bat --exclude=Thumbs.db
 	dh_link
-	
-	mh_installpoms -plibservlet3.1-java
-	mh_installjar -plibservlet3.1-java -l -s --usj-name=servlet-api   debian/javaxpoms/servlet-api.pom   $(BLDLIB)/servlet-api.jar
-	mh_installjar -plibservlet3.1-java -l -s --usj-name=jsp-api       debian/javaxpoms/jsp-api.pom       $(BLDLIB)/jsp-api.jar
-	mh_installjar -plibservlet3.1-java -l -s --usj-name=el-api        debian/javaxpoms/el-api.pom        $(BLDLIB)/el-api.jar
-	mh_installjar -plibservlet3.1-java -l -s --usj-name=websocket-api debian/javaxpoms/websocket-api.pom $(BLDLIB)/websocket-api.jar
 	
 	rm -r debian/poms
 	rm -rf \

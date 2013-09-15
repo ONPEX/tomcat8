@@ -33,6 +33,11 @@ tomcat8 (8.0.0~RC1-1) UNRELEASED; urgency=low
   * Moved the tomcat-{servlet|jsp|el}-api artifacts from libservlet3.1-java
     to libtomcat8-java
   * Fixed the versions of the Maven dependencies for jsp-api
+  * The symlinks to /usr/share/tomcat8/lib are no longer split between the two
+    packages libtomcat8-java and tomcat8-common. tomcat8-common assembles all
+    the jars required by Tomcat (tomcat jars + dbcp + pool). libtomcat8-java
+    deploys only the jars in /usr/share/java and the Maven artifacts in
+    /usr/share/maven-repo.
 
  -- Emmanuel Bourg <ebourg@apache.org>  Thu, 12 Sep 2013 16:10:10 +0200
 
