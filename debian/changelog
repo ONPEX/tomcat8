@@ -41,6 +41,8 @@ tomcat8 (8.0.0~RC1-1) UNRELEASED; urgency=low
   * Added the EL and WebSocket APIs to libservlet3.1-java-doc
   * Use a Lintian override to clear the codeless-jar warnings on the tomcat-i18n
     jars instead of a patch turning them into zip files.
+  * Removed 0011-fix-classpath-lintian-warnings.patch and specified
+    the classpath of jasper.jar in libtomcat8-java.manifest instead.
 
  -- Emmanuel Bourg <ebourg@apache.org>  Thu, 12 Sep 2013 16:10:10 +0200
 

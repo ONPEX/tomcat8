@@ -6,7 +6,6 @@
 0006-add-JARs-below-var-to-class-loader.patch
 0009-Use-java.security.policy-file-in-catalina.sh.patch
 0010-debianize-build-xml.patch
-0011-fix-classpath-lintian-warnings.patch
 0012-java7-compat.patch
 0013-dont-look-for-build-properties-in-user-home.patch
 0014-JDTCompiler.patch
