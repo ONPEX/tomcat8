@@ -1,6 +1,6 @@
 usr/share/java/el-api-3.0.jar:
  Bundle-ManifestVersion: 2 
- Bundle-Vendor: Apache Software Foundation
+ Bundle-Vendor: The Apache Software Foundation
  Bundle-Version: 3.0.0
  Bundle-Localization: plugin
  Bundle-RequiredExecutionEnvironment: J2SE-1.5
@@ -13,19 +13,28 @@ usr/share/java/jsp-api-2.3.jar:
  Import-Package: javax.servlet;version="3.1.0",javax.servlet.http;version="3.1.0",javax.servlet.resources;version="3.1.0",javax.el;version="3.0.0"
  Bundle-ManifestVersion: 2
  Export-Package: javax.servlet.jsp; version=2.3,javax.servlet.jsp.el; version=2.3,javax.servlet.jsp.resources; version=2.3,javax.servlet.jsp.tagext; version=2.3
- Bundle-Version: 2.3.0.v201103241327
+ Bundle-Version: 2.3.0
  Bundle-SymbolicName: javax.servlet.jsp
  Bundle-Name: Java Server Pages API Bundle
  Bundle-RequiredExecutionEnvironment: CDC-1.0/Foundation-1.0,JavaSE-1.7
  Bundle-Localization: plugin
- Bundle-Vendor: Apache Software Foundation
+ Bundle-Vendor: The Apache Software Foundation
 
 usr/share/java/servlet-api-3.1.jar:
  Bundle-ManifestVersion: 2
  Export-Package: javax.servlet;version="3.1.0",javax.servlet.annotation;version="3.1.0",javax.servlet.descriptor;version="3.1.0",javax.servlet.http;version="3.1.0",javax.servlet.resources;version="3.1.0"
- Bundle-Version: 3.1.0.v201103241327
+ Bundle-Version: 3.1.0
  Bundle-SymbolicName: javax.servlet
  Bundle-Name: Servlet API Bundle
  Bundle-RequiredExecutionEnvironment: CDC-1.0/Foundation-1.0,JavaSE-1.7
  Bundle-Localization: plugin
- Bundle-Vendor: Apache Software Foundation
+ Bundle-Vendor: The Apache Software Foundation
+
+usr/share/java/websocket-api-1.0.jar:
+ Bundle-ManifestVersion: 2
+ Export-Package: javax.websocket;version="1.0.0",javax.websocket.server;version="1.0.0"
+ Bundle-Version: 1.0.0
+ Bundle-SymbolicName: javax.websocket
+ Bundle-Name: WebSocket API Bundle
+ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+ Bundle-Localization: plugin
