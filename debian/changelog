@@ -11,36 +11,33 @@ tomcat8 (8.0.0~RC1-1) UNRELEASED; urgency=low
     - Updated the artifactId of the specification jars to include
       the new javax prefix
     - Added the javax.websocket-api artifact to libservlet3.1-java
-  * Marked libtomcat8-java as conflicting with libtomcat7-java
   * Use XZ compression for the upstream tarball
-  * Replaced Sun Microsystems with Oracle
-  * Mentioned 'Apache Tomcat' in the packages descriptions
+  * debian/control:
+    - Replaced Sun Microsystems with Oracle in the packages descriptions
+    - Mentioned 'Apache Tomcat' in the packages descriptions
   * Deploy the Tomcat artifacts in the Maven repository with the 8.x version
     instead of 'debian' to avoid conflicts with other versions of Tomcat.
-  * No longer alter the poms in debian/javaxpoms during the build. They are
-    copied and transformed in the temporary debian/poms directory.
-  * The spec jars under the org.apache.tomcat groupId are now deployed with
-    the upstream version instead of the specification version to match the
-    artifacts available on Maven central.
+  * Hard coded the versions in the poms in debian/javaxpoms to fix the version
+    of the dependencies for jsp-api
   * Renamed the jars in /usr/share/java to tomcat8-xxx to avoid conflicts
     with other versions of Tomcat
-  * Removed libservlet3.1-java.links defining the tomcat-* links
-    in /usr/share/java with the specifications versions
   * Added the missing descriptions to the patches
-  * Added a Lintian override for the incompatible-java-bytecode-format warning
-    since Tomcat requires Java 7
   * Added a patch to ignore the failing tests
   * Moved the tomcat-{servlet|jsp|el}-api artifacts from libservlet3.1-java
-    to libtomcat8-java
-  * Fixed the versions of the Maven dependencies for jsp-api
+    to libtomcat8-java and changed their versions to the Tomcat version instead
+    of the specification version.
+  * Removed libservlet3.1-java.links defining the tomcat-* links
+    in /usr/share/java with the specifications versions
   * The symlinks to /usr/share/tomcat8/lib are no longer split between the two
     packages libtomcat8-java and tomcat8-common. tomcat8-common assembles all
     the jars required by Tomcat (tomcat jars + dbcp + pool). libtomcat8-java
     deploys only the jars in /usr/share/java and the Maven artifacts in
     /usr/share/maven-repo.
   * Added the EL and WebSocket APIs to libservlet3.1-java-doc
-  * Use a Lintian override to clear the codeless-jar warnings on the tomcat-i18n
-    jars instead of a patch turning them into zip files.
+  * Added a Lintian override for the incompatible-java-bytecode-format warning
+    since Tomcat requires Java 7
+  * Added a Lintian override to clear the codeless-jar warnings
+    on the tomcat-i18n jars instead of a patch turning them into zip files.
   * Removed 0011-fix-classpath-lintian-warnings.patch and specified
     the classpath of jasper.jar in libtomcat8-java.manifest instead.
 
