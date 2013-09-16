@@ -38,6 +38,7 @@ tomcat8 (8.0.0~RC1-1) UNRELEASED; urgency=low
     the jars required by Tomcat (tomcat jars + dbcp + pool). libtomcat8-java
     deploys only the jars in /usr/share/java and the Maven artifacts in
     /usr/share/maven-repo.
+  * Added the EL and WebSocket APIs to libservlet3.1-java-doc
 
  -- Emmanuel Bourg <ebourg@apache.org>  Thu, 12 Sep 2013 16:10:10 +0200
 

@@ -55,10 +55,10 @@ ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))
 else
 	$(ANT_INVOKE) deploy
 endif
-	javadoc -subpackages "javax.servlet" -d "output/api" \
+	javadoc -subpackages "javax.servlet:javax.el:javax.websocket" -d "output/api" \
 		-sourcepath "java" -author -version -breakiterator \
 		-windowtitle "Tomcat API Documentation" -doctitle "Tomcat API" \
-		-bottom "Copyright &#169; 2000-2012 Apache Software Foundation. All Rights Reserved."
+		-bottom "Copyright &#169; 2000-2013 The Apache Software Foundation. All Rights Reserved."
 	touch build-stamp
 
 clean:
