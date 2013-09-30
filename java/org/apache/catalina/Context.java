@@ -56,7 +56,7 @@ import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
  * <p>
  *
  * @author Craig R. McClanahan
- * @version $Id: Context.java 1505199 2013-07-20 20:22:41Z jboynes $
+ * @version $Id: Context.java 1513712 2013-08-14 01:54:37Z jboynes $
  */
 public interface Context extends Container {
 
@@ -610,41 +610,6 @@ public interface Context extends Container {
      * @param xmlNamespaceAware true to enable namespace awareness
      */
     public void setXmlNamespaceAware(boolean xmlNamespaceAware);
-    /**
-     * Get the server.xml <context> attribute's xmlValidation.
-     * @return true if validation is enabled.
-     */
-
-
-    /**
-     * Set the validation feature of the XML parser used when
-     * parsing tlds files.
-     * @param tldValidation true to enable xml instance validation
-     */
-    public void setTldValidation(boolean tldValidation);
-
-
-    /**
-     * Get the server.xml <context> attribute's webXmlValidation.
-     * @return true if validation is enabled.
-     *
-     */
-    public boolean getTldValidation();
-
-
-    /**
-     * Get the server.xml &lt;host&gt; attribute's xmlNamespaceAware.
-     * @return true if namespace awareness is enabled.
-     */
-    public boolean getTldNamespaceAware();
-
-
-    /**
-     * Set the namespace aware feature of the XML parser used when
-     * parsing xml instances.
-     * @param tldNamespaceAware true to enable namespace awareness
-     */
-    public void setTldNamespaceAware(boolean tldNamespaceAware);
 
     /**
      * Get the Jar Scanner to be used to scan for JAR resources for this

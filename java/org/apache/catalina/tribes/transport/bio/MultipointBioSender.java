@@ -33,7 +33,7 @@ import org.apache.catalina.tribes.transport.MultiPointSender;
 /**
  *
  * @author Filip Hanik
- * @version $Id: MultipointBioSender.java 1370388 2012-08-07 17:43:38Z markt $
+ * @version $Id: MultipointBioSender.java 1511907 2013-08-08 18:07:43Z markt $
  *
  */
 public class MultipointBioSender extends AbstractSender implements MultiPointSender {
@@ -139,6 +139,7 @@ public class MultipointBioSender extends AbstractSender implements MultiPointSen
     @Override
     public boolean keepalive() {
         boolean result = false;
+        @SuppressWarnings("unchecked")
         Map.Entry<Member,BioSender>[] entries = bioSenders.entrySet().toArray(new Map.Entry[bioSenders.size()]);
         for ( int i=0; i<entries.length; i++ ) {
             BioSender sender = entries[i].getValue();

@@ -54,7 +54,7 @@ import org.apache.tomcat.util.res.StringManager;
 /**
  * Classloader implementation which is specialized for handling web
  * applications in the most efficient way, while being Catalina aware (all
- * accesses to resources are made through the DirContext interface).
+ * accesses to resources are made through {@link WebResourceRoot}).
  * This class loader supports detection of modified
  * Java classes, which can be used to implement auto-reload support.
  * <p>
@@ -66,7 +66,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: WebappLoader.java 1451061 2013-02-28 00:36:50Z markt $
+ * @version $Id: WebappLoader.java 1524528 2013-09-18 18:48:41Z markt $
  */
 
 public class WebappLoader extends LifecycleMBeanBase
@@ -691,35 +691,17 @@ public class WebappLoader extends LifecycleMBeanBase
 
         if (classes.isDirectory()) {
 
-            File classRepository = null;
-
-            String absoluteClassesPath = classes.getCanonicalPath();
-
-            if (absoluteClassesPath != null) {
-                classRepository = new File(absoluteClassesPath);
-            } else {
-                classRepository = new File(workDir, classesPath);
-                if (!classRepository.mkdirs() &&
-                        !classRepository.isDirectory()) {
-                    throw new IOException(
-                            sm.getString("webappLoader.mkdirFailure"));
-                }
-                if (!copyDir(classes, classRepository)) {
-                    throw new IOException(
-                            sm.getString("webappLoader.copyFailure"));
-                }
-            }
-
             if(log.isDebugEnabled())
                 log.debug(sm.getString("webappLoader.classDeploy", classesPath,
-                             classRepository.getAbsolutePath()));
+                        classes.getURL().toExternalForm()));
 
             // Adding the repository to the class loader
-            classLoader.setRepository(classesPath + "/", classRepository);
+            classLoader.setRepository(classesPath + "/", classes);
             loaderRepositories.add(classesPath + "/" );
         }
 
         // Setting up the JAR repository (/WEB-INF/lib), if it exists
+        // TODO Simplify this in a similar manner to WEB-INF/classes
 
         String libPath = "/WEB-INF/lib";
 
@@ -907,30 +889,6 @@ public class WebappLoader extends LifecycleMBeanBase
                 log.debug("getClasspath ", ex);
         }
         return null;
-    }
-
-    /**
-     * Copy directory.
-     */
-    private boolean copyDir(WebResource src, File destDir) {
-
-        WebResource[] resources =
-                src.getWebResourceRoot().listResources(src.getWebappPath());
-        for (WebResource resource : resources) {
-            File currentFile = new File(destDir, resource.getName());
-            if (resource.isFile()) {
-                InputStream is = resource.getInputStream();
-                if (!copy(is, currentFile))
-                    return false;
-            } else if (resource.isDirectory()) {
-                if (!currentFile.isDirectory() && !currentFile.mkdir())
-                    return false;
-                if (!copyDir(resource, currentFile))
-                    return false;
-            }
-        }
-
-        return true;
     }
 
 

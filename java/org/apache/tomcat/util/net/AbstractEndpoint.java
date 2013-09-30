@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.StringTokenizer;
@@ -43,7 +44,7 @@ import org.apache.tomcat.util.threads.ThreadPoolExecutor;
  * @author Mladen Turk
  * @author Remy Maucherat
  */
-public abstract class AbstractEndpoint {
+public abstract class AbstractEndpoint<S> {
 
     // -------------------------------------------------------------- Constants
     protected static final StringManager sm = StringManager.getManager("org.apache.tomcat.util.net.res");
@@ -93,6 +94,23 @@ public abstract class AbstractEndpoint {
             return threadName;
         }
     }
+
+
+    protected static class PrivilegedSetTccl implements PrivilegedAction<Void> {
+
+        private ClassLoader cl;
+
+        PrivilegedSetTccl(ClassLoader cl) {
+            this.cl = cl;
+        }
+
+        @Override
+        public Void run() {
+            Thread.currentThread().setContextClassLoader(cl);
+            return null;
+        }
+    }
+
 
     private static final int INITIAL_ERROR_DELAY = 50;
     private static final int MAX_ERROR_DELAY = 1600;
@@ -405,8 +423,7 @@ public abstract class AbstractEndpoint {
      */
     public void setAttribute(String name, Object value) {
         if (getLog().isTraceEnabled()) {
-            getLog().trace(sm.getString("abstractProtocolHandler.setAttribute",
-                    name, value));
+            getLog().trace(sm.getString("endpoint.setAttribute", name, value));
         }
         attributes.put(name, value);
     }
@@ -416,8 +433,7 @@ public abstract class AbstractEndpoint {
     public Object getAttribute(String key) {
         Object value = attributes.get(key);
         if (getLog().isTraceEnabled()) {
-            getLog().trace(sm.getString("abstractProtocolHandler.getAttribute",
-                    key, value));
+            getLog().trace(sm.getString("endpoint.getAttribute", key, value));
         }
         return value;
     }
@@ -503,6 +519,18 @@ public abstract class AbstractEndpoint {
                 //this is our internal one, so we need to shut it down
                 ThreadPoolExecutor tpe = (ThreadPoolExecutor) executor;
                 tpe.shutdownNow();
+                int count = 0;
+                while (count < 50 && tpe.isTerminating()) {
+                    try {
+                        Thread.sleep(100);
+                        count++;
+                    } catch (InterruptedException e) {
+                        // Ignore
+                    }
+                }
+                if (tpe.isTerminating()) {
+                    getLog().warn(sm.getString("endpoint.warn.executorShutdown", getName()));
+                }
                 TaskQueue queue = (TaskQueue) tpe.getQueue();
                 queue.setParent(null);
             }
@@ -589,6 +617,12 @@ public abstract class AbstractEndpoint {
             }
         }
     }
+
+
+    // ---------------------------------------------- Request processing methods
+
+    public abstract void processSocketAsync(SocketWrapper<S> socketWrapper,
+            SocketStatus socketStatus);
 
 
     // ------------------------------------------------------- Lifecycle methods

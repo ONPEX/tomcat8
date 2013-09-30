@@ -65,6 +65,7 @@ import org.apache.catalina.LifecycleListener;
 import org.apache.catalina.LifecycleState;
 import org.apache.catalina.WebResource;
 import org.apache.catalina.WebResourceRoot;
+import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.IntrospectionUtils;
 import org.apache.tomcat.util.res.StringManager;
@@ -104,12 +105,10 @@ import org.apache.tomcat.util.res.StringManager;
  * <strong>IMPLEMENTATION NOTE</strong> - No check for sealing violations or
  * security is made unless a security manager is present.
  * <p>
- * TODO: Is there any requirement to provide a proper Lifecycle implementation
- *       rather than the current stubbed implementation?
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: WebappClassLoader.java 1508214 2013-07-29 22:17:59Z markt $
+ * @version $Id: WebappClassLoader.java 1524546 2013-09-18 19:45:13Z markt $
  */
 public class WebappClassLoader
     extends URLClassLoader
@@ -253,8 +252,9 @@ public class WebappClassLoader
 
 
     /**
-     * Associated directory context giving access to the resources in this
-     * webapp.
+     * Associated web resources for this webapp.
+     * TODO Review the use of resources in this class to see if further
+     *      simplifications can be made.
      */
     protected WebResourceRoot resources = null;
 
@@ -299,9 +299,10 @@ public class WebappClassLoader
 
 
     /**
-     * The local repository for locally loaded classes or resources.
+     * The path to the repository for locally loaded classes or resources. This
+     * would normally be /WEB-INF/classes/.
      */
-    protected String repository = null;
+    protected String repositoryPath = null;
 
 
      /**
@@ -310,12 +311,11 @@ public class WebappClassLoader
      protected URL[] repositoryURLs = null;
 
 
-    /**
-     * Repository translated as path in the work directory (for Jasper
-     * originally), but which is used to generate a fake URL should getURLs be
-     * called.
-     */
-    protected File file = null;
+     /**
+      * The {@link WebResource} for the repository for locally loaded classes or
+      * resources. This would normally point to /WEB-INF/classes/.
+      */
+    protected WebResource repository = null;
 
 
     /**
@@ -740,25 +740,22 @@ public class WebappClassLoader
     /**
      * Set the place this ClassLoader can look for classes to be loaded.
      *
-     * @param repository Name of a source of classes to be loaded, such as a
+     * @param path  Path of a source of classes to be loaded, such as a
      *  directory pathname, a JAR file pathname, or a ZIP file pathname
      *
      * @exception IllegalArgumentException if the specified repository is
      *  invalid or does not exist
      */
-    synchronized void setRepository(String repository, File file) {
+    synchronized void setRepository(String path, WebResource repository) {
 
-        // Note : There should be only one (of course), but I think we should
-        // keep this a bit generic
-
-        if (repository == null)
+        if (path == null)
             return;
 
         if (log.isDebugEnabled())
-            log.debug("addRepository(" + repository + ")");
+            log.debug("addRepository(" + path + ")");
 
+        this.repositoryPath = path;
         this.repository = repository;
-        this.file = file;
     }
 
 
@@ -880,7 +877,7 @@ public class WebappClassLoader
                     continue;
                 if (!name.equals(jarNames[i])) {
                     // Missing JAR
-                    log.info("    Additional JARs have been added : '"
+                    log.info("    One or more JARs have been added : '"
                              + name + "'");
                     return true;
                 }
@@ -897,7 +894,7 @@ public class WebappClassLoader
                 }
             } else if (i < jarNames.length) {
                 // There was less JARs
-                log.info("    Additional JARs have been added");
+                log.info("    One or more JARs have been removed");
                 return (true);
             }
         }
@@ -920,8 +917,8 @@ public class WebappClassLoader
         sb.append("  delegate: ");
         sb.append(delegate);
         sb.append("\r\n");
-        sb.append("  repository: ");
-        sb.append(repository);
+        sb.append("  repositoryPath: ");
+        sb.append(repositoryPath);
         sb.append("\r\n");
         if (this.parent != null) {
             sb.append("----------> Parent Classloader:\r\n");
@@ -1084,9 +1081,9 @@ public class WebappClassLoader
 
         int jarFilesLength = jarFiles.length;
 
-        if (repository != null) {
+        if (repositoryPath != null) {
             // Looking at the repository
-            WebResource[] webResources = resources.getResources(repository + name);
+            WebResource[] webResources = resources.getResources(repositoryPath + name);
             for (WebResource webResource : webResources) {
                 if (webResource.exists()) {
                     result.add(webResource.getURL());
@@ -1512,7 +1509,7 @@ public class WebappClassLoader
         }
 
         int resultLength;
-        if (file == null) {
+        if (repository == null) {
             resultLength = jarRealFiles.length;
         } else {
             resultLength = jarRealFiles.length + 1;
@@ -1522,8 +1519,8 @@ public class WebappClassLoader
 
         try {
             URL[] urls = new URL[resultLength];
-            if (file != null) {
-                urls[off ++] = getURI(file);
+            if (repository != null) {
+                urls[off ++] = repository.getURL();
             }
             for (File jarRealFile : jarRealFiles) {
                 urls[off++] = getURI(jarRealFile);
@@ -1641,8 +1638,6 @@ public class WebappClassLoader
 
         started = false;
 
-        file = null;
-
         int length = jarFiles.length;
         for (int i = 0; i < length; i++) {
             try {
@@ -1658,9 +1653,9 @@ public class WebappClassLoader
         notFoundResources.clear();
         resourceEntries.clear();
         resources = null;
-        repository = null;
+        repositoryPath = null;
         repositoryURLs = null;
-        file = null;
+        repository = null;
         jarFiles = null;
         jarRealFiles = null;
         jarPath = null;
@@ -1756,6 +1751,8 @@ public class WebappClassLoader
         // Clear the classloader reference in the VM's bean introspector
         java.beans.Introspector.flushCaches();
 
+        // Clear any custom URLStreamHandlers
+        TomcatURLStreamHandlerFactory.release(this);
     }
 
 
@@ -1800,6 +1797,7 @@ public class WebappClassLoader
                 defineClass("org.apache.catalina.loader.JdbcLeakPrevention",
                     classBytes, 0, offset, this.getClass().getProtectionDomain());
             Object obj = lpClass.newInstance();
+            @SuppressWarnings("unchecked")
             List<String> driverNames = (List<String>) obj.getClass().getMethod(
                     "clearJdbcDriverRegistrations").invoke(obj);
             for (String name : driverNames) {
@@ -1828,6 +1826,7 @@ public class WebappClassLoader
 
     private final void clearReferencesStaticFinal() {
 
+        @SuppressWarnings("unchecked")
         Collection<ResourceEntry> values =
             ((HashMap<String,ResourceEntry>) resourceEntries.clone()).values();
         Iterator<ResourceEntry> loadedClasses = values.iterator();
@@ -2645,22 +2644,6 @@ public class WebappClassLoader
 
     }
 
-    /**
-     * Find specified resource in local repositories.
-     *
-     * @return the loaded resource, or null if the resource isn't found
-     */
-    protected ResourceEntry findResourceInternal(File file, String path){
-        ResourceEntry entry = new ResourceEntry();
-        try {
-            entry.source = getURI(new File(file, path));
-            entry.codeBase = entry.source;
-        } catch (MalformedURLException e) {
-            return null;
-        }
-        return entry;
-    }
-
 
     /**
      * Find specified resource in local repositories.
@@ -2691,25 +2674,16 @@ public class WebappClassLoader
 
         boolean fileNeedConvert = false;
 
-        if (repository != null) {
-            String fullPath = repository + path;
+        if (repositoryPath != null) {
+            String fullPath = repositoryPath + path;
             resource = resources.getResource(fullPath);
 
             if (resource.exists()) {
 
                 contentLength = (int) resource.getContentLength();
-                String canonicalPath = resource.getCanonicalPath();
-                if (canonicalPath != null) {
-                    // we create the ResourceEntry based on the information returned
-                    // by the DirContext rather than just using the path to the
-                    // repository. This allows to have smart DirContext implementations
-                    // that "virtualize" the docbase (e.g. Eclipse WTP)
-                    entry = findResourceInternal(new File(canonicalPath), "");
-                } else {
-                    // probably a resource not in the filesystem (e.g. in a
-                    // packaged war)
-                    entry = findResourceInternal(file, path);
-                }
+                entry = new ResourceEntry();
+                entry.source = resource.getURL();
+                entry.codeBase = entry.source;
                 entry.lastModified = resource.getLastModified();
 
                 binaryStream = resource.getInputStream();

@@ -55,10 +55,21 @@
         contributions from Nick Williams and Jeremy Boynes. (markt)
       </add>
       <add>
+        Implement JSR 245 MR2 - JSP 2.3. (markt)
+      </add>
+      <add>
+        Implement JSR 341 - Unified Expression Language 3.0. (markt)
+      </add>
+      <add>
         Implement JSR 356 - WebSockets. The JSR 356 implementation includes
         contributions from Nick Williams, Rossen Stoyanchev and Niki Dokovski.
         (markt)
       </add>
+      <update>
+        <bug>46727</bug>: Refactor default servlet to make it easier to
+        sub-class to implement finer grained control of the file encoding. Based
+        on a patch by Fred Toth. (markt)
+      </update>
       <add>
         <bug>45995</bug>: Align Tomcat with Apache httpd and perform MIME type
         mapping based on file extension in a case insensitive manner. (markt)
@@ -80,6 +91,15 @@
         <code>catalina.base</code> system property falling back to the value for
         Catalina home. (markt)
       </scode>
+      <update>
+        <bug>52092</bug>: JULI now uses the <code>OneLineFormatter</code> and
+        <code>AsyncFileHandler</code> by default. (markt)
+      </update>
+      <fix>
+        <bug>52558</bug>: Refactor <code>CometConnectionManagerValve</code> so
+        that it does not prevent the session from being serialized in when
+        running in a cluster. (markt)
+      </fix>
       <fix>
         <bug>52767</bug>: Remove reference to MySQL specific autoReconnect
         property in <code>JDBCAccessLogValve</code>. (markt)
@@ -144,6 +164,11 @@
         used by both Catalina and Jasper. Includes patches provided by Jeremy
         Boynes. (violetagg/markt)
       </scode>
+      <scode>
+        <bug>55246</bug>: Move TLD scanning to a ServletContainerInitializer
+        provided by Jasper. Includes removal of TldConfig lifecycle listener and
+        associated Context properties. (jboynes)
+      </scode>
     </changelog>
   </subsection>
   <subsection name="Coyote">
@@ -169,6 +194,10 @@
       <scode>
         Refactor char encoding/decoding using NIO APIs. (remm)
       </scode>
+      <update>
+        Change the default URIEncoding for all connectors from ISO-8859-1 to
+        UTF-8. (markt)
+      </update>
     </changelog>
   </subsection>
   <subsection name="Jasper">
@@ -184,6 +213,12 @@
       <add>
         Create test cases for JspC. Patch by Jeremy Boynes. (markt)
       </add>
+      <scode>
+        <bug>55246</bug>: TLD scanning is now performed by JasperInitializer
+        (a ServletContainerInitializer) removing the need for support within the
+        Servlet container itself. The scan is now performed only once rather than
+        in two passes reducing startup time. (jboynes)
+      </scode>
     </changelog>
   </subsection>
   <subsection name="Cluster">
@@ -205,6 +240,14 @@
         application to include details of the configured SSL ciphers suites for
         each connector. (markt)
       </add>
+      <update>
+        <bug>48550</bug>: Update examples web application to use UTF-8. (markt)
+      </update>
+      <update>
+        <bug>55383</bug>: Improve the design and correct the HTML markup of
+        the documentation web application. Patches provided by Konstantin
+        Preißer. (markt)
+      </update>
     </changelog>
   </subsection>
   <subsection name="Tribes">
@@ -245,6 +288,12 @@
         schema defintion files from jsp-api.jar to servlet-api.jar so relative
         includes between the J2EE, Servlet and JSP schemas are correctly
         resolved. (markt)
+      </fix>
+      <fix>
+        <bug>55372</bug>: When starting Tomcat with the <code>jpda</code> option
+        to enable remote debugging, by default only listen on localhost for
+        connections from a debugger. Prior to this change, Tomcat listened on
+        all known addresses. (markt)
       </fix>
     </changelog>
   </subsection>

@@ -23,12 +23,10 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CoderResult;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -45,6 +43,7 @@ import javax.websocket.SendResult;
 
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
+import org.apache.tomcat.util.buf.Utf8Encoder;
 import org.apache.tomcat.util.res.StringManager;
 
 public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
@@ -75,7 +74,7 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
     // Max size of WebSocket header is 14 bytes
     private final ByteBuffer headerBuffer = ByteBuffer.allocate(14);
     private final ByteBuffer outputBuffer = ByteBuffer.allocate(8192);
-    private final CharsetEncoder encoder = StandardCharsets.UTF_8.newEncoder();
+    private final CharsetEncoder encoder = new Utf8Encoder();
     private final ByteBuffer encoderBuffer = ByteBuffer.allocate(8192);
     private final AtomicBoolean batchingAllowed = new AtomicBoolean(false);
     private volatile long sendTimeout = -1;
@@ -120,7 +119,7 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
 
 
     public Future<Void> sendBytesByFuture(ByteBuffer data) {
-        FutureToSendHandler f2sh = new FutureToSendHandler();
+        FutureToSendHandler f2sh = new FutureToSendHandler(wsSession);
         sendBytesByCompletion(data, f2sh);
         return f2sh;
     }
@@ -157,7 +156,7 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
 
 
     public Future<Void> sendStringByFuture(String text) {
-        FutureToSendHandler f2sh = new FutureToSendHandler();
+        FutureToSendHandler f2sh = new FutureToSendHandler(wsSession);
         sendStringByCompletion(text, f2sh);
         return f2sh;
     }
@@ -188,11 +187,14 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
 
     void sendPartialString(CharBuffer part, boolean last) throws IOException {
         try {
-            FutureToSendHandler f2sh = new FutureToSendHandler();
+            // Get the timeout before we send the message. The message may
+            // trigger a session close and depending on timing the client
+            // session may close before we can read the timeout.
+            long timeout = getBlockingSendTimeout();
+            FutureToSendHandler f2sh = new FutureToSendHandler(wsSession);
             TextMessageSendHandler tmsh = new TextMessageSendHandler(f2sh, part,
                     last, encoder, encoderBuffer, this);
             tmsh.write();
-            long timeout = getBlockingSendTimeout();
             if (timeout == -1) {
                 f2sh.get();
             } else {
@@ -207,10 +209,13 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
 
     void startMessageBlock(byte opCode, ByteBuffer payload, boolean last)
             throws IOException {
-        FutureToSendHandler f2sh = new FutureToSendHandler();
+        // Get the timeout before we send the message. The message may
+        // trigger a session close and depending on timing the client
+        // session may close before we can read the timeout.
+        long timeout = getBlockingSendTimeout();
+        FutureToSendHandler f2sh = new FutureToSendHandler(wsSession);
         startMessage(opCode, payload, last, f2sh);
         try {
-            long timeout = getBlockingSendTimeout();
             if (timeout == -1) {
                 f2sh.get();
             } else {
@@ -443,7 +448,7 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
     }
 
     public Future<Void> sendObjectByFuture(Object obj) {
-        FutureToSendHandler f2sh = new FutureToSendHandler();
+        FutureToSendHandler f2sh = new FutureToSendHandler(wsSession);
         sendObjectByCompletion(obj, f2sh);
         return f2sh;
     }
@@ -674,10 +679,22 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
             }
 
             // Write the payload
-            while (payload.hasRemaining() && outputBuffer.hasRemaining()) {
-                if (mask == null) {
-                    outputBuffer.put(payload.get());
-                } else {
+            int payloadLeft = payload.remaining();
+            int payloadLimit = payload.limit();
+            int outputSpace = outputBuffer.remaining();
+            int toWrite = payloadLeft;
+
+            if (payloadLeft > outputSpace) {
+                toWrite = outputSpace;
+                // Temporarily reduce the limit
+                payload.limit(payload.position() + toWrite);
+            }
+
+            if (mask == null) {
+                // Use a bulk copy
+                outputBuffer.put(payload);
+            } else {
+                for (int i = 0; i < toWrite; i++) {
                     outputBuffer.put(
                             (byte) (payload.get() ^ (mask[maskIndex++] & 0xFF)));
                     if (maskIndex > 3) {
@@ -685,7 +702,10 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
                     }
                 }
             }
-            if (payload.hasRemaining()) {
+
+            if (payloadLeft > outputSpace) {
+                // Restore the original limit
+                payload.limit(payloadLimit);
                 // Still more headers to write, need to flush
                 outputBuffer.flip();
                 endpoint.doWrite(this, outputBuffer);
@@ -719,69 +739,6 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
             }
         }
     }
-
-    /**
-     * Converts a Future to a SendHandler.
-     */
-    private static class FutureToSendHandler
-            implements Future<Void>, SendHandler {
-
-        private final CountDownLatch latch = new CountDownLatch(1);
-        private volatile SendResult result = null;
-
-        // --------------------------------------------------------- SendHandler
-
-        @Override
-        public void onResult(SendResult result) {
-            this.result = result;
-            latch.countDown();
-        }
-
-
-        // -------------------------------------------------------------- Future
-
-        @Override
-        public boolean cancel(boolean mayInterruptIfRunning) {
-            // Cancelling the task is not supported
-            return false;
-        }
-
-        @Override
-        public boolean isCancelled() {
-            // Cancelling the task is not supported
-            return false;
-        }
-
-        @Override
-        public boolean isDone() {
-            return latch.getCount() == 0;
-        }
-
-        @Override
-        public Void get() throws InterruptedException,
-                ExecutionException {
-            latch.await();
-            if (result.getException() != null) {
-                throw new ExecutionException(result.getException());
-            }
-            return null;
-        }
-
-        @Override
-        public Void get(long timeout, TimeUnit unit)
-                throws InterruptedException, ExecutionException,
-                TimeoutException {
-            boolean retval = latch.await(timeout, unit);
-            if (retval == false) {
-                throw new TimeoutException();
-            }
-            if (result.getException() != null) {
-                throw new ExecutionException(result.getException());
-            }
-            return null;
-        }
-    }
-
 
     private static class WsOutputStream extends OutputStream {
 

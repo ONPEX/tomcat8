@@ -65,7 +65,7 @@ import org.ietf.jgss.GSSName;
  * location) are identical to those currently supported by Tomcat 3.X.
  *
  * @author Craig R. McClanahan
- * @version $Id: RealmBase.java 1508214 2013-07-29 22:17:59Z markt $
+ * @version $Id: RealmBase.java 1511907 2013-08-08 18:07:43Z markt $
  */
 
 public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
@@ -1415,6 +1415,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
             return new X509SubjectDnRetriever();
 
         try {
+            @SuppressWarnings("unchecked")
             Class<? extends X509UsernameRetriever> clazz = (Class<? extends X509UsernameRetriever>)Class.forName(className);
             return clazz.newInstance();
         } catch (ClassNotFoundException e) {

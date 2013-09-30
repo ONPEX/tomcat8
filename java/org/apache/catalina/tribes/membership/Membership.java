@@ -36,7 +36,7 @@ import org.apache.catalina.tribes.Member;
  *
  * @author Filip Hanik
  * @author Peter Rossbach
- * @version $Id: Membership.java 1430602 2013-01-08 22:46:52Z markt $
+ * @version $Id: Membership.java 1511907 2013-08-08 18:07:43Z markt $
  */
 public class Membership implements Cloneable {
 
@@ -69,6 +69,7 @@ public class Membership implements Cloneable {
     public Object clone() {
         synchronized (membersLock) {
             Membership clone = new Membership(local, memberComparator);
+            @SuppressWarnings("unchecked")
             final HashMap<Member, MbrEntry> tmpclone = (HashMap<Member, MbrEntry>) map.clone();
             clone.map = tmpclone;
             clone.members = new Member[members.length];

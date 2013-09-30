@@ -51,6 +51,7 @@ import org.apache.tomcat.util.http.MimeHeaders;
 import org.apache.tomcat.util.log.UserDataHelper;
 import org.apache.tomcat.util.net.AbstractEndpoint;
 import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
+import org.apache.tomcat.util.net.DispatchType;
 import org.apache.tomcat.util.net.SocketStatus;
 import org.apache.tomcat.util.net.SocketWrapper;
 import org.apache.tomcat.util.res.StringManager;
@@ -238,7 +239,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
     protected HttpUpgradeHandler httpUpgradeHandler = null;
 
 
-    public AbstractHttp11Processor(AbstractEndpoint endpoint) {
+    public AbstractHttp11Processor(AbstractEndpoint<S> endpoint) {
         super(endpoint);
         userDataHelper = new UserDataHelper(getLog());
     }
@@ -637,12 +638,6 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
 
 
     /**
-     * Allows the super class to set the socket wrapper being used.
-     */
-    protected abstract void setSocketWrapper(SocketWrapper<S> socketWrapper);
-
-
-    /**
      * Exposes input buffer to super class to allow better code re-use.
      * @return  The input buffer used by the processor.
      */
@@ -659,13 +654,14 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
     /**
      * Initialize standard input and output filters.
      */
-    protected void initializeFilters(int maxTrailerSize) {
+    protected void initializeFilters(int maxTrailerSize, int maxExtensionSize) {
         // Create and add the identity filters.
         getInputBuffer().addFilter(new IdentityInputFilter());
         getOutputBuffer().addFilter(new IdentityOutputFilter());
 
         // Create and add the chunked filters.
-        getInputBuffer().addFilter(new ChunkedInputFilter(maxTrailerSize));
+        getInputBuffer().addFilter(
+                new ChunkedInputFilter(maxTrailerSize, maxExtensionSize));
         getOutputBuffer().addFilter(new ChunkedOutputFilter());
 
         // Create and add the void filters.
@@ -790,6 +786,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             InputFilter savedBody = new SavedRequestInputFilter(body);
             savedBody.setRequest(request);
 
+            @SuppressWarnings("unchecked")
             AbstractInputBuffer<S> internalBuffer = (AbstractInputBuffer<S>)
                 request.getInputBuffer();
             internalBuffer.addActiveFilter(savedBody);
@@ -814,6 +811,10 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             ((AtomicBoolean) param).set(asyncStateMachine.isAsyncTimingOut());
         } else if (actionCode == ActionCode.ASYNC_IS_ERROR) {
             ((AtomicBoolean) param).set(asyncStateMachine.isAsyncError());
+        } else if (actionCode == ActionCode.UPGRADE) {
+            httpUpgradeHandler = (HttpUpgradeHandler) param;
+            // Stop further HTTP output
+            getOutputBuffer().finished = true;
         } else if (actionCode == ActionCode.AVAILABLE) {
             request.setAvailable(inputBuffer.available());
         } else if (actionCode == ActionCode.NB_WRITE_INTEREST) {
@@ -826,13 +827,13 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             }
         } else if (actionCode == ActionCode.NB_READ_INTEREST) {
             registerForEvent(true, false);
-        } else if (actionCode == ActionCode.UPGRADE) {
-            httpUpgradeHandler = (HttpUpgradeHandler) param;
-            // Stop further HTTP output
-            getOutputBuffer().finished = true;
         } else if (actionCode == ActionCode.REQUEST_BODY_FULLY_READ) {
             AtomicBoolean result = (AtomicBoolean) param;
             result.set(getInputBuffer().isFinished());
+        } else if (actionCode == ActionCode.DISPATCH_READ) {
+            socketWrapper.addDispatch(DispatchType.NON_BLOCKING_READ);
+        } else if (actionCode == ActionCode.DISPATCH_WRITE) {
+            socketWrapper.addDispatch(DispatchType.NON_BLOCKING_WRITE);
         } else {
             actionInternal(actionCode, param);
         }
@@ -1109,15 +1110,6 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
 
 
     /**
-     * Regsiter the socket for the specified events.
-     *
-     * @param read  Register the socket for read events
-     * @param write Regsiter the socket for write events
-     */
-    protected abstract void registerForEvent(boolean read, boolean write);
-
-
-    /**
      * After reading the request headers, we have to setup the request filters.
      */
     protected void prepareRequest() {
@@ -1272,10 +1264,20 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
 
         // Parse content-length header
         long contentLength = request.getContentLengthLong();
-        if (contentLength >= 0 && !contentDelimitation) {
-            getInputBuffer().addActiveFilter
-                (inputFilters[Constants.IDENTITY_FILTER]);
-            contentDelimitation = true;
+        if (contentLength >= 0) {
+            if (contentDelimitation) {
+                // contentDelimitation being true at this point indicates that
+                // chunked encoding is being used but chunked encoding should
+                // not be used with a content length. RFC 2616, section 4.4,
+                // bullet 3 states Content-Length must be ignored in this case -
+                // so remove it.
+                headers.removeHeader("content-length");
+                request.setContentLength(-1);
+            } else {
+                getInputBuffer().addActiveFilter
+                        (inputFilters[Constants.IDENTITY_FILTER]);
+                contentDelimitation = true;
+            }
         }
 
         MessageBytes valueMB = headers.getValue("host");
@@ -1585,16 +1587,8 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         } else if (status == SocketStatus.OPEN_READ &&
                 request.getReadListener() != null) {
             try {
-                try {
-                    if (inputBuffer.nbRead() > 0) {
-                        asyncStateMachine.asyncOperation();
-                    }
-                } catch (IOException x) {
-                    if (getLog().isDebugEnabled()) {
-                        getLog().debug("Unable to read async data.",x);
-                    }
-                    status = SocketStatus.ASYNC_READ_ERROR;
-                    request.setAttribute(RequestDispatcher.ERROR_EXCEPTION, x);
+                if (inputBuffer.available() > 0) {
+                    asyncStateMachine.asyncOperation();
                 }
             } catch (IllegalStateException x) {
                 registerForEvent(true, false);
@@ -1612,12 +1606,6 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             ExceptionUtils.handleThrowable(t);
             getLog().error(sm.getString("http11processor.request.process"), t);
             error = true;
-        } finally {
-            if (error) {
-                // 500 - Internal Server Error
-                response.setStatus(500);
-                getAdapter().log(request, response, 0);
-            }
         }
 
         rp.setStage(org.apache.coyote.Constants.STAGE_ENDED);

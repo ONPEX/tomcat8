@@ -546,7 +546,7 @@ public class InternalAprInputBuffer extends AbstractInputBuffer<Long> {
 
     @Override
     protected void init(SocketWrapper<Long> socketWrapper,
-            AbstractEndpoint endpoint) throws IOException {
+            AbstractEndpoint<Long> endpoint) throws IOException {
 
         socket = socketWrapper.getSocket().longValue();
         wrapper = socketWrapper;
@@ -556,33 +556,15 @@ public class InternalAprInputBuffer extends AbstractInputBuffer<Long> {
 
     @Override
     protected boolean fill(boolean block) throws IOException {
-        // Ignore the block parameter
 
         int nRead = 0;
 
         if (parsingHeader) {
-
             if (lastValid == buf.length) {
                 throw new IllegalArgumentException
                     (sm.getString("iib.requestheadertoolarge.error"));
             }
-
-            bbuf.clear();
-            nRead = doReadSocket(true);
-            if (nRead > 0) {
-                bbuf.limit(nRead);
-                bbuf.get(buf, pos, nRead);
-                lastValid = pos + nRead;
-            } else {
-                if ((-nRead) == Status.EAGAIN) {
-                    return false;
-                } else {
-                    throw new IOException(sm.getString("iib.failedread"));
-                }
-            }
-
         } else {
-
             if (buf.length - end < 4500) {
                 // In this case, the request header was really large, so we allocate a
                 // brand new one; the old one will get GCed when subsequent requests
@@ -592,23 +574,36 @@ public class InternalAprInputBuffer extends AbstractInputBuffer<Long> {
             }
             pos = end;
             lastValid = pos;
-            bbuf.clear();
-            nRead = doReadSocket(true);
-            if (nRead > 0) {
-                bbuf.limit(nRead);
-                bbuf.get(buf, pos, nRead);
-                lastValid = pos + nRead;
-            } else {
-                if ((-nRead) == Status.ETIMEDOUT || (-nRead) == Status.TIMEUP) {
-                    throw new SocketTimeoutException(sm.getString("iib.failedread"));
-                } else if (nRead == 0) {
-                    // APR_STATUS_IS_EOF, since native 1.1.22
-                    return false;
-                } else {
-                    throw new IOException(sm.getString("iib.failedread"));
-                }
-            }
+        }
 
+        bbuf.clear();
+
+        nRead = doReadSocket(block);
+        if (nRead > 0) {
+            bbuf.limit(nRead);
+            bbuf.get(buf, pos, nRead);
+            lastValid = pos + nRead;
+        } else if (-nRead == Status.EAGAIN) {
+            return false;
+        } else if ((-nRead) == Status.ETIMEDOUT || (-nRead) == Status.TIMEUP) {
+            if (block) {
+                throw new SocketTimeoutException(
+                        sm.getString("iib.readtimeout"));
+            } else {
+                // Attempting to read from the socket when the poller
+                // has not signalled that there is data to read appears
+                // to behave like a blocking read with a short timeout
+                // on OSX rather than like a non-blocking read. If no
+                // data is read, treat the resulting timeout like a
+                // non-blocking read that returned no data.
+                return false;
+            }
+        } else if (nRead == 0) {
+            // APR_STATUS_IS_EOF, since native 1.1.22
+            return false;
+        } else {
+            throw new IOException(sm.getString("iib.failedread.apr",
+                    Integer.valueOf(-nRead)));
         }
 
         return (nRead > 0);
@@ -616,21 +611,8 @@ public class InternalAprInputBuffer extends AbstractInputBuffer<Long> {
 
 
     @Override
-    protected int nbRead() throws IOException {
-        bbuf.clear();
-        int nRead = doReadSocket(false);
-
-        if (nRead > 0) {
-            bbuf.limit(nRead);
-            bbuf.get(buf, pos, nRead);
-            lastValid = pos + nRead;
-            return nRead;
-        } else if (-nRead == Status.EAGAIN) {
-            return 0;
-        } else {
-            throw new IOException(sm.getString("iib.failedread.apr",
-                    Integer.valueOf(-nRead)));
-        }
+    protected final Log getLog() {
+        return log;
     }
 
 
@@ -656,7 +638,12 @@ public class InternalAprInputBuffer extends AbstractInputBuffer<Long> {
                 writeLock.lock();
                 wrapper.setBlockingStatus(block);
                 // Set the current settings for this socket
-                Socket.optSet(socket, Socket.APR_SO_NONBLOCK, (block ? 0 : 1));
+                if (block) {
+                    Socket.optSet(socket, Socket.APR_SO_NONBLOCK, 0);
+                } else {
+                    Socket.optSet(socket, Socket.APR_SO_NONBLOCK, 1);
+                    Socket.timeoutSet(socket, 0);
+                }
                 // Downgrade the lock
                 try {
                     readLock.lock();

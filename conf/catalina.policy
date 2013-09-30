@@ -24,7 +24,7 @@
 // * Read access to the web application's document root directory
 // * Read, write and delete access to the web application's working directory
 //
-// $Id: catalina.policy 1460115 2013-03-23 07:53:06Z kkolinko $
+// $Id: catalina.policy 1524078 2013-09-17 14:52:28Z schultz $
 // ============================================================================
 
 
@@ -80,10 +80,16 @@ grant codeBase "file:${catalina.home}/bin/tomcat-juli.jar" {
         permission java.lang.RuntimePermission "getClassLoader";
         permission java.lang.RuntimePermission "setContextClassLoader";
 
+        permission java.lang.management.ManagementPermission "monitor";
+
         permission java.util.logging.LoggingPermission "control";
 
         permission java.util.PropertyPermission "java.util.logging.config.class", "read";
         permission java.util.PropertyPermission "java.util.logging.config.file", "read";
+        permission java.util.PropertyPermission "org.apache.juli.AsyncLoggerPollInterval", "read";
+        permission java.util.PropertyPermission "org.apache.juli.AsyncMaxRecordCount", "read";
+        permission java.util.PropertyPermission "org.apache.juli.AsyncOverflowDropType", "read";
+        permission java.util.PropertyPermission "org.apache.juli.ClassLoaderLogManager.debug", "read";
         permission java.util.PropertyPermission "catalina.base", "read";
 
         // Note: To enable per context logging configuration, permit read access to

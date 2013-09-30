@@ -80,7 +80,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: ApplicationContext.java 1505199 2013-07-20 20:22:41Z jboynes $
+ * @version $Id: ApplicationContext.java 1511907 2013-08-08 18:07:43Z markt $
  */
 
 public class ApplicationContext
@@ -926,6 +926,7 @@ public class ApplicationContext
     public <T extends Filter> T createFilter(Class<T> c)
     throws ServletException {
         try {
+            @SuppressWarnings("unchecked")
             T filter = (T) context.getInstanceManager().newInstance(c.getName());
             return filter;
         } catch (IllegalAccessException e) {
@@ -1068,6 +1069,7 @@ public class ApplicationContext
     public <T extends Servlet> T createServlet(Class<T> c)
     throws ServletException {
         try {
+            @SuppressWarnings("unchecked")
             T servlet = (T) context.getInstanceManager().newInstance(c.getName());
             context.dynamicServletCreated(servlet);
             return servlet;
@@ -1295,6 +1297,7 @@ public class ApplicationContext
     public <T extends EventListener> T createListener(Class<T> c)
             throws ServletException {
         try {
+            @SuppressWarnings("unchecked")
             T listener =
                 (T) context.getInstanceManager().newInstance(c);
             if (listener instanceof ServletContextListener ||

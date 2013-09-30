@@ -28,6 +28,7 @@ import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.catalina.tribes.Channel;
 import org.apache.catalina.tribes.Member;
@@ -46,7 +47,7 @@ import org.apache.catalina.tribes.util.ExecutorFactory;
  * Need to fix this, could use java.nio and only need one thread to send and receive, or
  * just use a timeout on the receive
  * @author Filip Hanik
- * @version $Id: McastServiceImpl.java 1430602 2013-01-08 22:46:52Z markt $
+ * @version $Id: McastServiceImpl.java 1516756 2013-08-23 09:00:31Z markt $
  */
 public class McastServiceImpl
 {
@@ -580,14 +581,18 @@ public class McastServiceImpl
     }//class SenderThread
 
     protected static class RecoveryThread extends Thread {
-        static volatile boolean running = false;
+
+        private static final AtomicBoolean running = new AtomicBoolean(false);
 
         public static synchronized void recover(McastServiceImpl parent) {
-            if (running) return;
-            if (!parent.isRecoveryEnabled())
-                return;
 
-            running = true;
+            if (!parent.isRecoveryEnabled()) {
+                return;
+            }
+
+            if (!running.compareAndSet(false, true)) {
+                return;
+            }
 
             Thread t = new RecoveryThread(parent);
 
@@ -644,7 +649,7 @@ public class McastServiceImpl
                     }
                 }
             }finally {
-                running = false;
+                running.set(false);
             }
         }
     }

@@ -99,7 +99,6 @@ import org.apache.catalina.Wrapper;
 import org.apache.catalina.deploy.NamingResourcesImpl;
 import org.apache.catalina.loader.WebappLoader;
 import org.apache.catalina.session.StandardManager;
-import org.apache.catalina.startup.TldConfig;
 import org.apache.catalina.util.CharsetMapper;
 import org.apache.catalina.util.ContextName;
 import org.apache.catalina.util.ExtensionValidator;
@@ -135,7 +134,7 @@ import org.apache.tomcat.util.scan.StandardJarScanner;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardContext.java 1505308 2013-07-21 08:43:56Z markt $
+ * @version $Id: StandardContext.java 1523625 2013-09-16 13:10:18Z markt $
  */
 
 public class StandardContext extends ContainerBase
@@ -705,22 +704,6 @@ public class StandardContext extends ContainerBase
      * Attribute value used to turn on/off XML namespace validation
      */
     private boolean webXmlNamespaceAware = Globals.STRICT_SERVLET_COMPLIANCE;
-
-    /**
-     * Attribute value used to turn on/off TLD processing
-     */
-    private boolean processTlds = true;
-
-    /**
-     * Attribute value used to turn on/off XML validation
-     */
-    private boolean tldValidation = Globals.STRICT_SERVLET_COMPLIANCE;
-
-
-    /**
-     * Attribute value used to turn on/off TLD XML namespace validation
-     */
-    private boolean tldNamespaceAware = Globals.STRICT_SERVLET_COMPLIANCE;
 
 
     /**
@@ -4524,6 +4507,11 @@ public class StandardContext extends ContainerBase
      */
     @Override
     public String getRealPath(String path) {
+        // The WebResources API expects all paths to start with /. This is a
+        // special case for consistency with earlier Tomcat versions.
+        if ("".equals(path)) {
+            path = "/";
+        }
         if (resources != null) {
             return resources.getResource(path).getCanonicalPath();
         }
@@ -4763,7 +4751,7 @@ public class StandardContext extends ContainerBase
                 ExceptionUtils.handleThrowable(t);
                 getLogger().error
                     (sm.getString("standardContext.applicationListener",
-                                  listeners[i]), t);
+                                  listeners[i].getClassName()), t);
                 ok = false;
             }
         }
@@ -4959,8 +4947,8 @@ public class StandardContext extends ContainerBase
                     "/WEB-INF/classes/META-INF/resources");
             if (webinfClassesResource.isDirectory()) {
                 getResources().createWebResourceSet(
-                        WebResourceRoot.ResourceSetType.RESOURCE_JAR,
-                        webinfClassesResource.getURL(), "/", "/");
+                        WebResourceRoot.ResourceSetType.RESOURCE_JAR, "/",
+                        webinfClassesResource.getURL(), "/");
             }
         }
 
@@ -6333,10 +6321,6 @@ public class StandardContext extends ContainerBase
     protected void initInternal() throws LifecycleException {
         super.initInternal();
 
-        if (processTlds) {
-            this.addLifecycleListener(new TldConfig());
-        }
-
         // Register the naming resources
         if (namingResources != null) {
             namingResources.init();
@@ -6487,65 +6471,6 @@ public class StandardContext extends ContainerBase
     @Override
     public void setXmlNamespaceAware(boolean webXmlNamespaceAware){
         this.webXmlNamespaceAware= webXmlNamespaceAware;
-    }
-
-
-    /**
-     * Set the validation feature of the XML parser used when
-     * parsing tlds files.
-     * @param tldValidation true to enable xml instance validation
-     */
-    @Override
-    public void setTldValidation(boolean tldValidation){
-
-        this.tldValidation = tldValidation;
-
-    }
-
-    /**
-     * Get the server.xml <context> attribute's webXmlValidation.
-     * @return true if validation is enabled.
-     *
-     */
-    @Override
-    public boolean getTldValidation(){
-        return tldValidation;
-    }
-
-    /**
-     * Sets the process TLDs attribute.
-     *
-     * @param newProcessTlds The new value
-     */
-    public void setProcessTlds(boolean newProcessTlds) {
-        processTlds = newProcessTlds;
-    }
-
-    /**
-     * Returns the processTlds attribute value.
-     */
-    public boolean getProcessTlds() {
-        return processTlds;
-    }
-
-    /**
-     * Get the server.xml &lt;host&gt; attribute's xmlNamespaceAware.
-     * @return true if namespace awarenes is enabled.
-     */
-    @Override
-    public boolean getTldNamespaceAware(){
-        return tldNamespaceAware;
-    }
-
-
-    /**
-     * Set the namespace aware feature of the XML parser used when
-     * parsing xml instances.
-     * @param tldNamespaceAware true to enable namespace awareness
-     */
-    @Override
-    public void setTldNamespaceAware(boolean tldNamespaceAware){
-        this.tldNamespaceAware= tldNamespaceAware;
     }
 
 

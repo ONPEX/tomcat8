@@ -60,7 +60,7 @@ public class TestAbstractHttp11Processor extends TomcatBaseTest {
             "Content-Length: 9" + SimpleHttpClient.CRLF +
             "Content-Type: application/x-www-form-urlencoded" +
                     SimpleHttpClient.CRLF +
-            SimpleHttpClient.CRLF +
+                    SimpleHttpClient.CRLF +
             "test=data";
 
         Client client = new Client(tomcat.getConnector().getLocalPort());
@@ -70,6 +70,7 @@ public class TestAbstractHttp11Processor extends TomcatBaseTest {
         client.processRequest();
         assertTrue(client.isResponse501());
     }
+
 
     @Test
     public void testWithTEBuffered() throws Exception {
@@ -88,7 +89,7 @@ public class TestAbstractHttp11Processor extends TomcatBaseTest {
             "Content-Length: 9" + SimpleHttpClient.CRLF +
             "Content-Type: application/x-www-form-urlencoded" +
                     SimpleHttpClient.CRLF +
-            SimpleHttpClient.CRLF +
+                    SimpleHttpClient.CRLF +
             "test=data";
 
         Client client = new Client(tomcat.getConnector().getLocalPort());
@@ -97,6 +98,54 @@ public class TestAbstractHttp11Processor extends TomcatBaseTest {
         client.connect();
         client.processRequest();
         assertTrue(client.isResponse501());
+    }
+
+
+    @Test
+    public void testWithTEChunked() throws Exception {
+        doTestWithTEChunked(false);
+    }
+
+
+    @Test
+    public void testWithTEChunkedWithCL() throws Exception {
+        // Should be ignored
+        doTestWithTEChunked(true);
+    }
+
+
+    private void doTestWithTEChunked(boolean withCL)
+            throws Exception {
+
+        Tomcat tomcat = getTomcatInstance();
+
+        // Use the normal Tomcat ROOT context
+        File root = new File("test/webapp");
+        tomcat.addWebapp("", root.getAbsolutePath());
+
+        tomcat.start();
+
+        String request =
+            "POST /echo-params.jsp HTTP/1.1" + SimpleHttpClient.CRLF +
+            "Host: any" + SimpleHttpClient.CRLF +
+            (withCL ? "Content-length: 1" + SimpleHttpClient.CRLF : "") +
+            "Transfer-encoding: chunked" + SimpleHttpClient.CRLF +
+            "Content-Type: application/x-www-form-urlencoded" +
+                    SimpleHttpClient.CRLF +
+            "Connection: close" + SimpleHttpClient.CRLF +
+            SimpleHttpClient.CRLF +
+            "9" + SimpleHttpClient.CRLF +
+            "test=data" + SimpleHttpClient.CRLF +
+            "0" + SimpleHttpClient.CRLF +
+            SimpleHttpClient.CRLF;
+
+        Client client = new Client(tomcat.getConnector().getLocalPort());
+        client.setRequest(new String[] {request});
+
+        client.connect();
+        client.processRequest();
+        assertTrue(client.isResponse200());
+        assertTrue(client.getResponseBody().contains("test - data"));
     }
 
 
@@ -118,7 +167,7 @@ public class TestAbstractHttp11Processor extends TomcatBaseTest {
             "Content-Type: application/x-www-form-urlencoded" +
                     SimpleHttpClient.CRLF +
             "Connection: close" + SimpleHttpClient.CRLF +
-            SimpleHttpClient.CRLF +
+                SimpleHttpClient.CRLF +
             "test=data";
 
         Client client = new Client(tomcat.getConnector().getLocalPort());
@@ -148,7 +197,7 @@ public class TestAbstractHttp11Processor extends TomcatBaseTest {
             "Content-Length: 9" + SimpleHttpClient.CRLF +
             "Content-Type: application/x-www-form-urlencoded" +
                     SimpleHttpClient.CRLF +
-            SimpleHttpClient.CRLF +
+                    SimpleHttpClient.CRLF +
             "test=data";
 
         Client client = new Client(tomcat.getConnector().getLocalPort());
@@ -177,7 +226,7 @@ public class TestAbstractHttp11Processor extends TomcatBaseTest {
             "Content-Length: 9" + SimpleHttpClient.CRLF +
             "Content-Type: application/x-www-form-urlencoded" +
                     SimpleHttpClient.CRLF +
-            SimpleHttpClient.CRLF +
+                    SimpleHttpClient.CRLF +
             "test=data";
 
         Client client = new Client(tomcat.getConnector().getLocalPort());

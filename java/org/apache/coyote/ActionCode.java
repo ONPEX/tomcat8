@@ -41,12 +41,6 @@ public enum ActionCode {
     RESET,
 
     /**
-     * Hook called after request, but before recycling. Can be used for logging,
-     * to update counters, custom cleanup - the request is still visible
-     */
-    POST_REQUEST,
-
-    /**
      * Hook called if swallowing request input should be disabled.
      * Example: Cancel a large file upload.
      *
@@ -215,5 +209,17 @@ public enum ActionCode {
     /**
      * Indicates if the request body has been fully read.
      */
-    REQUEST_BODY_FULLY_READ
+    REQUEST_BODY_FULLY_READ,
+
+    /**
+     * Indicates that the container needs to trigger a call to onDataAvailable()
+     * for the registered non-blocking read listener.
+     */
+    DISPATCH_READ,
+
+    /**
+     * Indicates that the container needs to trigger a call to onWritePossible()
+     * for the registered non-blocking write listener.
+     */
+    DISPATCH_WRITE
 }

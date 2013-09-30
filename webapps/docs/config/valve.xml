@@ -42,13 +42,11 @@
   Individual Valves have distinct processing capabilities, and are
   described individually below.</p>
 
-    <blockquote><em>
-    <p>The description below uses the variable name $CATALINA_BASE to refer the
+    <p><em>The description below uses the variable name $CATALINA_BASE to refer the
     base directory against which most relative paths are resolved. If you have
     not configured Tomcat for multiple instances by setting a CATALINA_BASE
     directory, then $CATALINA_BASE will be set to the value of $CATALINA_HOME,
-    the directory into which you have installed Tomcat.</p>
-    </em></blockquote>
+    the directory into which you have installed Tomcat.</em></p>
 
 </section>
 
@@ -57,13 +55,19 @@
 
   <subsection name="Introduction">
 
-    <p>The <strong>Access Log Valve</strong> creates log files in the same
-    format as those created by standard web servers.  These logs can later
-    be analyzed by standard log analysis tools to track page hit counts,
-    user session activity, and so on.  The files produces by this <code>Valve</code>
-    are rolled over nightly at midnight.  This <code>Valve</code>
-    may be associated with any Catalina container (<code>Context</code>,
-    <code>Host</code>, or <code>Engine</code>), and
+    <p>The <strong>Access Log Valve</strong> creates log files in the
+    same format as those created by standard web servers.  These logs
+    can later be analyzed by standard log analysis tools to track page
+    hit counts, user session activity, and so on.  This <code>Valve</code>
+    uses self-contained logic to write its log files, which can be
+    automatically rolled over at midnight each day.  (The essential
+    requirement for access logging is to handle a large continuous
+    stream of data with low overhead. This <code>Valve</code> does not
+    use Apache Commons Logging, thus avoiding additional overhead and
+    potentially complex configuration).</p>
+
+    <p>This <code>Valve</code> may be associated with any Catalina container
+    (<code>Context</code>, <code>Host</code>, or <code>Engine</code>), and
     will record ALL requests processed by that container.</p>
 
     <p>Some requests may be handled by Tomcat before they are passed to a
@@ -291,6 +295,7 @@
     It is modeled after the
     <a href="http://httpd.apache.org/">Apache HTTP Server</a> log configuration
     syntax:
+    </p>
     <ul>
     <li><b><code>%{xxx}i</code></b> for incoming headers</li>
     <li><b><code>%{xxx}o</code></b> for outgoing response headers</li>
@@ -299,7 +304,6 @@
     <li><b><code>%{xxx}s</code></b> xxx is an attribute in the HttpSession</li>
     <li><b><code>%{xxx}t</code></b> xxx is an enhanced SimpleDateFormat pattern</li>
     </ul>
-    </p>
 
     <p>All formats supported by SimpleDateFormat are allowed in <code>%{xxx}t</code>.
     In addition the following extensions have been added:</p>
@@ -339,12 +343,15 @@
 
   <subsection name="Introduction">
 
-    <p>The <strong>Extended Access Log Valve</strong> is a variant of
-    the Access Log Valve. It is not a real extension of the standard
-    Access Log valve, instead it supports the so-called
+    <p>The <strong>Extended Access Log Valve</strong> extends the
+    <a href="#Access_Log_Valve">Access Log Valve</a> class, and so
+    uses the same self-contained logging logic.  This means it
+    implements many of the same file handling attributes.  The main
+    difference to the standard <code>AccessLogValve</code> is that
+    <code>ExtendedAccessLogValve</code> creates log files which
+    conform to the the Working Draft for the
     <a href="http://www.w3.org/TR/WD-logfile.html">Extended Log File Format</a>
-    defined by the W3C. The main difference to the standard
-    <code>AccessLogValve</code> are the supported pattern values.</p>
+    defined by the W3C.</p>
 
   </subsection>
 
@@ -509,10 +516,8 @@
 
   <subsection name="Example">
     <p>To allow access only for the clients connecting from localhost:</p>
-<pre>
-    &lt;Valve className="org.apache.catalina.valves.RemoteAddrValve"
-       allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1"/&gt;
-</pre>
+    <source><![CDATA[<Valve className="org.apache.catalina.valves.RemoteAddrValve"
+   allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1"/>]]></source>
   </subsection>
 
 </section>
@@ -596,7 +601,7 @@
     your virtual host, and then have their identity recognized by all other
     web applications on the same virtual host.</p>
 
-    <p>See the <a href="host.html#Single Sign On">Single Sign On</a> special
+    <p>See the <a href="host.html#Single_Sign_On">Single Sign On</a> special
     feature on the <strong>Host</strong> element for more information.</p>
 
   </subsection>

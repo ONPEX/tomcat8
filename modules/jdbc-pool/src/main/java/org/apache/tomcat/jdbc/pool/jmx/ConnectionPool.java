@@ -311,6 +311,11 @@ public class ConnectionPool extends NotificationBroadcasterSupport implements Co
         return getPoolProperties().getValidationQuery();
     }
 
+    @Override
+    public int getValidationQueryTimeout() {
+        return getPoolProperties().getValidationQueryTimeout();
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -664,6 +669,11 @@ public class ConnectionPool extends NotificationBroadcasterSupport implements Co
         getPoolProperties().setValidationQuery(validationQuery);
     }
 
+    @Override
+    public void setValidationQueryTimeout(int validationQueryTimeout) {
+        getPoolProperties().setValidationQueryTimeout(validationQueryTimeout);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -827,6 +837,22 @@ public class ConnectionPool extends NotificationBroadcasterSupport implements Co
     @Override
     public void setPropagateInterruptState(boolean propagateInterruptState) {
         getPoolProperties().setPropagateInterruptState(propagateInterruptState);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isIgnoreExceptionOnPreLoad() {
+        return getPoolProperties().isIgnoreExceptionOnPreLoad();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setIgnoreExceptionOnPreLoad(boolean ignoreExceptionOnPreLoad) {
+        getPoolProperties().setIgnoreExceptionOnPreLoad(ignoreExceptionOnPreLoad);
     }
 
     /**

@@ -17,14 +17,13 @@
 package org.apache.coyote.http11;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.coyote.ActionCode;
+import org.apache.coyote.ByteBufferHolder;
 import org.apache.coyote.OutputBuffer;
 import org.apache.coyote.Response;
 import org.apache.coyote.http11.filters.GzipOutputFilter;
@@ -133,7 +132,7 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer {
         finished = false;
 
         // Cause loading of HttpMessages
-        HttpMessages.getMessage(200);
+        HttpMessages.getInstance(response.getLocale()).getMessage(200);
     }
 
 
@@ -386,7 +385,7 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer {
 
 
     public abstract void init(SocketWrapper<S> socketWrapper,
-            AbstractEndpoint endpoint) throws IOException;
+            AbstractEndpoint<S> endpoint) throws IOException;
 
     public abstract void sendAck() throws IOException;
 
@@ -427,7 +426,8 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer {
             message = response.getMessage();
         }
         if (message == null) {
-            write(HttpMessages.getMessage(status));
+            write(HttpMessages.getInstance(
+                    response.getLocale()).getMessage(status));
         } else {
             write(message);
         }
@@ -670,49 +670,5 @@ public abstract class AbstractOutputBuffer<S> implements OutputBuffer {
             }
         }
         return result;
-    }
-
-
-    protected static class ByteBufferHolder {
-        private final ByteBuffer buf;
-        private final AtomicBoolean flipped;
-        public ByteBufferHolder(ByteBuffer buf, boolean flipped) {
-           this.buf = buf;
-           this.flipped = new AtomicBoolean(flipped);
-        }
-        public ByteBuffer getBuf() {
-            return buf;
-        }
-        public boolean isFlipped() {
-            return flipped.get();
-        }
-
-        public boolean flip() {
-            if (flipped.compareAndSet(false, true)) {
-                buf.flip();
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-        public boolean hasData() {
-            if (flipped.get()) {
-                return buf.remaining()>0;
-            } else {
-                return buf.position()>0;
-            }
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder builder = new StringBuilder(super.toString());
-            builder.append("[flipped=");
-            builder.append(isFlipped()?"true, remaining=" : "false, position=");
-            builder.append(isFlipped()? buf.remaining(): buf.position());
-            builder.append("]");
-            return builder.toString();
-        }
-
     }
 }

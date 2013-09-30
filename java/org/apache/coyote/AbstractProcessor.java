@@ -34,9 +34,10 @@ public abstract class AbstractProcessor<S> implements ActionHook, Processor<S> {
 
     protected Adapter adapter;
     protected final AsyncStateMachine<S> asyncStateMachine;
-    protected final AbstractEndpoint endpoint;
+    protected final AbstractEndpoint<S> endpoint;
     protected final Request request;
     protected final Response response;
+    protected SocketWrapper<S> socketWrapper = null;
 
 
     /**
@@ -50,7 +51,7 @@ public abstract class AbstractProcessor<S> implements ActionHook, Processor<S> {
         response = null;
     }
 
-    public AbstractProcessor(AbstractEndpoint endpoint) {
+    public AbstractProcessor(AbstractEndpoint<S> endpoint) {
         this.endpoint = endpoint;
         asyncStateMachine = new AsyncStateMachine<>(this);
 
@@ -65,7 +66,7 @@ public abstract class AbstractProcessor<S> implements ActionHook, Processor<S> {
     /**
      * The endpoint receiving connections that are handled by this processor.
      */
-    protected AbstractEndpoint getEndpoint() {
+    protected AbstractEndpoint<S> getEndpoint() {
         return endpoint;
     }
 
@@ -96,6 +97,22 @@ public abstract class AbstractProcessor<S> implements ActionHook, Processor<S> {
      */
     public Adapter getAdapter() {
         return adapter;
+    }
+
+
+    /**
+     * Set the socket wrapper being used.
+     */
+    protected final void setSocketWrapper(SocketWrapper<S> socketWrapper) {
+        this.socketWrapper = socketWrapper;
+    }
+
+
+    /**
+     * Get the socket wrapper being used.
+     */
+    protected final SocketWrapper<S> getSocketWrapper() {
+        return socketWrapper;
     }
 
 
@@ -156,4 +173,13 @@ public abstract class AbstractProcessor<S> implements ActionHook, Processor<S> {
 
     @Override
     public abstract HttpUpgradeHandler getHttpUpgradeHandler();
+
+
+    /**
+     * Register the socket for the specified events.
+     *
+     * @param read  Register the socket for read events
+     * @param write Register the socket for write events
+     */
+    protected abstract void registerForEvent(boolean read, boolean write);
 }

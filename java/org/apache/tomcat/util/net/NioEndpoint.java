@@ -32,6 +32,8 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.WritableByteChannel;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -71,7 +73,7 @@ import org.apache.tomcat.util.net.jsse.NioX509KeyManager;
  * @author Remy Maucherat
  * @author Filip Hanik
  */
-public class NioEndpoint extends AbstractEndpoint {
+public class NioEndpoint extends AbstractEndpoint<NioChannel> {
 
 
     // -------------------------------------------------------------- Constants
@@ -600,11 +602,18 @@ public class NioEndpoint extends AbstractEndpoint {
         return true;
     }
 
+
+    @Override
+    public void processSocketAsync(SocketWrapper<NioChannel> socketWrapper,
+            SocketStatus socketStatus) {
+        dispatchForEvent(socketWrapper.getSocket(), socketStatus, true);
+    }
+
     public boolean dispatchForEvent(NioChannel socket, SocketStatus status, boolean dispatch) {
-        if (!dispatch) {
-            processSocket(socket,status,dispatch);
-        } else {
+        if (dispatch && status == SocketStatus.OPEN_READ) {
             socket.getPoller().add(socket, OP_CALLBACK);
+        } else {
+            processSocket(socket,status,dispatch);
         }
         return true;
     }
@@ -619,8 +628,30 @@ public class NioEndpoint extends AbstractEndpoint {
             SocketProcessor sc = processorCache.pop();
             if ( sc == null ) sc = new SocketProcessor(socket,status);
             else sc.reset(socket,status);
-            if ( dispatch && getExecutor()!=null ) getExecutor().execute(sc);
-            else sc.run();
+            if (dispatch && getExecutor() != null) {
+                ClassLoader loader = Thread.currentThread().getContextClassLoader();
+                try {
+                    //threads should not be created by the webapp classloader
+                    if (Constants.IS_SECURITY_ENABLED) {
+                        PrivilegedAction<Void> pa = new PrivilegedSetTccl(
+                                getClass().getClassLoader());
+                        AccessController.doPrivileged(pa);
+                    } else {
+                        Thread.currentThread().setContextClassLoader(
+                                getClass().getClassLoader());
+                    }
+                    getExecutor().execute(sc);
+                } finally {
+                    if (Constants.IS_SECURITY_ENABLED) {
+                        PrivilegedAction<Void> pa = new PrivilegedSetTccl(loader);
+                        AccessController.doPrivileged(pa);
+                    } else {
+                        Thread.currentThread().setContextClassLoader(loader);
+                    }
+                }
+            } else {
+                sc.run();
+            }
         } catch (RejectedExecutionException rx) {
             log.warn("Socket processing request was rejected for:"+socket,rx);
             return false;
@@ -1376,13 +1407,11 @@ public class NioEndpoint extends AbstractEndpoint {
         }
 
         public void reset(Poller poller, NioChannel channel, long soTimeout) {
-            this.socket = channel;
+            super.reset(channel, soTimeout);
+
+            cometNotify = false;
+            interestOps = 0;
             this.poller = poller;
-            lastAccess = System.currentTimeMillis();
-            setComet(false);
-            setTimeout(soTimeout);
-            setWriteTimeout(soTimeout);
-            error = false;
             sendfileData = null;
             if (readLatch != null) {
                 try {
@@ -1393,6 +1422,7 @@ public class NioEndpoint extends AbstractEndpoint {
                 }
             }
             readLatch = null;
+            sendfileData = null;
             if (writeLatch != null) {
                 try {
                     for (int i = 0; i < (int) writeLatch.getCount(); i++) {
@@ -1402,10 +1432,7 @@ public class NioEndpoint extends AbstractEndpoint {
                 }
             }
             writeLatch = null;
-            cometNotify = false;
-            sendfileData = null;
-            keepAliveLeft = 100;
-            async = false;
+            setWriteTimeout(soTimeout);
         }
 
         public void reset() {
@@ -1417,7 +1444,6 @@ public class NioEndpoint extends AbstractEndpoint {
         public void setCometNotify(boolean notify) { this.cometNotify = notify; }
         public boolean getCometNotify() { return cometNotify; }
         public NioChannel getChannel() { return getSocket();}
-        public void setChannel(NioChannel channel) { this.socket = channel;}
         public int interestOps() { return interestOps;}
         public int interestOps(int ops) { this.interestOps  = ops; return ops; }
         public CountDownLatch getReadLatch() { return readLatch; }

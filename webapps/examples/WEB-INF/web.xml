@@ -46,13 +46,14 @@
     <filter>
         <filter-name>Set Character Encoding</filter-name>
         <filter-class>org.apache.catalina.filters.SetCharacterEncodingFilter</filter-class>
+        <async-supported>true</async-supported>
         <init-param>
             <param-name>encoding</param-name>
-            <param-value>EUC_JP</param-value>
+            <param-value>UTF-8</param-value>
         </init-param>
         <init-param>
             <param-name>ignore</param-name>
-            <param-value>true</param-value>
+            <param-value>false</param-value>
         </init-param>
     </filter>
 
@@ -87,12 +88,10 @@
 
 <!-- Example filter mapping to apply the "Set Character Encoding" filter
      to *all* requests processed by this web application -->
-<!--
     <filter-mapping>
         <filter-name>Set Character Encoding</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
--->
 
 <!--
     <filter-mapping>
@@ -157,7 +156,7 @@
 
     <servlet-mapping>
         <servlet-name>ChatServlet</servlet-name>
-        <url-pattern>/jsp/chat/chat</url-pattern>
+        <url-pattern>/servlets/chat/chat</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>CompressionFilterTestServlet</servlet-name>
@@ -367,4 +366,25 @@
       <servlet-name>stock</servlet-name>
       <url-pattern>/async/stockticker</url-pattern>
     </servlet-mapping>
+
+    <!-- Non-blocking IO examples -->
+    <servlet>
+      <servlet-class>nonblocking.ByteCounter</servlet-class>
+      <servlet-name>bytecounter</servlet-name>
+      <async-supported>true</async-supported>
+    </servlet>
+    <servlet-mapping>
+      <servlet-name>bytecounter</servlet-name>
+      <url-pattern>/servlets/nonblocking/bytecounter</url-pattern>
+    </servlet-mapping>
+    <servlet>
+      <servlet-class>nonblocking.NumberWriter</servlet-class>
+      <servlet-name>numberwriter</servlet-name>
+      <async-supported>true</async-supported>
+    </servlet>
+    <servlet-mapping>
+      <servlet-name>numberwriter</servlet-name>
+      <url-pattern>/servlets/nonblocking/numberwriter</url-pattern>
+    </servlet-mapping>
+
 </web-app>

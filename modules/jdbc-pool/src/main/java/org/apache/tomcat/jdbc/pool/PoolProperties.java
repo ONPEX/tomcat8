@@ -57,6 +57,7 @@ public class PoolProperties implements PoolConfiguration, Cloneable, Serializabl
     private volatile int minIdle = initialSize;
     private volatile int maxWait = 30000;
     private volatile String validationQuery;
+    private volatile int validationQueryTimeout = -1;
     private volatile String validatorClassName;
     private volatile Validator validator;
     private volatile boolean testOnBorrow = false;
@@ -92,7 +93,7 @@ public class PoolProperties implements PoolConfiguration, Cloneable, Serializabl
     private volatile boolean useDisposableConnectionFacade = true;
     private volatile boolean logValidationErrors = false;
     private volatile boolean propagateInterruptState = false;
-
+    private volatile boolean ignoreExceptionOnPreLoad = false;
 
     /**
      * {@inheritDoc}
@@ -377,6 +378,22 @@ public class PoolProperties implements PoolConfiguration, Cloneable, Serializabl
     @Override
     public String getValidationQuery() {
         return validationQuery;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getValidationQueryTimeout() {
+        return validationQueryTimeout;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setValidationQueryTimeout(int validationQueryTimeout) {
+        this.validationQueryTimeout = validationQueryTimeout;
     }
 
     /**
@@ -754,6 +771,7 @@ public class PoolProperties implements PoolConfiguration, Cloneable, Serializabl
         }
 
         try {
+            @SuppressWarnings("unchecked")
             Class<Validator> validatorClass = (Class<Validator>)Class.forName(className);
             validator = validatorClass.newInstance();
         } catch (ClassNotFoundException e) {
@@ -1255,6 +1273,22 @@ public class PoolProperties implements PoolConfiguration, Cloneable, Serializabl
     @Override
     public void setPropagateInterruptState(boolean propagateInterruptState) {
         this.propagateInterruptState = propagateInterruptState;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isIgnoreExceptionOnPreLoad() {
+        return ignoreExceptionOnPreLoad;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setIgnoreExceptionOnPreLoad(boolean ignoreExceptionOnPreLoad) {
+        this.ignoreExceptionOnPreLoad = ignoreExceptionOnPreLoad;
     }
 
     @Override

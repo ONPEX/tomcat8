@@ -20,6 +20,7 @@ import java.io.IOException;
 
 import org.apache.coyote.InputBuffer;
 import org.apache.coyote.Request;
+import org.apache.juli.logging.Log;
 import org.apache.tomcat.util.buf.ByteChunk;
 import org.apache.tomcat.util.http.MimeHeaders;
 import org.apache.tomcat.util.net.AbstractEndpoint;
@@ -241,13 +242,9 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
     protected abstract boolean fill(boolean block) throws IOException;
 
     protected abstract void init(SocketWrapper<S> socketWrapper,
-            AbstractEndpoint endpoint) throws IOException;
+            AbstractEndpoint<S> endpoint) throws IOException;
 
-    /**
-     * Issues a non blocking read.
-     * @return int  Number of bytes read
-     */
-    protected abstract int nbRead() throws IOException;
+    protected abstract Log getLog();
 
 
     // --------------------------------------------------------- Public Methods
@@ -334,13 +331,29 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
      * correspond).
      */
     public int available() {
-        int result = (lastValid - pos);
-        if ((result == 0) && (lastActiveFilter >= 0)) {
-            for (int i = 0; (result == 0) && (i <= lastActiveFilter); i++) {
-                result = activeFilters[i].available();
+        int available = lastValid - pos;
+        if ((available == 0) && (lastActiveFilter >= 0)) {
+            for (int i = 0; (available == 0) && (i <= lastActiveFilter); i++) {
+                available = activeFilters[i].available();
             }
         }
-        return result;
+        if (available > 0) {
+            return available;
+        }
+
+        try {
+            fill(false);
+            available = lastValid - pos;
+        } catch (IOException ioe) {
+            if (getLog().isDebugEnabled()) {
+                getLog().debug(sm.getString("iib.available.readFail"), ioe);
+            }
+            // Not ideal. This will indicate that data is available which should
+            // trigger a read which in turn will trigger another IOException and
+            // that one can be thrown.
+            available = 1;
+        }
+        return available;
     }
 
 

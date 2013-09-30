@@ -16,31 +16,34 @@
  */
 package org.apache.tomcat.util.net;
 
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 public class SocketWrapper<E> {
 
-    protected volatile E socket;
+    private volatile E socket;
 
-    protected volatile long lastAccess = -1;
+    private volatile long lastAccess = -1;
     private long timeout = -1;
-    protected boolean error = false;
-    protected volatile int keepAliveLeft = 100;
+    private boolean error = false;
+    private volatile int keepAliveLeft = 100;
     private boolean comet = false;
-    protected boolean async = false;
-    protected boolean keptAlive = false;
+    private boolean async = false;
+    private boolean keptAlive = false;
     private boolean upgraded = false;
     /*
      * Following cached for speed / reduced GC
      */
-    private int localPort = -1;
-    private String localName = null;
     private String localAddr = null;
-    private int remotePort = -1;
-    private String remoteHost = null;
+    private String localName = null;
+    private int localPort = -1;
     private String remoteAddr = null;
+    private String remoteHost = null;
+    private int remotePort = -1;
     /*
      * Used if block/non-blocking is set at the socket level. The client is
      * responsible for the thread-safe use of this field via the locks provided.
@@ -58,13 +61,14 @@ public class SocketWrapper<E> {
      * writes.
      */
     private final Object writeThreadLock = new Object();
-    public Object getWriteThreadLock() { return writeThreadLock; }
+
+    private Set<DispatchType> dispatches = new LinkedHashSet<>();
 
     public SocketWrapper(E socket) {
         this.socket = socket;
         ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         this.blockingStatusReadLock = lock.readLock();
-        this.blockingStatusWriteLock =lock.writeLock();
+        this.blockingStatusWriteLock = lock.writeLock();
     }
 
     public E getSocket() {
@@ -107,5 +111,43 @@ public class SocketWrapper<E> {
     public Lock getBlockingStatusReadLock() { return blockingStatusReadLock; }
     public WriteLock getBlockingStatusWriteLock() {
         return blockingStatusWriteLock;
+    }
+    public Object getWriteThreadLock() { return writeThreadLock; }
+    public void addDispatch(DispatchType dispatchType) {
+        dispatches.add(dispatchType);
+    }
+    public boolean hasNextDispatch() {
+        return dispatches.size() > 0;
+    }
+    public DispatchType getNextDispatch() {
+        DispatchType result = null;
+        Iterator<DispatchType> iter = dispatches.iterator();
+        if (iter.hasNext()) {
+            result = iter.next();
+            iter.remove();
+        }
+        return result;
+    }
+    public void clearDispatches() {
+        dispatches.clear();
+    }
+
+    public void reset(E socket, long timeout) {
+        async = false;
+        blockingStatus = true;
+        comet = false;
+        dispatches.clear();
+        error = false;
+        keepAliveLeft = 100;
+        lastAccess = System.currentTimeMillis();
+        localAddr = null;
+        localName = null;
+        localPort = -1;
+        remoteAddr = null;
+        remoteHost = null;
+        remotePort = -1;
+        this.socket = socket;
+        this.timeout = timeout;
+        upgraded = false;
     }
 }

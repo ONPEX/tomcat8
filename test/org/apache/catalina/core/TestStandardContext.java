@@ -64,6 +64,7 @@ import org.apache.catalina.startup.TesterMapRealm;
 import org.apache.catalina.startup.TesterServlet;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
+import org.apache.jasper.servlet.JasperInitializer;
 import org.apache.tomcat.util.buf.ByteChunk;
 import org.apache.tomcat.util.descriptor.web.FilterDef;
 import org.apache.tomcat.util.descriptor.web.FilterMap;
@@ -671,9 +672,8 @@ public class TestStandardContext extends TomcatBaseTest {
         // Make sure non-multipart works properly
         client.doRequest("/regular", false, false);
 
-        assertEquals("Incorrect response for GET request",
-                     "parts=0",
-                     client.getResponseBody());
+        // Servlet attempts to read parts which will trigger an ISE
+        assertTrue(client.isResponse500());
 
         client.reset();
 
@@ -687,12 +687,11 @@ public class TestStandardContext extends TomcatBaseTest {
         client.reset();
 
         // Make casual multipart request to "regular" servlet w/o config
-        // We expect that no parts will be available
+        // We expect an error
         client.doRequest("/regular", false, true); // send multipart request
 
-        assertEquals("Incorrect response for non-configured casual multipart request",
-                     "parts=0", // multipart request should be ignored
-                     client.getResponseBody());
+        // Servlet attempts to read parts which will trigger an ISE
+        assertTrue(client.isResponse500());
 
         client.reset();
 
@@ -865,6 +864,7 @@ public class TestStandardContext extends TomcatBaseTest {
 
         File docBase = new File("test/webapp-3.0");
         Context ctx = tomcat.addContext("", docBase.getAbsolutePath());
+        ctx.addServletContainerInitializer(new JasperInitializer(), null);
 
         // Start the context
         tomcat.start();

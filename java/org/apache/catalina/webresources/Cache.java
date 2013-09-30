@@ -57,7 +57,9 @@ public class Cache {
 
     protected WebResource getResource(String path) {
 
-        // TODO Should some resources be excluded from caching?
+        if (noCache(path)) {
+            return root.getResourceInternal(path);
+        }
 
         CachedResource cacheEntry = resourceCache.get(path);
 
@@ -76,7 +78,7 @@ public class Cache {
                 // newCacheEntry was inserted into the cache - validate it
                 cacheEntry = newCacheEntry;
                 cacheEntry.validate();
-                if (newCacheEntry.getContentLength() > getMaxObjectSize()) {
+                if (newCacheEntry.getContentLength() > getMaxSizeBytes()) {
                     // Cache size has not been updated at this point
                     removeCacheEntry(path, false);
                     return newCacheEntry;
@@ -102,7 +104,7 @@ public class Cache {
                         // Unable to create sufficient space for this resource
                         // Remove it from the cache
                         removeCacheEntry(path, true);
-                        log.warn(sm.getString("cache.addFail"));
+                        log.warn(sm.getString("cache.addFail", path));
                     }
                 }
             } else {
@@ -135,6 +137,15 @@ public class Cache {
                     root.getContext().getName(),
                     Long.valueOf(newSize / 1024)));
         }
+    }
+
+    private boolean noCache(String path) {
+        // Don't cache resources used by the class loader (it has its own cache)
+        if (path.startsWith("/WEB-INF/classes") ||
+                path.startsWith("/WEB-INF/lib")) {
+            return true;
+        }
+        return false;
     }
 
     private long evict(long targetSize, Iterator<CachedResource> iter) {
@@ -184,6 +195,11 @@ public class Cache {
         return maxSize / 1024;
     }
 
+    public long getMaxSizeBytes() {
+        // Internally bytes, externally kilobytes
+        return maxSize;
+    }
+
     public void setMaxSize(long maxSize) {
         // Internally bytes, externally kilobytes
         this.maxSize = maxSize * 1024;
@@ -198,6 +214,10 @@ public class Cache {
     public long getMaxObjectSize() {
         // Internally bytes, externally kilobytes
         return maxObjectSize / 1024;
+    }
+
+    public void clear() {
+        resourceCache.clear();
     }
 
     private static class EvictionOrder implements Comparator<CachedResource> {

@@ -80,7 +80,7 @@ import org.apache.tomcat.util.http.fileupload.util.Streams;
  *   }
  * </pre>
  *
- * @version $Id: MultipartStream.java 1456916 2013-03-15 12:08:38Z markt $
+ * @version $Id: MultipartStream.java 1521060 2013-09-09 11:56:53Z markt $
  */
 public class MultipartStream {
 
@@ -281,7 +281,7 @@ public class MultipartStream {
      * @see #MultipartStream(InputStream, byte[],
      *     MultipartStream.ProgressNotifier)
      */
-    MultipartStream(InputStream input,
+    public MultipartStream(InputStream input,
             byte[] boundary,
             int bufSize,
             ProgressNotifier pNotifier) {

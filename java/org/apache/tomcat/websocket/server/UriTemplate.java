@@ -18,9 +18,11 @@ package org.apache.tomcat.websocket.server;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.websocket.DeploymentException;
 
@@ -48,15 +50,28 @@ public class UriTemplate {
         }
 
         StringBuilder normalized = new StringBuilder(path.length());
+        Set<String> paramNames = new HashSet<>();
 
-        String[] segments = path.split("/");
+        // Include empty segments.
+        String[] segments = path.split("/", -1);
         int paramCount = 0;
         int segmentCount = 0;
 
         for (int i = 0; i < segments.length; i++) {
             String segment = segments[i];
             if (segment.length() == 0) {
-                continue;
+                if (i == 0 || (i == segments.length - 1 && paramCount == 0)) {
+                    // Ignore the first empty segment as the path must always
+                    // start with '/'
+                    // Ending with a '/' is also OK for instances used for
+                    // matches but not for parameterised templates.
+                    continue;
+                } else {
+                    // As per EG discussion, all other empty segments are
+                    // invalid
+                    throw new IllegalArgumentException(sm.getString(
+                            "uriTemplate.emptySegment", path));
+                }
             }
             normalized.append('/');
             int index = -1;
@@ -66,6 +81,10 @@ public class UriTemplate {
                 normalized.append('{');
                 normalized.append(paramCount++);
                 normalized.append('}');
+                if (!paramNames.add(segment)) {
+                    throw new IllegalArgumentException(sm.getString(
+                            "uriTemplate.duplicateParameter", segment));
+                }
             } else {
                 if (segment.contains("{") || segment.contains("}")) {
                     throw new IllegalArgumentException(sm.getString(

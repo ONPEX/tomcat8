@@ -75,7 +75,7 @@ import org.apache.tomcat.util.res.StringManager;
 * @author Bip Thelin
 * @author Malcolm Edgar
 * @author Glenn L. Nielsen
-* @version $Id: HTMLManagerServlet.java 1456657 2013-03-14 20:34:32Z markt $
+* @version $Id: HTMLManagerServlet.java 1516710 2013-08-23 06:34:50Z violetagg $
 * @see ManagerServlet
 */
 
@@ -118,7 +118,8 @@ public final class HTMLManagerServlet extends ManagerServlet {
                       HttpServletResponse response)
         throws IOException, ServletException {
 
-        StringManager smClient = getStringManager(request);
+        StringManager smClient = StringManager.getManager(
+                Constants.Package, request.getLocales());
 
         // Identify the request parameters that we need
         // By obtaining the command from the pathInfo, per-command security can
@@ -179,7 +180,8 @@ public final class HTMLManagerServlet extends ManagerServlet {
                       HttpServletResponse response)
         throws IOException, ServletException {
 
-        StringManager smClient = getStringManager(request);
+        StringManager smClient = StringManager.getManager(
+                Constants.Package, request.getLocales());
 
         // Identify the request parameters that we need
         // By obtaining the command from the pathInfo, per-command security can
@@ -1305,6 +1307,8 @@ public final class HTMLManagerServlet extends ManagerServlet {
         "</tr>\n" +
         "</table>\n" +
         "</form>\n" +
+        "</td>\n" +
+        "</tr>\n" +
         "</table>\n" +
         "<br>\n" +
         "\n";

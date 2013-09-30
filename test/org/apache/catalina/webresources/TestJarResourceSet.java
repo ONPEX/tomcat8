@@ -18,6 +18,8 @@ package org.apache.catalina.webresources;
 
 import java.io.File;
 
+import org.junit.Test;
+
 import org.apache.catalina.WebResourceRoot;
 import org.apache.catalina.WebResourceSet;
 
@@ -28,7 +30,7 @@ public class TestJarResourceSet extends AbstractTestResourceSet {
         File f = new File("test/webresources/dir1.jar");
         TesterWebResourceRoot root = new TesterWebResourceRoot();
         WebResourceSet webResourceSet =
-                new JarResourceSet(root, f.getAbsolutePath(), "/", "/");
+                new JarResourceSet(root, "/", f.getAbsolutePath(), "/");
         root.setMainResources(webResourceSet);
         return root;
     }
@@ -41,5 +43,12 @@ public class TestJarResourceSet extends AbstractTestResourceSet {
     @Override
     public String getBaseDir() {
         return "test/webresources";
+    }
+
+    @Override
+    @Test
+    public void testNoArgConstructor() {
+        @SuppressWarnings("unused")
+        Object obj = new JarResourceSet();
     }
 }

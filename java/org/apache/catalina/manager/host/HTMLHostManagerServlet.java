@@ -56,7 +56,7 @@ import org.apache.tomcat.util.res.StringManager;
 * @author Malcolm Edgar
 * @author Glenn L. Nielsen
 * @author Peter Rossbach
-* @version $Id: HTMLHostManagerServlet.java 1361753 2012-07-15 18:53:13Z markt $
+* @version $Id: HTMLHostManagerServlet.java 1514291 2013-08-15 14:25:30Z markt $
 * @see org.apache.catalina.manager.ManagerServlet
 */
 
@@ -80,7 +80,8 @@ public final class HTMLHostManagerServlet extends HostManagerServlet {
                       HttpServletResponse response)
         throws IOException, ServletException {
 
-        StringManager smClient = getStringManager(request);
+        StringManager smClient = StringManager.getManager(
+                Constants.Package, request.getLocales());
 
         // Identify the request parameters that we need
         String command = request.getPathInfo();
@@ -120,7 +121,8 @@ public final class HTMLHostManagerServlet extends HostManagerServlet {
     public void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        StringManager smClient = getStringManager(request);
+        StringManager smClient = StringManager.getManager(
+                Constants.Package, request.getLocales());
 
         // Identify the request parameters that we need
         String command = request.getPathInfo();
