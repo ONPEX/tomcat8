@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-/* $Id: SessionExample.java 1337745 2012-05-13 00:15:35Z kkolinko $
+/* $Id: SessionExample.java 1511468 2013-08-07 20:07:15Z markt $
  *
  */
 
@@ -49,7 +49,7 @@ public class SessionExample extends HttpServlet {
                       HttpServletResponse response)
         throws IOException, ServletException
     {
-        response.setContentType("text/html");
+        response.setContentType("text/html;charset=UTF-8");
 
         PrintWriter out = response.getWriter();
         out.println("<html>");

@@ -23,6 +23,8 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.coyote.InputBuffer;
 import org.apache.coyote.Request;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.buf.ByteChunk;
 import org.apache.tomcat.util.buf.MessageBytes;
 import org.apache.tomcat.util.net.AbstractEndpoint;
@@ -40,8 +42,8 @@ import org.apache.tomcat.util.net.SocketWrapper;
  */
 public class InternalNioInputBuffer extends AbstractInputBuffer<NioChannel> {
 
-    private static final org.apache.juli.logging.Log log =
-        org.apache.juli.logging.LogFactory.getLog(InternalNioInputBuffer.class);
+    private static final Log log =
+            LogFactory.getLog(InternalNioInputBuffer.class);
 
     // -------------------------------------------------------------- Constants
 
@@ -156,35 +158,8 @@ public class InternalNioInputBuffer extends AbstractInputBuffer<NioChannel> {
     // --------------------------------------------------------- Public Methods
 
     @Override
-    public int available() {
-
-        int available = super.available();
-        if (available>0) {
-            return available;
-        }
-
-        available = Math.max(lastValid - pos, 0);
-        if (available>0) {
-            return available;
-        }
-        try {
-            available = nbRead();
-        }catch (IOException ioe) {
-            if (log.isDebugEnabled()) {
-                log.debug(sm.getString("iib.available.readFail"), ioe);
-            }
-            // Not ideal. This will indicate that data is available which should
-            // trigger a read which in turn will trigger another IOException and
-            // that one can be thrown.
-            available = 1;
-        }
-        return available;
-    }
-
-
-    @Override
-    public int nbRead() throws IOException {
-        return readSocket(true,false);
+    protected final Log getLog() {
+        return log;
     }
 
 
@@ -780,7 +755,7 @@ public class InternalNioInputBuffer extends AbstractInputBuffer<NioChannel> {
 
     @Override
     protected void init(SocketWrapper<NioChannel> socketWrapper,
-            AbstractEndpoint endpoint) throws IOException {
+            AbstractEndpoint<NioChannel> endpoint) throws IOException {
 
         socket = socketWrapper.getSocket();
         if (socket == null) {

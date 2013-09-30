@@ -55,7 +55,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  *
  * @author Remy Maucherat
  * @author Jean-Francois Arcand
- * @version $Id: ApplicationContextFacade.java 1460675 2013-03-25 14:20:35Z markt $
+ * @version $Id: ApplicationContextFacade.java 1511217 2013-08-07 09:16:31Z markt $
  */
 
 public class ApplicationContextFacade implements ServletContext {
@@ -448,8 +448,9 @@ public class ApplicationContextFacade implements ServletContext {
     public FilterRegistration.Dynamic addFilter(String filterName,
             Filter filter) {
         if (SecurityUtil.isPackageProtectionEnabled()) {
-            return (FilterRegistration.Dynamic) doPrivileged(
-                    "addFilter", new Class[]{String.class, Filter.class}, new Object[]{filterName, filter});
+            return (FilterRegistration.Dynamic) doPrivileged("addFilter",
+                    new Class[]{String.class, Filter.class},
+                    new Object[]{filterName, filter});
         } else {
             return context.addFilter(filterName, filter);
         }
@@ -460,8 +461,9 @@ public class ApplicationContextFacade implements ServletContext {
     public FilterRegistration.Dynamic addFilter(String filterName,
             Class<? extends Filter> filterClass) {
         if (SecurityUtil.isPackageProtectionEnabled()) {
-            return (FilterRegistration.Dynamic) doPrivileged(
-                    "addFilter", new Object[]{filterName, filterClass.getName()});
+            return (FilterRegistration.Dynamic) doPrivileged("addFilter",
+                    new Class[]{String.class, Class.class},
+                    new Object[]{filterName, filterClass});
         } else {
             return context.addFilter(filterName, filterClass);
         }
@@ -515,8 +517,9 @@ public class ApplicationContextFacade implements ServletContext {
     public ServletRegistration.Dynamic addServlet(String servletName,
             Servlet servlet) {
         if (SecurityUtil.isPackageProtectionEnabled()) {
-            return (ServletRegistration.Dynamic) doPrivileged(
-                    "addServlet", new Class[]{String.class, Servlet.class}, new Object[]{servletName, servlet});
+            return (ServletRegistration.Dynamic) doPrivileged("addServlet",
+                    new Class[]{String.class, Servlet.class},
+                    new Object[]{servletName, servlet});
         } else {
             return context.addServlet(servletName, servlet);
         }
@@ -527,8 +530,9 @@ public class ApplicationContextFacade implements ServletContext {
     public ServletRegistration.Dynamic addServlet(String servletName,
             Class<? extends Servlet> servletClass) {
         if (SecurityUtil.isPackageProtectionEnabled()) {
-            return (ServletRegistration.Dynamic) doPrivileged(
-                    "addServlet", new Object[]{servletName, servletClass.getName()});
+            return (ServletRegistration.Dynamic) doPrivileged("addServlet",
+                    new Class[]{String.class, Class.class},
+                    new Object[]{servletName, servletClass});
         } else {
             return context.addServlet(servletName, servletClass);
         }
@@ -628,7 +632,8 @@ public class ApplicationContextFacade implements ServletContext {
     public void addListener(Class<? extends EventListener> listenerClass) {
         if (SecurityUtil.isPackageProtectionEnabled()) {
             doPrivileged("addListener",
-                    new Object[]{listenerClass.getName()});
+                    new Class[]{Class.class},
+                    new Object[]{listenerClass});
         } else {
             context.addListener(listenerClass);
         }
@@ -650,7 +655,8 @@ public class ApplicationContextFacade implements ServletContext {
     public <T extends EventListener> void addListener(T t) {
         if (SecurityUtil.isPackageProtectionEnabled()) {
             doPrivileged("addListener",
-                    new Object[]{t.getClass().getName()});
+                    new Class[]{EventListener.class},
+                    new Object[]{t});
         } else {
             context.addListener(t);
         }
@@ -681,9 +687,7 @@ public class ApplicationContextFacade implements ServletContext {
     @Override
     public void declareRoles(String... roleNames) {
         if (SecurityUtil.isPackageProtectionEnabled()) {
-//FIXME
-            doPrivileged("declareRoles",
-                    new Object[]{roleNames});
+            doPrivileged("declareRoles", new Object[]{roleNames});
         } else {
             context.declareRoles(roleNames);
         }

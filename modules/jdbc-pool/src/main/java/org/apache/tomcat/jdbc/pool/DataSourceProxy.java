@@ -458,6 +458,15 @@ public class DataSourceProxy implements PoolConfiguration {
      */
 
     @Override
+    public void setValidationQueryTimeout(int validationQueryTimeout) {
+        this.poolProperties.setValidationQueryTimeout(validationQueryTimeout);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+
+    @Override
     public void setJdbcInterceptors(String interceptors) {
         this.getPoolProperties().setJdbcInterceptors(interceptors);
     }
@@ -930,6 +939,15 @@ public class DataSourceProxy implements PoolConfiguration {
      */
 
     @Override
+    public int getValidationQueryTimeout() {
+        return getPoolProperties().getValidationQueryTimeout();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+
+    @Override
     public String getValidatorClassName() {
         return getPoolProperties().getValidatorClassName();
     }
@@ -1296,6 +1314,22 @@ public class DataSourceProxy implements PoolConfiguration {
     @Override
     public void setPropagateInterruptState(boolean propagateInterruptState) {
         getPoolProperties().setPropagateInterruptState(propagateInterruptState);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isIgnoreExceptionOnPreLoad() {
+        return getPoolProperties().isIgnoreExceptionOnPreLoad();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setIgnoreExceptionOnPreLoad(boolean ignoreExceptionOnPreLoad) {
+        getPoolProperties().setIgnoreExceptionOnPreLoad(ignoreExceptionOnPreLoad);
     }
 
     public void purge()  {

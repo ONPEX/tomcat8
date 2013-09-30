@@ -466,7 +466,7 @@ public class InternalInputBuffer extends AbstractInputBuffer<Socket> {
 
     @Override
     protected void init(SocketWrapper<Socket> socketWrapper,
-            AbstractEndpoint endpoint) throws IOException {
+            AbstractEndpoint<Socket> endpoint) throws IOException {
         inputStream = socketWrapper.getSocket().getInputStream();
     }
 
@@ -553,8 +553,8 @@ public class InternalInputBuffer extends AbstractInputBuffer<Socket> {
 
 
     @Override
-    protected int nbRead() throws IOException {
-        throw new IllegalStateException("This method is unused for BIO");
+    protected final Log getLog() {
+        return log;
     }
 
 

@@ -141,7 +141,7 @@ public class TestUriTemplate {
         Map<String,String> result = t.match(new UriTemplate("/a"));
 
         Assert.assertNull(result);
-   }
+    }
 
 
     @Test
@@ -150,5 +150,64 @@ public class TestUriTemplate {
         Map<String,String> result = t.match(new UriTemplate("/a/b/c"));
 
         Assert.assertNull(result);
-   }
+    }
+
+
+    @Test(expected=java.lang.IllegalArgumentException.class)
+    public void testDuplicate01() throws Exception {
+        @SuppressWarnings("unused")
+        UriTemplate t = new UriTemplate("/{var}/{var}");
+    }
+
+
+    @Test
+    public void testDuplicate02() throws Exception {
+        UriTemplate t = new UriTemplate("/{a}/{b}");
+        Map<String,String> result = t.match(new UriTemplate("/x/x"));
+
+        Assert.assertEquals(2, result.size());
+        Assert.assertEquals("x", result.get("a"));
+        Assert.assertEquals("x", result.get("b"));
+    }
+
+
+    public void testEgMailingList01() throws Exception {
+        UriTemplate t = new UriTemplate("/a/{var}");
+        Map<String,String> result = t.match(new UriTemplate("/a/b/"));
+
+        Assert.assertNull(result);
+    }
+
+
+    public void testEgMailingList02() throws Exception {
+        UriTemplate t = new UriTemplate("/a/{var}");
+        Map<String,String> result = t.match(new UriTemplate("/a/"));
+
+        Assert.assertNull(result);
+    }
+
+
+    @Test
+    public void testEgMailingList03() throws Exception {
+        UriTemplate t = new UriTemplate("/a/{var}");
+        Map<String,String> result = t.match(new UriTemplate("/a"));
+
+        Assert.assertNull(result);
+    }
+
+
+    @Test(expected=java.lang.IllegalArgumentException.class)
+    public void testEgMailingList04() throws Exception {
+        UriTemplate t = new UriTemplate("/a/{var1}/{var2}");
+        @SuppressWarnings("unused")
+        Map<String,String> result = t.match(new UriTemplate("/a//c"));
+    }
+
+
+    @Test(expected=java.lang.IllegalArgumentException.class)
+    public void testEgMailingList05() throws Exception {
+        UriTemplate t = new UriTemplate("/a/{var}/");
+        @SuppressWarnings("unused")
+        Map<String,String> result = t.match(new UriTemplate("/a/b/"));
+    }
 }

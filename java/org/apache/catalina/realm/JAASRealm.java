@@ -124,7 +124,7 @@ org.foobar.auth.DatabaseLoginModule REQUIRED
 *
 * @author Craig R. McClanahan
 * @author Yoav Shapira
- * @version $Id: JAASRealm.java 1498498 2013-07-01 14:57:05Z markt $
+ * @version $Id: JAASRealm.java 1511907 2013-08-08 18:07:43Z markt $
  */
 
 public class JAASRealm extends RealmBase {
@@ -629,6 +629,7 @@ public class JAASRealm extends RealmBase {
                 URL resource = Thread.currentThread().getContextClassLoader().
                         getResource(configFile);
                 URI uri = resource.toURI();
+                @SuppressWarnings("unchecked")
                 Class<Configuration> sunConfigFile = (Class<Configuration>)
                         Class.forName("com.sun.security.auth.login.ConfigFile");
                 Constructor<Configuration> constructor =

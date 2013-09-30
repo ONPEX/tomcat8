@@ -55,6 +55,8 @@ import javax.net.ssl.SSLException;
 import javax.net.ssl.TrustManagerFactory;
 import javax.websocket.ClientEndpoint;
 import javax.websocket.ClientEndpointConfig;
+import javax.websocket.CloseReason;
+import javax.websocket.CloseReason.CloseCodes;
 import javax.websocket.DeploymentException;
 import javax.websocket.Endpoint;
 import javax.websocket.Extension;
@@ -331,7 +333,7 @@ public class WsWebSocketContainer
 
         WsSession wsSession = new WsSession(endpoint, wsRemoteEndpointClient,
                 this, null, null, null, null, null, subProtocol,
-                Collections.EMPTY_MAP, false,
+                Collections.<String, String> emptyMap(), false,
                 clientEndpointConfiguration);
         endpoint.onOpen(wsSession, clientEndpointConfiguration);
         registerSession(endpoint, wsSession);
@@ -715,7 +717,7 @@ public class WsWebSocketContainer
      */
     @Override
     public Set<Extension> getInstalledExtensions() {
-        return Collections.EMPTY_SET;
+        return Collections.emptySet();
     }
 
 
@@ -740,6 +742,27 @@ public class WsWebSocketContainer
         this.defaultAsyncTimeout = timeout;
     }
 
+
+    /**
+     * Cleans up the resources still in use by WebSocket sessions created from
+     * this container. This includes closing sessions and cancelling
+     * {@link Future}s associated with blocking read/writes.
+     */
+    public void destroy() {
+        CloseReason cr = new CloseReason(
+                CloseCodes.GOING_AWAY, sm.getString("wsWebSocketContainer.shutdown"));
+
+        for (WsSession session : sessions.keySet()) {
+            try {
+                session.close(cr);
+            } catch (IOException ioe) {
+                log.debug(sm.getString(
+                        "wsWebSocketContainer.sessionCloseFail", session.getId()), ioe);
+            }
+        }
+    }
+
+
     // ----------------------------------------------- BackgroundProcess methods
 
     @Override
@@ -751,7 +774,7 @@ public class WsWebSocketContainer
             backgroundProcessCount = 0;
 
             for (WsSession wsSession : sessions.keySet()) {
-                wsSession.expire();
+                wsSession.checkExpiration();
             }
         }
 

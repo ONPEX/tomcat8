@@ -42,7 +42,7 @@ import org.apache.tomcat.util.res.StringManager;
  * classes (<code>/WEB-INF/classes</code> and <code>/WEB-INF/lib</code>).</p>
  *
  * @author Fabien Carrion
- * @version $Id: WebAnnotationSet.java 1500964 2013-07-08 21:24:05Z markt $
+ * @version $Id: WebAnnotationSet.java 1521027 2013-09-09 10:26:16Z markt $
  */
 
 public class WebAnnotationSet {
@@ -369,8 +369,7 @@ public class WebAnnotationSet {
             if (annotation.authenticationType()
                     == Resource.AuthenticationType.CONTAINER) {
                 resource.setAuth("Container");
-            }
-            else if (annotation.authenticationType()
+            } else if (annotation.authenticationType()
                     == Resource.AuthenticationType.APPLICATION) {
                 resource.setAuth("Application");
             }

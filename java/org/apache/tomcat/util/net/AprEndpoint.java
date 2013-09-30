@@ -63,7 +63,7 @@ import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
  * @author Mladen Turk
  * @author Remy Maucherat
  */
-public class AprEndpoint extends AbstractEndpoint {
+public class AprEndpoint extends AbstractEndpoint<Long> {
 
 
     // -------------------------------------------------------------- Constants
@@ -795,7 +795,8 @@ public class AprEndpoint extends AbstractEndpoint {
             // During shutdown, executor may be null - avoid NPE
             if (running) {
                 if (log.isDebugEnabled()) {
-                    log.debug("processSocketWithOptions(long): " + socket);
+                    log.debug(sm.getString("endpoint.debug.socket",
+                            Long.valueOf(socket)));
                 }
                 AprSocketWrapper wrapper =
                         new AprSocketWrapper(Long.valueOf(socket));
@@ -849,7 +850,8 @@ public class AprEndpoint extends AbstractEndpoint {
     }
 
 
-    public boolean processSocketAsync(SocketWrapper<Long> socket,
+    @Override
+    public void processSocketAsync(SocketWrapper<Long> socket,
             SocketStatus status) {
         try {
             synchronized (socket) {
@@ -870,7 +872,7 @@ public class AprEndpoint extends AbstractEndpoint {
                         if (executor == null) {
                             log.warn(sm.getString("endpoint.warn.noExector",
                                     socket, status));
-                            return false;
+                            return;
                         } else {
                             executor.execute(proc);
                         }
@@ -886,15 +888,12 @@ public class AprEndpoint extends AbstractEndpoint {
             }
         } catch (RejectedExecutionException x) {
             log.warn("Socket processing request was rejected for: "+socket, x);
-            return false;
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
             // This means we got an OOM or similar creating a thread, or that
             // the pool and its queue are full
             log.error(sm.getString("endpoint.process.fail"), t);
-            return false;
         }
-        return true;
     }
 
     private void destroySocket(long socket) {
@@ -906,13 +905,18 @@ public class AprEndpoint extends AbstractEndpoint {
         // countDownConnection(). Once the connector is stopped, the latch is
         // removed so it does not matter that destroySocket() does not call
         // countDownConnection() in that case
+        Poller poller = this.poller;
+        if (poller != null) {
+            poller.removeFromPoller(socket);
+        }
         connections.remove(Long.valueOf(socket));
         destroySocket(socket, running);
     }
 
     private void destroySocket(long socket, boolean doIt) {
         if (log.isDebugEnabled()) {
-            String msg = "destroySocket(long,boolean): " + socket + " " + doIt;
+            String msg = sm.getString("endpoint.debug.destroySocket",
+                    Long.valueOf(socket), Boolean.valueOf(doIt));
             if (log.isTraceEnabled()) {
                 log.trace(msg, new Exception());
             } else {
@@ -1048,7 +1052,7 @@ public class AprEndpoint extends AbstractEndpoint {
                     waitingRequests.iterator();
                 while (sockets.hasNext()) {
                     SocketWrapper<Long> socket = sockets.next();
-                    if (socket.async) {
+                    if (socket.isAsync()) {
                         long access = socket.getLastAccess();
                         if (socket.getTimeout() > 0 &&
                                 (now-access)>socket.getTimeout()) {
@@ -1430,8 +1434,9 @@ public class AprEndpoint extends AbstractEndpoint {
 
         private void add(long socket, int timeout, int flags) {
             if (log.isDebugEnabled()) {
-                String msg = "Poller.add(long,int,int) " + socket + " " +
-                        timeout + " " + flags;
+                String msg = sm.getString("endpoint.debug.pollerAdd",
+                        Long.valueOf(socket), Integer.valueOf(timeout),
+                        Integer.valueOf(flags));
                 if (log.isTraceEnabled()) {
                     log.trace(msg, new Exception());
                 } else {
@@ -1516,7 +1521,8 @@ public class AprEndpoint extends AbstractEndpoint {
             long socket = timeouts.check(date);
             while (socket != 0) {
                 if (log.isDebugEnabled()) {
-                    log.debug("Poller maintain() timing out socket: " + socket);
+                    log.debug(sm.getString("endpoint.debug.socketTimeout",
+                            Long.valueOf(socket)));
                 }
                 removeFromPoller(socket);
                 boolean comet = connections.get(
@@ -1561,7 +1567,7 @@ public class AprEndpoint extends AbstractEndpoint {
             while (pollerRunning) {
 
                 // Loop if endpoint is paused
-                while (paused) {
+                while (pollerRunning && paused) {
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
@@ -1587,6 +1593,11 @@ public class AprEndpoint extends AbstractEndpoint {
                     }
                 }
 
+                // Don't add or poll if the poller has been stopped
+                if (!pollerRunning) {
+                    break;
+                }
+
                 try {
                     // Add sockets which are waiting to the poller
                     if (addList.size() > 0) {
@@ -1599,8 +1610,9 @@ public class AprEndpoint extends AbstractEndpoint {
                         SocketInfo info = localAddList.get();
                         while (info != null) {
                             if (log.isDebugEnabled()) {
-                                log.debug("Poller run() adding socket: " +
-                                        info.socket);
+                                log.debug(sm.getString(
+                                        "endpoint.debug.pollerAddDo",
+                                        Long.valueOf(info.socket)));
                             }
                             timeouts.remove(info.socket);
                             AprSocketWrapper wrapper = connections.get(
@@ -1657,6 +1669,12 @@ public class AprEndpoint extends AbstractEndpoint {
                                 timeouts.remove(desc[n*2+1]);
                                 AprSocketWrapper wrapper = connections.get(
                                         Long.valueOf(desc[n*2+1]));
+                                if (getLog().isDebugEnabled()) {
+                                    log.debug(sm.getString(
+                                            "endpoint.debug.pollerProcess",
+                                            Long.valueOf(desc[n*2+1]),
+                                            Long.valueOf(desc[n*2])));
+                                }
                                 wrapper.pollerFlags = wrapper.pollerFlags & ~((int) desc[n*2]);
                                 // Check for failed sockets and hand this socket off to a worker
                                 if (wrapper.isComet()) {
@@ -1700,20 +1718,37 @@ public class AprEndpoint extends AbstractEndpoint {
                                     if (wrapper.isAsync()) {
                                         // Must be using non-blocking IO for the socket to be in the
                                         // poller during async processing. Need to trigger error
-                                        // handling. Poller will return error codes plus the flags it
-                                        // was waiting for. We could return ASYNC_[WRITE|READ]_ERROR
-                                        // error here but if we do, there will be no exception
-                                        // associated with the error. By signalling read/write is
-                                        // possible, a read/write will be attempted, fail and that
-                                        // will trigger an exception
+                                        // handling. Poller may return error codes plus the flags it
+                                        // was waiting for or it may just return an error code. We
+                                        // could return ASYNC_[WRITE|READ]_ERROR here but if we do,
+                                        // there will be no exception associated with the error in
+                                        // application code. By signalling read/write is possible, a
+                                        // read/write will be attempted, fail and that will trigger
+                                        // an exception the application will see.
+                                        // Check the return flags first, followed by what the socket
+                                        // was registered for
                                         if ((desc[n*2] & Poll.APR_POLLIN) == Poll.APR_POLLIN) {
-                                            // Must be doing a non-blocking read
+                                            // Error probably occurred during a non-blocking read
                                             if (!processSocket(desc[n*2+1], SocketStatus.OPEN_READ)) {
                                                 // Close socket and clear pool
                                                 destroySocket(desc[n*2+1]);
                                             }
                                         } else if ((desc[n*2] & Poll.APR_POLLOUT) == Poll.APR_POLLOUT) {
-                                            // Must be doing an non-blocking write write
+                                            // Error probably occurred during a non-blocking write
+                                            if (!processSocket(desc[n*2+1], SocketStatus.OPEN_WRITE)) {
+                                                // Close socket and clear pool
+                                                destroySocket(desc[n*2+1]);
+                                            }
+                                        } else if ((wrapper.pollerFlags & Poll.APR_POLLIN) == Poll.APR_POLLIN) {
+                                            // Can't tell what was happening when the error occurred but the
+                                            // socket is registered for non-blocking read so use that
+                                            if (!processSocket(desc[n*2+1], SocketStatus.OPEN_READ)) {
+                                                // Close socket and clear pool
+                                                destroySocket(desc[n*2+1]);
+                                            }
+                                        } else if ((wrapper.pollerFlags & Poll.APR_POLLOUT) == Poll.APR_POLLOUT) {
+                                            // Can't tell what was happening when the error occurred but the
+                                            // socket is registered for non-blocking write so use that
                                             if (!processSocket(desc[n*2+1], SocketStatus.OPEN_WRITE)) {
                                                 // Close socket and clear pool
                                                 destroySocket(desc[n*2+1]);
@@ -1880,6 +1915,7 @@ public class AprEndpoint extends AbstractEndpoint {
             // in the poller can cause problems
             try {
                 synchronized (this) {
+                    this.notify();
                     this.wait(pollTime / 1000);
                 }
             } catch (InterruptedException e) {
@@ -1984,7 +2020,7 @@ public class AprEndpoint extends AbstractEndpoint {
             while (sendfileRunning) {
 
                 // Loop if endpoint is paused
-                while (paused) {
+                while (sendfileRunning && paused) {
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
@@ -1992,7 +2028,7 @@ public class AprEndpoint extends AbstractEndpoint {
                     }
                 }
                 // Loop if poller is empty
-                while (sendfileCount < 1 && addS.size() < 1) {
+                while (sendfileRunning && sendfileCount < 1 && addS.size() < 1) {
                     // Reset maintain time.
                     maintainTime = 0;
                     try {
@@ -2002,6 +2038,11 @@ public class AprEndpoint extends AbstractEndpoint {
                     } catch (InterruptedException e) {
                         // Ignore
                     }
+                }
+
+                // Don't add or poll if the poller has been stopped
+                if (!sendfileRunning) {
+                    break;
                 }
 
                 try {
@@ -2190,7 +2231,7 @@ public class AprEndpoint extends AbstractEndpoint {
                         socket = null;
                     } else if (state == Handler.SocketState.LONG) {
                         socket.access();
-                        if (socket.async) {
+                        if (socket.isAsync()) {
                             waitingRequests.add(socket);
                         }
                     }
@@ -2249,10 +2290,10 @@ public class AprEndpoint extends AbstractEndpoint {
             if (state == Handler.SocketState.CLOSED) {
                 // Close socket and pool
                 destroySocket(socket.getSocket().longValue());
-                socket.socket = null;
+                socket.reset(null, 1);
             } else if (state == Handler.SocketState.LONG) {
                 socket.access();
-                if (socket.async) {
+                if (socket.isAsync()) {
                     waitingRequests.add(socket);
                 }
             } else if (state == Handler.SocketState.ASYNC_END) {
@@ -2272,22 +2313,6 @@ public class AprEndpoint extends AbstractEndpoint {
 
         public AprSocketWrapper(Long socket) {
             super(socket);
-        }
-    }
-
-
-    private static class PrivilegedSetTccl implements PrivilegedAction<Void> {
-
-        private ClassLoader cl;
-
-        PrivilegedSetTccl(ClassLoader cl) {
-            this.cl = cl;
-        }
-
-        @Override
-        public Void run() {
-            Thread.currentThread().setContextClassLoader(cl);
-            return null;
         }
     }
 }

@@ -24,12 +24,10 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.servlet.ServletContext;
 
@@ -74,14 +72,17 @@ public class WebappServiceLoader<T> {
      * @return an unmodifiable collection of service providers
      * @throws IOException if there was a problem loading any service
      */
-    public Collection<T> load(Class<T> serviceType) throws IOException {
+    public List<T> load(Class<T> serviceType) throws IOException {
         String configFile = SERVICES + serviceType.getName();
 
-        Set<String> servicesFound = new HashSet<>();
+        LinkedHashSet<String> applicationServicesFound = new LinkedHashSet<>();
+        LinkedHashSet<String> containerServicesFound = new LinkedHashSet<>();
+
         ClassLoader loader = context.getClassLoader();
 
         // if the ServletContext has ORDERED_LIBS, then use that to specify the
         // set of JARs from WEB-INF/lib that should be used for loading services
+        @SuppressWarnings("unchecked")
         List<String> orderedLibs =
                 (List<String>) context.getAttribute(ServletContext.ORDERED_LIBS);
         if (orderedLibs != null) {
@@ -101,7 +102,7 @@ public class WebappServiceLoader<T> {
                     url = new URL("jar:" + base + "!/" + configFile);
                 }
                 try {
-                    parseConfigFile(servicesFound, url);
+                    parseConfigFile(applicationServicesFound, url);
                 } catch (FileNotFoundException e) {
                     // no provider file found, this is OK
                 }
@@ -118,17 +119,21 @@ public class WebappServiceLoader<T> {
             resources = loader.getResources(configFile);
         }
         while (resources.hasMoreElements()) {
-            parseConfigFile(servicesFound, resources.nextElement());
+            parseConfigFile(containerServicesFound, resources.nextElement());
         }
+
+        // Add the application services after the container services to ensure
+        // that the container services are loaded first
+        containerServicesFound.addAll(applicationServicesFound);
 
         // load the discovered services
-        if (servicesFound.isEmpty()) {
+        if (containerServicesFound.isEmpty()) {
             return Collections.emptyList();
         }
-        return loadServices(serviceType, servicesFound);
+        return loadServices(serviceType, containerServicesFound);
     }
 
-    private void parseConfigFile(Set<String> servicesFound, URL url)
+    void parseConfigFile(LinkedHashSet<String> servicesFound, URL url)
             throws IOException {
         try (InputStream is = url.openStream()) {
             InputStreamReader in =
@@ -144,16 +149,12 @@ public class WebappServiceLoader<T> {
                 if (line.length() == 0) {
                     continue;
                 }
-                if (servicesFound.contains(line)) {
-                    continue;
-                }
                 servicesFound.add(line);
             }
         }
     }
 
-    private Collection<T> loadServices(Class<T> serviceType,
-                                       Set<String> servicesFound)
+    List<T> loadServices(Class<T> serviceType, LinkedHashSet<String> servicesFound)
             throws IOException {
         ClassLoader loader = context.getClassLoader();
         List<T> services = new ArrayList<>(servicesFound.size());
@@ -166,6 +167,6 @@ public class WebappServiceLoader<T> {
                 throw new IOException(e);
             }
         }
-        return Collections.unmodifiableCollection(services);
+        return Collections.unmodifiableList(services);
     }
 }

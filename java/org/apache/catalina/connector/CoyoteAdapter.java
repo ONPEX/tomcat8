@@ -57,7 +57,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: CoyoteAdapter.java 1492397 2013-06-12 19:49:56Z markt $
+ * @version $Id: CoyoteAdapter.java 1519711 2013-09-03 14:59:17Z markt $
  */
 public class CoyoteAdapter implements Adapter {
 
@@ -305,7 +305,10 @@ public class CoyoteAdapter implements Adapter {
                     asyncConImpl.setErrorState(null, false);
                 }
             } else if (status==SocketStatus.ASYNC_READ_ERROR) {
-                success = true;
+                // A async read error is an IO error which means the socket
+                // needs to be closed so set success to false to trigger a
+                // close
+                success = false;
                 Throwable t = (Throwable)req.getAttribute(
                         RequestDispatcher.ERROR_EXCEPTION);
                 req.getAttributes().remove(RequestDispatcher.ERROR_EXCEPTION);
@@ -325,7 +328,10 @@ public class CoyoteAdapter implements Adapter {
                     asyncConImpl.setErrorState(t, true);
                 }
             } else if (status==SocketStatus.ASYNC_WRITE_ERROR) {
-                success = true;
+                // A async write error is an IO error which means the socket
+                // needs to be closed so set success to false to trigger a
+                // close
+                success = false;
                 Throwable t = (Throwable)req.getAttribute(
                         RequestDispatcher.ERROR_EXCEPTION);
                 req.getAttributes().remove(RequestDispatcher.ERROR_EXCEPTION);
@@ -357,6 +363,10 @@ public class CoyoteAdapter implements Adapter {
                     try {
                         Thread.currentThread().setContextClassLoader(newCL);
                         res.onWritePossible();
+                    } catch (Throwable t) {
+                        ExceptionUtils.handleThrowable(t);
+                        res.getWriteListener().onError(t);
+                        throw t;
                     } finally {
                         Thread.currentThread().setContextClassLoader(oldCL);
                     }
@@ -373,6 +383,10 @@ public class CoyoteAdapter implements Adapter {
                         if (request.isFinished()) {
                             req.getReadListener().onAllDataRead();
                         }
+                    } catch (Throwable t) {
+                        ExceptionUtils.handleThrowable(t);
+                        req.getReadListener().onError(t);
+                        throw t;
                     } finally {
                         Thread.currentThread().setContextClassLoader(oldCL);
                     }
@@ -411,7 +425,6 @@ public class CoyoteAdapter implements Adapter {
             if (!request.isAsync() && !comet) {
                 request.finishRequest();
                 response.finishResponse();
-                req.action(ActionCode.POST_REQUEST , null);
                 request.getMappingData().context.logAccess(
                         request, response,
                         System.currentTimeMillis() - req.getStartTime(),
@@ -426,6 +439,14 @@ public class CoyoteAdapter implements Adapter {
             success = false;
             log.error(sm.getString("coyoteAdapter.asyncDispatch"), t);
         } finally {
+            if (!success) {
+                res.setStatus(500);
+                long time = 0;
+                if (req.getStartTime() != -1) {
+                    time = System.currentTimeMillis() - req.getStartTime();
+                }
+                log(req, res, time);
+            }
             req.getRequestProcessor().setWorkerThreadName(null);
             // Recycle the wrapper request and response
             if (!success || (!comet && !request.isAsync())) {
@@ -516,8 +537,7 @@ public class CoyoteAdapter implements Adapter {
             AsyncContextImpl asyncConImpl = (AsyncContextImpl)request.getAsyncContext();
             if (asyncConImpl != null) {
                 async = true;
-                ReadListener readListener =
-                        request.getCoyoteRequest().getReadListener();
+                ReadListener readListener = req.getReadListener();
                 if (readListener != null) {
                     // Possible the all data may have been read during service()
                     // method so this needs to be checked here
@@ -548,7 +568,6 @@ public class CoyoteAdapter implements Adapter {
                             System.currentTimeMillis() - req.getStartTime(),
                             false);
                 }
-                req.action(ActionCode.POST_REQUEST , null);
             }
 
         } catch (IOException e) {

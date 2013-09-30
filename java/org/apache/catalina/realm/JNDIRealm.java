@@ -171,7 +171,7 @@ import org.ietf.jgss.GSSCredential;
  *
  * @author John Holman
  * @author Craig R. McClanahan
- * @version $Id: JNDIRealm.java 1508214 2013-07-29 22:17:59Z markt $
+ * @version $Id: JNDIRealm.java 1518210 2013-08-28 14:02:50Z markt $
  */
 
 public class JNDIRealm extends RealmBase {
@@ -1028,7 +1028,7 @@ public class JNDIRealm extends RealmBase {
                    with broken SSL
                 */
                 // log the exception so we know it's there.
-                containerLog.warn(sm.getString("jndiRealm.exception"), e);
+                containerLog.info(sm.getString("jndiRealm.exception.retry"), e);
 
                 // close the connection so we know it will be reopened.
                 if (context != null)
@@ -1043,7 +1043,7 @@ public class JNDIRealm extends RealmBase {
             } catch (CommunicationException e) {
 
                 // log the exception so we know it's there.
-                containerLog.warn(sm.getString("jndiRealm.exception"), e);
+                containerLog.info(sm.getString("jndiRealm.exception.retry"), e);
 
                 // close the connection so we know it will be reopened.
                 if (context != null)
@@ -1058,7 +1058,7 @@ public class JNDIRealm extends RealmBase {
             } catch (ServiceUnavailableException e) {
 
                 // log the exception so we know it's there.
-                containerLog.warn(sm.getString("jndiRealm.exception"), e);
+                containerLog.info(sm.getString("jndiRealm.exception.retry"), e);
 
                 // close the connection so we know it will be reopened.
                 if (context != null)
@@ -1987,7 +1987,7 @@ public class JNDIRealm extends RealmBase {
             } catch (CommunicationException e) {
 
                 // log the exception so we know it's there.
-                containerLog.warn(sm.getString("jndiRealm.exception"), e);
+                containerLog.info(sm.getString("jndiRealm.exception.retry"), e);
 
                 // close the connection so we know it will be reopened.
                 if (context != null)
@@ -2002,7 +2002,7 @@ public class JNDIRealm extends RealmBase {
             } catch (ServiceUnavailableException e) {
 
                 // log the exception so we know it's there.
-                containerLog.warn(sm.getString("jndiRealm.exception"), e);
+                containerLog.info(sm.getString("jndiRealm.exception.retry"), e);
 
                 // close the connection so we know it will be reopened.
                 if (context != null)
@@ -2050,9 +2050,12 @@ public class JNDIRealm extends RealmBase {
 
         User user = null;
         List<String> roles = null;
+        Hashtable<?, ?> preservedEnvironment = null;
 
         try {
             if (gssCredential != null && isUseDelegatedCredential()) {
+                // Preserve the current context environment parameters
+                preservedEnvironment = context.getEnvironment();
                 // Set up context
                 context.addToEnvironment(
                         Context.SECURITY_AUTHENTICATION, "GSSAPI");
@@ -2068,24 +2071,12 @@ public class JNDIRealm extends RealmBase {
                 roles = getRoles(context, user);
             }
         } finally {
-            try {
-                context.removeFromEnvironment(
-                        Context.SECURITY_AUTHENTICATION);
-            } catch (NamingException e) {
-                // Ignore
-            }
-            try {
-                context.removeFromEnvironment(
-                        "javax.security.sasl.server.authentication");
-            } catch (NamingException e) {
-                // Ignore
-            }
-            try {
-                context.removeFromEnvironment(
-                        "javax.security.sasl.qop");
-            } catch (NamingException e) {
-                // Ignore
-            }
+            restoreEnvironmentParameter(context,
+                    Context.SECURITY_AUTHENTICATION, preservedEnvironment);
+            restoreEnvironmentParameter(context,
+                    "javax.security.sasl.server.authentication", preservedEnvironment);
+            restoreEnvironmentParameter(context, "javax.security.sasl.qop",
+                    preservedEnvironment);
         }
 
         if (user != null) {
@@ -2094,6 +2085,19 @@ public class JNDIRealm extends RealmBase {
         }
 
         return null;
+    }
+
+    private void restoreEnvironmentParameter(DirContext context,
+            String parameterName, Hashtable<?, ?> preservedEnvironment) {
+        try {
+            context.removeFromEnvironment(parameterName);
+            if (preservedEnvironment != null && preservedEnvironment.containsKey(parameterName)) {
+                context.addToEnvironment(parameterName,
+                        preservedEnvironment.get(parameterName));
+            }
+        } catch (NamingException e) {
+            // Ignore
+        }
     }
 
     /**
@@ -2118,7 +2122,7 @@ public class JNDIRealm extends RealmBase {
             connectionAttempt = 1;
 
             // log the first exception.
-            containerLog.warn(sm.getString("jndiRealm.exception"), e);
+            containerLog.info(sm.getString("jndiRealm.exception.retry"), e);
 
             // Try connecting to the alternate url.
             context = new InitialDirContext(getDirectoryContextEnvironment());

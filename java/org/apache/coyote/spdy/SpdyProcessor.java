@@ -54,7 +54,7 @@ import org.apache.tomcat.util.net.SocketWrapper;
  *
  * Based on the AJP processor.
  */
-public class SpdyProcessor extends AbstractProcessor<Object> implements
+public class SpdyProcessor<S> extends AbstractProcessor<S> implements
         Runnable {
 
     // TODO: handle input
@@ -80,7 +80,7 @@ public class SpdyProcessor extends AbstractProcessor<Object> implements
 
     private boolean outCommit = false;
 
-    public SpdyProcessor(SpdyConnection spdy, AbstractEndpoint endpoint) {
+    public SpdyProcessor(SpdyConnection spdy, AbstractEndpoint<S> endpoint) {
         super(endpoint);
 
         this.spdy = spdy;
@@ -440,7 +440,8 @@ public class SpdyProcessor extends AbstractProcessor<Object> implements
                 message = response.getMessage();
             }
             if (message == null) {
-                message = HttpMessages.getMessage(response.getStatus());
+                message = HttpMessages.getInstance(
+                        response.getLocale()).getMessage(response.getStatus());
             }
             if (message == null) {
                 // mod_jk + httpd 2.x fails with a null status message - bug
@@ -468,7 +469,7 @@ public class SpdyProcessor extends AbstractProcessor<Object> implements
     }
 
     @Override
-    public SocketState process(SocketWrapper<Object> socket)
+    public SocketState process(SocketWrapper<S> socket)
             throws IOException {
         throw new IOException("Unimplemented");
     }
@@ -493,6 +494,11 @@ public class SpdyProcessor extends AbstractProcessor<Object> implements
     @Override
     public SocketState upgradeDispatch(SocketStatus status) throws IOException {
         return null;
+    }
+
+    @Override
+    protected void registerForEvent(boolean read, boolean write) {
+        // NO-OP
     }
 
     public void onSynStream(SpdyStream str) throws IOException {

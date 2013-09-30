@@ -103,7 +103,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: Request.java 1499642 2013-07-04 04:03:09Z violetagg $
+ * @version $Id: Request.java 1522587 2013-09-12 14:14:15Z markt $
  */
 
 public class Request
@@ -1876,6 +1876,7 @@ public class Request
      *
      * @since Servlet 3.1
      */
+    @SuppressWarnings("unchecked")
     @Override
     public <T extends HttpUpgradeHandler> T upgrade(
             Class<T> httpUpgradeHandlerClass) throws java.io.IOException, ServletException {
@@ -2372,7 +2373,7 @@ public class Request
         if (response != null) {
             Cookie newCookie =
                 ApplicationSessionCookieConfig.createSessionCookie(context,
-                        newSessionId, secure);
+                        newSessionId, isSecure());
             response.addSessionCookieInternal(newCookie);
         }
     }
@@ -2460,9 +2461,7 @@ public class Request
      * of the request body has been read
      */
     public boolean isFinished() {
-        AtomicBoolean result = new AtomicBoolean(false);
-        coyoteRequest.action(ActionCode.REQUEST_BODY_FULLY_READ, result);
-        return result.get();
+        return coyoteRequest.isFinished();
     }
 
 
@@ -2536,7 +2535,7 @@ public class Request
     public Collection<Part> getParts() throws IOException, IllegalStateException,
             ServletException {
 
-        parseParts();
+        parseParts(true);
 
         if (partsParseException != null) {
             if (partsParseException instanceof IOException) {
@@ -2551,7 +2550,7 @@ public class Request
         return parts;
     }
 
-    private void parseParts() {
+    private void parseParts(boolean explicit) {
 
         // Return immediately if the parts have already been parsed
         if (parts != null || partsParseException != null) {
@@ -2567,8 +2566,14 @@ public class Request
                                                  connector.getMaxPostSize(),
                                                  connector.getMaxPostSize());
             } else {
-                parts = Collections.emptyList();
-                return;
+                if (explicit) {
+                    partsParseException = new IllegalStateException(
+                            sm.getString("coyoteRequest.noMultipartConfig"));
+                    return;
+                } else {
+                    parts = Collections.emptyList();
+                    return;
+                }
             }
         }
 
@@ -2929,7 +2934,7 @@ public class Request
             }
 
             if ("multipart/form-data".equals(contentType)) {
-                parseParts();
+                parseParts(false);
                 success = true;
                 return;
             }

@@ -26,8 +26,8 @@ import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
 /**
- * Implementation of {@link Jar} that is optimised for file based JAR URLs (e.g
- * URLs of the form jar:file:...).
+ * Implementation of {@link Jar} that is optimised for file based JAR URLs that
+ * refer directly to a JAR file (e.g URLs of the form jar:file: ... .jar!/) .
  */
 public class FileUrlJar implements Jar {
 

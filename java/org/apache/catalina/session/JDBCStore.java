@@ -51,7 +51,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * saved are still subject to being expired based on inactivity.
  *
  * @author Bip Thelin
- * @version $Id: JDBCStore.java 1361802 2012-07-15 21:18:36Z markt $
+ * @version $Id: JDBCStore.java 1514281 2013-08-15 14:06:20Z violetagg $
  */
 
 public class JDBCStore extends StoreBase {
@@ -607,6 +607,7 @@ public class JDBCStore extends StoreBase {
                     return (null);
                 }
 
+                ClassLoader oldThreadContextCL = Thread.currentThread().getContextClassLoader();
                 try {
                     if (preparedLoadSql == null) {
                         String loadSql = "SELECT " + sessionIdCol + ", "
@@ -629,6 +630,7 @@ public class JDBCStore extends StoreBase {
                             classLoader = loader.getClassLoader();
                         }
                         if (classLoader != null) {
+                            Thread.currentThread().setContextClassLoader(classLoader);
                             ois = new CustomObjectInputStream(bis,
                                     classLoader);
                         } else {
@@ -667,6 +669,7 @@ public class JDBCStore extends StoreBase {
                             // Ignore
                         }
                     }
+                    Thread.currentThread().setContextClassLoader(oldThreadContextCL);
                     release(_conn);
                 }
                 numberOfTries--;

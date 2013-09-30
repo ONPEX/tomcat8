@@ -16,11 +16,18 @@
  */
 package org.apache.coyote.ajp;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import java.io.File;
+import java.io.IOException;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.junit.Assert;
 import org.junit.Test;
 
+import org.apache.catalina.Context;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
 
@@ -56,8 +63,7 @@ public class TestAbstractAjpProcessor extends TomcatBaseTest {
         tomcat.start();
 
         // Must have a real docBase - just use temp
-        org.apache.catalina.Context ctx =
-            tomcat.addContext("", System.getProperty("java.io.tmpdir"));
+        Context ctx = tomcat.addContext("", System.getProperty("java.io.tmpdir"));
         Tomcat.addServlet(ctx, "helloWorld", new HelloWorldServlet());
         ctx.addServletMapping("/", "helloWorld");
 
@@ -70,6 +76,8 @@ public class TestAbstractAjpProcessor extends TomcatBaseTest {
         validateCpong(ajpClient.cping());
 
         TesterAjpMessage forwardMessage = ajpClient.createForwardMessage("/");
+        // Complete the message - no extra headers required.
+        forwardMessage.end();
 
         // Two requests
         for (int i = 0; i < 2; i++) {
@@ -90,6 +98,107 @@ public class TestAbstractAjpProcessor extends TomcatBaseTest {
         ajpClient.disconnect();
     }
 
+    @Test
+    public void testPost() throws Exception {
+        doTestPost(false, HttpServletResponse.SC_OK);
+    }
+
+
+    @Test
+    public void testPostMultipleContentLength() throws Exception {
+        // Multiple content lengths
+        doTestPost(true, HttpServletResponse.SC_BAD_REQUEST);
+    }
+
+
+    public void doTestPost(boolean multipleCL, int expectedStatus) throws Exception {
+
+        Tomcat tomcat = getTomcatInstance();
+
+        // Use the normal Tomcat ROOT context
+        File root = new File("test/webapp");
+        tomcat.addWebapp("", root.getAbsolutePath());
+
+        tomcat.start();
+
+        SimpleAjpClient ajpClient = new SimpleAjpClient();
+        ajpClient.setPort(getPort());
+        ajpClient.connect();
+
+        validateCpong(ajpClient.cping());
+
+        TesterAjpMessage forwardMessage =
+                ajpClient.createForwardMessage("/echo-params.jsp", 4);
+        forwardMessage.addHeader(0xA008, "9");
+        if (multipleCL) {
+            forwardMessage.addHeader(0xA008, "99");
+        }
+        forwardMessage.addHeader(0xA007, "application/x-www-form-urlencoded");
+        forwardMessage.end();
+
+        TesterAjpMessage bodyMessage =
+                ajpClient.createBodyMessage("test=data".getBytes());
+
+        TesterAjpMessage responseHeaders =
+                ajpClient.sendMessage(forwardMessage, bodyMessage);
+
+        validateResponseHeaders(responseHeaders, expectedStatus);
+        if (expectedStatus == HttpServletResponse.SC_OK) {
+            // Expect 3 messages: headers, body, end for a valid request
+            TesterAjpMessage responseBody = ajpClient.readMessage();
+            validateResponseBody(responseBody, "test - data");
+            validateResponseEnd(ajpClient.readMessage(), true);
+
+            // Double check the connection is still open
+            validateCpong(ajpClient.cping());
+        } else {
+            // Expect 2 messages: headers, end for an invalid request
+            validateResponseEnd(ajpClient.readMessage(), false);
+        }
+
+
+        ajpClient.disconnect();
+    }
+
+
+    /*
+     * Bug 55453
+     */
+    @Test
+    public void test304WithBody() throws Exception {
+
+        Tomcat tomcat = getTomcatInstance();
+
+        // Must have a real docBase - just use temp
+        Context ctx = tomcat.addContext("", System.getProperty("java.io.tmpdir"));
+        Tomcat.addServlet(ctx, "bug55453", new Tester304WithBodyServlet());
+        ctx.addServletMapping("/", "bug55453");
+
+        tomcat.start();
+
+        SimpleAjpClient ajpClient = new SimpleAjpClient();
+        ajpClient.setPort(getPort());
+        ajpClient.connect();
+
+        validateCpong(ajpClient.cping());
+
+        TesterAjpMessage forwardMessage = ajpClient.createForwardMessage("/");
+        forwardMessage.end();
+
+        TesterAjpMessage responseHeaders =
+                ajpClient.sendMessage(forwardMessage, null);
+
+        // Expect 2 messages: headers, end
+        validateResponseHeaders(responseHeaders, 304);
+        validateResponseEnd(ajpClient.readMessage(), true);
+
+        // Double check the connection is still open
+        validateCpong(ajpClient.cping());
+
+        ajpClient.disconnect();
+    }
+
+
     /**
      * Process response header packet and checks the status. Any other data is
      * ignored.
@@ -97,20 +206,20 @@ public class TestAbstractAjpProcessor extends TomcatBaseTest {
     private void validateResponseHeaders(TesterAjpMessage message,
             int expectedStatus) throws Exception {
         // First two bytes should always be AB
-        assertEquals((byte) 'A', message.buf[0]);
-        assertEquals((byte) 'B', message.buf[1]);
+        Assert.assertEquals((byte) 'A', message.buf[0]);
+        Assert.assertEquals((byte) 'B', message.buf[1]);
 
         // Set the start position and read the length
         message.processHeader(false);
 
         // Check the length
-        assertTrue(message.len > 0);
+        Assert.assertTrue(message.len > 0);
 
         // Should be a header message
-        assertEquals(0x04, message.readByte());
+        Assert.assertEquals(0x04, message.readByte());
 
         // Check status
-        assertEquals(expectedStatus, message.readInt());
+        Assert.assertEquals(expectedStatus, message.readInt());
 
         // Read the status message
         message.readString();
@@ -132,51 +241,66 @@ public class TestAbstractAjpProcessor extends TomcatBaseTest {
      */
     private void validateResponseBody(TesterAjpMessage message,
             String expectedBody) throws Exception {
-        assertEquals((byte) 'A', message.buf[0]);
-        assertEquals((byte) 'B', message.buf[1]);
+
+        Assert.assertEquals((byte) 'A', message.buf[0]);
+        Assert.assertEquals((byte) 'B', message.buf[1]);
 
         // Set the start position and read the length
         message.processHeader(false);
 
         // Should be a body chunk message
-        assertEquals(0x03, message.readByte());
+        Assert.assertEquals(0x03, message.readByte());
 
         int len = message.readInt();
-        assertTrue(len > 0);
+        Assert.assertTrue(len > 0);
         String body = message.readString(len);
 
-        assertEquals(expectedBody, body);
+        Assert.assertTrue(body.contains(expectedBody));
     }
 
     private void validateResponseEnd(TesterAjpMessage message,
             boolean expectedReuse) {
-        assertEquals((byte) 'A', message.buf[0]);
-        assertEquals((byte) 'B', message.buf[1]);
+        Assert.assertEquals((byte) 'A', message.buf[0]);
+        Assert.assertEquals((byte) 'B', message.buf[1]);
 
         message.processHeader(false);
 
         // Should be an end body message
-        assertEquals(0x05, message.readByte());
+        Assert.assertEquals(0x05, message.readByte());
 
         // Check the length
-        assertEquals(2, message.getLen());
+        Assert.assertEquals(2, message.getLen());
 
         boolean reuse = false;
         if (message.readByte() > 0) {
             reuse = true;
         }
 
-        assertEquals(Boolean.valueOf(expectedReuse), Boolean.valueOf(reuse));
+        Assert.assertEquals(Boolean.valueOf(expectedReuse), Boolean.valueOf(reuse));
     }
 
     private void validateCpong(TesterAjpMessage message) throws Exception {
         // First two bytes should always be AB
-        assertEquals((byte) 'A', message.buf[0]);
-        assertEquals((byte) 'B', message.buf[1]);
+        Assert.assertEquals((byte) 'A', message.buf[0]);
+        Assert.assertEquals((byte) 'B', message.buf[1]);
         // CPONG should have a message length of 1
         // This effectively checks the next two bytes
-        assertEquals(1, message.getLen());
+        Assert.assertEquals(1, message.getLen());
         // Data should be the value 9
-        assertEquals(9, message.buf[4]);
+        Assert.assertEquals(9, message.buf[4]);
+    }
+
+
+    private static class Tester304WithBodyServlet extends HttpServlet {
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+                throws ServletException, IOException {
+
+            resp.setStatus(304);
+            resp.getWriter().print("Body not permitted for 304 response");
+        }
     }
 }

@@ -24,6 +24,7 @@ import java.util.Locale;
 
 import javax.management.ObjectName;
 
+import org.apache.catalina.Globals;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleState;
 import org.apache.catalina.Service;
@@ -42,7 +43,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: Connector.java 1485972 2013-05-24 08:33:44Z markt $
+ * @version $Id: Connector.java 1511448 2013-08-07 19:20:51Z markt $
  */
 
 
@@ -76,6 +77,11 @@ public class Connector extends LifecycleMBeanBase  {
                     "coyoteConnector.protocolHandlerInstantiationFailed"), e);
         } finally {
             this.protocolHandler = p;
+        }
+
+        if (!Globals.STRICT_SERVLET_COMPLIANCE) {
+            URIEncoding = "UTF-8";
+            URIEncodingLower = URIEncoding.toLowerCase(Locale.ENGLISH);
         }
     }
 

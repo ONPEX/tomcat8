@@ -25,7 +25,7 @@ package org.apache.catalina.security;
  *
  * @author Glenn L. Nielsen
  * @author Jean-Francois Arcand
- * @version $Id: SecurityClassLoad.java 1410545 2012-11-16 19:35:42Z markt $
+ * @version $Id: SecurityClassLoad.java 1524557 2013-09-18 20:24:02Z markt $
  */
 
 public final class SecurityClassLoad {
@@ -280,9 +280,7 @@ public final class SecurityClassLoad {
                 "util.net.NioBlockingSelector$BlockPoller$3");
         loader.loadClass(basePackage + "util.net.SSLSupport$CipherData");
         loader.loadClass
-            (basePackage + "util.net.JIoEndpoint$PrivilegedSetTccl");
-        loader.loadClass
-            (basePackage + "util.net.AprEndpoint$PrivilegedSetTccl");
+            (basePackage + "util.net.AbstractEndpoint$PrivilegedSetTccl");
     }
 }
 

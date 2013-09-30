@@ -26,7 +26,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -115,7 +114,7 @@ import org.xml.sax.SAXParseException;
  *
  * @author Craig R. McClanahan
  * @author Jean-Francois Arcand
- * @version $Id: ContextConfig.java 1508413 2013-07-30 12:29:58Z markt $
+ * @version $Id: ContextConfig.java 1524707 2013-09-19 12:15:20Z markt $
  */
 public class ContextConfig implements LifecycleListener {
 
@@ -1027,7 +1026,7 @@ public class ContextConfig implements LifecycleListener {
             for (int j = 0; j < roles.length; j++) {
                 if (!"*".equals(roles[j]) &&
                     !context.findSecurityRole(roles[j])) {
-                    log.info(sm.getString("contextConfig.role.auth", roles[j]));
+                    log.warn(sm.getString("contextConfig.role.auth", roles[j]));
                     context.addSecurityRole(roles[j]);
                 }
             }
@@ -1039,14 +1038,14 @@ public class ContextConfig implements LifecycleListener {
             Wrapper wrapper = (Wrapper) wrappers[i];
             String runAs = wrapper.getRunAs();
             if ((runAs != null) && !context.findSecurityRole(runAs)) {
-                log.info(sm.getString("contextConfig.role.runas", runAs));
+                log.warn(sm.getString("contextConfig.role.runas", runAs));
                 context.addSecurityRole(runAs);
             }
             String names[] = wrapper.findSecurityReferences();
             for (int j = 0; j < names.length; j++) {
                 String link = wrapper.findSecurityReference(names[j]);
                 if ((link != null) && !context.findSecurityRole(link)) {
-                    log.info(sm.getString("contextConfig.role.link", link));
+                    log.warn(sm.getString("contextConfig.role.link", link));
                     context.addSecurityRole(link);
                 }
             }
@@ -1592,7 +1591,7 @@ public class ContextConfig implements LifecycleListener {
      */
     protected void processServletContainerInitializers(ServletContext servletContext) {
 
-        Collection<ServletContainerInitializer> detectedScis;
+        List<ServletContainerInitializer> detectedScis;
         try {
             WebappServiceLoader<ServletContainerInitializer> loader =
                     new WebappServiceLoader<>(servletContext);
@@ -1659,7 +1658,6 @@ public class ContextConfig implements LifecycleListener {
             URL url = fragment.getURL();
             Jar jar = null;
             try {
-                // Note: Ignore file URLs for now since only jar URLs will be accepted
                 if ("jar".equals(url.getProtocol())) {
                     jar = JarFactory.newInstance(url);
                     jar.nextEntry();
@@ -1668,7 +1666,7 @@ public class ContextConfig implements LifecycleListener {
                         if (entryName.startsWith("META-INF/resources/")) {
                             context.getResources().createWebResourceSet(
                                     WebResourceRoot.ResourceSetType.RESOURCE_JAR,
-                                    url, "/", "/META-INF/resources");
+                                    "/", url, "/META-INF/resources");
                             break;
                         }
                         jar.nextEntry();
@@ -1680,7 +1678,7 @@ public class ContextConfig implements LifecycleListener {
                     if (resources.isDirectory()) {
                         context.getResources().createWebResourceSet(
                                 WebResourceRoot.ResourceSetType.RESOURCE_JAR,
-                                file.getAbsolutePath(), "/", "/");
+                                "/", file.getAbsolutePath(), null, "/");
                     }
                 }
             } catch (IOException ioe) {

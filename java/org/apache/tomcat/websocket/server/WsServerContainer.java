@@ -30,6 +30,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.websocket.CloseReason;
 import javax.websocket.CloseReason.CloseCodes;
 import javax.websocket.DeploymentException;
@@ -102,8 +105,9 @@ public class WsServerContainer extends WsWebSocketContainer
             setEnforceNoAddAfterHandshake(Boolean.parseBoolean(value));
         }
 
-        FilterRegistration fr = servletContext.addFilter(
-                WsFilter.class.getName(), new WsFilter(this));
+        FilterRegistration.Dynamic fr = servletContext.addFilter(
+                WsFilter.class.getName(), new WsFilter());
+        fr.setAsyncSupported(true);
 
         EnumSet<DispatcherType> types = EnumSet.of(DispatcherType.REQUEST,
                 DispatcherType.FORWARD);
@@ -114,7 +118,7 @@ public class WsServerContainer extends WsWebSocketContainer
 
     /**
      * Published the provided endpoint implementation at the specified path with
-     * the specified configuration. {@link #setServletContext(ServletContext)}
+     * the specified configuration. {@link #WsServerContainer(ServletContext)}
      * must be called before calling this method.
      *
      * @param sec   The configuration to use when creating endpoint instances
@@ -219,6 +223,14 @@ public class WsServerContainer extends WsWebSocketContainer
     }
 
 
+    public void doUpgrade(HttpServletRequest request,
+            HttpServletResponse response, ServerEndpointConfig sec,
+            Map<String,String> pathParams)
+            throws ServletException, IOException {
+        UpgradeUtil.doUpgrade(this, request, response, sec, pathParams);
+    }
+
+
     public WsMappingResult findMapping(String path) {
 
         // Prevent registering additional endpoints once the first attempt has
@@ -230,7 +242,8 @@ public class WsServerContainer extends WsWebSocketContainer
         // Check an exact match. Simple case as there are no templates.
         ServerEndpointConfig sec = configExactMatchMap.get(path);
         if (sec != null) {
-            return new WsMappingResult(sec, Collections.EMPTY_MAP);
+            return new WsMappingResult(sec,
+                    Collections.<String, String> emptyMap());
         }
 
         // No exact match. Need to look for template matches.
@@ -305,7 +318,8 @@ public class WsServerContainer extends WsWebSocketContainer
     @Override
     protected void registerSession(Endpoint endpoint, WsSession wsSession) {
         super.registerSession(endpoint, wsSession);
-        if (wsSession.getUserPrincipal() != null &&
+        if (wsSession.isOpen() &&
+                wsSession.getUserPrincipal() != null &&
                 wsSession.getHttpSessionId() != null) {
             registerAuthenticatedSession(wsSession,
                     wsSession.getHttpSessionId());

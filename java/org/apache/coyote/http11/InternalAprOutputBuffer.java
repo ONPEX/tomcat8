@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
+import org.apache.coyote.ByteBufferHolder;
 import org.apache.coyote.OutputBuffer;
 import org.apache.coyote.Response;
 import org.apache.tomcat.jni.Socket;
@@ -83,14 +84,14 @@ public class InternalAprOutputBuffer extends AbstractOutputBuffer<Long> {
     private volatile boolean flipped = false;
 
 
-    private AbstractEndpoint endpoint;
+    private AbstractEndpoint<Long> endpoint;
 
 
     // --------------------------------------------------------- Public Methods
 
     @Override
     public void init(SocketWrapper<Long> socketWrapper,
-            AbstractEndpoint endpoint) throws IOException {
+            AbstractEndpoint<Long> endpoint) throws IOException {
 
         wrapper = socketWrapper;
         socket = socketWrapper.getSocket().longValue();
@@ -123,14 +124,11 @@ public class InternalAprOutputBuffer extends AbstractOutputBuffer<Long> {
      * Send an acknowledgment.
      */
     @Override
-    public void sendAck()
-        throws IOException {
-
+    public void sendAck() throws IOException {
         if (!committed) {
             if (Socket.send(socket, Constants.ACK_BYTES, 0, Constants.ACK_BYTES.length) < 0)
-                throw new IOException(sm.getString("iib.failedwrite"));
+                throw new IOException(sm.getString("iob.failedwrite.ack"));
         }
-
     }
 
 
@@ -309,10 +307,10 @@ public class InternalAprOutputBuffer extends AbstractOutputBuffer<Long> {
 
     private void transfer(ByteBuffer from, ByteBuffer to) {
         int max = Math.min(from.remaining(), to.remaining());
-        ByteBuffer tmp = from.duplicate ();
-        tmp.limit (tmp.position() + max);
-        to.put (tmp);
-        from.position(from.position() + max);
+        int fromLimit = from.limit();
+        from.limit(from.position() + max);
+        to.put(from);
+        from.limit(fromLimit);
     }
 
 

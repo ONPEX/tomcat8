@@ -48,33 +48,66 @@ import org.apache.catalina.startup.BytesStreamer;
 import org.apache.catalina.startup.TesterServlet;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
+import org.apache.catalina.valves.TesterAccessLogValve;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.buf.ByteChunk;
-import org.apache.tomcat.util.buf.ByteChunk.ByteOutputChannel;
 
 public class TestNonBlockingAPI extends TomcatBaseTest {
 
-    private static final byte[] CHUNK = new byte[1024 * 1024];
-    private static final long WRITE_SIZE  = CHUNK.length * 5;
+    private static final Log log = LogFactory.getLog(TestNonBlockingAPI.class);
+
+    private static final int CHUNK_SIZE = 1024 * 1024;
+    private static final int WRITE_SIZE  = CHUNK_SIZE * 5;
+    private static final byte[] DATA = new byte[WRITE_SIZE];
+    private static final int WRITE_PAUSE_MS = 500;
+
 
     static {
-        byte[] seq = new byte[] {'0', '1', '2', '3', '4', '5', '6', '7',
-                '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
-        int i = 0;
-        while (i < CHUNK.length) {
-            System.arraycopy(seq, 0, CHUNK, i, 16);
-            i += 16;
+        // Use this sequence for padding to make it easier to spot errors
+        byte[] padding = new byte[] {'z', 'y', 'x', 'w', 'v', 'u', 't', 's',
+                'r', 'q', 'p', 'o', 'n', 'm', 'l', 'k'};
+        int blockSize = padding.length;
+
+        for (int i = 0; i < WRITE_SIZE / blockSize; i++) {
+            String hex = String.format("%01X", Integer.valueOf(i));
+            int hexSize = hex.length();
+            int padSize = blockSize - hexSize;
+
+            System.arraycopy(padding, 0, DATA, i * blockSize, padSize);
+            System.arraycopy(
+                    hex.getBytes(), 0, DATA, i * blockSize + padSize, hexSize);
         }
     }
 
+
     @Test
     public void testNonBlockingRead() throws Exception {
+        doTestNonBlockingRead(false);
+    }
+
+
+    @Test(expected=IOException.class)
+    public void testNonBlockingReadIgnoreIsReady() throws Exception {
+        // TODO Investigate options to get this test to pass with the HTTP BIO
+        //      connector.
+        if (getTomcatInstance().getConnector().getProtocol().equals(
+                "org.apache.coyote.http11.Http11Protocol")) {
+            throw new IOException(
+                    "Forced failure as this test requires true non-blocking IO");
+        }
+        doTestNonBlockingRead(true);
+    }
+
+
+    private void doTestNonBlockingRead(boolean ignoreIsReady) throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
         // Must have a real docBase - just use temp
         StandardContext ctx = (StandardContext) tomcat.addContext("",
                 System.getProperty("java.io.tmpdir"));
 
-        NBReadServlet servlet = new NBReadServlet();
+        NBReadServlet servlet = new NBReadServlet(ignoreIsReady);
         String servletName = NBReadServlet.class.getName();
         Tomcat.addServlet(ctx, servletName, servlet);
         ctx.addServletMapping("/", servletName);
@@ -84,6 +117,7 @@ public class TestNonBlockingAPI extends TomcatBaseTest {
         Map<String, List<String>> resHeaders = new HashMap<>();
         int rc = postUrl(true, new DataWriter(500), "http://localhost:" +
                 getPort() + "/", new ByteChunk(), resHeaders, null);
+
         Assert.assertEquals(HttpServletResponse.SC_OK, rc);
     }
 
@@ -137,7 +171,7 @@ public class TestNonBlockingAPI extends TomcatBaseTest {
         // Validate the result.
         // Response line
         String resultString = result.toString();
-        System.out.println("Read " + resultString.length() + " bytes");
+        log.info("Client read " + resultString.length() + " bytes");
         int lineStart = 0;
         int lineEnd = resultString.indexOf('\n', 0);
         String line = resultString.substring(lineStart, lineEnd + 1);
@@ -167,33 +201,63 @@ public class TestNonBlockingAPI extends TomcatBaseTest {
             line = resultString.substring(lineStart, lineEnd + 1);
             Assert.assertTrue(line.endsWith("\r\n"));
             line = line.substring(0, line.length() - 2);
-            System.out.println("[" + line + "]");
+            log.info("[" + line + "]");
             chunkSize = Integer.parseInt(line, 16);
 
             // Read the chunk
             lineStart = lineEnd + 1;
             lineEnd = resultString.indexOf('\n', lineStart);
-            System.out.println("Start : "  + lineStart + ", End: " + lineEnd);
-            line = resultString.substring(lineStart, lineEnd + 1);
-            if (line.length() > 40) {
-                System.out.println(line.substring(0, 32));
+            log.info("Start : "  + lineStart + ", End: " + lineEnd);
+            if (lineEnd > lineStart) {
+                line = resultString.substring(lineStart, lineEnd + 1);
             } else {
-                System.out.println(line);
-                }
-            Assert.assertTrue(line.endsWith("\r\n"));
-            if (chunkSize + 2 != line.length()) {
-                System.out.println("Chunk wrong length. Was " + line.length() +
-                        " Expected " + (chunkSize + 2));
-                // look for failed position
-                int pos = 0;
-                String seq = "0123456789ABCDEF";
-                // Assume starts with 0
-                while (line.subSequence(pos, pos + seq.length()).equals(seq)) {
-                    pos += seq.length();
-                }
-                System.out.println("Failed at position " + pos + " " +
-                        line.substring(pos, pos + seq.length()));
+                line = resultString.substring(lineStart);
             }
+            if (line.length() > 40) {
+                log.info(line.substring(0, 32));
+            } else {
+                log.info(line);
+            }
+            if (chunkSize + 2 != line.length()) {
+                log.error("Chunk wrong length. Was " + line.length() +
+                        " Expected " + (chunkSize + 2));
+
+                byte[] resultBytes = resultString.getBytes();
+
+                // Find error
+                boolean found = false;
+                for (int i = totalBodyRead; i < (totalBodyRead + line.length()); i++) {
+                    if (DATA[i] != resultBytes[lineStart + i - totalBodyRead]) {
+                        int dataStart = i - 16;
+                        if (dataStart < 0) {
+                            dataStart = 0;
+                        }
+                        int dataEnd = i + 16;
+                        if (dataEnd > DATA.length) {
+                            dataEnd = DATA.length;
+                        }
+                        int resultStart = lineStart + i - totalBodyRead - 16;
+                        if (resultStart < 0) {
+                            resultStart = 0;
+                        }
+                        int resultEnd = lineStart + i - totalBodyRead + 16;
+                        if (resultEnd > resultString.length()) {
+                            resultEnd = resultString.length();
+                        }
+                        log.error("Mis-match tx: " + new String(
+                                DATA, dataStart, dataEnd - dataStart));
+                        log.error("Mis-match rx: " +
+                                resultString.substring(resultStart, resultEnd));
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    log.error("No mismatch. Data truncated");
+                }
+            }
+
+            Assert.assertTrue(line.endsWith("\r\n"));
             Assert.assertEquals(chunkSize + 2, line.length());
 
             totalBodyRead += chunkSize;
@@ -207,16 +271,12 @@ public class TestNonBlockingAPI extends TomcatBaseTest {
     public void testNonBlockingWriteError() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
-        // Not applicable to BIO. This test does not start a new thread for the
-        // write so with BIO all the writes happen in the service() method just
-        // like blocking IO.
-        if (tomcat.getConnector().getProtocolHandlerClassName().equals(
-                "org.apache.coyote.http11.Http11Protocol")) {
-            return;
-        }
-
         // Must have a real docBase - just use temp
-        StandardContext ctx = (StandardContext) tomcat.addContext("", System.getProperty("java.io.tmpdir"));
+        StandardContext ctx = (StandardContext) tomcat.addContext(
+                "", System.getProperty("java.io.tmpdir"));
+
+        TesterAccessLogValve alv = new TesterAccessLogValve();
+        ctx.getPipeline().addValve(alv);
 
         NBWriteServlet servlet = new NBWriteServlet();
         String servletName = NBWriteServlet.class.getName();
@@ -225,46 +285,109 @@ public class TestNonBlockingAPI extends TomcatBaseTest {
         tomcat.getConnector().setProperty("socket.txBufSize", "1024");
         tomcat.start();
 
+        SocketFactory factory = SocketFactory.getDefault();
+        Socket s = factory.createSocket("localhost", getPort());
+
+        ByteChunk result = new ByteChunk();
+        OutputStream os = s.getOutputStream();
+        os.write(("GET / HTTP/1.1\r\n" +
+                "Host: localhost:" + getPort() + "\r\n" +
+                "Connection: close\r\n" +
+                "\r\n").getBytes(StandardCharsets.ISO_8859_1));
+        os.flush();
+
+        InputStream is = s.getInputStream();
+        byte[] buffer = new byte[8192];
+
+        int read = 0;
+        int readSinceLastPause = 0;
+        int readTotal = 0;
+        while (read != -1 && readTotal < WRITE_SIZE / 2) {
+            long start = System.currentTimeMillis();
+            read = is.read(buffer);
+            long end = System.currentTimeMillis();
+            log.info("Client read [" + read + "] bytes in [" + (end - start) +
+                    "] ms");
+            if (read > 0) {
+                result.append(buffer, 0, read);
+            }
+            readSinceLastPause += read;
+            readTotal += read;
+            if (readSinceLastPause > WRITE_SIZE / 16) {
+                readSinceLastPause = 0;
+                Thread.sleep(WRITE_PAUSE_MS);
+            }
+        }
+
+        os.close();
+        is.close();
+        s.close();
+
+        String resultString = result.toString();
+        log.info("Client read " + resultString.length() + " bytes");
+        int lineStart = 0;
+        int lineEnd = resultString.indexOf('\n', 0);
+        String line = resultString.substring(lineStart, lineEnd + 1);
+        Assert.assertEquals("HTTP/1.1 200 OK\r\n", line);
+
+        // Listeners are invoked and access valve entries created on a different
+        // thread so give that thread a chance to complete its work.
+        int count = 0;
+        while (count < 100 &&
+                !(servlet.wlistener.onErrorInvoked || servlet.rlistener.onErrorInvoked)) {
+            Thread.sleep(100);
+            count ++;
+        }
+
+        while (count < 100 && alv.getEntryCount() < 1) {
+            Thread.sleep(100);
+            count ++;
+        }
+
+        Assert.assertTrue("Error listener should have been invoked.",
+                servlet.wlistener.onErrorInvoked || servlet.rlistener.onErrorInvoked);
+
+        // TODO Figure out why non-blocking writes with the NIO connector appear
+        // to be slower on Linux
+        alv.validateAccessLog(1, 500, WRITE_PAUSE_MS * 7,
+                WRITE_PAUSE_MS * 7 + 30 * 1000);
+    }
+
+
+    @Test
+    public void testBug55438NonBlockingReadWriteEmptyRead() throws Exception {
+        Tomcat tomcat = getTomcatInstance();
+
+        // Must have a real docBase - just use temp
+        StandardContext ctx = (StandardContext) tomcat.addContext("",
+                System.getProperty("java.io.tmpdir"));
+
+        NBReadWriteServlet servlet = new NBReadWriteServlet();
+        String servletName = NBReadWriteServlet.class.getName();
+        Tomcat.addServlet(ctx, servletName, servlet);
+        ctx.addServletMapping("/", servletName);
+
+        tomcat.start();
+
         Map<String, List<String>> resHeaders = new HashMap<>();
-        ByteChunk slowReader = new ByteChunk();
-        slowReader.setLimit(1); // FIXME BUFFER IS BROKEN, 0 doesn't work
-        slowReader.setByteOutputChannel(new ByteOutputChannel() {
-            long counter = 0;
-            long delta = 0;
+        int rc = postUrl(false, new BytesStreamer() {
+            @Override
+            public byte[] next() {
+                return new byte[] {};
+            }
 
             @Override
-            public void realWriteBytes(byte[] cbuf, int off, int len) throws IOException {
-                try {
-                    if (len == 0)
-                        return;
-                    counter += len;
-                    delta += len;
-                    if (counter > WRITE_SIZE) {
-                        System.out.println("ERROR Downloaded more than expected ERROR");
-                    } else if (counter == WRITE_SIZE) {
-                        System.out.println("Download complete(" + WRITE_SIZE + " bytes)");
-                        // } else if (counter > (1966086)) {
-                        // System.out.println("Download almost complete, missing bytes ("+counter+")");
-                    } else if (delta > (WRITE_SIZE / 16)) {
-                        System.out.println("Read " + counter + " bytes.");
-                        delta = 0;
-                        Thread.sleep(500);
-                    }
-                } catch (Exception x) {
-                    throw new IOException(x);
-                }
+            public int getLength() {
+                return 0;
             }
-        });
-        int rc = postUrlWithDisconnect(true, new DataWriter(0), "http://localhost:" + getPort() + "/", resHeaders,
-                null);
-        slowReader.flushBuffer();
+
+            @Override
+            public int available() {
+                return 0;
+            }
+        }, "http://localhost:" +
+                getPort() + "/", new ByteChunk(), resHeaders, null);
         Assert.assertEquals(HttpServletResponse.SC_OK, rc);
-        try {
-            //allow the listeners to finish up
-            Thread.sleep(1000);
-        } catch (Exception e) {
-        }
-        Assert.assertTrue("Error listener should have been invoked.", servlet.wlistener.onErrorInvoked);
     }
 
 
@@ -317,7 +440,13 @@ public class TestNonBlockingAPI extends TomcatBaseTest {
     @WebServlet(asyncSupported = true)
     public class NBReadServlet extends TesterServlet {
         private static final long serialVersionUID = 1L;
+        private final boolean ignoreIsReady;
         public volatile TestReadListener listener;
+
+        public NBReadServlet(boolean ignoreIsReady) {
+            this.ignoreIsReady = ignoreIsReady;
+        }
+
         @Override
         protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
             // step 1 - start async
@@ -327,34 +456,32 @@ public class TestNonBlockingAPI extends TomcatBaseTest {
 
                 @Override
                 public void onTimeout(AsyncEvent event) throws IOException {
-                    System.out.println("onTimeout");
+                    log.info("onTimeout");
 
                 }
 
                 @Override
                 public void onStartAsync(AsyncEvent event) throws IOException {
-                    System.out.println("onStartAsync");
+                    log.info("onStartAsync");
 
                 }
 
                 @Override
                 public void onError(AsyncEvent event) throws IOException {
-                    System.out.println("AsyncListener.onError");
+                    log.info("AsyncListener.onError");
 
                 }
 
                 @Override
                 public void onComplete(AsyncEvent event) throws IOException {
-                    System.out.println("onComplete");
+                    log.info("onComplete");
 
                 }
             });
             // step 2 - notify on read
             ServletInputStream in = req.getInputStream();
-            listener = new TestReadListener(actx);
+            listener = new TestReadListener(actx, false, ignoreIsReady);
             in.setReadListener(listener);
-
-            listener.onDataAvailable();
         }
     }
 
@@ -373,98 +500,124 @@ public class TestNonBlockingAPI extends TomcatBaseTest {
 
                 @Override
                 public void onTimeout(AsyncEvent event) throws IOException {
-                    System.out.println("onTimeout");
+                    log.info("onTimeout");
 
                 }
 
                 @Override
                 public void onStartAsync(AsyncEvent event) throws IOException {
-                    System.out.println("onStartAsync");
+                    log.info("onStartAsync");
 
                 }
 
                 @Override
                 public void onError(AsyncEvent event) throws IOException {
-                    System.out.println("AsyncListener.onError");
+                    log.info("AsyncListener.onError");
 
                 }
 
                 @Override
                 public void onComplete(AsyncEvent event) throws IOException {
-                    System.out.println("onComplete");
+                    log.info("onComplete");
 
                 }
             });
             // step 2 - notify on read
             ServletInputStream in = req.getInputStream();
-            rlistener = new TestReadListener(actx);
+            rlistener = new TestReadListener(actx, true, false);
             in.setReadListener(rlistener);
             ServletOutputStream out = resp.getOutputStream();
             resp.setBufferSize(200 * 1024);
             wlistener = new TestWriteListener(actx);
             out.setWriteListener(wlistener);
-            wlistener.onWritePossible();
         }
 
 
     }
+
+    @WebServlet(asyncSupported = true)
+    public class NBReadWriteServlet extends TesterServlet {
+        private static final long serialVersionUID = 1L;
+        public volatile TestReadWriteListener rwlistener;
+
+        @Override
+        protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+            // step 1 - start async
+            AsyncContext actx = req.startAsync();
+            actx.setTimeout(Long.MAX_VALUE);
+
+            // step 2 - notify on read
+            ServletInputStream in = req.getInputStream();
+            rwlistener = new TestReadWriteListener(actx);
+            in.setReadListener(rwlistener);
+        }
+    }
+
     private class TestReadListener implements ReadListener {
         private final AsyncContext ctx;
+        private final boolean usingNonBlockingWrite;
+        private final boolean ignoreIsReady;
         private final StringBuilder body = new StringBuilder();
+        public volatile boolean onErrorInvoked = false;
 
-        public TestReadListener(AsyncContext ctx) {
+
+        public TestReadListener(AsyncContext ctx,
+                boolean usingNonBlockingWrite,
+                boolean ignoreIsReady) {
             this.ctx = ctx;
+            this.usingNonBlockingWrite = usingNonBlockingWrite;
+            this.ignoreIsReady = ignoreIsReady;
         }
 
         @Override
-        public void onDataAvailable() {
-            try {
-                ServletInputStream in = ctx.getRequest().getInputStream();
-                String s = "";
-                byte[] b = new byte[8192];
-                int read = 0;
-                do {
-                    read = in.read(b);
-                    if (read == -1) {
-                        break;
-                    }
-                    s += new String(b, 0, read);
-                } while (in.isReady());
-                System.out.println(s);
-                body.append(s);
-            } catch (Exception x) {
-                x.printStackTrace();
+        public void onDataAvailable() throws IOException {
+            ServletInputStream in = ctx.getRequest().getInputStream();
+            String s = "";
+            byte[] b = new byte[8192];
+            int read = 0;
+            do {
+                read = in.read(b);
+                if (read == -1) {
+                    break;
+                }
+                s += new String(b, 0, read);
+            } while (ignoreIsReady || in.isReady());
+            log.info(s);
+            body.append(s);
+        }
+
+        @Override
+        public void onAllDataRead() {
+            log.info("onAllDataRead");
+            // If non-blocking writes are being used, don't write here as it
+            // will inject unexpected data into the write output.
+            if (!usingNonBlockingWrite) {
+                String msg;
+                if (body.toString().endsWith("FINISHED")) {
+                    msg = "OK";
+                } else {
+                    msg = "FAILED";
+                }
+                try {
+                    ctx.getResponse().getOutputStream().print(msg);
+                } catch (IOException ioe) {
+                    // Ignore
+                }
                 ctx.complete();
             }
         }
 
         @Override
-        public void onAllDataRead() {
-            System.out.println("onAllDataRead");
-            String msg;
-            if (body.toString().endsWith("FINISHED")) {
-                msg = "OK";
-            } else {
-                msg = "FAILED";
-            }
-            try {
-                ctx.getResponse().getWriter().print(msg);
-            } catch (IOException ioe) {
-                // Ignore
-            }
-            ctx.complete();
-        }
-
-        @Override
         public void onError(Throwable throwable) {
-            System.out.println("ReadListener.onError");
+            log.info("ReadListener.onError");
             throwable.printStackTrace();
+            onErrorInvoked = true;
         }
     }
 
     private class TestWriteListener implements WriteListener {
         AsyncContext ctx;
-        long bytesToDownload = TestNonBlockingAPI.WRITE_SIZE;
+        int written = 0;
         public volatile boolean onErrorInvoked = false;
 
         public TestWriteListener(AsyncContext ctx) {
@@ -472,35 +625,93 @@ public class TestNonBlockingAPI extends TomcatBaseTest {
         }
 
         @Override
-        public void onWritePossible() {
-            try {
-                long left = Math.max(bytesToDownload, 0);
-                long start = System.currentTimeMillis();
-                long end = System.currentTimeMillis();
-                long before = left;
-                while (left > 0 && ctx.getResponse().getOutputStream().isReady()) {
-                    ctx.getResponse().getOutputStream().write(CHUNK);
-                    bytesToDownload -= CHUNK.length;
-                    left = Math.max(bytesToDownload, 0);
-                }
-                System.out.println("Write took:" + (end - start) + " ms. Bytes before=" + before + " after=" + left);
-                // only call complete if we have emptied the buffer
-                if (left == 0 && ctx.getResponse().getOutputStream().isReady()) {
-                    // it is illegal to call complete
-                    // if there is a write in progress
-                    ctx.complete();
-                }
-            } catch (Exception x) {
-                x.printStackTrace();
+        public void onWritePossible() throws IOException {
+            long start = System.currentTimeMillis();
+            long end = System.currentTimeMillis();
+            int before = written;
+            while (written < WRITE_SIZE &&
+                    ctx.getResponse().getOutputStream().isReady()) {
+                ctx.getResponse().getOutputStream().write(
+                        DATA, written, CHUNK_SIZE);
+                written += CHUNK_SIZE;
             }
-
+            if (written == WRITE_SIZE) {
+                // Clear the output buffer else data may be lost when
+                // calling complete
+                ctx.getResponse().flushBuffer();
+            }
+            log.info("Write took:" + (end - start) +
+                    " ms. Bytes before=" + before + " after=" + written);
+            // only call complete if we have emptied the buffer
+            if (ctx.getResponse().getOutputStream().isReady() &&
+                    written == WRITE_SIZE) {
+                // it is illegal to call complete
+                // if there is a write in progress
+                ctx.complete();
+            }
         }
 
         @Override
         public void onError(Throwable throwable) {
-            System.out.println("WriteListener.onError");
+            log.info("WriteListener.onError");
             throwable.printStackTrace();
             onErrorInvoked = true;
+        }
+
+    }
+
+    private class TestReadWriteListener implements ReadListener {
+        AsyncContext ctx;
+        private final StringBuilder body = new StringBuilder();
+
+        public TestReadWriteListener(AsyncContext ctx) {
+            this.ctx = ctx;
+        }
+
+        @Override
+        public void onDataAvailable() throws IOException {
+            ServletInputStream in = ctx.getRequest().getInputStream();
+            String s = "";
+            byte[] b = new byte[8192];
+            int read = 0;
+            do {
+                read = in.read(b);
+                if (read == -1) {
+                    break;
+                }
+                s += new String(b, 0, read);
+            } while (in.isReady());
+            log.info("Read [" + s + "]");
+            body.append(s);
+        }
+
+        @Override
+        public void onAllDataRead() throws IOException {
+            log.info("onAllDataRead");
+            ServletOutputStream output = ctx.getResponse().getOutputStream();
+            output.setWriteListener(new WriteListener() {
+                @Override
+                public void onWritePossible() throws IOException {
+                    ServletOutputStream output = ctx.getResponse().getOutputStream();
+                    if (output.isReady()) {
+                        log.info("Writing [" + body.toString() + "]");
+                        output.write(body.toString().getBytes("utf-8"));
+                    }
+                    ctx.complete();
+                }
+
+                @Override
+                public void onError(Throwable throwable) {
+                    log.info("ReadWriteListener.onError");
+                    throwable.printStackTrace();
+                }
+            });
+        }
+
+        @Override
+        public void onError(Throwable throwable) {
+            log.info("ReadListener.onError");
+            throwable.printStackTrace();
         }
 
     }

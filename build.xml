@@ -190,6 +190,9 @@
     <pathelement location="${test.classes}"/>
     <pathelement location="${junit.jar}"/>
     <pathelement location="${hamcrest.jar}"/>
+    <pathelement location="${easymock.jar}"/>
+    <pathelement location="${cglib.jar}"/>
+    <pathelement location="${objenesis.jar}"/>
     <path refid="compile.classpath" />
     <path refid="tomcat.classpath" />
   </path>
@@ -207,6 +210,7 @@
   <tstamp>
     <format property="year" pattern="yyyy" locale="en"/>
     <format property="today" pattern="MMM d yyyy" locale="en"/>
+    <format property="today-iso-8601" pattern="yyyy-MM-dd" locale="en"/>
     <format property="tstamp" pattern="hh:mm:ss"/>
   </tstamp>
   <filterset id="version.filters">
@@ -226,6 +230,7 @@
     <include name="**/LICENSE"/>
     <include name="**/NOTICE"/>
     <include name="**/RELEASE-NOTES"/>
+    <include name="**/javax.servlet.ServletContainerInitializer"/>
     <include name="**/.gitignore"/>
     <include name="**/*.classpath"/>
     <include name="**/*.css"/>
@@ -845,6 +850,7 @@
       <param name="relative-path" expression="."/>
       <param name="version" expression="${version}"/>
       <param name="build-date" expression="${today}"/>
+      <param name="build-date-iso-8601" expression="${today-iso-8601}"/>
       <param name="year" expression="${year}"/>
     </xslt>
     <xslt basedir="webapps/docs/appdev"
@@ -859,6 +865,7 @@
       <param name="relative-path" expression=".."/>
       <param name="version" expression="${version}"/>
       <param name="build-date" expression="${today}"/>
+      <param name="build-date-iso-8601" expression="${today-iso-8601}"/>
       <param name="year" expression="${year}"/>
     </xslt>
     <xslt basedir="webapps/docs/funcspecs"
@@ -873,6 +880,7 @@
       <param name="relative-path" expression=".."/>
       <param name="version" expression="${version}"/>
       <param name="build-date" expression="${today}"/>
+      <param name="build-date-iso-8601" expression="${today-iso-8601}"/>
       <param name="year" expression="${year}"/>
     </xslt>
     <xslt basedir="webapps/docs/config"
@@ -887,6 +895,7 @@
       <param name="relative-path" expression=".."/>
       <param name="version" expression="${version}"/>
       <param name="build-date" expression="${today}"/>
+      <param name="build-date-iso-8601" expression="${today-iso-8601}"/>
       <param name="year" expression="${year}"/>
     </xslt>
     <xslt basedir="webapps/docs/architecture"
@@ -901,6 +910,7 @@
       <param name="relative-path" expression=".."/>
       <param name="version" expression="${version}"/>
       <param name="build-date" expression="${today}"/>
+      <param name="build-date-iso-8601" expression="${today-iso-8601}"/>
       <param name="year" expression="${year}"/>
     </xslt>
 
@@ -916,6 +926,7 @@
       <param name="relative-path" expression=".."/>
       <param name="version" expression="${version}"/>
       <param name="build-date" expression="${today}"/>
+      <param name="build-date-iso-8601" expression="${today-iso-8601}"/>
       <param name="year" expression="${year}"/>
     </xslt>
   </target>
@@ -1226,7 +1237,10 @@
       <include name="javax/**" />
     </javac>
     <copy todir="${test.classes}">
-        <fileset dir="test" includes="META-INF/**"/>
+        <fileset dir="test">
+          <include name="META-INF/**"/>
+          <include name="**/service-config.txt"/>
+        </fileset>
     </copy>
   </target>
 
@@ -1677,9 +1691,9 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
       sourcepath="${tomcat.dist}/src/java"
       destdir="${tomcat.dist}/webapps/docs/servletapi"
       version="true"
-      windowtitle="Servlet 3.0 API Documentation - Apache Tomcat ${version}"
-      doctitle="Servlet 3.0 API - Apache Tomcat ${version}"
-      header="&lt;b&gt;Servlet 3.0 - Apache Tomcat ${version}&lt;/b&gt;"
+      windowtitle="Servlet 3.1 API Documentation - Apache Tomcat ${version}"
+      doctitle="Servlet 3.1 API - Apache Tomcat ${version}"
+      header="&lt;b&gt;Servlet 3.1 - Apache Tomcat ${version}&lt;/b&gt;"
       bottom="Copyright &amp;#169; 2000-${year} Apache Software Foundation. All Rights Reserved."
       encoding="ISO-8859-1"
       additionalparam="-breakiterator"
@@ -2522,6 +2536,24 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
       <param name="sourcefile" value="${hamcrest.loc}"/>
       <param name="destfile" value="${hamcrest.jar}"/>
       <param name="destdir" value="${hamcrest.home}"/>
+    </antcall>
+
+    <antcall target="downloadzip">
+      <param name="sourcefile" value="${easymock.loc}"/>
+      <param name="destfile" value="${easymock.jar}"/>
+      <param name="destdir" value="${base.path}"/>
+    </antcall>
+
+    <antcall target="downloadfile">
+      <param name="sourcefile" value="${cglib.loc}"/>
+      <param name="destfile" value="${cglib.jar}"/>
+      <param name="destdir" value="${cglib.home}"/>
+    </antcall>
+
+    <antcall target="downloadzip">
+      <param name="sourcefile" value="${objenesis.loc}"/>
+      <param name="destfile" value="${objenesis.jar}"/>
+      <param name="destdir" value="${base.path}"/>
     </antcall>
 
   </target>

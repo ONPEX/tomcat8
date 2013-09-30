@@ -38,7 +38,7 @@ import org.apache.el.util.ReflectionUtil;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: AstValue.java 1505394 2013-07-21 14:01:52Z markt $
+ * @version $Id: AstValue.java 1518328 2013-08-28 19:02:39Z markt $
  */
 public final class AstValue extends SimpleNode {
 
@@ -154,8 +154,9 @@ public final class AstValue extends SimpleNode {
                     }
                 }
                 // This is a method
-                base = resolver.invoke(ctx, base, suffix, null,
-                        mps.getParameters(ctx));
+                Object[] paramValues = mps.getParameters(ctx);
+                base = resolver.invoke(ctx, base, suffix,
+                        getTypesFromValues(paramValues), paramValues);
                 i+=2;
             } else {
                 // This is a property

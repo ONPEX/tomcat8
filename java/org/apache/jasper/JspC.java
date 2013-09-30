@@ -51,12 +51,14 @@ import org.apache.jasper.compiler.Localizer;
 import org.apache.jasper.compiler.TagPluginManager;
 import org.apache.jasper.compiler.TldLocationsCache;
 import org.apache.jasper.servlet.JspCServletContext;
+import org.apache.jasper.servlet.TldScanner;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tools.ant.AntClassLoader;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.util.FileUtils;
+import org.xml.sax.SAXException;
 
 /**
  * Shell for the jspc compiler.  Handles all options associated with the
@@ -151,9 +153,10 @@ public class JspC extends Task implements Options {
     }
 
     protected String classPath = null;
-    protected URLClassLoader loader = null;
+    protected ClassLoader loader = null;
     protected boolean trimSpaces = false;
     protected boolean genStringAsCharArray = false;
+    protected boolean validateXml;
     protected boolean xpoweredBy;
     protected boolean mappedFile = false;
     protected boolean poolingEnabled = true;
@@ -840,6 +843,7 @@ public class JspC extends Task implements Options {
     }
 
     public void setValidateXml( boolean b ) {
+        this.validateXml = b;
         org.apache.jasper.xmlparser.ParserUtils.validating=b;
     }
 
@@ -1154,9 +1158,6 @@ public class JspC extends Task implements Options {
             }
 
             originalClassLoader = Thread.currentThread().getContextClassLoader();
-            if( loader==null ) {
-                initClassLoader( clctxt );
-            }
             Thread.currentThread().setContextClassLoader(loader);
 
             clctxt.setClassLoader(loader);
@@ -1288,8 +1289,11 @@ public class JspC extends Task implements Options {
                     Localizer.getMessage("jsp.error.jspc.uriroot_not_dir"));
             }
 
+            if (loader == null) {
+                loader = initClassLoader();
+            }
             if (context == null) {
-                initServletContext();
+                initServletContext(loader);
             }
 
             // No explicit pages, we'll process all .jsp in the webapp
@@ -1412,13 +1416,21 @@ public class JspC extends Task implements Options {
         }
     }
 
-    protected void initServletContext() throws IOException, JasperException {
+    protected void initServletContext(ClassLoader classLoader)
+            throws IOException, JasperException {
         // TODO: should we use the Ant Project's log?
         PrintWriter log = new PrintWriter(System.out);
         URL resourceBase = new File(uriRoot).getCanonicalFile().toURI().toURL();
 
-        context = new JspCServletContext(log, resourceBase);
-        tldLocationsCache = TldLocationsCache.getInstance(context);
+        context = new JspCServletContext(log, resourceBase, classLoader);
+        TldScanner scanner = new TldScanner(context, true, validateXml);
+        try {
+            scanner.scan();
+        } catch (SAXException e) {
+            throw new JasperException(e);
+        }
+        tldLocationsCache = new TldLocationsCache(scanner.getTaglibMap());
+        context.setAttribute(TldLocationsCache.KEY, tldLocationsCache);
         rctxt = new JspRuntimeContext(context, this);
         jspConfig = new JspConfig(context);
         tagPluginManager = new TagPluginManager(context);
@@ -1428,11 +1440,9 @@ public class JspC extends Task implements Options {
      * Initializes the classloader as/if needed for the given
      * compilation context.
      *
-     * @param clctxt The compilation context
      * @throws IOException If an error occurs
      */
-    protected void initClassLoader(JspCompilationContext clctxt)
-        throws IOException {
+    protected ClassLoader initClassLoader() throws IOException {
 
         classPath = getClassPath();
 
@@ -1502,14 +1512,10 @@ public class JspC extends Task implements Options {
             }
         }
 
-        // What is this ??
-        urls.add(new File(
-                clctxt.getRealPath("/")).getCanonicalFile().toURI().toURL());
-
         URL urlsA[]=new URL[urls.size()];
         urls.toArray(urlsA);
         loader = new URLClassLoader(urlsA, this.getClass().getClassLoader());
-        context.setClassLoader(loader);
+        return loader;
     }
 
     /**

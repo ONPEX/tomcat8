@@ -68,7 +68,7 @@
 #                   command is executed. The default is "dt_socket".
 #
 #   JPDA_ADDRESS    (Optional) Java runtime options used when the "jpda start"
-#                   command is executed. The default is 8000.
+#                   command is executed. The default is localhost:8000.
 #
 #   JPDA_SUSPEND    (Optional) Java runtime options used when the "jpda start"
 #                   command is executed. Specifies whether JVM should suspend
@@ -94,7 +94,7 @@
 #                   Example (all one line)
 #                   LOGGING_MANAGER="-Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager"
 #
-# $Id: catalina.sh 1509161 2013-08-01 10:40:18Z markt $
+# $Id: catalina.sh 1515926 2013-08-20 19:07:25Z markt $
 # -----------------------------------------------------------------------------
 
 # OS specific support.  $var _must_ be set to either true or false.
@@ -258,7 +258,7 @@ if [ "$1" = "jpda" ] ; then
     JPDA_TRANSPORT="dt_socket"
   fi
   if [ -z "$JPDA_ADDRESS" ]; then
-    JPDA_ADDRESS="8000"
+    JPDA_ADDRESS="localhost:8000"
   fi
   if [ -z "$JPDA_SUSPEND" ]; then
     JPDA_SUSPEND="n"
@@ -450,6 +450,8 @@ elif [ "$1" = "stop" ] ; then
           if [ $? != 0 ]; then
             if [ -w "$CATALINA_PID" ]; then
               cat /dev/null > "$CATALINA_PID"
+              # If Tomcat has stopped don't try and force a stop with an empty PID file
+              FORCE=0
             else
               echo "Tomcat stopped but the PID file could not be removed or cleared."
             fi
@@ -461,7 +463,8 @@ elif [ "$1" = "stop" ] ; then
         fi
         if [ $SLEEP -eq 0 ]; then
           if [ $FORCE -eq 0 ]; then
-            echo "Tomcat did not stop in time. PID file was not removed."
+            echo "Tomcat did not stop in time. PID file was not removed. To aid diagnostics a thread dump has been written to standard out."
+            kill -3 `cat "$CATALINA_PID"`
           fi
         fi
         SLEEP=`expr $SLEEP - 1 `
@@ -483,7 +486,13 @@ elif [ "$1" = "stop" ] ; then
             if [ $? -gt 0 ]; then
                 rm -f "$CATALINA_PID" >/dev/null 2>&1
                 if [ $? != 0 ]; then
-                    echo "Tomcat was killed but the PID file could not be removed."
+                    if [ -w "$CATALINA_PID" ]; then
+                        cat /dev/null > "$CATALINA_PID"
+                    else
+                        echo "Tomcat was killed but the PID file could not be removed."
+                    fi
+                    # Set this to zero else a warning will be issued about the process still running
+                    KILL_SLEEP_INTERVAL=0
                 fi
                 break
             fi
