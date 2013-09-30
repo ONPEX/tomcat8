@@ -3,7 +3,7 @@ Author: Emmanuel Bourg <ebourg@apache.org>
 Forwarded: not-needed
 --- a/build.xml
 +++ b/build.xml
-@@ -1241,8 +1241,10 @@
+@@ -1255,8 +1255,10 @@
  
    <target name="test" description="Runs the JUnit test cases"
            depends="test-bio,test-nio,test-apr" >
@@ -14,7 +14,7 @@ Forwarded: not-needed
    </target>
  
    <target name="test-bio" description="Runs the JUnit test cases for BIO. Does not stop on errors."
-@@ -1278,7 +1280,7 @@
+@@ -1292,7 +1294,7 @@
                 description="The extension to use to distinguish the output"/>
  
      <sequential>

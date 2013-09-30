@@ -17,18 +17,18 @@ Last-Update: 2013-08-01
  </Context>
 --- a/webapps/docs/manager-howto.xml
 +++ b/webapps/docs/manager-howto.xml
-@@ -72,7 +72,7 @@
+@@ -71,7 +71,7 @@
+ <code>$CATALINA_BASE/conf/[enginename]/[hostname]</code> folder. Here is an
  example:</p>
- <pre>
- &lt;Context privileged="true" antiResourceLocking="false"
--         docBase="${catalina.home}/webapps/manager"&gt;
-+         docBase="${catalina.home}/../tomcat8-admin/manager"&gt;
-   &lt;Valve className="org.apache.catalina.valves.RemoteAddrValve"
-          allow="127\.0\.0\.1" /&gt;
- &lt;/Context&gt;
+ <source><![CDATA[<Context privileged="true" antiResourceLocking="false"
+-         docBase="${catalina.home}/webapps/manager">
++         docBase="${catalina.home}/../tomcat8-admin/manager">
+   <Valve className="org.apache.catalina.valves.RemoteAddrValve"
+          allow="127\.0\.0\.1" />
+ </Context>]]></source>
 --- a/conf/catalina.policy
 +++ b/conf/catalina.policy
-@@ -196,14 +196,14 @@
+@@ -202,14 +202,14 @@
  // - default CATALINA_HOME == CATALINA_BASE
  // - CATALINA_HOME != CATALINA_BASE, per instance Manager in CATALINA_BASE
  // - CATALINA_HOME != CATALINA_BASE, shared Manager in CATALINA_HOME
