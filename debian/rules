@@ -131,6 +131,6 @@ binary-arch: build install
 binary: binary-indep binary-arch
 
 get-orig-source:
-	-uscan --download-version $(T_VER) --force-download --rename
+	-uscan --force-download --rename
 
 .PHONY: build clean binary-indep binary-arch binary install get-orig-source
