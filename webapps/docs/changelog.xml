@@ -141,6 +141,12 @@
         Port storeconfig functionality, which can persist to server.xml and
         context.xml runtime container configuration changes. (remm)
       </add>
+      <add>
+        <bug>54095</bug>: Add support to the Default Servlet for serving
+        gzipped versions of static resources directly from disk as an
+        alternative to Tomcat compressing them on each request. Patch by
+        Philippe Marschall. (markt)
+      </add>
       <fix>
         <bug>54708</bug>: Change the name of the working directory for the ROOT
         application (located under $CATALINA_BASE/work by default) from _ to
@@ -169,6 +175,17 @@
         provided by Jasper. Includes removal of TldConfig lifecycle listener and
         associated Context properties. (jboynes)
       </scode>
+      <add>
+        <bug>55317</bug>: Facilitate weaving by allowing ClassFileTransformer to
+        be added to WebppClassLoader. Patch by Nick Williams. (markt)
+      </add>
+      <fix>
+        <bug>55620</bug>: Enable Tomcat to start when either $CATALINA_HOME
+        and/or $CATALINA_BASE contains a comma character. Prevent Tomcat from
+        starting when $CATALINA_HOME and/or $CATALINA_BASE contains a semi-colon
+        on Windows. Prevent Tomcat from starting when $CATALINA_HOME and/or
+        $CATALINA_BASE contains a colon on Linux/FreeBSD/etc. (markt)
+      </fix>
     </changelog>
   </subsection>
   <subsection name="Coyote">
@@ -219,6 +236,10 @@
         Servlet container itself. The scan is now performed only once rather than
         in two passes reducing startup time. (jboynes)
       </scode>
+      <fix>
+        <bug>55251</bug>: Do not allow JspC task to fail silently if the web.xml
+        or web.xml fragment can not be generated. (markt)
+      </fix>
     </changelog>
   </subsection>
   <subsection name="Cluster">
@@ -230,6 +251,10 @@
       <scode>
         Modify method signature in ReplicationValve. Cluster instance is not
         necessary to argument of method. (kfujino)
+      </scode>
+      <scode>
+        Remove unused <code>expireSessionsOnShutdown</code> attribute in
+        <code>org.apache.catalina.ha.session.BackupManager</code>. (kfujino)
       </scode>
     </changelog>
   </subsection>

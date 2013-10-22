@@ -17,7 +17,7 @@
 -->
 <!-- Content Stylesheet for "tomcat-docs" Documentation -->
 
-<!-- $Id: tomcat-docs.xsl 1522018 2013-09-11 20:09:40Z markt $ -->
+<!-- $Id: tomcat-docs.xsl 1532557 2013-10-15 22:03:57Z kpreisser $ -->
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   version="3.0">
@@ -36,26 +36,31 @@
   <xsl:param    name="home-href"           select="'http://tomcat.apache.org/'"/>
   <xsl:param    name="home-logo"           select="'/images/tomcat.png'"/>
   <xsl:param    name="home-stylesheet"     select="'/images/docs-stylesheet.css'"/>
-  <xsl:param    name="apache-logo"         select="'/images/asf-logo.gif'"/>
+  <xsl:param    name="apache-logo"         select="'/images/asf-feather.png'"/>
   <xsl:param    name="subdir"              select="''"/>
   <xsl:param    name="relative-path"       select="'.'"/>
   <xsl:param    name="version"             select="'8.0.x'"/>
-  <xsl:param    name="majorversion"        select="'8.0'"/>
+  <xsl:param    name="majorversion"        select="'8'"/>
+  <xsl:param    name="majorminorversion"   select="'8.0'"/>
   <xsl:param    name="build-date"          select="'MMM d yyyy'"/>
   <xsl:param    name="build-date-iso-8601" select="'yyyy-dd-MM'"/>
   <xsl:param    name="year"                select="'yyyy'"/>
   <xsl:param    name="buglink"             select="'http://issues.apache.org/bugzilla/show_bug.cgi?id='"/>
   <xsl:param    name="revlink"             select="'http://svn.apache.org/viewvc?view=rev&amp;rev='"/>
+  <xsl:param    name="doclink"             select="'http://tomcat.apache.org/tomcat-8.0-doc'"/>
+  <xsl:param    name="sylink"              select="'http://tomcat.apache.org/security-8.html'"/>
+  <xsl:param    name="dllink"              select="'http://tomcat.apache.org/download-80.cgi'"/>
   <xsl:param    name="sitedir"             select="''"/>
   <xsl:param    name="filename"            select="'-'"/>
 
   <!-- Defined variables (non-overrideable) -->
-  <xsl:variable name="commentslink">/<xsl:value-of select="$sitedir"/>comments.html</xsl:variable>
+  <xsl:variable name="commentslink"><xsl:value-of select="$relative-path"/>/comments.html</xsl:variable>
+  <xsl:variable name="project-xml-filename"><xsl:value-of select="$subdir"/>project.xml</xsl:variable>
+  <xsl:variable name="project"
+              select="document($project-xml-filename)/project"/>
 
   <!-- Process an entire document into an HTML page -->
   <xsl:template match="document">
-  <xsl:variable name="project"
-              select="document('project.xml')/project"/>
 <html lang="en">
 <head>
   <!-- Note: XLST seems to always output a
@@ -72,13 +77,8 @@
     <xsl:value-of select="$relative-path"/><xsl:value-of select="$home-stylesheet"/>
   </xsl:variable>
   <link href="{$css-src}" rel="stylesheet" type="text/css"/>
-  <style type="text/css" media="print"><![CDATA[
-    .noPrint { display: none; }
-    #middle > div > div#mainLeft { display: none; }
-    a { color: inherit; text-decoration: none; }
-  ]]></style>
 
-  <title><xsl:value-of select="project/title"/> (<xsl:value-of select="$version"/>) - <xsl:value-of select="properties/title"/></title>
+  <title><xsl:value-of select="$project/title"/> (<xsl:value-of select="$version"/>) - <xsl:value-of select="properties/title"/></title>
   <xsl:for-each select="properties/author">
     <xsl:variable name="name">
       <xsl:value-of select="."/>
@@ -89,9 +89,6 @@
       </xsl:variable>
     -->
     <meta name="author" content="{$name}"/>
-    <!-- Don't publish e-mail addresses
-    <meta name="email" content="{$email}"/>
-    -->
   </xsl:for-each>
 
   <!-- Script for ASF Comments System. -->
@@ -106,6 +103,7 @@
   <xsl:variable name="comments-identifier">
     <xsl:value-of select="$sitedir"/><xsl:value-of select="$subdir"/><xsl:value-of select="substring($filename,1,string-length($filename)-4)"/>
   </xsl:variable>
+  <xsl:if test="not(properties/no-comments)">
   <script type="application/javascript"
       data-comments-identifier="{$comments-identifier}"><![CDATA[
     "use strict"; // Enable strict mode
@@ -124,7 +122,6 @@
 
         (function(w, d) {
           if (w.location.hostname.toLowerCase() == "tomcat.apache.org") {
-            commentsDiv.appendChild(d.createTextNode("Loading comments…"));
             var s = d.createElement("script");
             s.type = "application/javascript";
             s.async = true;
@@ -139,6 +136,7 @@
       }), false);
     })();
   ]]></script>
+  </xsl:if>
   </head>
 
   <body>
@@ -147,17 +145,22 @@
   <header><div id="header">
     <div>
       <div>
-        <xsl:if test="project/logo">
+        <xsl:if test="$project/logo">
           <xsl:variable name="src">
             <xsl:value-of select="$relative-path"/><xsl:value-of select="$home-logo"/>
           </xsl:variable>
           <div class="logo noPrint">
-            <a href="{project/@href}"><img alt="Tomcat Home" src="{$src}"/></a>
+            <a href="{$project/@href}"><img alt="Tomcat Home" src="{$src}"/></a>
           </div>
         </xsl:if>
 
         <div style="height: 1px;"/>
-        <div class="asfLogo"><a href="http://www.apache.org/" target="_blank"><img src="http://www.apache.org/images/feather.png" alt="The Apache Software Foundation" style="width: 266px; height: 83px;"/></a></div>
+        <xsl:variable name="src">
+          <xsl:value-of select="$relative-path"/><xsl:value-of select="$apache-logo"/>
+        </xsl:variable>
+        <div class="asfLogo noPrint">
+          <a href="http://www.apache.org/" target="_blank"><img src="{$src}" alt="The Apache Software Foundation" style="width: 266px; height: 83px;"/></a>
+        </div>
         <h1><xsl:value-of select="$project/title"/></h1>
         <div class="versionInfo">
           Version <xsl:value-of select="$version"/>,
@@ -175,7 +178,7 @@
         <div>
           <!-- Navigation -->
           <nav>
-            <xsl:apply-templates select="project/body/menu"/>
+            <xsl:apply-templates select="$project/body/menu"/>
           </nav>
         </div>
       </div>
@@ -488,6 +491,32 @@
   <xsl:template match="rev">
       <xsl:variable name="link"><xsl:value-of select="$revlink"/><xsl:value-of select="text()"/></xsl:variable>
       <a href="{$link}">r<xsl:apply-templates/></a>
+  </xsl:template>
+
+  <!-- Link to online docs -->
+  <xsl:template match="doc">
+      <xsl:variable name="link"><xsl:value-of select="$doclink"/><xsl:value-of select="@path"/></xsl:variable>
+      <a href="{$link}"><xsl:apply-templates/></a>
+  </xsl:template>
+
+  <!-- Link to security page -->
+  <xsl:template match="security">
+      <xsl:variable name="link"><xsl:value-of select="$sylink"/></xsl:variable>
+      <a href="{$link}"><xsl:apply-templates/></a>
+  </xsl:template>
+
+  <!-- Link to download page -->
+  <xsl:template match="download">
+      <xsl:variable name="link"><xsl:value-of select="$dllink"/></xsl:variable>
+      <a href="{$link}"><xsl:apply-templates/></a>
+  </xsl:template>
+
+  <!-- Version numbers -->
+  <xsl:template match="version-major-minor">
+    <xsl:value-of select="$majorminorversion"/>
+  </xsl:template>
+  <xsl:template match="version-major">
+    <xsl:value-of select="$majorversion"/>
   </xsl:template>
 
   <!-- Process everything else by just passing it through -->

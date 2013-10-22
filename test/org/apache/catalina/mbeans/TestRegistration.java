@@ -33,7 +33,11 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
+import org.apache.catalina.Context;
+import org.apache.catalina.Realm;
 import org.apache.catalina.core.StandardHost;
+import org.apache.catalina.realm.CombinedRealm;
+import org.apache.catalina.realm.NullRealm;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
 import org.apache.tomcat.util.modeler.Registry;
@@ -92,6 +96,14 @@ public class TestRegistration extends TomcatBaseTest {
         }
     }
 
+    private static String[] requestMBeanNames(String port, String type) {
+        return new String[] {
+            "Tomcat:type=RequestProcessor,worker=" +
+                    ObjectName.quote("http-" + type + "-" + ADDRESS + "-" + port) +
+                    ",name=HttpRequest1",
+        };
+    }
+
     private static String[] contextMBeanNames(String host, String context) {
         return new String[] {
             "Tomcat:j2eeType=WebModule,name=//" + host + context +
@@ -107,6 +119,10 @@ public class TestRegistration extends TomcatBaseTest {
             "Tomcat:type=WebappClassLoader,context=" + context +
                 ",host=" + host,
             "Tomcat:type=WebResourceRoot,context=" + context +
+                ",host=" + host,
+            "Tomcat:type=Realm,realmPath=/realm0,context=" + context +
+                ",host=" + host,
+            "Tomcat:type=Realm,realmPath=/realm0/realm0,context=" + context +
                 ",host=" + host,
         };
     }
@@ -146,8 +162,16 @@ public class TestRegistration extends TomcatBaseTest {
         if (!contextDir.mkdirs() && !contextDir.isDirectory()) {
             fail("Failed to create: [" + contextDir.toString() + "]");
         }
-        tomcat.addContext(contextName, contextDir.getAbsolutePath());
+        Context ctx = tomcat.addContext(contextName, contextDir.getAbsolutePath());
+
+        CombinedRealm combinedRealm = new CombinedRealm();
+        Realm nullRealm = new NullRealm();
+        combinedRealm.addRealm(nullRealm);
+        ctx.setRealm(combinedRealm);
+
         tomcat.start();
+
+        getUrl("http://localhost:" + getPort());
 
         // Verify there are no Catalina MBeans
         onames = mbeanServer.queryNames(new ObjectName("Catalina:*"), null);
@@ -162,8 +186,7 @@ public class TestRegistration extends TomcatBaseTest {
         }
 
         // Create the list of expected MBean names
-        String protocol=
-            getTomcatInstance().getConnector().getProtocolHandlerClassName();
+        String protocol = tomcat.getConnector().getProtocolHandlerClassName();
         if (protocol.indexOf("Nio") > 0) {
             protocol = "nio";
         } else if (protocol.indexOf("Apr") > 0) {
@@ -171,12 +194,14 @@ public class TestRegistration extends TomcatBaseTest {
         } else {
             protocol = "bio";
         }
-        String index = getTomcatInstance().getConnector().getProperty("nameIndex").toString();
+        String index = tomcat.getConnector().getProperty("nameIndex").toString();
         ArrayList<String> expected = new ArrayList<>(Arrays.asList(basicMBeanNames()));
         expected.addAll(Arrays.asList(hostMBeanNames("localhost")));
         expected.addAll(Arrays.asList(contextMBeanNames("localhost", contextName)));
         expected.addAll(Arrays.asList(connectorMBeanNames("auto-" + index, protocol)));
         expected.addAll(Arrays.asList(optionalMBeanNames("localhost")));
+        expected.addAll(Arrays.asList(requestMBeanNames(
+                "auto-" + index + "-" + getPort(), protocol)));
 
         // Did we find all expected MBeans?
         ArrayList<String> missing = new ArrayList<>(expected);

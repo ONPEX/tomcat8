@@ -37,6 +37,7 @@ import java.security.PrivilegedAction;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -604,9 +605,9 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
 
 
     @Override
-    public void processSocketAsync(SocketWrapper<NioChannel> socketWrapper,
-            SocketStatus socketStatus) {
-        dispatchForEvent(socketWrapper.getSocket(), socketStatus, true);
+    public void processSocket(SocketWrapper<NioChannel> socketWrapper,
+            SocketStatus socketStatus, boolean dispatch) {
+        dispatchForEvent(socketWrapper.getSocket(), socketStatus, dispatch);
     }
 
     public boolean dispatchForEvent(NioChannel socket, SocketStatus status, boolean dispatch) {
@@ -628,7 +629,8 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
             SocketProcessor sc = processorCache.pop();
             if ( sc == null ) sc = new SocketProcessor(socket,status);
             else sc.reset(socket,status);
-            if (dispatch && getExecutor() != null) {
+            Executor executor = getExecutor();
+            if (dispatch && executor != null) {
                 ClassLoader loader = Thread.currentThread().getContextClassLoader();
                 try {
                     //threads should not be created by the webapp classloader
@@ -640,7 +642,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                         Thread.currentThread().setContextClassLoader(
                                 getClass().getClassLoader());
                     }
-                    getExecutor().execute(sc);
+                    executor.execute(sc);
                 } finally {
                     if (Constants.IS_SECURITY_ENABLED) {
                         PrivilegedAction<Void> pa = new PrivilegedSetTccl(loader);
@@ -652,8 +654,8 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
             } else {
                 sc.run();
             }
-        } catch (RejectedExecutionException rx) {
-            log.warn("Socket processing request was rejected for:"+socket,rx);
+        } catch (RejectedExecutionException ree) {
+            log.warn(sm.getString("endpoint.executor.fail", socket), ree);
             return false;
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
@@ -965,6 +967,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
             final KeyAttachment ka = key!=null?key:new KeyAttachment(socket);
             ka.reset(this,socket,getSocketProperties().getSoTimeout());
             ka.setKeepAliveLeft(NioEndpoint.this.getMaxKeepAliveRequests());
+            ka.setSecure(isSSLEnabled());
             PollerEvent r = eventCache.pop();
             ka.interestOps(SelectionKey.OP_READ);//this is what OP_REGISTER turns into.
             if ( r==null) r = new PollerEvent(socket,ka,OP_REGISTER);
@@ -1153,46 +1156,22 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                     if (sk.isReadable() || sk.isWritable() ) {
                         if ( attachment.getSendfileData() != null ) {
                             processSendfile(sk,attachment, false);
-                        } else if ( attachment.isComet() ) {
-                            //check if thread is available
-                            if ( isWorkerAvailable() ) {
-                                //set interest ops to 0 so we don't get multiple
-                                //Invocations for both read and write on separate threads
-                                reg(sk, attachment, 0);
-                                //read goes before write
-                                if (sk.isReadable()) {
-                                    //read notification
-                                    if (!processSocket(channel, SocketStatus.OPEN_READ, true))
-                                        processSocket(channel, SocketStatus.DISCONNECT, true);
-                                } else {
-                                    //future placement of a WRITE notif
-                                    if (!processSocket(channel, SocketStatus.OPEN_WRITE, true))
-                                        processSocket(channel, SocketStatus.DISCONNECT, true);
-                                }
-                            } else {
-                                result = false;
-                            }
                         } else {
-                            //later on, improve latch behavior
                             if ( isWorkerAvailable() ) {
-
-                                boolean readAndWrite = sk.isReadable() && sk.isWritable();
-                                reg(sk, attachment, 0);
-                                if (attachment.isAsync() && readAndWrite) {
-                                    //remember the that we want to know about write too
-                                    attachment.interestOps(SelectionKey.OP_WRITE);
-                                }
-                                //read goes before write
+                                unreg(sk, attachment, sk.readyOps());
+                                boolean closeSocket = false;
+                                // Read goes before write
                                 if (sk.isReadable()) {
-                                    //read notification
-                                    if (!processSocket(channel, SocketStatus.OPEN_READ, true))
-                                        close = true;
-                                } else {
-                                    //future placement of a WRITE notif
-                                    if (!processSocket(channel, SocketStatus.OPEN_WRITE, true))
-                                        close = true;
+                                    if (!processSocket(channel, SocketStatus.OPEN_READ, true)) {
+                                        closeSocket = true;
+                                    }
                                 }
-                                if (close) {
+                                if (!closeSocket && sk.isWritable()) {
+                                    if (!processSocket(channel, SocketStatus.OPEN_WRITE, true)) {
+                                        closeSocket = true;
+                                    }
+                                }
+                                if (closeSocket) {
                                     cancelledKey(sk,SocketStatus.DISCONNECT);
                                 }
                             } else {

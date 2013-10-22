@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -76,12 +76,6 @@
         Set to <code>true</code> if you wish to have session listeners notified
         when session attributes are being replicated or removed across Tomcat
         nodes in the cluster.
-      </attribute>
-      <attribute name="expireSessionsOnShutdown" required="false">
-        When a web application is being shutdown, Tomcat issues an expire call
-        to each session to notify all the listeners. If you wish for all
-        sessions to expire on all nodes when a shutdown occurs on one node, set
-        this value to <code>true</code>. Default value is <code>false</code>.
       </attribute>
       <attribute name="sessionAttributeFilter" required="false">
         A regular expression used to filter, which session attributes will

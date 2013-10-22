@@ -48,7 +48,7 @@ import org.apache.tomcat.util.res.StringManager;
  * <code>StandardWrapper</code> container implementation.
  *
  * @author Craig R. McClanahan
- * @version $Id: StandardWrapperValve.java 1390882 2012-09-27 08:20:12Z markt $
+ * @version $Id: StandardWrapperValve.java 1530172 2013-10-08 07:19:36Z markt $
  */
 
 final class StandardWrapperValve
@@ -197,7 +197,6 @@ final class StandardWrapperValve
                     try {
                         SystemLogHandler.startCapture();
                         if (request.isAsyncDispatching()) {
-                            //TODO SERVLET3 - async
                             ((AsyncContextImpl)request.getAsyncContext()).doInternalDispatch();
                         } else if (comet) {
                             filterChain.doFilterEvent(request.getEvent());
@@ -214,7 +213,6 @@ final class StandardWrapperValve
                     }
                 } else {
                     if (request.isAsyncDispatching()) {
-                        //TODO SERVLET3 - async
                         ((AsyncContextImpl)request.getAsyncContext()).doInternalDispatch();
                     } else if (comet) {
                         request.setComet(true);

@@ -62,13 +62,13 @@ import org.apache.tomcat.util.res.StringManager;
  * @author Craig R. McClanahan
  * @author Jean-Francois Arcand
  * @author Peter Rossbach
- * @version $Id: DeltaManager.java 1513823 2013-08-14 11:58:43Z markt $
+ * @version $Id: DeltaManager.java 1525827 2013-09-24 10:08:58Z kfujino $
  */
 
 public class DeltaManager extends ClusterManagerBase{
 
     // ---------------------------------------------------- Security Classes
-    public static final org.apache.juli.logging.Log log =
+    public final org.apache.juli.logging.Log log =
             org.apache.juli.logging.LogFactory.getLog(DeltaManager.class);
 
     /**

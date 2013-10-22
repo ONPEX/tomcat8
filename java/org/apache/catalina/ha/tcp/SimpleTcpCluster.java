@@ -32,6 +32,7 @@ import org.apache.catalina.Container;
 import org.apache.catalina.Context;
 import org.apache.catalina.Engine;
 import org.apache.catalina.Host;
+import org.apache.catalina.Lifecycle;
 import org.apache.catalina.LifecycleEvent;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleListener;
@@ -70,7 +71,7 @@ import org.apache.tomcat.util.res.StringManager;
  * @author Filip Hanik
  * @author Remy Maucherat
  * @author Peter Rossbach
- * @version $Id: SimpleTcpCluster.java 1505637 2013-07-22 09:22:01Z kfujino $
+ * @version $Id: SimpleTcpCluster.java 1526408 2013-09-26 08:03:03Z kfujino $
  */
 public class SimpleTcpCluster extends LifecycleMBeanBase
         implements CatalinaCluster, LifecycleListener, MembershipListener,
@@ -506,6 +507,9 @@ public class SimpleTcpCluster extends LifecycleMBeanBase
 
         //send a heartbeat through the channel
         if ( isHeartbeatBackgroundEnabled() && channel !=null ) channel.heartbeat();
+
+        // periodic event
+        fireLifecycleEvent(Lifecycle.PERIODIC_EVENT, null);
     }
 
 

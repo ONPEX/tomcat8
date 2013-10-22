@@ -463,15 +463,15 @@ public class Http11AprProcessor extends AbstractHttp11Processor<Long> {
         } else if (actionCode == ActionCode.COMET_END) {
             comet = false;
         } else if (actionCode == ActionCode.COMET_CLOSE) {
-            ((AprEndpoint)endpoint).processSocketAsync(this.socketWrapper,
-                    SocketStatus.OPEN_READ);
+            ((AprEndpoint)endpoint).processSocket(this.socketWrapper,
+                    SocketStatus.OPEN_READ, true);
         } else if (actionCode == ActionCode.COMET_SETTIMEOUT) {
             //no op
         } else if (actionCode == ActionCode.ASYNC_COMPLETE) {
             socketWrapper.clearDispatches();
             if (asyncStateMachine.asyncComplete()) {
-                ((AprEndpoint)endpoint).processSocketAsync(this.socketWrapper,
-                        SocketStatus.OPEN_READ);
+                ((AprEndpoint)endpoint).processSocket(this.socketWrapper,
+                        SocketStatus.OPEN_READ, true);
             }
         } else if (actionCode == ActionCode.ASYNC_SETTIMEOUT) {
             if (param==null) {
@@ -481,8 +481,8 @@ public class Http11AprProcessor extends AbstractHttp11Processor<Long> {
             socketWrapper.setTimeout(timeout);
         } else if (actionCode == ActionCode.ASYNC_DISPATCH) {
             if (asyncStateMachine.asyncDispatch()) {
-                ((AprEndpoint)endpoint).processSocketAsync(this.socketWrapper,
-                        SocketStatus.OPEN_READ);
+                ((AprEndpoint)endpoint).processSocket(this.socketWrapper,
+                        SocketStatus.OPEN_READ, true);
             }
         }
 

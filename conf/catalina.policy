@@ -14,7 +14,7 @@
 // limitations under the License.
 
 // ============================================================================
-// catalina.policy - Security Policy Permissions for Tomcat 7
+// catalina.policy - Security Policy Permissions for Tomcat
 //
 // This file contains a default set of security policies to be enforced (by the
 // JVM) when Catalina is executed with the "-security" option.  In addition
@@ -24,7 +24,7 @@
 // * Read access to the web application's document root directory
 // * Read, write and delete access to the web application's working directory
 //
-// $Id: catalina.policy 1524078 2013-09-17 14:52:28Z schultz $
+// $Id: catalina.policy 1532506 2013-10-15 20:00:14Z markt $
 // ============================================================================
 
 
@@ -191,8 +191,9 @@ grant {
     // Applications using Comet need to be able to access this package
     permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.comet";
 
-    // Applications using WebSocket need to be able to access this package
-    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.websocket";
+    // Applications using WebSocket need to be able to access these packages
+    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.tomcat.websocket";
+    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.tomcat.websocket.server";
 };
 
 

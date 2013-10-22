@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -26,7 +26,7 @@
     <author email="craigmcc@apache.org">Craig McClanahan</author>
     <author email="amyroh@apache.org">Amy Roh</author>
     <title>Tomcat MBean Names</title>
-    <revision>$Id: mbean-names.xml 1520323 2013-09-05 14:17:07Z markt $</revision>
+    <revision>$Id: mbean-names.xml 1529692 2013-10-06 21:21:45Z kpreisser $</revision>
   </properties>
 
 <body>

@@ -83,7 +83,7 @@ package org.apache.catalina;
  * the component as soon as {@link #start()} exits. It is typically used when a
  * component has failed to start.
  *
- * MUST_DESTROY is used to indicate that the {@link #stop()} should be called on
+ * MUST_DESTROY is used to indicate that the {@link #destroy()} should be called on
  * the component as soon as {@link #stop()} exits. It is typically used when a
  * component is not designed to be restarted.
  *
@@ -98,7 +98,7 @@ package org.apache.catalina;
  *       components should use MUST_DESTROY to signal this.
  *
  * @author Craig R. McClanahan
- * @version $Id: Lifecycle.java 1187801 2011-10-22 21:16:40Z markt $
+ * @version $Id: Lifecycle.java 1526410 2013-09-26 08:10:41Z kfujino $
  */
 public interface Lifecycle {
 

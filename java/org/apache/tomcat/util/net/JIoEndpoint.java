@@ -26,6 +26,7 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 
 import org.apache.juli.logging.Log;
@@ -169,7 +170,7 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
                     long access = socket.getLastAccess();
                     if (socket.getTimeout() > 0 &&
                             (now-access)>socket.getTimeout()) {
-                        processSocketAsync(socket,SocketStatus.TIMEOUT);
+                        processSocket(socket, SocketStatus.TIMEOUT, true);
                     }
                 }
 
@@ -530,6 +531,7 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
         try {
             SocketWrapper<Socket> wrapper = new SocketWrapper<>(socket);
             wrapper.setKeepAliveLeft(getMaxKeepAliveRequests());
+            wrapper.setSecure(isSSLEnabled());
             // During shutdown, executor may be null - avoid NPE
             if (!running) {
                 return false;
@@ -549,49 +551,50 @@ public class JIoEndpoint extends AbstractEndpoint<Socket> {
     }
 
 
-    /**
-     * Process an existing async connection. If processing is required, passes
-     * the wrapped socket to an executor for processing.
-     *
-     * @param socket    The socket associated with the client.
-     * @param status    Only OPEN and TIMEOUT are used. The others are used for
-     *                  Comet requests that are not supported by the BIO (JIO)
-     *                  Connector.
-     */
     @Override
-    public void processSocketAsync(SocketWrapper<Socket> socket,
-            SocketStatus status) {
+    public void processSocket(SocketWrapper<Socket> socket,
+            SocketStatus status, boolean dispatch) {
         try {
+            // Synchronisation is required here as this code may be called as a
+            // result of calling AsyncContext.dispatch() from a non-container
+            // thread
             synchronized (socket) {
                 if (waitingRequests.remove(socket)) {
                     SocketProcessor proc = new SocketProcessor(socket,status);
-                    ClassLoader loader = Thread.currentThread().getContextClassLoader();
-                    try {
-                        //threads should not be created by the webapp classloader
-                        if (Constants.IS_SECURITY_ENABLED) {
-                            PrivilegedAction<Void> pa = new PrivilegedSetTccl(
-                                    getClass().getClassLoader());
-                            AccessController.doPrivileged(pa);
-                        } else {
-                            Thread.currentThread().setContextClassLoader(
-                                    getClass().getClassLoader());
+                    Executor executor = getExecutor();
+                    if (dispatch && executor != null) {
+                        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+                        try {
+                            //threads should not be created by the webapp classloader
+                            if (Constants.IS_SECURITY_ENABLED) {
+                                PrivilegedAction<Void> pa =
+                                        new PrivilegedSetTccl(
+                                        getClass().getClassLoader());
+                                AccessController.doPrivileged(pa);
+                            } else {
+                                Thread.currentThread().setContextClassLoader(
+                                        getClass().getClassLoader());
+                            }
+                            // During shutdown, executor may be null - avoid NPE
+                            if (!running) {
+                                return;
+                            }
+                            getExecutor().execute(proc);
+                        } finally {
+                            if (Constants.IS_SECURITY_ENABLED) {
+                                PrivilegedAction<Void> pa = new PrivilegedSetTccl(loader);
+                                AccessController.doPrivileged(pa);
+                            } else {
+                                Thread.currentThread().setContextClassLoader(loader);
+                            }
                         }
-                        // During shutdown, executor may be null - avoid NPE
-                        if (!running) {
-                            return;
-                        }
-                        getExecutor().execute(proc);
-                        //TODO gotta catch RejectedExecutionException and properly handle it
-                    } finally {
-                        if (Constants.IS_SECURITY_ENABLED) {
-                            PrivilegedAction<Void> pa = new PrivilegedSetTccl(loader);
-                            AccessController.doPrivileged(pa);
-                        } else {
-                            Thread.currentThread().setContextClassLoader(loader);
-                        }
+                    } else {
+                        proc.run();
                     }
                 }
             }
+        } catch (RejectedExecutionException ree) {
+            log.warn(sm.getString("endpoint.executor.fail", socket) , ree);
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
             // This means we got an OOM or similar creating a thread, or that

@@ -20,7 +20,7 @@
   xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
                       http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
   version="3.1"
-  metadata-complete="false">
+  metadata-complete="true">
 
     <description>
       Servlet and JSP Examples.
@@ -369,8 +369,8 @@
 
     <!-- Non-blocking IO examples -->
     <servlet>
-      <servlet-class>nonblocking.ByteCounter</servlet-class>
       <servlet-name>bytecounter</servlet-name>
+      <servlet-class>nonblocking.ByteCounter</servlet-class>
       <async-supported>true</async-supported>
     </servlet>
     <servlet-mapping>
@@ -378,13 +378,20 @@
       <url-pattern>/servlets/nonblocking/bytecounter</url-pattern>
     </servlet-mapping>
     <servlet>
-      <servlet-class>nonblocking.NumberWriter</servlet-class>
       <servlet-name>numberwriter</servlet-name>
+      <servlet-class>nonblocking.NumberWriter</servlet-class>
       <async-supported>true</async-supported>
     </servlet>
     <servlet-mapping>
       <servlet-name>numberwriter</servlet-name>
       <url-pattern>/servlets/nonblocking/numberwriter</url-pattern>
     </servlet-mapping>
+
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+        <welcome-file>index.xhtml</welcome-file>
+        <welcome-file>index.htm</welcome-file>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
 
 </web-app>

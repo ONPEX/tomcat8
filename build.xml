@@ -262,6 +262,7 @@
     <include name="**/*.tasks"/>
     <include name="**/*.tld"/>
     <include name="**/*.txt"/>
+    <include name="**/*.xhtml"/>
     <include name="**/*.xml"/>
     <include name="**/*.xsd"/>
     <include name="**/*.xsl"/>
@@ -596,7 +597,7 @@
     </copy>
     <!-- Copy jdbc-pool documentation -->
     <copy tofile="webapps/docs/jdbc-pool.xml"
-          file="${tomcat.jdbc.dir}/doc/jdbc-pool.xml" encoding="ISO-8859-1">
+          file="${tomcat.jdbc.dir}/doc/jdbc-pool.xml" encoding="UTF-8">
       <filterset>
         <filter token="TOMCAT_PROJECT_DEST" value="project.xml"/>
       </filterset>
@@ -815,7 +816,7 @@
         <exclude name="docs/architecture/*.xml"/>
       </fileset>
     </copy>
-    <copy todir="${tomcat.build}/webapps" encoding="ISO-8859-1">
+    <copy todir="${tomcat.build}/webapps" encoding="UTF-8">
       <filterset refid="version.filters"/>
       <fileset dir="webapps">
         <include name="docs/**/*.html"/>
@@ -849,6 +850,8 @@
       <param name="subdir" expression=""/>
       <param name="relative-path" expression="."/>
       <param name="version" expression="${version}"/>
+      <param name="majorversion" expression="${version.major}"/>
+      <param name="majorminorversion" expression="${version.major.minor}"/>
       <param name="build-date" expression="${today}"/>
       <param name="build-date-iso-8601" expression="${today-iso-8601}"/>
       <param name="year" expression="${year}"/>
@@ -864,6 +867,8 @@
       <param name="subdir" expression="appdev/"/>
       <param name="relative-path" expression=".."/>
       <param name="version" expression="${version}"/>
+      <param name="majorversion" expression="${version.major}"/>
+      <param name="majorminorversion" expression="${version.major.minor}"/>
       <param name="build-date" expression="${today}"/>
       <param name="build-date-iso-8601" expression="${today-iso-8601}"/>
       <param name="year" expression="${year}"/>
@@ -879,6 +884,8 @@
       <param name="subdir" expression="funcspecs/"/>
       <param name="relative-path" expression=".."/>
       <param name="version" expression="${version}"/>
+      <param name="majorversion" expression="${version.major}"/>
+      <param name="majorminorversion" expression="${version.major.minor}"/>
       <param name="build-date" expression="${today}"/>
       <param name="build-date-iso-8601" expression="${today-iso-8601}"/>
       <param name="year" expression="${year}"/>
@@ -894,6 +901,8 @@
       <param name="subdir" expression="config/"/>
       <param name="relative-path" expression=".."/>
       <param name="version" expression="${version}"/>
+      <param name="majorversion" expression="${version.major}"/>
+      <param name="majorminorversion" expression="${version.major.minor}"/>
       <param name="build-date" expression="${today}"/>
       <param name="build-date-iso-8601" expression="${today-iso-8601}"/>
       <param name="year" expression="${year}"/>
@@ -909,6 +918,8 @@
       <param name="subdir" expression="architecture/"/>
       <param name="relative-path" expression=".."/>
       <param name="version" expression="${version}"/>
+      <param name="majorversion" expression="${version.major}"/>
+      <param name="majorminorversion" expression="${version.major.minor}"/>
       <param name="build-date" expression="${today}"/>
       <param name="build-date-iso-8601" expression="${today-iso-8601}"/>
       <param name="year" expression="${year}"/>
@@ -925,6 +936,8 @@
       <param name="subdir" expression="tribes/"/>
       <param name="relative-path" expression=".."/>
       <param name="version" expression="${version}"/>
+      <param name="majorversion" expression="${version.major}"/>
+      <param name="majorminorversion" expression="${version.major.minor}"/>
       <param name="build-date" expression="${today}"/>
       <param name="build-date-iso-8601" expression="${today-iso-8601}"/>
       <param name="year" expression="${year}"/>
@@ -979,7 +992,7 @@
         <include name="host-manager/**"/>
       </fileset>
     </copy>
-    <copy todir="${tomcat.build}/webapps" encoding="ISO-8859-1">
+    <copy todir="${tomcat.build}/webapps" encoding="UTF-8">
       <filterset refid="version.filters" />
       <fileset dir="webapps">
         <include name="ROOT/index.jsp"/>
@@ -1931,7 +1944,7 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
 
   <target name="release"
     depends="clean,clean-depend,release-init,dist-deployer,installer,package-zip,package-winzip,package-tgz,package-deployer-zip,package-deployer-tgz,javadoc,package-docs-tgz,package-src-zip,package-src-tgz,package-src-jar"
-    description="Create a Tomcat 8 packaged distribution">
+    description="Create a Tomcat packaged distribution">
 
     <copy file="KEYS"
          todir="${tomcat.release}/v${version}"/>
@@ -1942,12 +1955,12 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
     </copy>
     <copy file="res/welcome.main.html"
         tofile="${tomcat.release}/v${version}/README.html"
-        encoding="ISO-8859-1">
+        encoding="UTF-8">
       <filterset refid="version.filters"/>
     </copy>
     <copy file="res/welcome.bin.html"
         tofile="${tomcat.release}/v${version}/bin/README.html"
-        encoding="ISO-8859-1">
+        encoding="UTF-8">
       <filterset refid="version.filters"/>
     </copy>
 
