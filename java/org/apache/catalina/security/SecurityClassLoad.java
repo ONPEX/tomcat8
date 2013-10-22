@@ -25,7 +25,7 @@ package org.apache.catalina.security;
  *
  * @author Glenn L. Nielsen
  * @author Jean-Francois Arcand
- * @version $Id: SecurityClassLoad.java 1524557 2013-09-18 20:24:02Z markt $
+ * @version $Id: SecurityClassLoad.java 1532511 2013-10-15 20:15:03Z markt $
  */
 
 public final class SecurityClassLoad {
@@ -272,6 +272,7 @@ public final class SecurityClassLoad {
         loader.loadClass(basePackage + "util.http.parser.MediaTypeCache");
         // net
         loader.loadClass(basePackage + "util.net.Constants");
+        loader.loadClass(basePackage + "util.net.DispatchType");
         loader.loadClass(basePackage +
                 "util.net.NioBlockingSelector$BlockPoller$1");
         loader.loadClass(basePackage +

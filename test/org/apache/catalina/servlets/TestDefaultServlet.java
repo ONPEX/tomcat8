@@ -39,6 +39,8 @@ import org.junit.Test;
 
 import static org.apache.catalina.startup.SimpleHttpClient.CRLF;
 
+import org.apache.catalina.Context;
+import org.apache.catalina.Wrapper;
 import org.apache.catalina.startup.SimpleHttpClient;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
@@ -86,6 +88,61 @@ public class TestDefaultServlet extends TomcatBaseTest {
                 "/META-INF/doesntexistanywhere", res, null);
         assertEquals(HttpServletResponse.SC_NOT_FOUND, rc);
 
+    }
+
+    /**
+     * Verify serving of gzipped resources from context root.
+     */
+    @Test
+    public void testGzippedFile() throws Exception {
+
+        Tomcat tomcat = getTomcatInstance();
+
+        File appDir = new File("test/webapp");
+
+        File gzipIndex = new File(appDir, "index.html.gz");
+        long gzipSize = gzipIndex.length();
+
+        File index = new File(appDir, "index.html");
+        long indexSize = index.length();
+
+        // app dir is relative to server home
+        Context ctxt = tomcat.addContext("", appDir.getAbsolutePath());
+        Wrapper defaultServlet = Tomcat.addServlet(ctxt, "default",
+                "org.apache.catalina.servlets.DefaultServlet");
+        defaultServlet.addInitParameter("gzip", "true");
+        ctxt.addServletMapping("/", "default");
+
+        ctxt.addMimeMapping("html", "text/html");
+
+        tomcat.start();
+
+        TestGzipClient gzipClient = new TestGzipClient(getPort());
+
+        gzipClient.reset();
+        gzipClient.setRequest(new String[] {
+                "GET /index.html HTTP/1.1" + CRLF +
+                "Host: localhost" + CRLF +
+                "Connection: Close" + CRLF +
+                "Accept-Encoding: gzip" + CRLF + CRLF });
+        gzipClient.connect();
+        gzipClient.processRequest();
+        assertTrue(gzipClient.isResponse200());
+        List<String> responseHeaders = gzipClient.getResponseHeaders();
+        assertTrue(responseHeaders.contains("Content-Length: " + gzipSize));
+
+        gzipClient.reset();
+        gzipClient.setRequest(new String[] {
+                "GET /index.html HTTP/1.1" + CRLF +
+                "Host: localhost" + CRLF +
+                "Connection: Close" + CRLF+ CRLF });
+        gzipClient.connect();
+        gzipClient.processRequest();
+        assertTrue(gzipClient.isResponse200());
+        responseHeaders = gzipClient.getResponseHeaders();
+        assertTrue(responseHeaders.contains("Content-Type: text/html"));
+        assertFalse(responseHeaders.contains("Content-Encoding: gzip"));
+        assertTrue(responseHeaders.contains("Content-Length: " + indexSize));
     }
 
     /**
@@ -300,6 +357,18 @@ public class TestDefaultServlet extends TomcatBaseTest {
     private static class TestCustomErrorClient extends SimpleHttpClient {
 
         public TestCustomErrorClient(int port) {
+            setPort(port);
+        }
+
+        @Override
+        public boolean isResponseBodyOK() {
+            return true;
+        }
+    }
+
+    private static class TestGzipClient extends SimpleHttpClient {
+
+        public TestGzipClient(int port) {
             setPort(port);
         }
 

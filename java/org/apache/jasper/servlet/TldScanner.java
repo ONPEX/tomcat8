@@ -115,6 +115,14 @@ public class TldScanner {
     }
 
     /**
+     * Set the class loader used by the digester to create objects as a result
+     * of this scan. Normally this only needs tobe set when using JspC.
+     */
+    public void setClassLoader(ClassLoader classLoader) {
+        tldParser.setClassLoader(classLoader);
+    }
+
+    /**
      * Scan for TLDs required by the platform specification.
      */
     protected void scanPlatform() {
@@ -185,7 +193,11 @@ public class TldScanner {
         Set<String> dirList = context.getResourcePaths(startPath);
         if (dirList != null) {
             for (String path : dirList) {
-                if (path.endsWith("/")) {
+                if (path.startsWith("/WEB-INF/classes/")) {
+                    // Skip: JSP.7.3.1
+                } else if (path.startsWith("/WEB-INF/lib/")) {
+                    // Skip: JSP.7.3.1
+                } else if (path.endsWith("/")) {
                     scanResourcePaths(path);
                 } else if (path.startsWith("/WEB-INF/tags/")) {
                     // JSP 7.3.1: in /WEB-INF/tags only consider implicit.tld
@@ -242,12 +254,12 @@ public class TldScanner {
             }
             boolean found = false;
             Jar jar = JarFactory.newInstance(urlConn.getURL());
-            URL jarURL = urlConn.getJarFileURL();
+            URL jarURL = jar.getJarFileURL();
             try {
                 jar.nextEntry();
                 for (String entryName = jar.getEntryName();
-                     entryName != null;
-                     jar.nextEntry(), entryName = jar.getEntryName()) {
+                    entryName != null;
+                    jar.nextEntry(), entryName = jar.getEntryName()) {
                     if (!(entryName.startsWith("META-INF/") &&
                             entryName.endsWith(TLD_EXT))) {
                         continue;

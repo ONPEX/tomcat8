@@ -1374,7 +1374,7 @@ public class JspC extends Task implements Options {
         }
     }
 
-    protected void initWebXml() {
+    protected void initWebXml() throws JasperException {
         try {
             if (webxmlLevel >= INC_WEBXML) {
                 mapout = openWebxmlWriter(new File(webxmlFile));
@@ -1396,6 +1396,7 @@ public class JspC extends Task implements Options {
             mapout = null;
             servletout = null;
             mappingout = null;
+            throw new JasperException(ioe);
         }
     }
 
@@ -1424,6 +1425,8 @@ public class JspC extends Task implements Options {
 
         context = new JspCServletContext(log, resourceBase, classLoader);
         TldScanner scanner = new TldScanner(context, true, validateXml);
+        scanner.setClassLoader(classLoader);
+
         try {
             scanner.scan();
         } catch (SAXException e) {

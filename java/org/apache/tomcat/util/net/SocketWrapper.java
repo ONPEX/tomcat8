@@ -17,8 +17,8 @@
 package org.apache.tomcat.util.net;
 
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
@@ -35,6 +35,7 @@ public class SocketWrapper<E> {
     private boolean async = false;
     private boolean keptAlive = false;
     private boolean upgraded = false;
+    private boolean secure = false;
     /*
      * Following cached for speed / reduced GC
      */
@@ -62,7 +63,7 @@ public class SocketWrapper<E> {
      */
     private final Object writeThreadLock = new Object();
 
-    private Set<DispatchType> dispatches = new LinkedHashSet<>();
+    private Set<DispatchType> dispatches = new CopyOnWriteArraySet<>();
 
     public SocketWrapper(E socket) {
         this.socket = socket;
@@ -81,6 +82,8 @@ public class SocketWrapper<E> {
     public void setAsync(boolean async) { this.async = async; }
     public boolean isUpgraded() { return upgraded; }
     public void setUpgraded(boolean upgraded) { this.upgraded = upgraded; }
+    public boolean isSecure() { return secure; }
+    public void setSecure(boolean secure) { this.secure = secure; }
     public long getLastAccess() { return lastAccess; }
     public void access() { access(System.currentTimeMillis()); }
     public void access(long access) { lastAccess = access; }
@@ -114,22 +117,31 @@ public class SocketWrapper<E> {
     }
     public Object getWriteThreadLock() { return writeThreadLock; }
     public void addDispatch(DispatchType dispatchType) {
-        dispatches.add(dispatchType);
+        synchronized (dispatches) {
+            dispatches.add(dispatchType);
+        }
     }
-    public boolean hasNextDispatch() {
-        return dispatches.size() > 0;
-    }
-    public DispatchType getNextDispatch() {
-        DispatchType result = null;
-        Iterator<DispatchType> iter = dispatches.iterator();
-        if (iter.hasNext()) {
-            result = iter.next();
-            iter.remove();
+    public Iterator<DispatchType> getIteratorAndClearDispatches() {
+        // Note: Logic in AbstractProtocol depends on this method only returning
+        // a non-null value if the iterator is non-empty. i.e. it should never
+        // return an empty iterator.
+        Iterator<DispatchType> result;
+        synchronized (dispatches) {
+            // Synchronized as the generation of the iterator and the clearing
+            // of dispatches needs to be an atomic operation.
+            result = dispatches.iterator();
+            if (result.hasNext()) {
+                dispatches.clear();
+            } else {
+                result = null;
+            }
         }
         return result;
     }
     public void clearDispatches() {
-        dispatches.clear();
+        synchronized (dispatches) {
+            dispatches.clear();
+        }
     }
 
     public void reset(E socket, long timeout) {

@@ -73,9 +73,9 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
 
     // Max size of WebSocket header is 14 bytes
     private final ByteBuffer headerBuffer = ByteBuffer.allocate(14);
-    private final ByteBuffer outputBuffer = ByteBuffer.allocate(8192);
+    private final ByteBuffer outputBuffer = ByteBuffer.allocate(Constants.DEFAULT_BUFFER_SIZE);
     private final CharsetEncoder encoder = new Utf8Encoder();
-    private final ByteBuffer encoderBuffer = ByteBuffer.allocate(8192);
+    private final ByteBuffer encoderBuffer = ByteBuffer.allocate(Constants.DEFAULT_BUFFER_SIZE);
     private final AtomicBoolean batchingAllowed = new AtomicBoolean(false);
     private volatile long sendTimeout = -1;
     private WsSession wsSession;
@@ -275,7 +275,11 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
             MessagePart mpNext = messagePartQueue.poll();
             if (mpNext == null) {
                 messagePartInProgress = false;
-            } else {
+            } else if (!closed){
+                // Session may have been closed unexpectedly in the middle of
+                // sending a fragmented message closing the endpoint. If this
+                // happens, clearly there is no point trying to send the rest of
+                // the message.
                 writeMessagePart(mpNext);
             }
         }
@@ -743,7 +747,7 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
     private static class WsOutputStream extends OutputStream {
 
         private final WsRemoteEndpointImplBase endpoint;
-        private final ByteBuffer buffer = ByteBuffer.allocate(8192);
+        private final ByteBuffer buffer = ByteBuffer.allocate(Constants.DEFAULT_BUFFER_SIZE);
         private final Object closeLock = new Object();
         private volatile boolean closed = false;
 
@@ -826,7 +830,7 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
     private static class WsWriter extends Writer {
 
         private final WsRemoteEndpointImplBase endpoint;
-        private final CharBuffer buffer = CharBuffer.allocate(8192);
+        private final CharBuffer buffer = CharBuffer.allocate(Constants.DEFAULT_BUFFER_SIZE);
         private final Object closeLock = new Object();
         private volatile boolean closed = false;
 

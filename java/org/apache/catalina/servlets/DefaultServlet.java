@@ -32,6 +32,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
@@ -104,7 +105,7 @@ import org.apache.tomcat.util.res.StringManager;
  * </p>
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: DefaultServlet.java 1524400 2013-09-18 13:21:08Z markt $
+ * @version $Id: DefaultServlet.java 1532296 2013-10-15 11:57:48Z markt $
  */
 
 public class DefaultServlet
@@ -137,6 +138,12 @@ public class DefaultServlet
      * Read only flag. By default, it's set to true.
      */
     protected boolean readOnly = true;
+
+
+    /**
+     * Should be serve gzip versions of files. By default, it's set to false.
+     */
+    protected boolean gzip = false;
 
 
     /**
@@ -276,6 +283,9 @@ public class DefaultServlet
 
         if (getServletConfig().getInitParameter("readonly") != null)
             readOnly = Boolean.parseBoolean(getServletConfig().getInitParameter("readonly"));
+
+        if (getServletConfig().getInitParameter("gzip") != null)
+            gzip = Boolean.parseBoolean(getServletConfig().getInitParameter("gzip"));
 
         if (getServletConfig().getInitParameter("sendfileSize") != null)
             sendfileSize =
@@ -734,11 +744,12 @@ public class DefaultServlet
         boolean isError =
             response.getStatus() >= HttpServletResponse.SC_BAD_REQUEST;
 
+        boolean included = false;
         // Check if the conditions specified in the optional If headers are
         // satisfied.
         if (resource.isFile()) {
             // Checking If headers
-            boolean included = (request.getAttribute(
+            included = (request.getAttribute(
                     RequestDispatcher.INCLUDE_CONTEXT_PATH) != null);
             if (!included && !isError &&
                     !checkIfHeaders(request, response, resource)) {
@@ -752,6 +763,32 @@ public class DefaultServlet
         if (contentType == null) {
             contentType = getServletContext().getMimeType(resource.getName());
             resource.setMimeType(contentType);
+        }
+
+        // These need to reflect the original resource, not the potentially
+        // gzip'd version of the resource so get them now if they are going to
+        // be needed later
+        String eTag = null;
+        String lastModifiedHttp = null;
+        if (resource.isFile() && !isError) {
+            eTag = resource.getETag();
+            lastModifiedHttp = resource.getLastModifiedHttp();
+        }
+
+
+        // Serve a gzipped version of the file if present
+        boolean usingGzippedVersion = false;
+        if (gzip &&
+                resource.isFile() &&
+                !included &&
+                !path.endsWith(".gz") &&
+                checkIfGzip(request)) {
+            WebResource gzipResource = resources.getResource(path + ".gz");
+            if (gzipResource.exists() && gzipResource.isFile()) {
+                response.addHeader("Content-Encoding", "gzip");
+                resource = gzipResource;
+                usingGzippedVersion = true;
+            }
         }
 
         ArrayList<Range> ranges = null;
@@ -777,11 +814,10 @@ public class DefaultServlet
                 ranges = parseRange(request, response, resource);
 
                 // ETag header
-                response.setHeader("ETag", resource.getETag());
+                response.setHeader("ETag", eTag);
 
                 // Last-Modified header
-                response.setHeader("Last-Modified",
-                        resource.getLastModifiedHttp());
+                response.setHeader("Last-Modified", lastModifiedHttp);
             }
 
             // Get content length
@@ -806,10 +842,12 @@ public class DefaultServlet
             } catch (IllegalStateException e) {
                 // If it fails, we try to get a Writer instead if we're
                 // trying to serve a text file
-                if ( (contentType == null)
-                        || (contentType.startsWith("text"))
-                        || (contentType.endsWith("xml"))
-                        || (contentType.contains("/javascript")) ) {
+                if (!usingGzippedVersion &&
+                        ((contentType == null) ||
+                                (contentType.startsWith("text")) ||
+                                (contentType.endsWith("xml")) ||
+                                (contentType.contains("/javascript")))
+                        ) {
                     writer = response.getWriter();
                     // Cannot reliably serve partial content with a Writer
                     ranges = FULL;
@@ -1679,6 +1717,24 @@ public class DefaultServlet
             }
         }
         return true;
+    }
+
+    /**
+     * Check if the user agent supports gzip encoding.
+     *
+     * @param request   The servlet request we are processing
+     * @return boolean true if the user agent supports gzip encoding,
+     * and false if the user agent does not support gzip encoding
+     */
+    protected boolean checkIfGzip(HttpServletRequest request) {
+        Enumeration<String> headers = request.getHeaders("Accept-Encoding");
+        while (headers.hasMoreElements()) {
+            String header = headers.nextElement();
+            if (header.indexOf("gzip") != -1) {
+                return true;
+            }
+        }
+        return false;
     }
 
 
