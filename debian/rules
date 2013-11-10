@@ -31,7 +31,10 @@ RWFILES := $(RWLOC)/index.html $(RWLOC)/META-INF/context.xml
 ANT_ARGS := -Dcompile.debug=true \
 	-Djdt.jar=/usr/share/java/ecj.jar \
 	-Djunit.jar=/usr/share/java/junit4.jar \
+	-Dcglib.jar=/usr/share/java/cglib-nodep.jar \
+	-Deasymock.jar=/usr/share/java/easymock.jar \
 	-Dhamcrest.jar=/usr/share/java/hamcrest-core.jar \
+	-Dobjenesis.jar=/usr/share/java/objenesis.jar \
 	-Dversion=$(T_VER) \
 	-Dversion.major="$(T_VER_MAJOR)" \
 	-Dversion.minor="$(T_VER_MINOR)" \

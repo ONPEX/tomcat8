@@ -2,14 +2,25 @@ Source: tomcat8
 Section: java
 Priority: optional
 Maintainer: Debian Java Maintainers <pkg-java-maintainers@lists.alioth.debian.org>
-Uploaders: James Page <james.page@ubuntu.com>, 
- Miguel Landaeta <miguel@miguel.cc>,
- tony mancill <tmancill@debian.org>,
- Jakub Adam <jakub.adam@ktknet.cz>,
- Emmanuel Bourg <ebourg@apache.org>
-Build-Depends: default-jdk, ant-optional, debhelper (>= 9), po-debconf, libhamcrest-java (>= 1.3)
-Build-Depends-Indep: maven-repo-helper, libecj-java, javahelper,
- junit4, libjstl1.1-java, libjakarta-taglibs-standard-java
+Uploaders: James Page <james.page@ubuntu.com>,
+           Miguel Landaeta <miguel@miguel.cc>,
+           tony mancill <tmancill@debian.org>,
+           Jakub Adam <jakub.adam@ktknet.cz>,
+           Emmanuel Bourg <ebourg@apache.org>
+Build-Depends: ant-optional,
+               debhelper (>= 9),
+               default-jdk,
+               po-debconf
+Build-Depends-Indep: javahelper,
+                     junit4,
+                     libcglib-java,
+                     libeasymock-java,
+                     libecj-java,
+                     libhamcrest-java (>= 1.3),
+                     libjakarta-taglibs-standard-java,
+                     libjstl1.1-java,
+                     libobjenesis-java,
+                     maven-repo-helper
 Standards-Version: 3.9.4
 Vcs-Git: git://anonscm.debian.org/pkg-java/tomcat8.git
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-java/tomcat8.git
@@ -17,26 +28,26 @@ Homepage: http://tomcat.apache.org
 
 Package: tomcat8-common
 Architecture: all
-Depends: libtomcat8-java (>= ${source:Version}), ${misc:Depends},
- default-jre-headless | java7-runtime-headless | java7-runtime | java-7-runtime
+Depends: default-jre-headless | java7-runtime-headless | java7-runtime | java-7-runtime,
+         libtomcat8-java (>= ${source:Version}),
+         ${misc:Depends}
 Description: Apache Tomcat 8 - Servlet and JSP engine -- common files
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Oracle, and provides a "pure Java" HTTP web
  server environment for Java code to run.
  .
  This package contains common files needed by the tomcat8 and tomcat8-user
- packages (Tomcat 8 scripts and libraries). 
+ packages (Tomcat 8 scripts and libraries).
 
 Package: tomcat8
 Architecture: all
-Depends: tomcat8-common (>= ${source:Version}), ucf,
-	adduser, ${misc:Depends}
+Depends: adduser, tomcat8-common (>= ${source:Version}), ucf, ${misc:Depends}
 Recommends: authbind
-Suggests: tomcat8-docs (>= ${source:Version}),
+Suggests: libtcnative-1 (>= 1.1.24),
           tomcat8-admin (>= ${source:Version}),
+          tomcat8-docs (>= ${source:Version}),
           tomcat8-examples (>= ${source:Version}),
-          tomcat8-user (>= ${source:Version}),
-          libtcnative-1 (>= 1.1.24)
+          tomcat8-user (>= ${source:Version})
 Description: Apache Tomcat 8 - Servlet and JSP engine
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Oracle, and provides a "pure Java" HTTP web
@@ -51,11 +62,11 @@ Description: Apache Tomcat 8 - Servlet and JSP engine
 
 Package: tomcat8-user
 Architecture: all
-Depends: tomcat8-common (>= ${source:Version}), netcat, ${misc:Depends}
-Suggests: tomcat8-docs (>= ${source:Version}),
+Depends: netcat, tomcat8-common (>= ${source:Version}), ${misc:Depends}
+Suggests: tomcat8 (>= ${source:Version}),
           tomcat8-admin (>= ${source:Version}),
-          tomcat8-examples (>= ${source:Version}),
-          tomcat8 (>= ${source:Version})
+          tomcat8-docs (>= ${source:Version}),
+          tomcat8-examples (>= ${source:Version})
 Description: Apache Tomcat 8 - Servlet and JSP engine -- tools to create user instances
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Oracle, and provides a "pure Java" HTTP web
@@ -67,9 +78,9 @@ Description: Apache Tomcat 8 - Servlet and JSP engine -- tools to create user in
 
 Package: libtomcat8-java
 Architecture: all
-Depends: libecj-java,
+Depends: libcommons-dbcp-java,
          libcommons-pool-java,
-         libcommons-dbcp-java,
+         libecj-java,
          ${misc:Depends}
 Suggests: tomcat8 (>= ${source:Version})
 Description: Apache Tomcat 8 - Servlet and JSP engine -- core libraries
@@ -114,8 +125,10 @@ Description: Apache Tomcat 8 - Servlet and JSP engine -- admin web applications
 
 Package: tomcat8-examples
 Architecture: all
-Depends: tomcat8-common (>= ${source:Version}), ${misc:Depends},
- libjstl1.1-java, libjakarta-taglibs-standard-java
+Depends: libjakarta-taglibs-standard-java,
+         libjstl1.1-java,
+         tomcat8-common (>= ${source:Version}),
+         ${misc:Depends}
 Description: Apache Tomcat 8 - Servlet and JSP engine -- example web applications
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Oracle, and provides a "pure Java" HTTP web
@@ -133,4 +146,3 @@ Description: Apache Tomcat 8 - Servlet and JSP engine -- documentation
  server environment for Java code to run.
  .
  This package contains the online documentation web application.
-
