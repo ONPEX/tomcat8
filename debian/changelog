@@ -16,6 +16,7 @@ tomcat8 (8.0.0~RC5-1) UNRELEASED; urgency=low
   * debian/control:
     - Replaced Sun Microsystems with Oracle in the packages descriptions
     - Mentioned 'Apache Tomcat' in the packages descriptions
+    - Standards-Version updated to 3.9.5 (no changes)
   * Deploy the Tomcat artifacts in the Maven repository with the 8.x version
     instead of 'debian' to avoid conflicts with other versions of Tomcat.
   * Hard coded the versions in the poms in debian/javaxpoms to fix the version
