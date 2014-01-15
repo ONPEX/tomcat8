@@ -2,7 +2,7 @@ Description: Set UTF-8 as default character encoding
 Author: Thomas Koch <thomas@koch.ro>
 --- a/conf/server.xml
 +++ b/conf/server.xml
-@@ -69,6 +69,7 @@
+@@ -67,6 +67,7 @@
      -->
      <Connector port="8080" protocol="HTTP/1.1"
                 connectionTimeout="20000"

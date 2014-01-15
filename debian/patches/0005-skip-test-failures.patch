@@ -3,10 +3,10 @@ Author: Emmanuel Bourg <ebourg@apache.org>
 Forwarded: not-needed
 --- a/build.xml
 +++ b/build.xml
-@@ -1268,8 +1268,10 @@
+@@ -1286,8 +1286,10 @@
  
    <target name="test" description="Runs the JUnit test cases"
-           depends="test-bio,test-nio,test-apr" >
+           depends="test-bio,test-nio,test-apr,cobertura-report" >
 +    <!--
      <fail if="test.result.error" message='Some tests completed with an Error. See ${tomcat.build}/logs for details, search for "FAILED".' />
      <fail if="test.result.failure" message='Some tests completed with a Failure. See ${tomcat.build}/logs for details, search for "FAILED".' />
@@ -14,7 +14,7 @@ Forwarded: not-needed
    </target>
  
    <target name="test-bio" description="Runs the JUnit test cases for BIO. Does not stop on errors."
-@@ -1305,7 +1307,7 @@
+@@ -1323,7 +1325,7 @@
                 description="The extension to use to distinguish the output"/>
  
      <sequential>
