@@ -34,7 +34,6 @@ import org.apache.catalina.Container;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleState;
 import org.apache.catalina.Server;
-import org.apache.catalina.core.StandardServer;
 import org.apache.catalina.security.SecurityConfig;
 import org.apache.juli.ClassLoaderLogManager;
 import org.apache.tomcat.util.ExceptionUtils;
@@ -65,7 +64,7 @@ import org.xml.sax.SAXParseException;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: Catalina.java 1501081 2013-07-09 04:28:42Z violetagg $
+ * @version $Id: Catalina.java 1533117 2013-10-17 15:26:13Z markt $
  */
 public class Catalina {
 
@@ -275,7 +274,7 @@ public class Catalina {
         attrs.add("className");
         fakeAttributes.put(Object.class, attrs);
         digester.setFakeAttributes(fakeAttributes);
-        digester.setClassLoader(StandardServer.class.getClassLoader());
+        digester.setUseContextClassLoader(true);
 
         // Configure the actions we will be using
         digester.addObjectCreate("Server",
@@ -395,6 +394,7 @@ public class Catalina {
 
         // Initialize the digester
         Digester digester = new Digester();
+        digester.setUseContextClassLoader(true);
 
         // Configure the rules we need for shutting down
         digester.addObjectCreate("Server",
@@ -424,7 +424,6 @@ public class Catalina {
         if( s == null ) {
             // Create and execute our Digester
             Digester digester = createStopDigester();
-            digester.setClassLoader(Thread.currentThread().getContextClassLoader());
             File file = configFile();
             FileInputStream fis = null;
             try {

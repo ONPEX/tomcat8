@@ -53,7 +53,7 @@ import org.apache.tomcat.util.res.StringManager;
  * is first started.
  *
  * @author Craig R. McClanahan
- * @version $Id: ApplicationFilterConfig.java 1500964 2013-07-08 21:24:05Z markt $
+ * @version $Id: ApplicationFilterConfig.java 1550123 2013-12-11 12:36:17Z markt $
  */
 
 public final class ApplicationFilterConfig implements FilterConfig, Serializable {
@@ -373,10 +373,10 @@ public final class ApplicationFilterConfig implements FilterConfig, Serializable
         }
         if (context instanceof StandardContext) {
             StandardContext standardContext = (StandardContext) context;
-            onameStr = domain + ":j2eeType=Filter,name=" + filterName +
-                 ",WebModule=" + webMod + ",J2EEApplication=" +
-                 standardContext.getJ2EEApplication() + ",J2EEServer=" +
-                 standardContext.getJ2EEServer();
+            onameStr = domain + ":j2eeType=Filter,WebModule=" + webMod +
+                    ",name=" + filterName + ",J2EEApplication=" +
+                    standardContext.getJ2EEApplication() + ",J2EEServer=" +
+                    standardContext.getJ2EEServer();
         } else {
             onameStr = domain + ":j2eeType=Filter,name=" + filterName +
                  ",WebModule=" + webMod;

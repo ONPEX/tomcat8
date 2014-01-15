@@ -24,7 +24,7 @@
 // * Read access to the web application's document root directory
 // * Read, write and delete access to the web application's working directory
 //
-// $Id: catalina.policy 1532506 2013-10-15 20:00:14Z markt $
+// $Id: catalina.policy 1542952 2013-11-18 09:02:13Z markt $
 // ============================================================================
 
 
@@ -127,7 +127,7 @@ grant codeBase "file:${catalina.home}/lib/-" {
 
 // These permissions are granted by default to all web applications
 // In addition, a web application will be given a read FilePermission
-// and JndiPermission for all files and directories in its document root.
+// for all files and directories in its document root.
 grant {
     // Required for JNDI lookup of named JDBC DataSource's and
     // javamail named MimePart DataSource used to send mail

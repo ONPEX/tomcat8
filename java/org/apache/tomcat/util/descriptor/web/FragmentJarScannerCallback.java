@@ -39,16 +39,19 @@ public class FragmentJarScannerCallback implements JarScannerCallback {
         "META-INF/web-fragment.xml";
     private final WebXmlParser webXmlParser;
     private final boolean delegate;
+    private final boolean parseRequired;
     private final Map<String,WebXml> fragments = new HashMap<>();
     private boolean ok  = true;
 
-    public FragmentJarScannerCallback(WebXmlParser webXmlParser, boolean delegate) {
+    public FragmentJarScannerCallback(WebXmlParser webXmlParser, boolean delegate,
+            boolean parseRequired) {
         this.webXmlParser = webXmlParser;
         this.delegate = delegate;
+        this.parseRequired = parseRequired;
     }
 
     @Override
-    public void scan(JarURLConnection jarConn, boolean isWebapp)
+    public void scan(JarURLConnection jarConn, String webappPath, boolean isWebapp)
             throws IOException {
 
         URL url = jarConn.getURL();
@@ -61,8 +64,10 @@ public class FragmentJarScannerCallback implements JarScannerCallback {
 
         try {
             // Only web application JARs are checked for web-fragment.xml
-            // files
-            if (isWebapp) {
+            // files.
+            // web-fragment.xml files don't need to be parsed if they are never
+            // going to be used.
+            if (isWebapp && parseRequired) {
                 jar = JarFactory.newInstance(url);
                 is = jar.getInputStream(FRAGMENT_LOCATION);
             }
@@ -73,7 +78,7 @@ public class FragmentJarScannerCallback implements JarScannerCallback {
                 fragment.setDistributable(true);
             } else {
                 InputSource source = new InputSource(
-                        resourceURL.toString() + "!/" + FRAGMENT_LOCATION);
+                        "jar:" + resourceURL.toString() + "!/" + FRAGMENT_LOCATION);
                 source.setByteStream(is);
                 if (!webXmlParser.parseWebXml(source, fragment, true)) {
                     ok = false;
@@ -104,7 +109,7 @@ public class FragmentJarScannerCallback implements JarScannerCallback {
     }
 
     @Override
-    public void scan(File file, boolean isWebapp) throws IOException {
+    public void scan(File file, String webappPath, boolean isWebapp) throws IOException {
 
         InputStream stream = null;
         WebXml fragment = new WebXml();

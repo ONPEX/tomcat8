@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
+import org.apache.catalina.Globals;
 import org.apache.catalina.startup.Constants;
 import org.apache.tomcat.util.descriptor.DigesterFactory;
 import org.apache.tomcat.util.digester.Digester;
@@ -36,7 +37,7 @@ import org.xml.sax.InputSource;
  * schema validation.
  *
  * @author Remy Maucherat
- * @version $Id: ValidatorTask.java 1501159 2013-07-09 09:25:47Z markt $
+ * @version $Id: ValidatorTask.java 1549528 2013-12-09 10:01:16Z markt $
  * @since 5.0
  */
 
@@ -90,7 +91,10 @@ public class ValidatorTask extends BaseRedirectorHelperTask {
         Thread.currentThread().setContextClassLoader
             (ValidatorTask.class.getClassLoader());
 
-        Digester digester = DigesterFactory.newDigester(true, true, null);
+        // Called through trusted manager interface. If running under a
+        // SecurityManager assume that untrusted applications may be deployed.
+        Digester digester = DigesterFactory.newDigester(
+                true, true, null, Globals.IS_SECURITY_ENABLED);
         try {
             file = file.getCanonicalFile();
             InputStream stream =

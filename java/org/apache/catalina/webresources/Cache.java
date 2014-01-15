@@ -34,10 +34,6 @@ public class Cache {
     protected static final StringManager sm =
             StringManager.getManager(Constants.Package);
 
-    // Estimate (on high side to be safe) of average size excluding content
-    // based on profiler data.
-    private static final long CACHE_ENTRY_SIZE = 500;
-
     private static final long TARGET_FREE_PERCENT_GET = 5;
     private static final long TARGET_FREE_PERCENT_BACKGROUND = 10;
 
@@ -46,30 +42,40 @@ public class Cache {
 
     private long ttl = 5000;
     private long maxSize = 10 * 1024 * 1024;
-    private long maxObjectSize = maxSize / 20;
+    private int maxObjectSize =
+            (int) (maxSize / 20 > Integer.MAX_VALUE ? Integer.MAX_VALUE : maxSize / 20);
 
-    private ConcurrentMap<String,CachedResource> resourceCache =
+    private AtomicLong lookupCount = new AtomicLong(0);
+    private AtomicLong hitCount = new AtomicLong(0);
+
+    private final ConcurrentMap<String,CachedResource> resourceCache =
             new ConcurrentHashMap<>();
 
     public Cache(StandardRoot root) {
         this.root = root;
     }
 
-    protected WebResource getResource(String path) {
+    protected WebResource getResource(String path, boolean useClassLoaderResources) {
+
+        lookupCount.incrementAndGet();
 
         if (noCache(path)) {
-            return root.getResourceInternal(path);
+            return root.getResourceInternal(path, useClassLoaderResources);
         }
 
         CachedResource cacheEntry = resourceCache.get(path);
 
-        if (cacheEntry != null && !cacheEntry.validate()) {
+        if (cacheEntry != null && !cacheEntry.validate(useClassLoaderResources)) {
             removeCacheEntry(path, true);
             cacheEntry = null;
         }
 
         if (cacheEntry == null) {
-            CachedResource newCacheEntry = new CachedResource(root, path, ttl);
+            // Local copy to ensure consistency
+            int maxObjectSizeBytes = getMaxObjectSizeBytes();
+            CachedResource newCacheEntry =
+                    new CachedResource(root, path, getTtl(), maxObjectSizeBytes);
+
             // Concurrent callers will end up with the same CachedResource
             // instance
             cacheEntry = resourceCache.putIfAbsent(path, newCacheEntry);
@@ -77,18 +83,12 @@ public class Cache {
             if (cacheEntry == null) {
                 // newCacheEntry was inserted into the cache - validate it
                 cacheEntry = newCacheEntry;
-                cacheEntry.validate();
-                if (newCacheEntry.getContentLength() > getMaxSizeBytes()) {
-                    // Cache size has not been updated at this point
-                    removeCacheEntry(path, false);
-                    return newCacheEntry;
-                }
+                cacheEntry.validate(useClassLoaderResources);
 
-                // Assume that the cache entry will include the content.
-                // This isn't always the case but it makes tracking the
-                // current cache size easier.
-                long delta = CACHE_ENTRY_SIZE;
-                delta += cacheEntry.getContentLength();
+                // Even if the resource content larger than maxObjectSizeBytes
+                // there is still benefit in caching the resource metadata
+
+                long delta = cacheEntry.getSize();
                 size.addAndGet(delta);
 
                 if (size.get() > maxSize) {
@@ -110,8 +110,10 @@ public class Cache {
             } else {
                 // Another thread added the entry to the cache
                 // Make sure it is validated
-                cacheEntry.validate();
+                cacheEntry.validate(useClassLoaderResources);
             }
+        } else {
+            hitCount.incrementAndGet();
         }
 
         return cacheEntry;
@@ -141,6 +143,8 @@ public class Cache {
 
     private boolean noCache(String path) {
         // Don't cache resources used by the class loader (it has its own cache)
+        // TODO. Review these exclusions once class loader resource handling is
+        // complete
         if (path.startsWith("/WEB-INF/classes") ||
                 path.startsWith("/WEB-INF/lib")) {
             return true;
@@ -176,9 +180,8 @@ public class Cache {
         // once and the cache size is only updated (if required) once.
         CachedResource cachedResource = resourceCache.remove(path);
         if (cachedResource != null && updateSize) {
-            long delta =
-                    0 - CACHE_ENTRY_SIZE - cachedResource.getContentLength();
-            size.addAndGet(delta);
+            long delta = cachedResource.getSize();
+            size.addAndGet(-delta);
         }
     }
 
@@ -195,29 +198,44 @@ public class Cache {
         return maxSize / 1024;
     }
 
-    public long getMaxSizeBytes() {
-        // Internally bytes, externally kilobytes
-        return maxSize;
-    }
-
     public void setMaxSize(long maxSize) {
         // Internally bytes, externally kilobytes
         this.maxSize = maxSize * 1024;
     }
 
+    public long getLookupCount() {
+        return lookupCount.get();
+    }
 
-    public void setMaxObjectSize(long maxObjectSize) {
+    public long getHitCount() {
+        return hitCount.get();
+    }
+
+    public void setMaxObjectSize(int maxObjectSize) {
+        if (maxObjectSize * 1024L > Integer.MAX_VALUE) {
+            log.warn(sm.getString("cache.maxObjectSizeTooBig",
+                    Integer.valueOf(maxObjectSize)));
+            this.maxObjectSize = Integer.MAX_VALUE;
+        }
         // Internally bytes, externally kilobytes
         this.maxObjectSize = maxObjectSize * 1024;
     }
 
-    public long getMaxObjectSize() {
+    public int getMaxObjectSize() {
         // Internally bytes, externally kilobytes
         return maxObjectSize / 1024;
     }
 
+    public int getMaxObjectSizeBytes() {
+        return maxObjectSize;
+    }
+
     public void clear() {
         resourceCache.clear();
+    }
+
+    public long getSize() {
+        return size.get() / 1024;
     }
 
     private static class EvictionOrder implements Comparator<CachedResource> {

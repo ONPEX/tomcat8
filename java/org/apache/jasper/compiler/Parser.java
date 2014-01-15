@@ -29,6 +29,8 @@ import javax.servlet.jsp.tagext.TagLibraryInfo;
 import org.apache.jasper.JasperException;
 import org.apache.jasper.JspCompilationContext;
 import org.apache.jasper.util.UniqueAttributesImpl;
+import org.apache.tomcat.util.descriptor.tld.TldResourcePath;
+import org.apache.tomcat.util.scan.Jar;
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.AttributesImpl;
 
@@ -60,7 +62,7 @@ class Parser implements TagConstants {
 
     private final boolean directivesOnly;
 
-    private final JarResource jarResource;
+    private final Jar jar;
 
     private final PageInfo pageInfo;
 
@@ -86,7 +88,7 @@ class Parser implements TagConstants {
      * The constructor
      */
     private Parser(ParserController pc, JspReader reader, boolean isTagFile,
-            boolean directivesOnly, JarResource jarResource) {
+            boolean directivesOnly, Jar jar) {
         this.parserController = pc;
         this.ctxt = pc.getJspCompilationContext();
         this.pageInfo = pc.getCompiler().getPageInfo();
@@ -95,7 +97,7 @@ class Parser implements TagConstants {
         this.scriptlessCount = 0;
         this.isTagFile = isTagFile;
         this.directivesOnly = directivesOnly;
-        this.jarResource = jarResource;
+        this.jar = jar;
         start = reader.mark();
     }
 
@@ -113,12 +115,11 @@ class Parser implements TagConstants {
      */
     public static Node.Nodes parse(ParserController pc, JspReader reader,
             Node parent, boolean isTagFile, boolean directivesOnly,
-            JarResource jarResource, String pageEnc, String jspConfigPageEnc,
+            Jar jar, String pageEnc, String jspConfigPageEnc,
             boolean isDefaultPageEncoding, boolean isBomPresent)
             throws JasperException {
 
-        Parser parser = new Parser(pc, reader, isTagFile, directivesOnly,
-                jarResource);
+        Parser parser = new Parser(pc, reader, isTagFile, directivesOnly, jar);
 
         Node.Root root = new Node.Root(reader.mark(), parent, false);
         root.setPageEncoding(pageEnc);
@@ -317,7 +318,7 @@ class Parser implements TagConstants {
         }
 
         try {
-            parserController.parse(file, parent, jarResource);
+            parserController.parse(file, parent, jar);
         } catch (FileNotFoundException ex) {
             err.jspError(start, "jsp.error.file.not.found", file);
         } catch (Exception ex) {
@@ -406,19 +407,11 @@ class Parser implements TagConstants {
                                 .getCache().get(uri);
                     }
                     if (impl == null) {
-                        TldLocation location = ctxt.getTldLocation(uri);
+                        TldResourcePath tldResourcePath = ctxt.getTldResourcePath(uri);
                         impl = new TagLibraryInfoImpl(ctxt, parserController,
-                                pageInfo, prefix, uri, location, err,
-                                reader.mark());
+                                pageInfo, prefix, uri, tldResourcePath, err);
                         if (ctxt.getOptions().isCaching()) {
                             ctxt.getOptions().getCache().put(uri, impl);
-                        }
-                    } else {
-                        // Current compilation context needs location of cached
-                        // tag files
-                        for (TagFileInfo info : impl.getTagFiles()) {
-                            ctxt.setTagFileJarResource(info.getPath(),
-                                    ctxt.getTagFileJarResource());
                         }
                     }
                     pageInfo.addTaglib(uri, impl);
@@ -743,14 +736,16 @@ class Parser implements TagConstants {
     }
 
     /*
-     * ELExpressionBody (following "${" to first unquoted "}") // XXX add formal
-     * production and confirm implementation against it, // once it's decided
+     * ELExpressionBody. Starts with "#{" or "${".  Ends with "}".May contain
+     *                   quoted "{", "}", '{', or '}' and nested "{...}"
      */
     private void parseELExpression(Node parent, char type)
             throws JasperException {
         start = reader.mark();
         Mark last = null;
-        boolean singleQuoted = false, doubleQuoted = false;
+        boolean singleQuoted = false;
+        boolean doubleQuoted = false;
+        int nesting = 0;
         int currentChar;
         do {
             // XXX could move this logic to JspReader
@@ -763,11 +758,20 @@ class Parser implements TagConstants {
             }
             if (currentChar == -1)
                 err.jspError(start, "jsp.error.unterminated", type + "{");
-            if (currentChar == '"' && !singleQuoted)
+            if (currentChar == '"' && !singleQuoted) {
                 doubleQuoted = !doubleQuoted;
-            if (currentChar == '\'' && !doubleQuoted)
+            } else if (currentChar == '\'' && !doubleQuoted) {
                 singleQuoted = !singleQuoted;
-        } while (currentChar != '}' || (singleQuoted || doubleQuoted));
+            } else if (currentChar == '{' && !doubleQuoted && !singleQuoted) {
+                nesting++;
+            } else if (currentChar =='}' && !doubleQuoted && !singleQuoted) {
+                // Note: This also matches the terminating '}' at which point
+                //       nesting will be set to -1 - hence the test for
+                //       while (currentChar != '}' || nesting > -1 ||...) below
+                //       to continue the loop until the final '}' is detected
+                nesting--;
+            }
+        } while (currentChar != '}' || singleQuoted || doubleQuoted || nesting > -1);
 
         @SuppressWarnings("unused")
         Node unused = new Node.ELExpression(

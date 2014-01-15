@@ -29,7 +29,7 @@ import java.util.jar.JarFile;
  * refer to a JAR file nested inside a WAR
  * (e.g URLs of the form jar:file: ... .war!/ ... .jar).
  */
-public class FileUrlNestedJar implements Jar {
+public class JarFileUrlNestedJar implements Jar {
 
     private final URL jarFileURL;
     private final JarFile warFile;
@@ -37,7 +37,7 @@ public class FileUrlNestedJar implements Jar {
     private NonClosingJarInputStream jarInputStream = null;
     private JarEntry entry = null;
 
-    public FileUrlNestedJar(URL url) throws IOException {
+    public JarFileUrlNestedJar(URL url) throws IOException {
         jarFileURL = url;
         JarURLConnection jarConn = (JarURLConnection) url.openConnection();
         jarConn.setUseCaches(false);
@@ -47,8 +47,6 @@ public class FileUrlNestedJar implements Jar {
         int pathStart = urlAsString.indexOf("!/") + 2;
         String jarPath = urlAsString.substring(pathStart);
         jarEntry = warFile.getJarEntry(jarPath);
-
-        jarInputStream = createJarInputStream();
     }
 
 
@@ -61,6 +59,7 @@ public class FileUrlNestedJar implements Jar {
 
     @Override
     public boolean entryExists(String name) throws IOException {
+        reset();
         JarEntry entry = jarInputStream.getNextJarEntry();
         while (entry != null) {
             if (name.equals(entry.getName())) {
@@ -75,6 +74,7 @@ public class FileUrlNestedJar implements Jar {
 
     @Override
     public InputStream getInputStream(String name) throws IOException {
+        reset();
         JarEntry entry = jarInputStream.getNextJarEntry();
         while (entry != null) {
             if (name.equals(entry.getName())) {
@@ -90,6 +90,34 @@ public class FileUrlNestedJar implements Jar {
         }
     }
 
+
+    @Override
+    public long getLastModified(String name) throws IOException {
+        reset();
+        JarEntry entry = jarInputStream.getNextJarEntry();
+        while (entry != null) {
+            if (name.equals(entry.getName())) {
+                break;
+            }
+            entry = jarInputStream.getNextJarEntry();
+        }
+
+        if (entry == null) {
+            return -1;
+        } else {
+            return entry.getTime();
+        }
+    }
+
+    @Override
+    public String getURL(String entry) {
+        StringBuilder result = new StringBuilder("jar:");
+        result.append(getJarFileURL().toExternalForm());
+        result.append("!/");
+        result.append(entry);
+
+        return result.toString();
+    }
 
     @Override
     public void close() {
@@ -121,6 +149,14 @@ public class FileUrlNestedJar implements Jar {
 
     @Override
     public void nextEntry() {
+        if (jarInputStream == null) {
+            try {
+                jarInputStream = createJarInputStream();
+            } catch (IOException e) {
+                entry = null;
+                return;
+            }
+        }
         try {
             entry = jarInputStream.getNextJarEntry();
         } catch (IOException ioe) {
@@ -141,6 +177,9 @@ public class FileUrlNestedJar implements Jar {
 
     @Override
     public InputStream getEntryInputStream() throws IOException {
+        if (jarInputStream == null) {
+            createJarInputStream();
+        }
         return jarInputStream;
     }
 

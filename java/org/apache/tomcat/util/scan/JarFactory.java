@@ -33,10 +33,12 @@ public class JarFactory {
         String jarUrl = url.toString();
         if (jarUrl.startsWith("jar:file:")) {
             if (jarUrl.endsWith("!/")) {
-                return new FileUrlJar(url);
+                return new JarFileUrlJar(url, true);
             } else {
-                return new FileUrlNestedJar(url);
+                return new JarFileUrlNestedJar(url);
             }
+        } else if (jarUrl.startsWith("file:")) {
+            return new JarFileUrlJar(url, false);
         } else {
             return new UrlJar(url);
         }

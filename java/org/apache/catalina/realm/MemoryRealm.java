@@ -39,7 +39,7 @@ import org.apache.tomcat.util.digester.Digester;
  * synchronization is performed around accesses to the principals collection.
  *
  * @author Craig R. McClanahan
- * @version $Id: MemoryRealm.java 1361771 2012-07-15 19:40:18Z markt $
+ * @version $Id: MemoryRealm.java 1548185 2013-12-05 16:11:55Z markt $
  */
 
 public class MemoryRealm  extends RealmBase {
@@ -115,17 +115,7 @@ public class MemoryRealm  extends RealmBase {
 
         GenericPrincipal principal = principals.get(username);
 
-        boolean validated = false;
-        if (principal != null && credentials != null) {
-            if (hasMessageDigest()) {
-                // Hex hashes should be compared case-insensitive
-                validated = (digest(credentials)
-                             .equalsIgnoreCase(principal.getPassword()));
-            } else {
-                validated =
-                    (digest(credentials).equals(principal.getPassword()));
-            }
-        }
+        boolean validated = compareCredentials(credentials, principal.getPassword());
 
         if (validated) {
             if (log.isDebugEnabled())

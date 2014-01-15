@@ -35,6 +35,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
@@ -82,7 +83,6 @@ import org.apache.catalina.Container;
 import org.apache.catalina.ContainerListener;
 import org.apache.catalina.Context;
 import org.apache.catalina.Globals;
-import org.apache.catalina.Host;
 import org.apache.catalina.InstanceListener;
 import org.apache.catalina.Lifecycle;
 import org.apache.catalina.LifecycleException;
@@ -134,7 +134,7 @@ import org.apache.tomcat.util.scan.StandardJarScanner;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardContext.java 1523625 2013-09-16 13:10:18Z markt $
+ * @version $Id: StandardContext.java 1552029 2013-12-18 17:09:08Z markt $
  */
 
 public class StandardContext extends ContainerBase
@@ -212,12 +212,6 @@ public class StandardContext extends ContainerBase
      * Lifecycle provider.
      */
     private InstanceManager instanceManager = null;
-
-
-    /**
-     * The antiJARLocking flag for this Context.
-     */
-    private boolean antiJARLocking = false;
 
 
     /**
@@ -695,7 +689,8 @@ public class StandardContext extends ContainerBase
 
 
     /**
-     * Attribute value used to turn on/off XML validation
+     * Attribute value used to turn on/off XML validation for web.xml and
+     * web-fragment.xml files.
      */
     private boolean webXmlValidation = Globals.STRICT_SERVLET_COMPLIANCE;
 
@@ -704,6 +699,18 @@ public class StandardContext extends ContainerBase
      * Attribute value used to turn on/off XML namespace validation
      */
     private boolean webXmlNamespaceAware = Globals.STRICT_SERVLET_COMPLIANCE;
+
+
+    /**
+     * Attribute used to turn on/off the use of external entities.
+     */
+    private boolean xmlBlockExternal = Globals.IS_SECURITY_ENABLED;
+
+
+    /**
+     * Attribute value used to turn on/off XML validation
+     */
+    private boolean tldValidation = Globals.STRICT_SERVLET_COMPLIANCE;
 
 
     /**
@@ -1290,37 +1297,11 @@ public class StandardContext extends ContainerBase
 
 
     /**
-     * Return the antiJARLocking flag for this Context.
-     */
-    public boolean getAntiJARLocking() {
-
-        return (this.antiJARLocking);
-
-    }
-
-
-    /**
      * Return the antiResourceLocking flag for this Context.
      */
     public boolean getAntiResourceLocking() {
 
         return (this.antiResourceLocking);
-
-    }
-
-
-    /**
-     * Set the antiJARLocking feature for this Context.
-     *
-     * @param antiJARLocking The new flag value
-     */
-    public void setAntiJARLocking(boolean antiJARLocking) {
-
-        boolean oldAntiJARLocking = this.antiJARLocking;
-        this.antiJARLocking = antiJARLocking;
-        support.firePropertyChange("antiJARLocking",
-                                   oldAntiJARLocking,
-                                   this.antiJARLocking);
 
     }
 
@@ -4649,34 +4630,33 @@ public class StandardContext extends ContainerBase
      */
     public boolean filterStart() {
 
-        if (getLogger().isDebugEnabled())
+        if (getLogger().isDebugEnabled()) {
             getLogger().debug("Starting filters");
+        }
         // Instantiate and record a FilterConfig for each defined filter
         boolean ok = true;
         synchronized (filterConfigs) {
             filterConfigs.clear();
-            Iterator<String> names = filterDefs.keySet().iterator();
-            while (names.hasNext()) {
-                String name = names.next();
-                if (getLogger().isDebugEnabled())
+            for (Entry<String,FilterDef> entry : filterDefs.entrySet()) {
+                String name = entry.getKey();
+                if (getLogger().isDebugEnabled()) {
                     getLogger().debug(" Starting filter '" + name + "'");
-                ApplicationFilterConfig filterConfig = null;
+                }
                 try {
-                    filterConfig =
-                        new ApplicationFilterConfig(this, filterDefs.get(name));
+                    ApplicationFilterConfig filterConfig =
+                            new ApplicationFilterConfig(this, entry.getValue());
                     filterConfigs.put(name, filterConfig);
                 } catch (Throwable t) {
                     t = ExceptionUtils.unwrapInvocationTargetException(t);
                     ExceptionUtils.handleThrowable(t);
-                    getLogger().error
-                        (sm.getString("standardContext.filterStart", name), t);
+                    getLogger().error(sm.getString(
+                            "standardContext.filterStart", name), t);
                     ok = false;
                 }
             }
         }
 
-        return (ok);
-
+        return ok;
     }
 
 
@@ -4925,9 +4905,7 @@ public class StandardContext extends ContainerBase
      * Return <code>true</code> if initialization was successfull,
      * or <code>false</code> otherwise.
      */
-    public boolean resourcesStart() throws LifecycleException {
-
-        boolean ok = true;
+    public void resourcesStart() throws LifecycleException {
 
         resources.setAllowLinking(isAllowLinking());
 
@@ -4951,8 +4929,6 @@ public class StandardContext extends ContainerBase
                         webinfClassesResource.getURL(), "/");
             }
         }
-
-        return ok;
     }
 
 
@@ -5066,10 +5042,7 @@ public class StandardContext extends ContainerBase
             }
         }
         if (ok) {
-            if (!resourcesStart()) {
-                log.error( "Error in resourceStart()");
-                ok = false;
-            }
+            resourcesStart();
         }
 
         if (getLoader() == null) {
@@ -5135,7 +5108,6 @@ public class StandardContext extends ContainerBase
 
                 // since the loader just started, the webapp classloader is now
                 // created.
-                setClassLoaderProperty("antiJARLocking", getAntiJARLocking());
                 setClassLoaderProperty("clearReferencesStatic",
                         getClearReferencesStatic());
                 setClassLoaderProperty("clearReferencesStopThreads",
@@ -5333,12 +5305,6 @@ public class StandardContext extends ContainerBase
                 new Notification("j2ee.state.running", this.getObjectName(),
                                  sequenceNumber.getAndIncrement());
             broadcaster.sendNotification(notification);
-        }
-
-        // Close all JARs right away to avoid always opening a peak number
-        // of files on startup
-        if (getLoader() instanceof WebappLoader) {
-            ((WebappLoader) getLoader()).closeJARs(true);
         }
 
         // Reinitializing if something went wrong
@@ -5875,57 +5841,29 @@ public class StandardContext extends ContainerBase
     }
 
 
-
-    /**
-     * Get base path.
-     */
-    protected String getBasePath() {
-        String docBase = null;
-        Container container = this;
-        while (container != null) {
-            if (container instanceof Host)
-                break;
-            container = container.getParent();
-        }
-        File file = new File(getDocBase());
-        if (!file.isAbsolute()) {
-            if (container == null) {
-                docBase = (new File(getCatalinaBase(), getDocBase())).getPath();
-            } else {
-                // Use the "appBase" property of this container
-                file = ((Host) container).getAppBaseFile();
-                docBase = (new File(file, getDocBase())).getPath();
-            }
-        } else {
-            docBase = file.getPath();
-        }
-        return docBase;
-    }
-
-
     /**
      * Get naming context full name.
      */
     private String getNamingContextName() {
-    if (namingContextName == null) {
-        Container parent = getParent();
-        if (parent == null) {
-        namingContextName = getName();
-        } else {
-        Stack<String> stk = new Stack<>();
-        StringBuilder buff = new StringBuilder();
-        while (parent != null) {
-            stk.push(parent.getName());
-            parent = parent.getParent();
+        if (namingContextName == null) {
+            Container parent = getParent();
+            if (parent == null) {
+            namingContextName = getName();
+            } else {
+            Stack<String> stk = new Stack<>();
+            StringBuilder buff = new StringBuilder();
+            while (parent != null) {
+                stk.push(parent.getName());
+                parent = parent.getParent();
+            }
+            while (!stk.empty()) {
+                buff.append("/" + stk.pop());
+            }
+            buff.append(getName());
+            namingContextName = buff.toString();
+            }
         }
-        while (!stk.empty()) {
-            buff.append("/" + stk.pop());
-        }
-        buff.append(getName());
-        namingContextName = buff.toString();
-        }
-    }
-    return namingContextName;
+        return namingContextName;
     }
 
 
@@ -6430,47 +6368,52 @@ public class StandardContext extends ContainerBase
 
     }
 
-     /**
-     * Set the validation feature of the XML parser used when
-     * parsing xml instances.
-     * @param webXmlValidation true to enable xml instance validation
-     */
+
     @Override
-    public void setXmlValidation(boolean webXmlValidation){
-
-        this.webXmlValidation = webXmlValidation;
-
-    }
-
-    /**
-     * Get the server.xml <context> attribute's xmlValidation.
-     * @return true if validation is enabled.
-     *
-     */
-    @Override
-    public boolean getXmlValidation(){
-        return webXmlValidation;
-    }
-
-
-    /**
-     * Get the server.xml <context> attribute's xmlNamespaceAware.
-     * @return true if namespace awarenes is enabled.
-     */
-    @Override
-    public boolean getXmlNamespaceAware(){
+    public boolean getXmlNamespaceAware() {
         return webXmlNamespaceAware;
     }
 
 
-    /**
-     * Set the namespace aware feature of the XML parser used when
-     * parsing xml instances.
-     * @param webXmlNamespaceAware true to enable namespace awareness
-     */
     @Override
-    public void setXmlNamespaceAware(boolean webXmlNamespaceAware){
-        this.webXmlNamespaceAware= webXmlNamespaceAware;
+    public void setXmlNamespaceAware(boolean webXmlNamespaceAware) {
+        this.webXmlNamespaceAware = webXmlNamespaceAware;
+    }
+
+
+    @Override
+    public void setXmlValidation(boolean webXmlValidation) {
+        this.webXmlValidation = webXmlValidation;
+    }
+
+
+    @Override
+    public boolean getXmlValidation() {
+        return webXmlValidation;
+    }
+
+
+    @Override
+    public void setXmlBlockExternal(boolean xmlBlockExternal) {
+        this.xmlBlockExternal = xmlBlockExternal;
+    }
+
+
+    @Override
+    public boolean getXmlBlockExternal() {
+        return xmlBlockExternal;
+    }
+
+
+    @Override
+    public void setTldValidation(boolean tldValidation) {
+        this.tldValidation = tldValidation;
+    }
+
+
+    @Override
+    public boolean getTldValidation() {
+        return tldValidation;
     }
 
 

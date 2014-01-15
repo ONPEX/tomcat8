@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.imageio.ImageIO;
 
@@ -85,9 +86,9 @@ public final class Room {
 
 
     /**
-     * An object used to synchronize access to this Room.
+     * The lock used to synchronize access to this Room.
      */
-    private final Object syncObj = new Object();
+    private final ReentrantLock roomLock = new ReentrantLock();
 
     /**
      * Indicates if this room has already been shutdown.
@@ -107,6 +108,15 @@ public final class Room {
      * messages which would cause TCP overhead and high CPU usage.
      */
     private final Timer drawmessageBroadcastTimer = new Timer();
+
+    private static final int TIMER_DELAY = 30;
+
+    /**
+     * The current active broadcast timer task. If null, then no Broadcast task is scheduled.
+     * The Task will be scheduled if the first player enters the Room, and
+     * cancelled if the last player exits the Room, to avoid unnecessary timer executions.
+     */
+    private TimerTask activeBroadcastTimerTask;
 
 
     /**
@@ -138,9 +148,10 @@ public final class Room {
         roomGraphics.setBackground(Color.WHITE);
         roomGraphics.clearRect(0, 0, roomImage.getWidth(),
                 roomImage.getHeight());
+    }
 
-        // Schedule a TimerTask that broadcasts draw messages.
-        drawmessageBroadcastTimer.schedule(new TimerTask() {
+    private TimerTask createBroadcastTimerTask() {
+        return new TimerTask() {
             @Override
             public void run() {
                 invokeAndWait(new Runnable() {
@@ -150,7 +161,7 @@ public final class Room {
                     }
                 });
             }
-        }, 30, 30);
+        };
     }
 
     /**
@@ -170,6 +181,13 @@ public final class Room {
 
         // Add the new player to the list.
         players.add(p);
+
+        // If currently no Broacast Timer Task is scheduled, then we need to create one.
+        if (activeBroadcastTimerTask == null) {
+            activeBroadcastTimerTask = createBroadcastTimerTask();
+            drawmessageBroadcastTimer.schedule(activeBroadcastTimerTask,
+                    TIMER_DELAY, TIMER_DELAY);
+        }
 
         // Send him the current number of players and the current room image.
         String content = String.valueOf(players.size());
@@ -196,7 +214,20 @@ public final class Room {
      * @param p
      */
     private void internalRemovePlayer(Player p) {
-        players.remove(p);
+        boolean removed = players.remove(p);
+        assert removed;
+
+        // If the last player left the Room, we need to cancel the Broadcast Timer Task.
+        if (players.size() == 0) {
+            // Cancel the task.
+            // Note that it can happen that the TimerTask is just about to execute (from
+            // the Timer thread) but waits until all players are gone (or even until a new
+            // player is added to the list), and then executes. This is OK. To prevent it,
+            // a TimerTask subclass would need to have some boolan "cancel" instance variable and
+            // query it in the invocation of Room#invokeAndWait.
+            activeBroadcastTimerTask.cancel();
+            activeBroadcastTimerTask = null;
+        }
 
         // Broadcast that one player is removed.
         broadcastRoomMessage(MessageType.PLAYER_CHANGED, "-");
@@ -292,19 +323,63 @@ public final class Room {
         }
     }
 
+    /**
+     * A list of cached {@link Runnable}s to prevent recursive invocation of Runnables
+     * by one thread. This variable is only used by one thread at a time and then
+     * set to <code>null</code>.
+     */
+    private List<Runnable> cachedRunnables = null;
 
     /**
      * Submits the given Runnable to the Room Executor and waits until it
      * has been executed. Currently, this simply means that the Runnable
-     * will be run directly inside of a synchronized() block.
+     * will be run directly inside of a synchronized() block.<br>
+     * Note that if a runnable recursively calls invokeAndWait() with another
+     * runnable on this Room, it will not be executed recursively, but instead
+     * cached until the original runnable is finished, to keep the behavior of
+     * using a Executor.
      * @param task
      */
     public void invokeAndWait(Runnable task)  {
-        synchronized (syncObj) {
-            if (!closed) {
-                task.run();
+
+        // Check if the current thread already holds a lock on this room.
+        // If yes, then we must not directly execute the Runnable but instead
+        // cache it until the original invokeAndWait() has finished.
+        if (roomLock.isHeldByCurrentThread()) {
+
+            if (cachedRunnables == null) {
+                cachedRunnables = new ArrayList<>();
             }
+            cachedRunnables.add(task);
+
+        } else {
+
+            roomLock.lock();
+            try {
+                // Explicitely overwrite value to ensure data consistency in
+                // current thread
+                cachedRunnables = null;
+
+                if (!closed) {
+                    task.run();
+                }
+
+                // Run the cached runnables.
+                if (cachedRunnables != null) {
+                    for (int i = 0; i < cachedRunnables.size(); i++) {
+                        if (!closed) {
+                            cachedRunnables.get(i).run();
+                        }
+                    }
+                    cachedRunnables = null;
+                }
+
+            } finally {
+                roomLock.unlock();
+            }
+
         }
+
     }
 
     /**
@@ -405,7 +480,7 @@ public final class Room {
          */
         private void sendRoomMessage(MessageType type, String content) {
             if (content == null || type == null)
-                throw null;
+                throw new NullPointerException();
 
             String completeMsg = String.valueOf(type.flag) + content;
 

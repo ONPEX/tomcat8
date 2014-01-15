@@ -25,15 +25,20 @@ package org.apache.catalina.security;
  *
  * @author Glenn L. Nielsen
  * @author Jean-Francois Arcand
- * @version $Id: SecurityClassLoad.java 1532511 2013-10-15 20:15:03Z markt $
+ * @version $Id: SecurityClassLoad.java 1551658 2013-12-17 19:10:07Z markt $
  */
 
 public final class SecurityClassLoad {
 
-    public static void securityClassLoad(ClassLoader loader)
-        throws Exception {
+    public static void securityClassLoad(ClassLoader loader) throws Exception {
+        securityClassLoad(loader, true);
+    }
 
-        if( System.getSecurityManager() == null ){
+
+    static void securityClassLoad(ClassLoader loader, boolean requireSecurityManager)
+            throws Exception {
+
+        if (requireSecurityManager && System.getSecurityManager() == null) {
             return;
         }
 
@@ -51,7 +56,7 @@ public final class SecurityClassLoad {
 
 
     private static final void loadCorePackage(ClassLoader loader)
-        throws Exception {
+            throws Exception {
         final String basePackage = "org.apache.catalina.core.";
         loader.loadClass
             (basePackage +
@@ -108,7 +113,7 @@ public final class SecurityClassLoad {
 
 
     private static final void loadLoaderPackage(ClassLoader loader)
-        throws Exception {
+            throws Exception {
         final String basePackage = "org.apache.catalina.loader.";
         loader.loadClass
             (basePackage +
@@ -125,7 +130,7 @@ public final class SecurityClassLoad {
 
 
     private static final void loadSessionPackage(ClassLoader loader)
-        throws Exception {
+            throws Exception {
         final String basePackage = "org.apache.catalina.session.";
         loader.loadClass
             (basePackage + "StandardSession");
@@ -139,7 +144,7 @@ public final class SecurityClassLoad {
 
 
     private static final void loadUtilPackage(ClassLoader loader)
-        throws Exception {
+            throws Exception {
         final String basePackage = "org.apache.catalina.util.";
         loader.loadClass(basePackage + "ParameterMap");
     }
@@ -147,9 +152,9 @@ public final class SecurityClassLoad {
 
     private static final void loadValvesPackage(ClassLoader loader)
             throws Exception {
-            final String basePackage = "org.apache.catalina.valves.";
-            loader.loadClass(basePackage + "AccessLogValve$3");
-        }
+        final String basePackage = "org.apache.catalina.valves.";
+        loader.loadClass(basePackage + "AccessLogValve$3");
+    }
 
 
     private static final void loadCoyotePackage(ClassLoader loader)
@@ -164,13 +169,13 @@ public final class SecurityClassLoad {
 
 
     private static final void loadJavaxPackage(ClassLoader loader)
-        throws Exception {
+            throws Exception {
         loader.loadClass("javax.servlet.http.Cookie");
     }
 
 
     private static final void loadConnectorPackage(ClassLoader loader)
-        throws Exception {
+            throws Exception {
         final String basePackage = "org.apache.catalina.connector.";
         loader.loadClass
             (basePackage +
@@ -253,7 +258,7 @@ public final class SecurityClassLoad {
     }
 
     private static final void loadTomcatPackage(ClassLoader loader)
-        throws Exception {
+            throws Exception {
         final String basePackage = "org.apache.tomcat.";
         // buf
         loader.loadClass(basePackage + "util.buf.HexUtils");
@@ -280,8 +285,9 @@ public final class SecurityClassLoad {
         loader.loadClass(basePackage +
                 "util.net.NioBlockingSelector$BlockPoller$3");
         loader.loadClass(basePackage + "util.net.SSLSupport$CipherData");
+        // threads
         loader.loadClass
-            (basePackage + "util.net.AbstractEndpoint$PrivilegedSetTccl");
+            (basePackage + "util.threads.TaskThreadFactory$PrivilegedSetTccl");
     }
 }
 

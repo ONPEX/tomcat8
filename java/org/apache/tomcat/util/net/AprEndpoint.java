@@ -17,8 +17,6 @@
 
 package org.apache.tomcat.util.net;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -514,7 +512,16 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
             }
 
             // Create SSL Context
-            sslContext = SSLContext.make(rootPool, value, SSL.SSL_MODE_SERVER);
+            try {
+                sslContext = SSLContext.make(rootPool, value, SSL.SSL_MODE_SERVER);
+            } catch (Exception e) {
+                // If the sslEngine is disabled on the AprLifecycleListener
+                // there will be an Exception here but there is no way to check
+                // the AprLifecycleListener settings from here
+                throw new Exception(
+                        sm.getString("endpoint.apr.failSslContextMake"), e);
+            }
+
             if (SSLInsecureRenegotiation) {
                 boolean legacyRenegSupported = false;
                 try {
@@ -883,26 +890,7 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
                     SocketProcessor proc = new SocketProcessor(socket, status);
                     Executor executor = getExecutor();
                     if (dispatch && executor != null) {
-                        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-                        try {
-                            //threads should not be created by the webapp classloader
-                            if (Constants.IS_SECURITY_ENABLED) {
-                                PrivilegedAction<Void> pa = new PrivilegedSetTccl(
-                                        getClass().getClassLoader());
-                                AccessController.doPrivileged(pa);
-                            } else {
-                                Thread.currentThread().setContextClassLoader(
-                                        getClass().getClassLoader());
-                            }
-                            executor.execute(proc);
-                        } finally {
-                            if (Constants.IS_SECURITY_ENABLED) {
-                                PrivilegedAction<Void> pa = new PrivilegedSetTccl(loader);
-                                AccessController.doPrivileged(pa);
-                            } else {
-                                Thread.currentThread().setContextClassLoader(loader);
-                            }
-                        }
+                        executor.execute(proc);
                     } else {
                         proc.run();
                     }
@@ -922,6 +910,8 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
         // If not running the socket will be destroyed by
         // parent pool or acceptor socket.
         // In any case disable double free which would cause JVM core.
+
+        connections.remove(Long.valueOf(socket));
 
         // While the connector is running, destroySocket() will call
         // countDownConnection(). Once the connector is stopped, the latch is

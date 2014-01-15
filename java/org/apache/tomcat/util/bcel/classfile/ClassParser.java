@@ -36,10 +36,12 @@ import org.apache.tomcat.util.bcel.Constants;
  * JVM specification 1.0</a>. See this paper for
  * further details about the structure of a bytecode file.
  *
- * @version $Id: ClassParser.java 1397985 2012-10-14 00:53:23Z markt $
+ * @version $Id: ClassParser.java 1539887 2013-11-08 00:54:54Z markt $
  * @author <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */
 public final class ClassParser {
+
+    private static final int MAGIC = 0xCAFEBABE;
 
     private DataInputStream file;
     private String file_name;
@@ -191,8 +193,7 @@ public final class ClassParser {
      * @throws  ClassFormatException
      */
     private final void readID() throws IOException, ClassFormatException {
-        int magic = 0xCAFEBABE;
-        if (file.readInt() != magic) {
+        if (file.readInt() != MAGIC) {
             throw new ClassFormatException(file_name + " is not a Java .class file");
         }
     }

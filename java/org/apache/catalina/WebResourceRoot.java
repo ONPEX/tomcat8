@@ -18,6 +18,7 @@ package org.apache.catalina;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -96,7 +97,7 @@ public interface WebResourceRoot extends Lifecycle {
     WebResource getResource(String path);
 
     /**
-     * Obtain the object(s) that represent the resource at the given path. Note
+     * Obtain the objects that represent the resource at the given path. Note
      * that the resource at that path may not exist. If the path does not
      * exist, the WebResource returned will be associated with the main
      * WebResourceSet. This will include all matches even if the resource would
@@ -106,9 +107,42 @@ public interface WebResourceRoot extends Lifecycle {
      * @param path  The path for the resource of interest relative to the root
      *              of the web application. It must start with '/'.
      *
-     * @return  The object that represents the resource at the given path
+     * @return  The objects that represents the resource at the given path
      */
     WebResource[] getResources(String path);
+
+    /**
+     * Obtain the object that represents the class loader resource at the given
+     * path. WEB-INF/classes is always searched prior to searching JAR files in
+     * WEB-INF/lib. The search order for JAR files will be consistent across
+     * subsequent calls to this method until the web application is reloaded. No
+     * guarantee is made as to what the search order for JAR files may be.
+     *
+     * @param path  The path of the class loader resource of interest relative
+     *              to the the root of class loader resources for this web
+     *              application.
+     *
+     * @return  The object that represents the class loader resource at the
+     *          given path
+     */
+    WebResource getClassLoaderResource(String path);
+
+    /**
+     * Obtain the objects that represent the class loader resource at the given
+     * path. Note that the resource at that path may not exist. If the path does
+     * not exist, the WebResource returned will be associated with the main
+     * WebResourceSet. This will include all matches even if the resource would
+     * not normally be accessible (e.g. because it was overridden by another
+     * resource)
+     *
+     * @param path  The path for the class loader resource of interest relative
+     *              to the root of the class loader resources for the web
+     *              application. It must start with '/'.
+     *
+     * @return  The objects that represents the class loader resources at the
+     *          given path
+     */
+    WebResource[] getClassLoaderResources(String path);
 
     /**
      * Obtain the list of the names of all of the files and directories located
@@ -312,30 +346,70 @@ public interface WebResourceRoot extends Lifecycle {
     long getCacheMaxSize();
 
     /**
-     * Set the maximum permitted size for a single object in the cache.
+     * Set the maximum permitted size for a single object in the cache. Note
+     * that the maximum size in bytes may not exceed {@link Integer#MAX_VALUE}.
      *
      * @param cacheMaxObjectSize    Maximum size for a single cached object in
      *                              kilobytes
      */
-    void setCacheMaxObjectSize(long cacheMaxObjectSize);
+    void setCacheMaxObjectSize(int cacheMaxObjectSize);
 
     /**
-     * Get the maximum permitted size for a single object in the cache.
+     * Get the maximum permitted size for a single object in the cache. Note
+     * that the maximum size in bytes may not exceed {@link Integer#MAX_VALUE}.
      *
      * @return  Maximum size for a single cached object in kilobytes
      */
-    long getCacheMaxObjectSize();
+    int getCacheMaxObjectSize();
+
+    /**
+     * Controls whether the trace locked files feature is enabled. If enabled,
+     * all calls to methods that return objects that lock a file and need to be
+     * closed to release that lock (e.g. {@link WebResource#getInputStream()}
+     * will perform a number of additional tasks.
+     * <ul>
+     *   <li>The stack trace at the point where the method was called will be
+     *       recorded and associated with the returned object.</li>
+     *   <li>The returned object will be wrapped so that the point where close()
+     *       (or equivalent) is called to release the resources can be detected.
+     *       Tracking of the object will cease once the resources have been
+     *       released.</li>
+     *   <li>All remaining locked resources on web application shutdown will be
+     *       logged and then closed.</li>
+     * </ul>
+     *
+     * @param traceLockedFiles @true to enable it, @false to disable it
+     */
+    void setTraceLockedFiles(boolean traceLockedFiles);
+
+    /**
+     * Has the trace locked files feature been enabled?
+     *
+     * @return @true if it has been enabled, otherwise @false
+     */
+    boolean getTraceLockedFiles();
 
     /**
      * This method will be invoked by the context on a periodic basis and allows
      * the implementation a method that executes periodic tasks, such as purging
      * expired cache entries.
      */
-    public void backgroundProcess();
+    void backgroundProcess();
 
-    public static enum ResourceSetType {
+    void registerTracedResource(WebResourceTraceWrapper traceWrapper);
+
+    void deregisterTracedResource(WebResourceTraceWrapper traceWrapperInputStream);
+
+    /**
+     * Obtain the set of {@link WebResourceSet#getBaseUrl()} for all
+     * {@link WebResourceSet}s used by this root.
+     */
+    List<URL> getBaseUrls();
+
+    static enum ResourceSetType {
         PRE,
         RESOURCE_JAR,
-        POST
+        POST,
+        CLASSES_JAR
     }
 }

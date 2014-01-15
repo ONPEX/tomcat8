@@ -20,10 +20,12 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.EnumSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.servlet.ReadListener;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.SessionTrackingMode;
+import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.catalina.Context;
@@ -57,7 +59,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: CoyoteAdapter.java 1519711 2013-09-03 14:59:17Z markt $
+ * @version $Id: CoyoteAdapter.java 1545801 2013-11-26 19:56:54Z markt $
  */
 public class CoyoteAdapter implements Adapter {
 
@@ -312,14 +314,15 @@ public class CoyoteAdapter implements Adapter {
                 Throwable t = (Throwable)req.getAttribute(
                         RequestDispatcher.ERROR_EXCEPTION);
                 req.getAttributes().remove(RequestDispatcher.ERROR_EXCEPTION);
-                if (req.getReadListener() != null) {
+                ReadListener readListener = req.getReadListener();
+                if (readListener != null) {
                     ClassLoader oldCL =
                             Thread.currentThread().getContextClassLoader();
                     ClassLoader newCL =
                             request.getContext().getLoader().getClassLoader();
                     try {
                         Thread.currentThread().setContextClassLoader(newCL);
-                        req.getReadListener().onError(t);
+                        readListener.onError(t);
                     } finally {
                         Thread.currentThread().setContextClassLoader(oldCL);
                     }
@@ -354,8 +357,9 @@ public class CoyoteAdapter implements Adapter {
 
             // Check to see if non-blocking writes or reads are being used
             if (!request.isAsyncDispatching() && request.isAsync()) {
-                if (res.getWriteListener() != null &&
-                        status == SocketStatus.OPEN_WRITE) {
+                WriteListener writeListener = res.getWriteListener();
+                ReadListener readListener = req.getReadListener();
+                if (writeListener != null && status == SocketStatus.OPEN_WRITE) {
                     ClassLoader oldCL =
                             Thread.currentThread().getContextClassLoader();
                     ClassLoader newCL =
@@ -363,29 +367,32 @@ public class CoyoteAdapter implements Adapter {
                     try {
                         Thread.currentThread().setContextClassLoader(newCL);
                         res.onWritePossible();
+                        if (request.isFinished() && req.sendAllDataReadEvent() &&
+                                readListener != null) {
+                            readListener.onAllDataRead();
+                        }
                     } catch (Throwable t) {
                         ExceptionUtils.handleThrowable(t);
-                        res.getWriteListener().onError(t);
+                        writeListener.onError(t);
                         throw t;
                     } finally {
                         Thread.currentThread().setContextClassLoader(oldCL);
                     }
                     success = true;
-                } else if (req.getReadListener() != null &&
-                        status == SocketStatus.OPEN_READ) {
+                } else if (readListener != null && status == SocketStatus.OPEN_READ) {
                     ClassLoader oldCL =
                             Thread.currentThread().getContextClassLoader();
                     ClassLoader newCL =
                             request.getContext().getLoader().getClassLoader();
                     try {
                         Thread.currentThread().setContextClassLoader(newCL);
-                        req.getReadListener().onDataAvailable();
-                        if (request.isFinished()) {
-                            req.getReadListener().onAllDataRead();
+                        readListener.onDataAvailable();
+                        if (request.isFinished() && req.sendAllDataReadEvent()) {
+                            readListener.onAllDataRead();
                         }
                     } catch (Throwable t) {
                         ExceptionUtils.handleThrowable(t);
-                        req.getReadListener().onError(t);
+                        readListener.onError(t);
                         throw t;
                     } finally {
                         Thread.currentThread().setContextClassLoader(oldCL);
@@ -538,7 +545,7 @@ public class CoyoteAdapter implements Adapter {
             if (asyncConImpl != null) {
                 async = true;
                 ReadListener readListener = req.getReadListener();
-                if (readListener != null) {
+                if (readListener != null && request.isFinished()) {
                     // Possible the all data may have been read during service()
                     // method so this needs to be checked here
                     ClassLoader oldCL =
@@ -547,7 +554,7 @@ public class CoyoteAdapter implements Adapter {
                             request.getContext().getLoader().getClassLoader();
                     try {
                         Thread.currentThread().setContextClassLoader(newCL);
-                        if (request.isFinished()) {
+                        if (req.sendAllDataReadEvent()) {
                             req.getReadListener().onAllDataRead();
                         }
                     } finally {
@@ -574,8 +581,10 @@ public class CoyoteAdapter implements Adapter {
             // Ignore
         } finally {
             req.getRequestProcessor().setWorkerThreadName(null);
+            AtomicBoolean error = new AtomicBoolean(false);
+            res.action(ActionCode.IS_ERROR, error);
             // Recycle the wrapper request and response
-            if (!comet && !async) {
+            if (!comet && !async || error.get()) {
                 request.recycle();
                 response.recycle();
             } else {

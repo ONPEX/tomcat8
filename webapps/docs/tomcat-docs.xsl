@@ -17,7 +17,7 @@
 -->
 <!-- Content Stylesheet for "tomcat-docs" Documentation -->
 
-<!-- $Id: tomcat-docs.xsl 1532557 2013-10-15 22:03:57Z kpreisser $ -->
+<!-- $Id: tomcat-docs.xsl 1546661 2013-11-29 23:26:09Z kpreisser $ -->
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   version="3.0">
@@ -233,7 +233,7 @@
   <!-- Process a menu for the navigation bar -->
   <xsl:template match="menu">
   <div>
-    <h2><strong><xsl:value-of select="@name"/></strong></h2>
+    <h2><xsl:value-of select="@name"/></h2>
     <ul>
       <xsl:apply-templates select="item"/>
     </ul>

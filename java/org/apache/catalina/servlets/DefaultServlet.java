@@ -105,7 +105,7 @@ import org.apache.tomcat.util.res.StringManager;
  * </p>
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: DefaultServlet.java 1532296 2013-10-15 11:57:48Z markt $
+ * @version $Id: DefaultServlet.java 1549711 2013-12-09 23:43:15Z markt $
  */
 
 public class DefaultServlet
@@ -899,15 +899,15 @@ public class DefaultServlet
             }
 
             InputStream renderResult = null;
-            if (resource.isDirectory()) {
-                if (serveContent) {
+            if (serveContent) {
+                if (resource.isDirectory()) {
                     // Serve the directory browser
                     renderResult = render(getPathPrefix(request), resource);
+                } else {
+                    renderResult = resource.getInputStream();
                 }
-            }
 
-            // Copy the input stream to our output stream (if requested)
-            if (serveContent) {
+                // Copy the input stream to our output stream
                 try {
                     response.setBufferSize(output);
                 } catch (IllegalStateException e) {
@@ -1785,23 +1785,7 @@ public class DefaultServlet
         throws IOException {
 
         IOException exception = null;
-        InputStream resourceInputStream = null;
-
-        // Optimization: If the binary content has already been loaded, send
-        // it directly
-        if (resource.isFile()) {
-            byte buffer[] = resource.getContent();
-            if (buffer != null) {
-                ostream.write(buffer, 0, buffer.length);
-                return;
-            }
-            resourceInputStream = resource.getInputStream();
-        } else {
-            resourceInputStream = is;
-        }
-
-        InputStream istream = new BufferedInputStream
-            (resourceInputStream, input);
+        InputStream istream = new BufferedInputStream(is, input);
 
         // Copy the input stream to the output stream
         exception = copyRange(istream, ostream);

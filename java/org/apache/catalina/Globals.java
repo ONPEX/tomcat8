@@ -14,18 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.catalina;
-
 
 /**
  * Global constants that are applicable to multiple packages within Catalina.
  *
  * @author Craig R. McClanahan
- * @version $Id: Globals.java 1239298 2012-02-01 20:11:26Z markt $
+ * @version $Id: Globals.java 1549528 2013-12-09 10:01:16Z markt $
  */
-
 public final class Globals {
 
     /**
@@ -69,8 +65,8 @@ public final class Globals {
 
 
     /**
-     * The JNDI directory context which is associated with the context. This
-     * context can be used to manipulate static files.
+     * The WebResourceRoot which is associated with the context. This can be
+     * used to manipulate static files.
      */
     public static final String RESOURCES_ATTR =
         "org.apache.catalina.resources";
@@ -273,4 +269,25 @@ public final class Globals {
      * the tomcat instance installation path
      */
     public static final String CATALINA_BASE_PROP = "catalina.base";
+
+
+    /**
+     * Name of the ServletContext init-param that determines if the JSP engine
+     * should validate *.tld files when parsing them.
+     * <p>
+     * This must be kept in sync with org.apache.jasper.Constants
+     */
+    public static final String JASPER_XML_VALIDATION_TLD_INIT_PARAM =
+            "org.apache.jasper.XML_VALIDATE_TLD";
+
+
+    /**
+     * Name of the ServletContext init-param that determines if the JSP engine
+     * will block external entities from being used in *.tld, *.jspx, *.tagx and
+     * tagplugin.xml files.
+     * <p>
+     * This must be kept in sync with org.apache.jasper.Constants
+     */
+    public static final String JASPER_XML_BLOCK_EXTERNAL_INIT_PARAM =
+            "org.apache.jasper.XML_BLOCK_EXTERNAL";
 }

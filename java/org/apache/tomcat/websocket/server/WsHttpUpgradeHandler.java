@@ -139,10 +139,12 @@ public class WsHttpUpgradeHandler implements HttpUpgradeHandler {
 
     @Override
     public void destroy() {
-        try {
-            connection.close();
-        } catch (Exception e) {
-            log.error(sm.getString("wsHttpUpgradeHandler.destroyFailed"), e);
+        if (connection != null) {
+            try {
+                connection.close();
+            } catch (Exception e) {
+                log.error(sm.getString("wsHttpUpgradeHandler.destroyFailed"), e);
+            }
         }
     }
 
@@ -233,7 +235,9 @@ public class WsHttpUpgradeHandler implements HttpUpgradeHandler {
 
         @Override
         public void onWritePossible() {
-            wsRemoteEndpointServer.onWritePossible();
+            // Triggered by the poller so this isn't the same thread that
+            // triggered the write so no need for a dispatch
+            wsRemoteEndpointServer.onWritePossible(false);
         }
 
 

@@ -43,7 +43,7 @@ import org.xml.sax.Attributes;
  * and uses a specified XML file for its persistent storage.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: MemoryUserDatabase.java 1370479 2012-08-07 19:59:00Z markt $
+ * @version $Id: MemoryUserDatabase.java 1543753 2013-11-20 10:07:51Z markt $
  * @since 4.1
  */
 public class MemoryUserDatabase implements UserDatabase {
@@ -402,6 +402,8 @@ public class MemoryUserDatabase implements UserDatabase {
                                     pathname);
                 }
                 if (!file.exists()) {
+                    log.error(sm.getString("memoryUserDatabase.fileNotFound",
+                            file.getAbsolutePath()));
                     return;
                 }
 

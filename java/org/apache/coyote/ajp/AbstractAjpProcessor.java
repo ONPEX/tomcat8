@@ -421,6 +421,9 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
                 error = true;
             }
 
+        } else if (actionCode == ActionCode.IS_ERROR) {
+            ((AtomicBoolean) param).set(error);
+
         } else if (actionCode == ActionCode.DISABLE_SWALLOW_INPUT) {
             // TODO: Do not swallow request input but
             // make sure we are closing the connection
@@ -1403,6 +1406,7 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
 
         response.setCommitted(true);
 
+        responseMsgPos = -1;
         responseMessage.reset();
         responseMessage.appendByte(Constants.JK_AJP13_SEND_HEADERS);
 
@@ -1652,6 +1656,7 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
             responseMsgPos += written;
         }
 
+        // Message fully written, reset the position for a new message.
         if (responseMsgPos == len) {
             responseMsgPos = -1;
         }

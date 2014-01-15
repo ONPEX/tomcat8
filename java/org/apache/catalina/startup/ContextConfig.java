@@ -114,7 +114,7 @@ import org.xml.sax.SAXParseException;
  *
  * @author Craig R. McClanahan
  * @author Jean-Francois Arcand
- * @version $Id: ContextConfig.java 1524707 2013-09-19 12:15:20Z markt $
+ * @version $Id: ContextConfig.java 1549528 2013-12-09 10:01:16Z markt $
  */
 public class ContextConfig implements LifecycleListener {
 
@@ -605,10 +605,11 @@ public class ContextConfig implements LifecycleListener {
         String pathName = cn.getBaseName();
 
         boolean unpackWARs = true;
-        if (host instanceof StandardHost &&
-                context instanceof StandardContext) {
-            unpackWARs = ((StandardHost) host).isUnpackWARs() &&
-                    ((StandardContext) context).getUnpackWAR();
+        if (host instanceof StandardHost) {
+            unpackWARs = ((StandardHost) host).isUnpackWARs();
+            if (unpackWARs && context instanceof StandardContext) {
+                unpackWARs =  ((StandardContext) context).getUnpackWAR();
+            }
         }
 
         if (docBase.toLowerCase(Locale.ENGLISH).endsWith(".war") && !file.isDirectory() && unpackWARs) {
@@ -729,7 +730,7 @@ public class ContextConfig implements LifecycleListener {
         contextConfig(contextDigester);
 
         webXmlParser = new WebXmlParser(context.getXmlNamespaceAware(),
-                context.getXmlValidation());
+                context.getXmlValidation(), context.getXmlBlockExternal());
     }
 
 
@@ -1114,7 +1115,7 @@ public class ContextConfig implements LifecycleListener {
         // provided by the container. If any of the application JARs have a
         // web-fragment.xml it will be parsed at this point. web-fragment.xml
         // files are ignored for container provided JARs.
-        Map<String,WebXml> fragments = processJarsForWebFragments();
+        Map<String,WebXml> fragments = processJarsForWebFragments(webXml);
 
         // Step 2. Order the fragments.
         Set<WebXml> orderedFragments = null;
@@ -1123,7 +1124,7 @@ public class ContextConfig implements LifecycleListener {
 
         // Step 3. Look for ServletContainerInitializer implementations
         if (ok) {
-            processServletContainerInitializers(context.getServletContext());
+            processServletContainerInitializers(sContext);
         }
 
         if  (!webXml.isMetadataComplete() || typeInitializerMap.size() > 0) {
@@ -1839,15 +1840,23 @@ public class ContextConfig implements LifecycleListener {
      *
      * @return A map of JAR name to processed web fragment (if any)
      */
-    protected Map<String,WebXml> processJarsForWebFragments() {
+    protected Map<String,WebXml> processJarsForWebFragments(WebXml application) {
 
         JarScanner jarScanner = context.getJarScanner();
         boolean delegate = false;
         if (context instanceof StandardContext) {
             delegate = ((StandardContext) context).getDelegate();
         }
+        boolean parseRequired = true;
+        Set<String> absoluteOrder = application.getAbsoluteOrdering();
+        if (absoluteOrder != null && absoluteOrder.isEmpty() &&
+                !context.getXmlValidation()) {
+            // Skip parsing when there is an empty absolute ordering and
+            // validation is not enabled
+            parseRequired = false;
+        }
         FragmentJarScannerCallback callback =
-                new FragmentJarScannerCallback(webXmlParser, delegate);
+                new FragmentJarScannerCallback(webXmlParser, delegate, parseRequired);
 
         jarScanner.scan(JarScanType.PLUGGABILITY,
                 context.getServletContext(), callback);
@@ -2192,6 +2201,12 @@ public class ContextConfig implements LifecycleListener {
             } catch (IOException e) {
                 log.debug(sm.getString("contextConfig.invalidSciHandlesTypes",
                         className), e);
+            } finally {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    // ignore
+                }
             }
         }
     }

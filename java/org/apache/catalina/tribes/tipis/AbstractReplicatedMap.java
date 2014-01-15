@@ -56,7 +56,7 @@ public abstract class AbstractReplicatedMap<K,V>
 
     private static final long serialVersionUID = 1L;
 
-    private static final Log log = LogFactory.getLog(AbstractReplicatedMap.class);
+    private final Log log = LogFactory.getLog(AbstractReplicatedMap.class);
 
     /**
      * The default initial capacity - MUST be a power of two.
@@ -196,7 +196,8 @@ public abstract class AbstractReplicatedMap<K,V>
      */
     protected void init(MapOwner owner, Channel channel, String mapContextName,
             long timeout, int channelSendOptions,ClassLoader[] cls, boolean terminate) {
-        log.info("Initializing AbstractReplicatedMap with context name:"+mapContextName);
+        long start = System.currentTimeMillis();
+        if (log.isInfoEnabled()) log.info("Initializing AbstractReplicatedMap with context name:"+mapContextName);
         this.mapOwner = owner;
         this.externalLoaders = cls;
         this.channelSendOptions = channelSendOptions;
@@ -230,6 +231,9 @@ public abstract class AbstractReplicatedMap<K,V>
                 throw new RuntimeException("Unable to start replicated map.",x);
             }
         }
+        long complete = System.currentTimeMillis() - start;
+        if (log.isInfoEnabled())
+            log.info("AbstractReplicatedMap[" +mapContextName + "] initialization was completed in " + complete + " ms.");
     }
 
 
@@ -265,18 +269,17 @@ public abstract class AbstractReplicatedMap<K,V>
                 for (FaultyMember faultyMember : faultyMembers) {
                     memberDisappeared(faultyMember.getMember());
                 }
+                throw ce;
             }
         }
         //update our map of members, expire some if we didn't receive a ping back
         synchronized (mapMembers) {
-            Iterator<Map.Entry<Member, Long>> it = mapMembers.entrySet().iterator();
+            Member[] members = mapMembers.keySet().toArray(new Member[mapMembers.size()]);
             long now = System.currentTimeMillis();
-            while ( it.hasNext() ) {
-                Map.Entry<Member,Long> entry = it.next();
-                long access = entry.getValue().longValue();
+            for (Member member : members) {
+                long access = mapMembers.get(member).longValue();
                 if ( (now - access) > timeout ) {
-                    it.remove();
-                    memberDisappeared(entry.getKey());
+                    memberDisappeared(member);
                 }
             }
         }//synch
@@ -330,11 +333,11 @@ public abstract class AbstractReplicatedMap<K,V>
 
     @Override
     public void finalize() {
-        try {broadcast(MapMessage.MSG_STOP,false); }catch ( Exception ignore){}
-        //cleanup
         if (this.rpcChannel != null) {
             this.rpcChannel.breakdown();
         }
+        try {broadcast(MapMessage.MSG_STOP,false); }catch ( Exception ignore){}
+        //cleanup
         if (this.channel != null) {
             this.channel.removeChannelListener(this);
             this.channel.removeMembershipListener(this);
@@ -765,7 +768,9 @@ public abstract class AbstractReplicatedMap<K,V>
                 return; //the member was not part of our map.
             }
         }
-
+        if (log.isInfoEnabled())
+            log.info("Member["+member+"] disappeared. Related map entries will be relocated to the new node.");
+        long start = System.currentTimeMillis();
         Iterator<Map.Entry<K,MapEntry<K,V>>> i = innerMap.entrySet().iterator();
         while (i.hasNext()) {
             Map.Entry<K,MapEntry<K,V>> e = i.next();
@@ -813,6 +818,8 @@ public abstract class AbstractReplicatedMap<K,V>
             }
 
         } //while
+        long complete = System.currentTimeMillis() - start;
+        if (log.isInfoEnabled()) log.info("Relocation of map entries was complete in " + complete + " ms.");
     }
 
     public int getNextBackupIndex() {
@@ -1371,8 +1378,7 @@ public abstract class AbstractReplicatedMap<K,V>
             try {
                 return key(null);
             } catch ( Exception x ) {
-                log.error("Deserialization error of the MapMessage.key",x);
-                return null;
+                throw new RuntimeException("Deserialization error of the MapMessage.key", x);
             }
         }
 
@@ -1392,8 +1398,7 @@ public abstract class AbstractReplicatedMap<K,V>
             try {
                 return value(null);
             } catch ( Exception x ) {
-                log.error("Deserialization error of the MapMessage.value",x);
-                return null;
+                throw new RuntimeException("Deserialization error of the MapMessage.value", x);
             }
         }
 

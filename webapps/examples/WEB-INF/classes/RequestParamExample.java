@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-/* $Id: RequestParamExample.java 1337719 2012-05-12 23:06:04Z kkolinko $
+/* $Id: RequestParamExample.java 1551814 2013-12-18 02:53:35Z kpreisser $
  *
  */
 
@@ -47,10 +47,12 @@ public class RequestParamExample extends HttpServlet {
         throws IOException, ServletException
     {
         response.setContentType("text/html");
+        response.setCharacterEncoding("UTF-8");
 
         PrintWriter out = response.getWriter();
-        out.println("<html>");
+        out.println("<!DOCTYPE html><html>");
         out.println("<head>");
+        out.println("<meta charset=\"UTF-8\" />");
 
         String title = RB.getString("requestparams.title");
         out.println("<title>" + title + "</title>");

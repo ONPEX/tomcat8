@@ -47,7 +47,7 @@ import org.apache.tomcat.util.ExceptionUtils;
 * @author Craig R. McClanahan
 * @author Carson McDonald
 * @author Ignacio Ortega
-* @version $Id: JDBCRealm.java 1509156 2013-08-01 10:13:31Z markt $
+* @version $Id: JDBCRealm.java 1548183 2013-12-05 16:08:44Z markt $
 */
 
 public class JDBCRealm
@@ -389,13 +389,7 @@ public class JDBCRealm
         String dbCredentials = getPassword(username);
 
         // Validate the user's credentials
-        boolean validated = false;
-        if (hasMessageDigest()) {
-            // Hex hashes should be compared case-insensitive
-            validated = (digest(credentials).equalsIgnoreCase(dbCredentials));
-        } else {
-            validated = (digest(credentials).equals(dbCredentials));
-        }
+        boolean validated = compareCredentials(credentials, dbCredentials);
 
         if (validated) {
             if (containerLog.isTraceEnabled())

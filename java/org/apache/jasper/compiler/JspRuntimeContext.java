@@ -20,8 +20,10 @@ package org.apache.jasper.compiler;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FilePermission;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.URLDecoder;
 import java.security.CodeSource;
 import java.security.PermissionCollection;
 import java.security.Policy;
@@ -32,13 +34,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.ServletContext;
-import javax.servlet.jsp.JspFactory;
 
 import org.apache.jasper.Constants;
 import org.apache.jasper.JspCompilationContext;
 import org.apache.jasper.Options;
-import org.apache.jasper.runtime.JspFactoryImpl;
-import org.apache.jasper.security.SecurityClassLoad;
 import org.apache.jasper.servlet.JspServletWrapper;
 import org.apache.jasper.util.ExceptionUtils;
 import org.apache.jasper.util.FastRemovalDequeue;
@@ -57,7 +56,7 @@ import org.apache.juli.logging.LogFactory;
  * Only used if a web application context is a directory.
  *
  * @author Glenn L. Nielsen
- * @version $Revision: 1445964 $
+ * @version $Revision: 1551240 $
  */
 public final class JspRuntimeContext {
 
@@ -73,36 +72,6 @@ public final class JspRuntimeContext {
      * Counts how many times JSPs have been unloaded in this webapp.
      */
     private final AtomicInteger jspUnloadCount = new AtomicInteger(0);
-
-    /**
-     * Preload classes required at runtime by a JSP servlet so that
-     * we don't get a defineClassInPackage security exception.
-     */
-    static {
-        JspFactoryImpl factory = new JspFactoryImpl();
-        SecurityClassLoad.securityClassLoad(factory.getClass().getClassLoader());
-        if( System.getSecurityManager() != null ) {
-            String basePackage = "org.apache.jasper.";
-            try {
-                factory.getClass().getClassLoader().loadClass( basePackage +
-                                                               "runtime.JspFactoryImpl$PrivilegedGetPageContext");
-                factory.getClass().getClassLoader().loadClass( basePackage +
-                                                               "runtime.JspFactoryImpl$PrivilegedReleasePageContext");
-                factory.getClass().getClassLoader().loadClass( basePackage +
-                                                               "runtime.JspRuntimeLibrary");
-                factory.getClass().getClassLoader().loadClass( basePackage +
-                                                               "runtime.JspRuntimeLibrary$PrivilegedIntrospectHelper");
-                factory.getClass().getClassLoader().loadClass( basePackage +
-                                                               "runtime.ServletResponseWrapperInclude");
-                factory.getClass().getClassLoader().loadClass( basePackage +
-                                                               "servlet.JspServletWrapper");
-            } catch (ClassNotFoundException ex) {
-                throw new IllegalStateException(ex);
-            }
-        }
-
-        JspFactory.setDefaultFactory(factory);
-    }
 
     // ----------------------------------------------------------- Constructors
 
@@ -435,14 +404,20 @@ public final class JspRuntimeContext {
         if (parentClassLoader instanceof URLClassLoader) {
             URL [] urls = ((URLClassLoader)parentClassLoader).getURLs();
 
-            for(int i = 0; i < urls.length; i++) {
-                // Tomcat 4 can use URL's other than file URL's,
-                // a protocol other than file: will generate a
-                // bad file system path, so only add file:
-                // protocol URL's to the classpath.
+            for (int i = 0; i < urls.length; i++) {
+                // Tomcat can use URLs other than file URLs. However, a protocol
+                // other than file: will generate a bad file system path, so
+                // only add file: protocol URLs to the classpath.
 
-                if( urls[i].getProtocol().equals("file") ) {
-                    cpath.append(urls[i].getFile()+sep);
+                if (urls[i].getProtocol().equals("file") ) {
+                    try {
+                        // Need to decode the URL, primarily to convert %20
+                        // sequences back to spaces
+                        String decoded = URLDecoder.decode(urls[i].getPath(), "UTF-8");
+                        cpath.append(decoded + sep);
+                    } catch (UnsupportedEncodingException e) {
+                        // All JREs are required to support UTF-8
+                    }
                 }
             }
         }

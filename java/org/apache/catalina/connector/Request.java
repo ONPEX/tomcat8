@@ -96,6 +96,8 @@ import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
 import org.apache.tomcat.util.res.StringManager;
+import org.ietf.jgss.GSSCredential;
+import org.ietf.jgss.GSSException;
 
 
 /**
@@ -103,7 +105,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: Request.java 1522587 2013-09-12 14:14:15Z markt $
+ * @version $Id: Request.java 1546631 2013-11-29 19:25:49Z markt $
  */
 
 public class Request
@@ -299,7 +301,7 @@ public class Request
 
 
     /**
-     * The Subject associated with the current AccessControllerContext
+     * The Subject associated with the current AccessControlContext
      */
     protected transient Subject subject = null;
 
@@ -2333,6 +2335,27 @@ public class Request
     @Override
     public Principal getUserPrincipal() {
         if (userPrincipal instanceof TomcatPrincipal) {
+            GSSCredential gssCredential =
+                    ((TomcatPrincipal) userPrincipal).getGssCredential();
+            if (gssCredential != null) {
+                int left = -1;
+                try {
+                    left = gssCredential.getRemainingLifetime();
+                } catch (GSSException e) {
+                    log.warn(sm.getString("coyoteRequest.gssLifetimeFail",
+                            userPrincipal.getName()), e);
+                }
+                if (left == 0) {
+                    // GSS credential has expired. Need to re-authenticate.
+                    try {
+                        logout();
+                    } catch (ServletException e) {
+                        // Should never happen (no code called by logout()
+                        // throws a ServletException
+                    }
+                    return null;
+                }
+            }
             return ((TomcatPrincipal) userPrincipal).getUserPrincipal();
         }
 

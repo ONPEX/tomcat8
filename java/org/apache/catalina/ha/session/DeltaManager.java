@@ -27,7 +27,6 @@ import java.util.Date;
 import java.util.Iterator;
 
 import org.apache.catalina.Cluster;
-import org.apache.catalina.Container;
 import org.apache.catalina.Context;
 import org.apache.catalina.Engine;
 import org.apache.catalina.Host;
@@ -62,7 +61,7 @@ import org.apache.tomcat.util.res.StringManager;
  * @author Craig R. McClanahan
  * @author Jean-Francois Arcand
  * @author Peter Rossbach
- * @version $Id: DeltaManager.java 1525827 2013-09-24 10:08:58Z kfujino $
+ * @version $Id: DeltaManager.java 1551494 2013-12-17 09:28:14Z kfujino $
  */
 
 public class DeltaManager extends ClusterManagerBase{
@@ -768,27 +767,15 @@ public class DeltaManager extends ClusterManagerBase{
             //the channel is already running
             Cluster cluster = getCluster() ;
             // stop remove cluster binding
-            //wow, how many nested levels of if statements can we have ;)
             if(cluster == null) {
                 Context context = getContext() ;
                 if (context != null) {
-                     Container host = context.getParent() ;
-                     if(host != null && host instanceof Host) {
-                         cluster = host.getCluster();
-                         if(cluster != null && cluster instanceof CatalinaCluster) {
-                             setCluster((CatalinaCluster) cluster) ;
-                         } else {
-                             Container engine = host.getParent() ;
-                             if(engine != null && engine instanceof Engine) {
-                                 cluster = engine.getCluster();
-                                 if(cluster != null && cluster instanceof CatalinaCluster) {
-                                     setCluster((CatalinaCluster) cluster) ;
-                                 }
-                             } else {
-                                     cluster = null ;
-                             }
-                         }
-                     }
+                    cluster = context.getCluster();
+                    if(cluster instanceof CatalinaCluster) {
+                        setCluster((CatalinaCluster) cluster);
+                    } else {
+                        cluster = null;
+                    }
                 }
             }
             if (cluster == null) {
@@ -836,6 +823,7 @@ public class DeltaManager extends ClusterManagerBase{
             }
             SessionMessage msg = new SessionMessageImpl(this.getName(),
                     SessionMessage.EVT_GET_ALL_SESSIONS, null, "GET-ALL", "GET-ALL-" + getName());
+            msg.setTimestamp(beforeSendTime);
             // set reference time
             stateTransferCreateSendTime = beforeSendTime ;
             // request session state
@@ -1518,6 +1506,7 @@ public class DeltaManager extends ClusterManagerBase{
             sendSessions(sender, currentSessions, findSessionTimestamp);
         } else {
             // send session at blocks
+            int remain = currentSessions.length;
             for (int i = 0; i < currentSessions.length; i += getSendAllSessionsSize()) {
                 int len = i + getSendAllSessionsSize() > currentSessions.length ?
                         currentSessions.length - i :
@@ -1525,7 +1514,8 @@ public class DeltaManager extends ClusterManagerBase{
                 Session[] sendSessions = new Session[len];
                 System.arraycopy(currentSessions, i, sendSessions, 0, len);
                 sendSessions(sender, sendSessions,findSessionTimestamp);
-                if (getSendAllSessionsWaitTime() > 0) {
+                remain = remain - len;
+                if (getSendAllSessionsWaitTime() > 0 && remain > 0) {
                     try {
                         Thread.sleep(getSendAllSessionsWaitTime());
                     } catch (Exception sleep) {
@@ -1611,9 +1601,7 @@ public class DeltaManager extends ClusterManagerBase{
         result.sendAllSessions = sendAllSessions;
         result.sendAllSessionsSize = sendAllSessionsSize;
         result.sendAllSessionsWaitTime = sendAllSessionsWaitTime ;
-        result.receiverQueue = receiverQueue ;
         result.stateTimestampDrop = stateTimestampDrop ;
-        result.stateTransferCreateSendTime = stateTransferCreateSendTime;
         return result;
     }
 }

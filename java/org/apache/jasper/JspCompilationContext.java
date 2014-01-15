@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.jasper;
 
 import java.io.File;
@@ -25,24 +24,22 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.ServletContext;
 import javax.servlet.jsp.tagext.TagInfo;
 
 import org.apache.jasper.compiler.Compiler;
-import org.apache.jasper.compiler.JarResource;
 import org.apache.jasper.compiler.JspRuntimeContext;
 import org.apache.jasper.compiler.JspUtil;
 import org.apache.jasper.compiler.Localizer;
 import org.apache.jasper.compiler.ServletWriter;
-import org.apache.jasper.compiler.TldLocation;
 import org.apache.jasper.servlet.JasperLoader;
 import org.apache.jasper.servlet.JspServletWrapper;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
+import org.apache.tomcat.util.descriptor.tld.TldResourcePath;
+import org.apache.tomcat.util.scan.Jar;
 
 /**
  * A place holder for various things that are used through out the JSP
@@ -61,8 +58,6 @@ import org.apache.juli.logging.LogFactory;
 public class JspCompilationContext {
 
     private final Log log = LogFactory.getLog(JspCompilationContext.class); // must not be static
-
-    private final Map<String, JarResource> tagFileJarUrls;
 
     private String className;
     private final String jspUri;
@@ -93,27 +88,24 @@ public class JspCompilationContext {
     private final boolean isTagFile;
     private boolean protoTypeMode;
     private TagInfo tagInfo;
-    private final JarResource tagJarResource;
+    private final Jar tagJar;
 
     // jspURI _must_ be relative to the context
     public JspCompilationContext(String jspUri, Options options,
             ServletContext context, JspServletWrapper jsw,
             JspRuntimeContext rctxt) {
-
         this(jspUri, null, options, context, jsw, rctxt, null, false);
     }
 
     public JspCompilationContext(String tagfile, TagInfo tagInfo,
             Options options, ServletContext context, JspServletWrapper jsw,
-            JspRuntimeContext rctxt, JarResource tagJarResource) {
-        this(tagfile, tagInfo, options, context, jsw, rctxt, tagJarResource,
-                true);
+            JspRuntimeContext rctxt, Jar tagJar) {
+        this(tagfile, tagInfo, options, context, jsw, rctxt, tagJar, true);
     }
 
     private JspCompilationContext(String jspUri, TagInfo tagInfo,
             Options options, ServletContext context, JspServletWrapper jsw,
-            JspRuntimeContext rctxt, JarResource tagJarResource,
-            boolean isTagFile) {
+            JspRuntimeContext rctxt, Jar tagJar, boolean isTagFile) {
 
         this.jspUri = canonicalURI(jspUri);
         this.options = options;
@@ -135,11 +127,10 @@ public class JspCompilationContext {
         this.baseURI = baseURI;
 
         this.rctxt = rctxt;
-        this.tagFileJarUrls = new HashMap<>();
         this.basePackageName = Constants.JSP_PACKAGE_NAME;
 
         this.tagInfo = tagInfo;
-        this.tagJarResource = tagJarResource;
+        this.tagJar = tagJar;
         this.isTagFile = isTagFile;
     }
 
@@ -289,29 +280,7 @@ public class JspCompilationContext {
 
 
     public URL getResource(String res) throws MalformedURLException {
-        URL result = null;
-
-        if (res.startsWith("/META-INF/")) {
-            // This is a tag file packaged in a jar that is being compiled
-            JarResource jarResource = tagFileJarUrls.get(res);
-            if (jarResource == null) {
-                jarResource = tagJarResource;
-            }
-            if (jarResource != null) {
-                result = jarResource.getEntry(res.substring(1));
-            } else {
-                // May not be in a JAR in some IDE environments
-                result = context.getResource(canonicalURI(res));
-            }
-        } else if (res.startsWith("jar:jndi:")) {
-            // This is a tag file packaged in a jar that is being checked
-            // for a dependency
-            result = new URL(res);
-
-        } else {
-            result = context.getResource(canonicalURI(res));
-        }
-        return result;
+        return context.getResource(canonicalURI(res));
     }
 
 
@@ -331,29 +300,13 @@ public class JspCompilationContext {
     }
 
     /**
-     * Returns the tag-file-name-to-JAR-file map of this compilation unit,
-     * which maps tag file names to the JAR files in which the tag files are
-     * packaged.
-     *
-     * The map is populated when parsing the tag-file elements of the TLDs
-     * of any imported taglibs.
-     */
-    public JarResource getTagFileJarResource(String tagFile) {
-        return this.tagFileJarUrls.get(tagFile);
-    }
-
-    public void setTagFileJarResource(String tagFile, JarResource jarResource) {
-        this.tagFileJarUrls.put(tagFile, jarResource);
-    }
-
-    /**
      * Returns the JAR file in which the tag file for which this
      * JspCompilationContext was created is packaged, or null if this
      * JspCompilationContext does not correspond to a tag file, or if the
      * corresponding tag file is not packaged in a JAR.
      */
-    public JarResource getTagFileJarResource() {
-        return this.tagJarResource;
+    public Jar getTagFileJar() {
+        return this.tagJar;
     }
 
     /* ==================== Common implementation ==================== */
@@ -397,16 +350,23 @@ public class JspCompilationContext {
         long result = -1;
         URLConnection uc = null;
         try {
-            URL jspUrl = getResource(resource);
-            if (jspUrl == null) {
-                incrementRemoved();
-                return Long.valueOf(result);
-            }
-            uc = jspUrl.openConnection();
-            if (uc instanceof JarURLConnection) {
-                result = ((JarURLConnection) uc).getJarEntry().getTime();
+            if (tagJar != null) {
+                if (resource.startsWith("/")) {
+                    resource = resource.substring(1);
+                }
+                result = tagJar.getLastModified(resource);
             } else {
-                result = uc.getLastModified();
+                URL jspUrl = getResource(resource);
+                if (jspUrl == null) {
+                    incrementRemoved();
+                    return Long.valueOf(result);
+                }
+                uc = jspUrl.openConnection();
+                if (uc instanceof JarURLConnection) {
+                    result = ((JarURLConnection) uc).getJarEntry().getTime();
+                } else {
+                    result = uc.getLastModified();
+                }
             }
         } catch (IOException e) {
             if (log.isDebugEnabled()) {
@@ -566,10 +526,8 @@ public class JspCompilationContext {
      * Returns null if the given uri is not associated with any tag library
      * 'exposed' in the web application.
      */
-    public TldLocation getTldLocation(String uri) {
-        TldLocation location =
-                getOptions().getTldLocationsCache().getLocation(uri);
-        return location;
+    public TldResourcePath getTldResourcePath(String uri) {
+        return getOptions().getTldCache().getTldResourcePath(uri);
     }
 
     /**

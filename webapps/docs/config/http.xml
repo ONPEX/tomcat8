@@ -162,7 +162,7 @@
         If the <code>PATH</code> (Windows) or <code>LD_LIBRARY_PATH</code> (on
         most unix systems) environment variables contain the Tomcat native
         library, the APR/native connector will be used. If the native library
-        cannot be found, the blocking Java based connector will be used. Note
+        cannot be found, the non blocking Java based connector will be used. Note
         that the APR/native connector has different settings for HTTPS than the
         Java connectors.<br/>
         To use an explicit protocol rather than rely on the auto-switching
@@ -374,6 +374,14 @@
       be ignored. Note that if a shared executor is not specified for a
       connector then the connector will use a private, internal executor to
       provide the thread pool.</p>
+    </attribute>
+
+    <attribute name="executorTerminationTimeoutMillis" required="false">
+      <p>The time that the private internal executor will wait for request
+      processing threads to terminate before continuing with the process of
+      stopping the connector. If not set, the default is <code>0</code> (zero)
+      for the BIO connector and <code>5000</code> (5 seconds) for the NIO and
+      APR/native connectors.</p>
     </attribute>
 
     <attribute name="keepAliveTimeout" required="false">

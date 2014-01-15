@@ -26,24 +26,21 @@ import org.apache.tomcat.util.bcel.Constants;
 /**
  * Abstract super class for <em>Attribute</em> objects. Currently the
  * <em>ConstantValue</em>, <em>SourceFile</em>, <em>Code</em>,
- * <em>Exceptiontable</em>, <em>LineNumberTable</em>,
+ * <em>ExceptionTable</em>, <em>LineNumberTable</em>,
  * <em>LocalVariableTable</em>, <em>InnerClasses</em> and
  * <em>Synthetic</em> attributes are supported. The <em>Unknown</em>
  * attribute stands for non-standard-attributes.
  *
- * @version $Id: Attribute.java 1398112 2012-10-14 18:27:10Z markt $
+ * @version $Id: Attribute.java 1547760 2013-12-04 10:50:59Z markt $
  * @author <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see ConstantValue
  * @see SourceFile
  * @see Code
- * @see Unknown
  * @see ExceptionTable
  * @see LineNumberTable
  * @see LocalVariableTable
  * @see InnerClasses
- * @see Synthetic
  * @see Deprecated
- * @see Signature
  */
 public abstract class Attribute implements Cloneable, Serializable
 {
@@ -103,7 +100,8 @@ public abstract class Attribute implements Cloneable, Serializable
         switch (tag)
         {
         case Constants.ATTR_UNKNOWN:
-            return new Unknown(name_index, length, file, constant_pool);
+            Utility.swallowUnknownAttribute(file, length);
+            return null;
         case Constants.ATTR_CONSTANT_VALUE:
             return new ConstantValue(name_index, length, file, constant_pool);
         case Constants.ATTR_SOURCE_FILE:
@@ -120,15 +118,18 @@ public abstract class Attribute implements Cloneable, Serializable
         case Constants.ATTR_INNER_CLASSES:
             return new InnerClasses(name_index, length, file, constant_pool);
         case Constants.ATTR_SYNTHETIC:
-            return new Synthetic(name_index, length, file, constant_pool);
+            Utility.swallowSynthetic(file, length);
+            return null;
         case Constants.ATTR_DEPRECATED:
             return new Deprecated(name_index, length, file, constant_pool);
         case Constants.ATTR_PMG:
             return new PMGClass(name_index, length, file, constant_pool);
         case Constants.ATTR_SIGNATURE:
-            return new Signature(name_index, length, file, constant_pool);
+            Utility.swallowSignature(file);
+            return null;
         case Constants.ATTR_STACK_MAP:
-            return new StackMap(name_index, length, file, constant_pool);
+            Utility.swallowStackMap(file);
+            return null;
         case Constants.ATTR_RUNTIME_VISIBLE_ANNOTATIONS:
             return new RuntimeVisibleAnnotations(name_index, length, file,
                     constant_pool);
@@ -150,7 +151,8 @@ public abstract class Attribute implements Cloneable, Serializable
         case Constants.ATTR_ENCLOSING_METHOD:
             return new EnclosingMethod(name_index, length, file, constant_pool);
         case Constants.ATTR_STACK_MAP_TABLE:
-            return new StackMapTable(name_index, length, file, constant_pool);
+            Utility.swallowStackMapTable(file);
+            return null;
         default: // Never reached
             throw new IllegalStateException("Unrecognized attribute type tag parsed: " + tag);
         }
@@ -174,17 +176,18 @@ public abstract class Attribute implements Cloneable, Serializable
      * @return shallow copy of this attribute
      */
     @Override
-    public Object clone()
+    public Attribute clone()
     {
-        Object o = null;
+        Attribute attr = null;
         try
         {
-            o = super.clone();
+            attr = (Attribute) super.clone();
         }
         catch (CloneNotSupportedException e)
         {
-            e.printStackTrace(); // Never occurs
+            throw new Error("Clone Not Supported"); // never happens
         }
-        return o;
+        return attr;
     }
+
 }
