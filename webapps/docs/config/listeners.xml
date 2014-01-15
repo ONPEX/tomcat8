@@ -125,21 +125,6 @@
 
   </subsection>
 
-  <subsection name="Jasper Listener - org.apache.catalina.core.JasperListener">
-
-    <p>The <strong>Jasper Listener</strong> initializes the Jasper 2 JSP engine
-    before any web applications that may use it are loaded. For more
-    information on the Jasper 2 JSP engine see the
-    <a href="../jasper-howto.html">Jasper How To</a>.</p>
-
-    <p>This listener must only be nested within <a href="server.html">Server</a>
-    elements.</p>
-
-    <p>No additional attributes are supported by the <strong>Jasper Listener
-    </strong>.</p>
-
-  </subsection>
-
   <subsection name="Global Resources Lifecycle Listener - org.apache.catalina.mbeans.GlobalResourcesLifecycleListener">
 
     <p>The <strong>Global Resources Lifecycle Listener</strong> initializes the
@@ -435,8 +420,8 @@
       </attribute>
 
       <attribute name="rmiBindAddress" required="false">
-        <p>The address of the interface to be used by JMX/RMI server. Setting
-        this option to <code>true</code> is incompatible with setting the system
+        <p>The address of the interface to be used by JMX/RMI server.
+        This option is incompatible with setting the system
         property <code>com.sun.management.jmxremote.ssl</code> to
         <code>true</code>.</p>
       </attribute>

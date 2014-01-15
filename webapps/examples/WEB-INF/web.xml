@@ -29,7 +29,7 @@
 
     <!-- Define example filters -->
     <filter>
-        <filter-name>Timing filter</filter-name>
+        <filter-name>Timing Filter</filter-name>
         <filter-class>filters.ExampleFilter</filter-class>
         <init-param>
             <param-name>attribute</param-name>
@@ -393,5 +393,10 @@
         <welcome-file>index.htm</welcome-file>
         <welcome-file>index.jsp</welcome-file>
     </welcome-file-list>
+
+    <!-- Websocket examples -->
+    <listener>
+        <listener-class>websocket.drawboard.DrawboardContextListener</listener-class>
+    </listener>
 
 </web-app>

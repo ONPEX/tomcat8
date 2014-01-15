@@ -551,6 +551,21 @@
         <code>0</code> is used which indicates no limit.</p>
       </attribute>
 
+      <attribute name="spnegoDelegationQop" required="false">
+        <p>When the JNDI Realm is used with the SPNEGO authenticator and
+        <code>useDelegatedCredential</code> is <code>true</code> this attribute
+        controls the QOP (Quality of Protection) that should be used for
+        the connection to the LDAP
+        server after authentication. This value is used to set the
+        <code>javax.security.sasl.qop</code> environment property for the LDAP
+        connection. This attribute should be a comma-separated list of values
+        selected from <code>auth-conf</code>, <code>auth-int</code> and
+        <code>auth</code>. See <a
+        href="http://docs.oracle.com/javase/7/docs/api/javax/security/sasl/Sasl.html#QOP"
+        rel="nofollow">Java documentation</a> for more details.</p>
+        <p>The default value is <code>auth-conf</code>.</p>
+      </attribute>
+
       <attribute name="stripRealmForGss" required="false">
         <p>When processing users authenticated via the GSS-API, this attribute
         controls if any &quot;@...&quot; is removed from the end of the user
@@ -565,9 +580,9 @@
       </attribute>
 
       <attribute name="useDelegatedCredential" required="false">
-        <p>When the JNIRealm is used with the SPNEGO authenticator, delegated
+        <p>When the JNDIRealm is used with the SPNEGO authenticator, delegated
         credentials for the user may be available. If such credentials are
-        present, this attribute controls whether are not they are used to
+        present, this attribute controls whether or not they are used to
         connect to the directory. If not specified, the default value of
         <code>true</code> is used.</p>
       </attribute>
@@ -853,7 +868,7 @@
         be searched for using <code>ClassLoader#getResource(String)</code> so it
         is possible for the configuration to be bundled within a web
         application. If not specified, the default JVM global JAAS configuration
-        willbe used.</p>
+        will be used.</p>
       </attribute>
 
       <attribute name="roleClassNames" required="false">
@@ -910,13 +925,29 @@
     listed. Authentication against any Realm will be sufficient to authenticate
     the user.</p>
 
-    <p>The CombinedRealm implementation does not support any additional
-    attributes.</p>
-
     <p>See the <a href="../realm-howto.html">Container-Managed Security
     Guide</a> for more information on setting up container managed security
     using the CombinedRealm component.</p>
 
+    <p>The CombinedRealm implementation supports the following additional
+    attributes.</p>
+
+    <attributes>
+
+      <attribute name="allRolesMode" required="false">
+        <p>This attribute controls how the special role name <code>*</code> is
+        handled when processing authorization constraints in web.xml. By
+        default, the specification compliant value of <code>strict</code> is
+        used which means that the user must be assigned one of the roles defined
+        in web.xml. The alternative values are <code>authOnly</code> which means
+        that the user must be authenticated but no check is made for assigned
+        roles and <code>strictAuthOnly</code> which means that the user must be
+        authenticated and no check will be made for assigned roles unless roles
+        are defined in web.xml in which case the user must be assigned at least
+        one of those roles.</p>
+      </attribute>
+
+    </attributes>
   </subsection>
 
 
@@ -947,6 +978,18 @@
     attributes.</p>
 
     <attributes>
+       <attribute name="allRolesMode" required="false">
+        <p>This attribute controls how the special role name <code>*</code> is
+        handled when processing authorization constraints in web.xml. By
+        default, the specification compliant value of <code>strict</code> is
+        used which means that the user must be assigned one of the roles defined
+        in web.xml. The alternative values are <code>authOnly</code> which means
+        that the user must be authenticated but no check is made for assigned
+        roles and <code>strictAuthOnly</code> which means that the user must be
+        authenticated and no check will be made for assigned roles unless roles
+        are defined in web.xml in which case the user must be assigned at least
+        one of those roles.</p>
+      </attribute>
 
       <attribute name="cacheRemovalWarningTime" required="false">
        <p>If a failed user is removed from the cache because the cache is too

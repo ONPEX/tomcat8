@@ -75,7 +75,7 @@ import org.apache.tomcat.util.res.StringManager;
 * @author Bip Thelin
 * @author Malcolm Edgar
 * @author Glenn L. Nielsen
-* @version $Id: HTMLManagerServlet.java 1516710 2013-08-23 06:34:50Z violetagg $
+* @version $Id: HTMLManagerServlet.java 1550920 2013-12-14 10:52:56Z kkolinko $
 * @see ManagerServlet
 */
 
@@ -487,7 +487,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
                 if (manager instanceof DistributedManager && showProxySessions) {
                     args[5] = Integer.valueOf(
                             ((DistributedManager)manager).getActiveSessionsFull());
-                } else if (ctxt.getManager() != null){
+                } else if (manager != null){
                     args[5] = Integer.valueOf(manager.getActiveSessions());
                 } else {
                     args[5] = Integer.valueOf(0);

@@ -14,32 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.tomcat.util.descriptor.tld;
 
-package org.apache.jasper.compiler;
+import java.util.HashMap;
+import java.util.Map;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.jar.JarFile;
+/**
+ * Model of a Tag Library Validator from the XML descriptor.
+ */
+public class ValidatorXml {
+    private String validatorClass;
+    private final Map<String, String> initParams = new HashMap<>();
 
-public interface JarResource {
+    public String getValidatorClass() {
+        return validatorClass;
+    }
 
-    /**
-     * @return The JarFile for this resource. A new instance of JarFile
-     *         should be returned on each call.
-     * @throws IOException
-     */
-    JarFile getJarFile() throws IOException;
+    public void setValidatorClass(String validatorClass) {
+        this.validatorClass = validatorClass;
+    }
 
-    /**
-     * @return The URL of this resource. May or may not point
-     *         to the actual Jar file.
-     */
-    String getUrl();
+    public void addInitParam(String name, String value) {
+        initParams.put(name, value);
+    }
 
-    /**
-     * @param name
-     * @return The URL for the entry within this resource.
-     */
-    URL getEntry(String name);
-
+    public Map<String, String> getInitParams() {
+        return initParams;
+    }
 }

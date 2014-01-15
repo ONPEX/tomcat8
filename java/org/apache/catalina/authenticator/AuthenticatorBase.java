@@ -66,7 +66,7 @@ import org.apache.tomcat.util.res.StringManager;
  * requests.  Requests of any other type will simply be passed through.
  *
  * @author Craig R. McClanahan
- * @version $Id: AuthenticatorBase.java 1500964 2013-07-08 21:24:05Z markt $
+ * @version $Id: AuthenticatorBase.java 1546630 2013-11-29 19:23:13Z markt $
  */
 public abstract class AuthenticatorBase extends ValveBase
         implements Authenticator {
@@ -724,9 +724,17 @@ public abstract class AuthenticatorBase extends ValveBase
 
         if (session != null) {
             if (changeSessionIdOnAuthentication) {
+                String oldId = null;
+                if (log.isDebugEnabled()) {
+                    oldId = session.getId();
+                }
                 Manager manager = request.getContext().getManager();
                 manager.changeSessionId(session);
                 request.changeSessionId(session.getId());
+                if (log.isDebugEnabled()) {
+                    log.debug(sm.getString("authenticator.changeSessionId",
+                            oldId, session.getId()));
+                }
             }
         } else if (alwaysUseSession) {
             session = request.getSessionInternal(true);
@@ -841,7 +849,7 @@ public abstract class AuthenticatorBase extends ValveBase
     }
 
     @Override
-    public void logout(Request request) throws ServletException {
+    public void logout(Request request) {
         register(request, request.getResponse(), null,
                 null, null, null);
 

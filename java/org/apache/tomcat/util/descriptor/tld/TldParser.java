@@ -24,6 +24,7 @@ import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.descriptor.DigesterFactory;
 import org.apache.tomcat.util.descriptor.XmlErrorHandler;
 import org.apache.tomcat.util.digester.Digester;
+import org.apache.tomcat.util.digester.RuleSet;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -31,12 +32,18 @@ import org.xml.sax.SAXException;
  * Parses a Tag Library Descriptor.
  */
 public class TldParser {
-    private static final Log LOG = LogFactory.getLog(TldParser.class);
+    private static final Log log = LogFactory.getLog(TldParser.class);
     private final Digester digester;
 
-    public TldParser(boolean namespaceAware, boolean validation) {
-        TldRuleSet ruleSet = new TldRuleSet();
-        digester = DigesterFactory.newDigester(validation, namespaceAware, ruleSet);
+    public TldParser(boolean namespaceAware, boolean validation,
+            boolean blockExternal) {
+        this(namespaceAware, validation, new TldRuleSet(), blockExternal);
+    }
+
+    public TldParser(boolean namespaceAware, boolean validation, RuleSet ruleSet,
+            boolean blockExternal) {
+        digester = DigesterFactory.newDigester(
+                validation, namespaceAware, ruleSet, blockExternal);
     }
 
     public TaglibXml parse(TldResourcePath path) throws IOException, SAXException {
@@ -51,7 +58,7 @@ public class TldParser {
             source.setByteStream(is);
             digester.parse(source);
             if (!handler.getWarnings().isEmpty() || !handler.getErrors().isEmpty()) {
-                handler.logFindings(LOG, source.getSystemId());
+                handler.logFindings(log, source.getSystemId());
                 if (!handler.getErrors().isEmpty()) {
                     // throw the first to indicate there was a error during processing
                     throw handler.getErrors().iterator().next();

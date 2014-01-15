@@ -29,7 +29,7 @@ import org.apache.catalina.connector.Request;
  * provides some sort of authentication service.
  *
  * @author Craig R. McClanahan
- * @version $Id: Authenticator.java 1241162 2012-02-06 20:32:36Z markt $
+ * @version $Id: Authenticator.java 1546630 2013-11-29 19:23:13Z markt $
  */
 public interface Authenticator {
 
@@ -51,5 +51,5 @@ public interface Authenticator {
     public void login(String userName, String password, Request request)
             throws ServletException;
 
-    public void logout(Request request) throws ServletException;
+    public void logout(Request request);
 }

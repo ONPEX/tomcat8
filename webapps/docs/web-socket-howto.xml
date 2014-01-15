@@ -62,15 +62,23 @@
    the timeout to use in milliseconds. For an infinite timeout, use
    <code>-1</code>.</p>
 
-<p>The default buffer size for binary messages is 8192 bytes. This may be
-   changed for a web application by setting the servlet context initialization
-   parameter <code>org.apache.tomcat.websocket.binaryBufferSize</code> to the
-   desired value in bytes.</p>
+<p>If the application does not define a <code>MessageHandler.Partial</code> for
+   incoming binary messages, any incoming binary messages must be buffered so
+   the entire message can be delivered in a single call to the registered
+   <code>MessageHandler.Whole</code> for binary messages. The default buffer
+   size for binary messages is 8192 bytes. This may be changed for a web
+   application by setting the servlet context initialization parameter
+   <code>org.apache.tomcat.websocket.binaryBufferSize</code> to the desired
+   value in bytes.</p>
 
-<p>The default buffer size for text messages is 8192 bytes. This may be
-   changed for a web application by setting the servlet context initialization
-   parameter <code>org.apache.tomcat.websocket.textBufferSize</code> to the
-   desired value in bytes.</p>
+<p>If the application does not define a <code>MessageHandler.Partial</code> for
+   incoming text messages, any incoming text messages must be buffered so the
+   entire message can be delivered in a single call to the registered
+   <code>MessageHandler.Whole</code> for text messages. The default buffer size
+   for text messages is 8192 bytes. This may be changed for a web application by
+   setting the servlet context initialization parameter
+   <code>org.apache.tomcat.websocket.textBufferSize</code> to the desired value
+   in bytes.</p>
 
 <p>The Java WebSocket specification 1.0 does not permit programmatic deployment
    after the first endpoint has started a WebSocket handshake. By default,
@@ -81,6 +89,49 @@
    <code>org.apache.tomcat.websocket.STRICT_SPEC_COMPLIANCE</code> system
    property to <code>true</code> but any explicit setting on the servlet context
    will always take priority.</p>
+
+<p>The Java WebSocket 1.0 specification requires that callbacks for
+   asynchronous writes are performed on a different thread to the thread that
+   initiated the write. Since the container thread pool is not exposed via the
+   Servlet API, the WebSocket implementation has to provide its own thread pool.
+   This thread pool is controlled by the following servlet context
+   initialization parameters:</p>
+   <ul>
+     <li><code>org.apache.tomcat.websocket.executorCoreSize</code>: The core
+         size of the executor thread pool. If not set, the default of 0 (zero)
+         is used.</li>
+     <li><code>org.apache.tomcat.websocket.executorMaxSize</code>: The maximum
+         permitted size of the executor thread pool. If not set, the default of
+         10 is used.</li>
+     <li><code>org.apache.tomcat.websocket.executorKeepAliveTimeSeconds</code>:
+         The maximum time an idle thread will remain in the executor thread pool
+         until it is terminated. If not specified, the default of 60 seconds is
+         used.</li>
+   </ul>
+
+<p>When using the WebSocket client to connect to server endpoints, the timeout
+   for IO operations while establishing the connection is controlled by the
+   <code>userProperties</code> of the provided
+   <code>javax.websocket.ClientEndpointConfig</code>. The property is
+   <code>org.apache.tomcat.websocket.IO_TIMEOUT_MS</code> and is the
+   timeout as a <code>String</code> in milliseconds. The default is 5000 (5
+   seconds).</p>
+
+<p>When using the WebSocket client to connect to secure server endpoints, the
+   client SSL configuration is controlled by the <code>userProperties</code>
+   of the provided <code>javax.websocket.ClientEndpointConfig</code>. The
+   following user properties are supported:</p>
+   <ul>
+     <li><code>org.apache.tomcat.websocket.SSL_CONTEXT</code></li>
+     <li><code>org.apache.tomcat.websocket.SSL_PROTOCOLS</code></li>
+     <li><code>org.apache.tomcat.websocket.SSL_TRUSTSTORE</code></li>
+     <li><code>org.apache.tomcat.websocket.SSL_TRUSTSTORE_PWD</code></li>
+   </ul>
+   <p>The default truststore password is <code>changeit</code>.</p>
+   <p>If the <code>org.apache.tomcat.websocket.SSL_CONTEXT</code> property is
+      set then the <code>org.apache.tomcat.websocket.SSL_TRUSTSTORE</code> and
+      <code>org.apache.tomcat.websocket.SSL_TRUSTSTORE_PWD</code> properties
+      will be ignored.</p>
 </section>
 
 </body>

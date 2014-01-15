@@ -45,7 +45,7 @@ import org.apache.tomcat.util.modeler.Registry;
  *
  * @author Craig R. McClanahan
  * @author Amy Roh
- * @version $Id: MBeanUtils.java 1501082 2013-07-09 04:33:04Z violetagg $
+ * @version $Id: MBeanUtils.java 1550123 2013-12-11 12:36:17Z markt $
  */
 
 public class MBeanUtils {
@@ -347,8 +347,8 @@ public class MBeanUtils {
             ContextName cn = new ContextName(context.getName());
             Container host = context.getParent();
             name = new ObjectName(domain + ":type=Environment" +
-                        ",resourcetype=Context,context=" + cn.getDisplayName() +
-                        ",host=" + host.getName() +
+                        ",resourcetype=Context,host=" + host.getName() +
+                        ",context=" + cn.getDisplayName() +
                         ",name=" + environment.getName());
         }
         return (name);
@@ -375,17 +375,17 @@ public class MBeanUtils {
                 resource.getNamingResources().getContainer();
         if (container instanceof Server) {
             name = new ObjectName(domain + ":type=Resource" +
-                        ",resourcetype=Global,class=" + resource.getType() +
-                        ",name=" + quotedResourceName);
+                    ",resourcetype=Global,class=" + resource.getType() +
+                    ",name=" + quotedResourceName);
         } else if (container instanceof Context) {
             Context context = ((Context)container);
             ContextName cn = new ContextName(context.getName());
             Container host = context.getParent();
             name = new ObjectName(domain + ":type=Resource" +
-                        ",resourcetype=Context,context=" + cn.getDisplayName() +
-                        ",host=" + host.getName() +
-                        ",class=" + resource.getType() +
-                        ",name=" + quotedResourceName);
+                    ",resourcetype=Context,host=" + host.getName() +
+                    ",context=" + cn.getDisplayName() +
+                    ",class=" + resource.getType() +
+                    ",name=" + quotedResourceName);
         }
 
         return (name);
@@ -413,16 +413,16 @@ public class MBeanUtils {
                 resourceLink.getNamingResources().getContainer();
         if (container instanceof Server) {
             name = new ObjectName(domain + ":type=ResourceLink" +
-                        ",resourcetype=Global" +
-                        ",name=" + quotedResourceLinkName);
+                    ",resourcetype=Global" +
+                    ",name=" + quotedResourceLinkName);
         } else if (container instanceof Context) {
             Context context = ((Context)container);
             ContextName cn = new ContextName(context.getName());
             Container host = context.getParent();
             name = new ObjectName(domain + ":type=ResourceLink" +
-                        ",resourcetype=Context,context=" + cn.getDisplayName() +
-                        ",host=" + host.getName() +
-                        ",name=" + quotedResourceLinkName);
+                    ",resourcetype=Context,host=" + host.getName() +
+                    ",context=" + cn.getDisplayName() +
+                    ",name=" + quotedResourceLinkName);
         }
 
         return (name);
@@ -469,8 +469,8 @@ public class MBeanUtils {
 
         ContextName cn = new ContextName(context.getName());
         Container host = context.getParent();
-        name = new ObjectName(domain + ":type=Loader,context=" +
-                cn.getDisplayName() + ",host=" + host.getName());
+        name = new ObjectName(domain + ":type=Loader,host=" + host.getName() +
+                ",context=" + cn.getDisplayName());
 
         return name;
     }

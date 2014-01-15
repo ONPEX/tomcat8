@@ -18,11 +18,13 @@ package org.apache.catalina.webresources;
 
 import java.io.File;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.jar.JarEntry;
+import java.util.jar.Manifest;
 
 import org.apache.catalina.WebResource;
 import org.apache.catalina.WebResourceRoot;
@@ -31,18 +33,34 @@ import org.apache.catalina.util.ResourceSet;
 public abstract class AbstractArchiveResourceSet extends AbstractResourceSet {
 
     private final HashMap<String,JarEntry> jarFileEntries = new HashMap<>();
-    private String baseUrl;
+    private URL baseUrl;
+    private String baseUrlString;
+    private Manifest manifest;
 
 
-    public String getBaseUrl() {
+    protected final void setManifest(Manifest manifest) {
+        this.manifest = manifest;
+    }
+
+    protected final void setBaseUrl(URL baseUrl) {
+        this.baseUrl = baseUrl;
+        if (baseUrl == null) {
+            this.baseUrlString = null;
+        } else {
+            this.baseUrlString = baseUrl.toString();
+        }
+    }
+
+    @Override
+    public final URL getBaseUrl() {
         return baseUrl;
     }
 
-    public void setBaseUrl(String baseUrl) {
-        this.baseUrl = baseUrl;
+    protected final String getBaseUrlString() {
+        return baseUrlString;
     }
 
-    public HashMap<String,JarEntry> getJarFileEntries() {
+    protected final HashMap<String,JarEntry> getJarFileEntries() {
         return jarFileEntries;
     }
 
@@ -216,7 +234,7 @@ public abstract class AbstractArchiveResourceSet extends AbstractResourceSet {
                 if (jarEntry == null) {
                     return new EmptyResource(root, path);
                 } else {
-                    return createArchiveResource(jarEntry, path);
+                    return createArchiveResource(jarEntry, path, manifest);
                 }
             }
         } else {
@@ -225,5 +243,5 @@ public abstract class AbstractArchiveResourceSet extends AbstractResourceSet {
     }
 
     protected abstract WebResource createArchiveResource(JarEntry jarEntry,
-            String webAppPath);
+            String webAppPath, Manifest manifest);
 }

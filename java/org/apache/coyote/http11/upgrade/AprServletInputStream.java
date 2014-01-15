@@ -21,12 +21,16 @@ import java.io.IOException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.jni.OS;
 import org.apache.tomcat.jni.Socket;
 import org.apache.tomcat.jni.Status;
 import org.apache.tomcat.util.net.SocketWrapper;
 
 public class AprServletInputStream extends AbstractServletInputStream {
+
+    private static final Log log = LogFactory.getLog(AprServletInputStream.class);
 
     private final SocketWrapper<Long> wrapper;
     private final long socket;
@@ -44,6 +48,10 @@ public class AprServletInputStream extends AbstractServletInputStream {
     protected int doRead(boolean block, byte[] b, int off, int len)
             throws IOException {
 
+        if (closed) {
+            throw new IOException(sm.getString("apr.closed", Long.valueOf(socket)));
+        }
+
         Lock readLock = wrapper.getBlockingStatusReadLock();
         WriteLock writeLock = wrapper.getBlockingStatusWriteLock();
 
@@ -52,9 +60,6 @@ public class AprServletInputStream extends AbstractServletInputStream {
         try {
             readLock.lock();
             if (wrapper.getBlockingStatus() == block) {
-                if (closed) {
-                    throw new IOException(sm.getString("apr.closed", Long.valueOf(socket)));
-                }
                 result = Socket.recv(socket, b, off, len);
                 readDone = true;
             }
@@ -72,9 +77,6 @@ public class AprServletInputStream extends AbstractServletInputStream {
                 try {
                     readLock.lock();
                     writeLock.unlock();
-                    if (closed) {
-                        throw new IOException(sm.getString("apr.closed", Long.valueOf(socket)));
-                    }
                     result = Socket.recv(socket, b, off, len);
                 } finally {
                     readLock.unlock();
@@ -94,18 +96,25 @@ public class AprServletInputStream extends AbstractServletInputStream {
         } else if (-result == Status.EAGAIN) {
             eagain = true;
             return 0;
+        } else if (-result == Status.APR_EGENERAL && wrapper.isSecure()) {
+            // Not entirely sure why this is necessary. Testing to date has not
+            // identified any issues with this but log it so it can be tracked
+            // if it is suspected of causing issues in the future.
+            if (log.isDebugEnabled()) {
+                log.debug(sm.getString("apr.read.sslGeneralError",
+                        Long.valueOf(socket), wrapper));
+            }
+            eagain = true;
+            return 0;
         } else if (-result == Status.APR_EOF) {
             throw new EOFException(sm.getString("apr.clientAbort"));
         } else if ((OS.IS_WIN32 || OS.IS_WIN64) &&
                 (-result == Status.APR_OS_START_SYSERR + 10053)) {
             // 10053 on Windows is connection aborted
             throw new EOFException(sm.getString("apr.clientAbort"));
-        } else if (-result == Status.APR_EGENERAL && wrapper.isSecure()) {
-            // Connection abort by client during SSL handshake
-            throw new EOFException(sm.getString("apr.clientAbort"));
         } else {
             throw new IOException(sm.getString("apr.read.error",
-                    Integer.valueOf(-result), Long.valueOf(socket)));
+                    Integer.valueOf(-result), Long.valueOf(socket), wrapper));
         }
     }
 

@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.jasper.compiler;
 
 import java.io.FileNotFoundException;
@@ -23,13 +22,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.Vector;
-import java.util.jar.JarFile;
-import java.util.zip.ZipEntry;
 
 import org.apache.jasper.Constants;
 import org.apache.jasper.JasperException;
 import org.apache.jasper.JspCompilationContext;
+import org.apache.tomcat.util.scan.Jar;
 import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
 
 /**
  * This class has all the utility method(s). Ideally should move all the bean
@@ -337,12 +336,10 @@ public class JspUtil {
      *            the expected type of the interpreted result
      * @param fnmapvar
      *            Variable pointing to a function map.
-     * @param XmlEscape
-     *            True if the result should do XML escaping
      * @return a String representing a call to the EL interpreter.
      */
     public static String interpreterCall(boolean isTagFile, String expression,
-            Class<?> expectedType, String fnmapvar, boolean XmlEscape) {
+            Class<?> expectedType, String fnmapvar) {
         /*
          * Determine which context object to use.
          */
@@ -388,10 +385,6 @@ public class JspUtil {
             }
         }
 
-        if (primitiveConverterMethod != null) {
-            XmlEscape = false;
-        }
-
         /*
          * Build up the base call to the interpreter.
          */
@@ -414,7 +407,7 @@ public class JspUtil {
                         + "org.apache.jasper.runtime.PageContextImpl.proprietaryEvaluate"
                         + "(" + Generator.quote(expression) + ", " + targetType
                         + ".class, " + "(javax.servlet.jsp.PageContext)" + jspCtxt + ", "
-                        + fnmapvar + ", " + XmlEscape + ")");
+                        + fnmapvar + ")");
 
         /*
          * Add the primitive converter method if we need to.
@@ -652,19 +645,14 @@ public class JspUtil {
         }
     }
 
-    public static InputStream getInputStream(String fname, JarFile jarFile,
+    public static InputStream getInputStream(String fname, Jar jar,
             JspCompilationContext ctxt) throws IOException {
 
         InputStream in = null;
 
-        if (jarFile != null) {
+        if (jar != null) {
             String jarEntryName = fname.substring(1, fname.length());
-            ZipEntry jarEntry = jarFile.getEntry(jarEntryName);
-            if (jarEntry == null) {
-                throw new FileNotFoundException(Localizer.getMessage(
-                        "jsp.error.file.not.found", fname));
-            }
-            in = jarFile.getInputStream(jarEntry);
+            in = jar.getInputStream(jarEntryName);
         } else {
             in = ctxt.getResourceAsStream(fname);
         }
@@ -675,6 +663,20 @@ public class JspUtil {
         }
 
         return in;
+    }
+
+    public static InputSource getInputSource(String fname, Jar jar, JspCompilationContext ctxt)
+        throws IOException {
+        InputSource source;
+        if (jar != null) {
+            String jarEntryName = fname.substring(1, fname.length());
+            source = new InputSource(jar.getInputStream(jarEntryName));
+            source.setSystemId(jar.getURL(jarEntryName));
+        } else {
+            source = new InputSource(ctxt.getResourceAsStream(fname));
+            source.setSystemId(ctxt.getResource(fname).toExternalForm());
+        }
+        return source;
     }
 
     /**
@@ -883,18 +885,18 @@ public class JspUtil {
     }
 
     static InputStreamReader getReader(String fname, String encoding,
-            JarFile jarFile, JspCompilationContext ctxt, ErrorDispatcher err)
+            Jar jar, JspCompilationContext ctxt, ErrorDispatcher err)
             throws JasperException, IOException {
 
-        return getReader(fname, encoding, jarFile, ctxt, err, 0);
+        return getReader(fname, encoding, jar, ctxt, err, 0);
     }
 
     static InputStreamReader getReader(String fname, String encoding,
-            JarFile jarFile, JspCompilationContext ctxt, ErrorDispatcher err,
-            int skip) throws JasperException, IOException {
+            Jar jar, JspCompilationContext ctxt, ErrorDispatcher err, int skip)
+            throws JasperException, IOException {
 
         InputStreamReader reader = null;
-        InputStream in = getInputStream(fname, jarFile, ctxt);
+        InputStream in = getInputStream(fname, jar, ctxt);
         for (int i = 0; i < skip; i++) {
             in.read();
         }

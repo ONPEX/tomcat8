@@ -80,7 +80,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: ApplicationContext.java 1511907 2013-08-08 18:07:43Z markt $
+ * @version $Id: ApplicationContext.java 1549528 2013-12-09 10:01:16Z markt $
  */
 
 public class ApplicationContext
@@ -220,9 +220,7 @@ public class ApplicationContext
      */
     @Override
     public Object getAttribute(String name) {
-
         return (attributes.get(name));
-
     }
 
 
@@ -306,6 +304,20 @@ public class ApplicationContext
      */
     @Override
     public String getInitParameter(final String name) {
+        // Special handling for XML settings as the context setting must
+        // always override anything that might have been set by an application.
+        if (Globals.JASPER_XML_VALIDATION_TLD_INIT_PARAM.equals(name) &&
+                context.getTldValidation()) {
+            return "true";
+        }
+        if (Globals.JASPER_XML_BLOCK_EXTERNAL_INIT_PARAM.equals(name)) {
+            if (context.getXmlBlockExternal()) {
+                return "true";
+            } else if (Globals.IS_SECURITY_ENABLED) {
+                // System admin has explicitly changed the default
+                return "false";
+            }
+        }
         return parameters.get(name);
     }
 
@@ -316,7 +328,17 @@ public class ApplicationContext
      */
     @Override
     public Enumeration<String> getInitParameterNames() {
-        return Collections.enumeration(parameters.keySet());
+        Set<String> names = new HashSet<>();
+        names.addAll(parameters.keySet());
+        // Special handling for XML settings as these attributes will always be
+        // available if they have been set on the context
+        if (context.getTldValidation()) {
+            names.add(Globals.JASPER_XML_VALIDATION_TLD_INIT_PARAM);
+        }
+        if (context.getXmlBlockExternal() || Globals.IS_SECURITY_ENABLED) {
+            names.add(Globals.JASPER_XML_BLOCK_EXTERNAL_INIT_PARAM);
+        }
+        return Collections.enumeration(names);
     }
 
 
@@ -510,13 +532,9 @@ public class ApplicationContext
             throw new MalformedURLException(sm.getString(
                     "applicationContext.requestDispatcher.iae", path));
 
-        String normPath = RequestUtil.normalize(path);
-        if (normPath == null)
-            return (null);
-
         WebResourceRoot resources = context.getResources();
         if (resources != null) {
-            return resources.getResource(normPath).getURL();
+            return resources.getResource(path).getURL();
         }
 
         return null;
@@ -540,13 +558,9 @@ public class ApplicationContext
         if (!path.startsWith("/") && GET_RESOURCE_REQUIRE_SLASH)
             return null;
 
-        String normalizedPath = RequestUtil.normalize(path);
-        if (normalizedPath == null)
-            return (null);
-
         WebResourceRoot resources = context.getResources();
         if (resources != null) {
-            return resources.getResource(normalizedPath).getInputStream();
+            return resources.getResource(path).getInputStream();
         }
 
         return null;
@@ -557,7 +571,7 @@ public class ApplicationContext
      * Return a Set containing the resource paths of resources member of the
      * specified collection. Each path will be a String starting with
      * a "/" character. Paths representing directories will end with a "/"
-     * character. The returned set is immutable.
+     * character.
      *
      * @param path Collection path
      */
@@ -573,13 +587,9 @@ public class ApplicationContext
                 (sm.getString("applicationContext.resourcePaths.iae", path));
         }
 
-        String normalizedPath = RequestUtil.normalize(path);
-        if (normalizedPath == null)
-            return (null);
-
         WebResourceRoot resources = context.getResources();
         if (resources != null) {
-            return resources.listWebAppPaths(normalizedPath);
+            return resources.listWebAppPaths(path);
         }
 
         return null;

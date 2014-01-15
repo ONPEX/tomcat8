@@ -25,6 +25,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.cert.Certificate;
+import java.util.jar.Manifest;
 
 import org.apache.catalina.WebResourceRoot;
 import org.apache.juli.logging.Log;
@@ -123,18 +125,48 @@ public class FileResource extends AbstractResource {
     }
 
     @Override
-    public InputStream getInputStream() {
-        if (resource.exists()) {
-            try {
-                return new FileInputStream(resource);
-            } catch (FileNotFoundException fnfe) {
-                // Race condition - not an error
-                return null;
-            }
-        } else {
+    protected InputStream doGetInputStream() {
+        try {
+            return new FileInputStream(resource);
+        } catch (FileNotFoundException fnfe) {
+            // Race condition (file has been deleted) - not an error
             return null;
         }
     }
+
+    @Override
+    public final byte[] getContent() {
+        long len = getContentLength();
+
+        if (len > Integer.MAX_VALUE) {
+            // Can't create an array that big
+            throw new ArrayIndexOutOfBoundsException(sm.getString(
+                    "abstractResource.getContentTooLarge", getWebappPath(),
+                    Long.valueOf(len)));
+        }
+
+        int size = (int) len;
+        byte[] result = new byte[size];
+
+        int pos = 0;
+        try (InputStream is = new FileInputStream(resource)) {
+            while (pos < size) {
+                int n = is.read(result, pos, size - pos);
+                if (n < 0) {
+                    break;
+                }
+                pos += n;
+            }
+        } catch (IOException ioe) {
+            if (getLog().isDebugEnabled()) {
+                getLog().debug(sm.getString("abstractResource.getContentFail",
+                        getWebappPath()), ioe);
+            }
+        }
+
+        return result;
+    }
+
 
     @Override
     public long getCreation() {
@@ -168,8 +200,14 @@ public class FileResource extends AbstractResource {
         }
     }
 
-    protected File getResourceInternal() {
-        return resource;
+    @Override
+    public Certificate[] getCertificates() {
+        return null;
+    }
+
+    @Override
+    public Manifest getManifest() {
+        return null;
     }
 
     @Override

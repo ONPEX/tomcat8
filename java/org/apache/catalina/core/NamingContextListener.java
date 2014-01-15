@@ -76,7 +76,7 @@ import org.apache.tomcat.util.res.StringManager;
  * with each context and server.
  *
  * @author Remy Maucherat
- * @version $Id: NamingContextListener.java 1500964 2013-07-08 21:24:05Z markt $
+ * @version $Id: NamingContextListener.java 1550123 2013-12-11 12:36:17Z markt $
  */
 
 public class NamingContextListener
@@ -745,10 +745,10 @@ public class NamingContextListener
                 contextName = "/" + contextName;
             Host host = (Host) ((Context)container).getParent();
             name = new ObjectName(domain + ":type=DataSource" +
-                        ",context=" + contextName +
-                        ",host=" + host.getName() +
-                        ",class=" + resource.getType() +
-                        ",name=" + quotedResourceName);
+                    ",host=" + host.getName() +
+                    ",context=" + contextName +
+                    ",class=" + resource.getType() +
+                    ",name=" + quotedResourceName);
         }
 
         return (name);

@@ -31,7 +31,7 @@ import org.apache.tomcat.util.bcel.Constants;
  * programatically should see <a href="../generic/ConstantPoolGen.html">
  * ConstantPoolGen</a>.
 
- * @version $Id: ConstantPool.java 1397953 2012-10-13 21:43:36Z markt $
+ * @version $Id: ConstantPool.java 1540404 2013-11-09 21:39:37Z markt $
  * @see     Constant
  * @author <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */
@@ -87,7 +87,7 @@ public class ConstantPool implements Cloneable, Serializable {
             case Constants.CONSTANT_Class:
                 i = ((ConstantClass) c).getNameIndex();
                 c = getConstant(i, Constants.CONSTANT_Utf8);
-                str = Utility.compactClassName(((ConstantUtf8) c).getBytes(), false);
+                str = Utility.compactClassName(((ConstantUtf8) c).getBytes());
                 break;
             case Constants.CONSTANT_String:
                 i = ((ConstantString) c).getStringIndex();

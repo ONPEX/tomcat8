@@ -52,7 +52,7 @@ import org.apache.tomcat.util.res.StringManager;
  * be subclassed to create more sophisticated Manager implementations.
  *
  * @author Craig R. McClanahan
- * @version $Id: ManagerBase.java 1446076 2013-02-14 09:09:55Z kfujino $
+ * @version $Id: ManagerBase.java 1550123 2013-12-11 12:36:17Z markt $
  */
 
 public abstract class ManagerBase extends LifecycleMBeanBase
@@ -1261,15 +1261,15 @@ public abstract class ManagerBase extends LifecycleMBeanBase
 
         StringBuilder name = new StringBuilder("type=Manager");
 
+        name.append(",host=");
+        name.append(context.getParent().getName());
+
         name.append(",context=");
         String contextName = context.getName();
         if (!contextName.startsWith("/")) {
             name.append('/');
         }
         name.append(contextName);
-
-        name.append(",host=");
-        name.append(context.getParent().getName());
 
         return name.toString();
     }

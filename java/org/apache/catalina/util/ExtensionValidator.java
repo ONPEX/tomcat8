@@ -44,7 +44,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Greg Murray
  * @author Justyna Horwat
- * @version $Id: ExtensionValidator.java 1428079 2013-01-02 21:48:09Z markt $
+ * @version $Id: ExtensionValidator.java 1538838 2013-11-05 00:08:25Z markt $
  *
  */
 public final class ExtensionValidator {
@@ -161,30 +161,17 @@ public final class ExtensionValidator {
 
         // Primarily used for error reporting
         String jarName = null;
-        try {
-            WebResource[] jars = resources.listResources("/WEB-INF/lib");
-            for (WebResource jar : jars) {
-                jarName = jar.getName();
-                if (jarName.toLowerCase(Locale.ENGLISH).endsWith(".jar") &&
-                        jar.isFile()) {
+        WebResource[] jars = resources.listResources("/WEB-INF/lib");
+        for (WebResource jar : jars) {
+            jarName = jar.getName();
+            if (jarName.toLowerCase(Locale.ENGLISH).endsWith(".jar") &&
+                    jar.isFile()) {
 
-                    inputStream = jar.getInputStream();
-                    Manifest jmanifest = getManifest(inputStream);
-                    if (jmanifest != null) {
-                        ManifestResource mre = new ManifestResource(jarName,
-                                jmanifest, ManifestResource.APPLICATION);
-                        appManifestResources.add(mre);
-                    }
-                }
-            }
-        } catch (IOException ioe) {
-            throw new IOException("Jar: " + jarName, ioe);
-        } finally {
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                } catch (Throwable t) {
-                    ExceptionUtils.handleThrowable(t);
+                Manifest jmanifest = jar.getManifest();
+                if (jmanifest != null) {
+                    ManifestResource mre = new ManifestResource(jarName,
+                            jmanifest, ManifestResource.APPLICATION);
+                    appManifestResources.add(mre);
                 }
             }
         }

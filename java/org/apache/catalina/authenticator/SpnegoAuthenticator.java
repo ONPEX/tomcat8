@@ -43,7 +43,7 @@ import org.ietf.jgss.Oid;
 
 
 /**
- * A SPNEGO authenticator that uses the SPENGO/Kerberos support built in to Java
+ * A SPNEGO authenticator that uses the SPNEGO/Kerberos support built in to Java
  * 6. Successful Kerberos authentication depends on the correct configuration of
  * multiple components. If the configuration is invalid, the error messages are
  * often cryptic although a Google search will usually point you in the right
@@ -118,9 +118,6 @@ public class SpnegoAuthenticator extends AuthenticatorBase {
             System.setProperty(Constants.JAAS_CONF_PROPERTY,
                     jaasConfFile.getAbsolutePath());
         }
-
-        // This property must be false for SPNEGO to work
-        System.setProperty(Constants.USE_SUBJECT_CREDS_ONLY_PROPERTY, "false");
     }
 
 
@@ -230,7 +227,7 @@ public class SpnegoAuthenticator extends AuthenticatorBase {
                 };
             gssContext = manager.createContext(Subject.doAs(lc.getSubject(), action));
 
-            outToken = gssContext.acceptSecContext(decoded, 0, decoded.length);
+            outToken = Subject.doAs(lc.getSubject(), new AcceptAction(gssContext, decoded));
 
             if (outToken == null) {
                 if (log.isDebugEnabled()) {
@@ -296,5 +293,27 @@ public class SpnegoAuthenticator extends AuthenticatorBase {
 
         response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
         return false;
+    }
+
+
+    /**
+     * This class gets a gss credential via a privileged action.
+     */
+    private static class AcceptAction implements PrivilegedExceptionAction<byte[]> {
+
+        GSSContext gssContext;
+
+        byte[] decoded;
+
+        AcceptAction(GSSContext context, byte[] decodedToken) {
+            this.gssContext = context;
+            this.decoded = decodedToken;
+        }
+
+        @Override
+        public byte[] run() throws GSSException {
+            return gssContext.acceptSecContext(decoded,
+                    0, decoded.length);
+        }
     }
 }

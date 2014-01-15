@@ -71,7 +71,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: HostConfig.java 1508747 2013-07-31 07:40:20Z kfujino $
+ * @version $Id: HostConfig.java 1550743 2013-12-13 14:43:53Z markt $
  */
 public class HostConfig
     implements LifecycleListener {
@@ -145,7 +145,8 @@ public class HostConfig
     /**
      * The <code>Digester</code> instance used to parse context descriptors.
      */
-    protected static final Digester digester = createDigester();
+    protected Digester digester = createDigester(contextClass);
+    private final Object digesterLock = new Object();
 
     /**
      * The list of Wars in the appBase to be ignored because they are invalid
@@ -173,8 +174,14 @@ public class HostConfig
      */
     public void setContextClass(String contextClass) {
 
+        String oldContextClass = this.contextClass;
         this.contextClass = contextClass;
 
+        if (!oldContextClass.equals(contextClass)) {
+            synchronized (digesterLock) {
+                digester = createDigester(getContextClass());
+            }
+        }
     }
 
 
@@ -343,12 +350,11 @@ public class HostConfig
     /**
      * Create the digester which will be used to parse context config files.
      */
-    protected static Digester createDigester() {
+    protected static Digester createDigester(String contextClassName) {
         Digester digester = new Digester();
         digester.setValidating(false);
         // Add object creation rule
-        digester.addObjectCreate("Context", "org.apache.catalina.core.StandardContext",
-            "className");
+        digester.addObjectCreate("Context", contextClassName, "className");
         // Set the properties on that object (it doesn't matter if extra
         // properties are set)
         digester.addSetProperties("Context");
@@ -521,7 +527,7 @@ public class HostConfig
         File expandedDocBase = null;
 
         try (FileInputStream fis = new FileInputStream(contextXml)) {
-            synchronized (digester) {
+            synchronized (digesterLock) {
                 try {
                     context = (Context) digester.parse(fis);
                 } catch (Exception e) {
@@ -606,7 +612,7 @@ public class HostConfig
                         deployedApp.redeployResources.put(warDocBase.getAbsolutePath(),
                                 Long.valueOf(warDocBase.lastModified()));
                     } else {
-                        // Trigger a reload if a WAR is added
+                        // Trigger a redeploy if a WAR is added
                         deployedApp.redeployResources.put(
                                 warDocBase.getAbsolutePath(),
                                 Long.valueOf(0));
@@ -766,33 +772,31 @@ public class HostConfig
                 cn.getBaseName() + "/META-INF/context.xml");
 
         boolean xmlInWar = false;
-        if (deployXML) {
-            JarEntry entry = null;
-            try {
-                jar = new JarFile(war);
-                entry = jar.getJarEntry(Constants.ApplicationContextXml);
-                if (entry != null) {
-                    xmlInWar = true;
+        JarEntry entry = null;
+        try {
+            jar = new JarFile(war);
+            entry = jar.getJarEntry(Constants.ApplicationContextXml);
+            if (entry != null) {
+                xmlInWar = true;
+            }
+        } catch (IOException e) {
+            /* Ignore */
+        } finally {
+            entry = null;
+            if (jar != null) {
+                try {
+                    jar.close();
+                } catch (IOException ioe) {
+                    // Ignore;
                 }
-            } catch (IOException e) {
-                /* Ignore */
-            } finally {
-                entry = null;
-                if (jar != null) {
-                    try {
-                        jar.close();
-                    } catch (IOException ioe) {
-                        // Ignore;
-                    }
-                    jar = null;
-                }
+                jar = null;
             }
         }
 
         Context context = null;
         try {
             if (deployXML && xml.exists() && !copyXML) {
-                synchronized (digester) {
+                synchronized (digesterLock) {
                     try {
                         context = (Context) digester.parse(xml);
                     } catch (Exception e) {
@@ -808,8 +812,7 @@ public class HostConfig
                 }
                 context.setConfigFile(xml.toURI().toURL());
             } else if (deployXML && xmlInWar) {
-                synchronized (digester) {
-                    JarEntry entry = null;
+                synchronized (digesterLock) {
                     try {
                         jar = new JarFile(war);
                         entry =
@@ -847,6 +850,12 @@ public class HostConfig
                         digester.reset();
                     }
                 }
+            } else if (!deployXML && xmlInWar) {
+                // Block deployment as META-INF/context.xml may contain security
+                // configuration necessary for a secure deployment.
+                log.error(sm.getString("hostConfig.deployDescriptor.blocked",
+                        cn.getPath(), Constants.ApplicationContextXml,
+                        new File(host.getConfigBaseFile(), cn.getBaseName() + ".xml")));
             } else {
                 context = (Context) Class.forName(contextClass).newInstance();
             }
@@ -875,7 +884,7 @@ public class HostConfig
                 // Change location of XML file to config base
                 xml = new File(host.getConfigBaseFile(),
                         cn.getBaseName() + ".xml");
-                JarEntry entry = null;
+                entry = null;
                 try {
                     jar = new JarFile(war);
                     entry =
@@ -1059,13 +1068,14 @@ public class HostConfig
 
         try {
             if (deployXML && xml.exists()) {
-                synchronized (digester) {
+                synchronized (digesterLock) {
                     try {
                         context = (Context) digester.parse(xml);
                     } catch (Exception e) {
                         log.error(sm.getString(
                                 "hostConfig.deployDescriptor.error",
                                 xml), e);
+                        context = new FailedContext();
                     } finally {
                         if (context == null) {
                             context = new FailedContext();
@@ -1103,6 +1113,12 @@ public class HostConfig
                 } else {
                     context.setConfigFile(xml.toURI().toURL());
                 }
+            } else if (!deployXML && xml.exists()) {
+                // Block deployment as META-INF/context.xml may contain security
+                // configuration necessary for a secure deployment.
+                log.error(sm.getString("hostConfig.deployDescriptor.blocked",
+                        cn.getPath(), xml, xmlCopy));
+                context = new FailedContext();
             } else {
                 context = (Context) Class.forName(contextClass).newInstance();
             }
@@ -1152,6 +1168,11 @@ public class HostConfig
                 deployedApp.redeployResources.put(
                         xmlCopy.getAbsolutePath(),
                         Long.valueOf(0));
+                if (!xml.exists()) {
+                    deployedApp.redeployResources.put(
+                            xml.getAbsolutePath(),
+                            Long.valueOf(0));
+                }
             }
             addWatchedResources(deployedApp, dir.getAbsolutePath(), context);
             // Add the global redeploy resources (which are never deleted) at

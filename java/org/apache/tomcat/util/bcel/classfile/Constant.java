@@ -29,7 +29,7 @@ import org.apache.tomcat.util.bcel.util.BCELComparator;
  * in the constant pool of a class file. The classes keep closely to
  * the JVM specification.
  *
- * @version $Id: Constant.java 1507013 2013-07-25 15:32:05Z markt $
+ * @version $Id: Constant.java 1547760 2013-12-04 10:50:59Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */
 public abstract class Constant implements Cloneable, Serializable {
@@ -77,8 +77,12 @@ public abstract class Constant implements Cloneable, Serializable {
 
 
     @Override
-    public Object clone() throws CloneNotSupportedException {
-        return super.clone();
+    public Constant clone() {
+        try {
+            return (Constant) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new Error("Clone Not Supported"); // never happens
+        }
     }
 
 

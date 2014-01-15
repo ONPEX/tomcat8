@@ -31,7 +31,7 @@ import org.apache.tomcat.util.bcel.util.BCELComparator;
  * class file.  Those interested in programatically generating classes
  * should see the <a href="../generic/ClassGen.html">ClassGen</a> class.
 
- * @version $Id: JavaClass.java 1397953 2012-10-13 21:43:36Z markt $
+ * @version $Id: JavaClass.java 1540404 2013-11-09 21:39:37Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */
 public class JavaClass extends AccessFlags
@@ -96,37 +96,29 @@ public class JavaClass extends AccessFlags
          * `ConstPool.getConstant' method.
          */
         class_name = constant_pool.getConstantString(class_name_index, Constants.CONSTANT_Class);
-        class_name = Utility.compactClassName(class_name, false);
+        class_name = Utility.compactClassName(class_name);
         if (superclass_name_index > 0) {
             // May be zero -> class is java.lang.Object
             superclass_name = constant_pool.getConstantString(superclass_name_index,
                     Constants.CONSTANT_Class);
-            superclass_name = Utility.compactClassName(superclass_name, false);
+            superclass_name = Utility.compactClassName(superclass_name);
         } else {
             superclass_name = "java.lang.Object";
         }
         interface_names = new String[interfaces.length];
         for (int i = 0; i < interfaces.length; i++) {
             String str = constant_pool.getConstantString(interfaces[i], Constants.CONSTANT_Class);
-            interface_names[i] = Utility.compactClassName(str, false);
+            interface_names[i] = Utility.compactClassName(str);
         }
     }
 
 
-    /**
-     * @return Attributes of the class.
-     */
-    public Attribute[] getAttributes() {
-        return attributes;
-    }
-
     public AnnotationEntry[] getAnnotationEntries() {
         if (annotationsOutOfDate) {
             // Find attributes that contain annotation data
-            Attribute[] attrs = getAttributes();
             List<AnnotationEntry> accumulatedAnnotations = new ArrayList<>();
-            for (int i = 0; i < attrs.length; i++) {
-                Attribute attribute = attrs[i];
+            for (int i = 0; i < attributes.length; i++) {
+                Attribute attribute = attributes[i];
                 if (attribute instanceof Annotations) {
                     Annotations runtimeAnnotations = (Annotations)attribute;
                     for(int j = 0; j < runtimeAnnotations.getAnnotationEntries().length; j++)

@@ -31,10 +31,10 @@ public class SocketWrapper<E> {
     private long timeout = -1;
     private boolean error = false;
     private volatile int keepAliveLeft = 100;
-    private boolean comet = false;
-    private boolean async = false;
+    private volatile boolean comet = false;
+    private volatile boolean async = false;
     private boolean keptAlive = false;
-    private boolean upgraded = false;
+    private volatile boolean upgraded = false;
     private boolean secure = false;
     /*
      * Following cached for speed / reduced GC
@@ -161,5 +161,16 @@ public class SocketWrapper<E> {
         this.socket = socket;
         this.timeout = timeout;
         upgraded = false;
+    }
+
+    /**
+     * Overridden for debug purposes. No guarantees are made about the format of
+     * this message which may vary significantly between point releases.
+     * <p>
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return super.toString() + ":" + String.valueOf(socket);
     }
 }

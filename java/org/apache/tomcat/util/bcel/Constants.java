@@ -20,7 +20,7 @@ package org.apache.tomcat.util.bcel;
 /**
  * Constants for the project, mostly defined in the JVM specification.
  *
- * @version $Id: Constants.java 1397978 2012-10-14 00:26:02Z markt $
+ * @version $Id: Constants.java 1547760 2013-12-04 10:50:59Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */
 public interface Constants {
@@ -89,8 +89,8 @@ public interface Constants {
     "CONSTANT_Float", "CONSTANT_Long", "CONSTANT_Double",
     "CONSTANT_Class", "CONSTANT_String", "CONSTANT_Fieldref",
     "CONSTANT_Methodref", "CONSTANT_InterfaceMethodref",
-    "CONSTANT_NameAndType", "CONSTANT_MethodHandle",
-    "CONSTANT_MethodType", "CONSTANT_InvokeDynamic" };
+    "CONSTANT_NameAndType", "", "", "CONSTANT_MethodHandle",
+    "CONSTANT_MethodType", "", "CONSTANT_InvokeDynamic" };
 
 
   /** Attributes and their corresponding names.

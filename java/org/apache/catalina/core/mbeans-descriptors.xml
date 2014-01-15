@@ -74,10 +74,6 @@
                description="The alternate deployment descriptor name."
                type="java.lang.String" />
 
-    <attribute name="antiJARLocking"
-               description="Take care to not lock jar files"
-               type="boolean" />
-
     <attribute name="antiResourceLocking"
                description="Take care to not lock resources"
                type="boolean" />
@@ -332,16 +328,12 @@
                description="Flag to set to cause the system.out and system.err to be redirected to the logger when executing a servlet"
                type="boolean"/>
 
-    <attribute name="tldNamespaceAware"
-               description="Should TLD XML namespace validation be turned on?"
-               type="boolean"/>
-
     <attribute name="tldScanTime"
                description="Time spend scanning jars for TLDs for this context"
                type="long"/>
 
     <attribute name="tldValidation"
-               description="Should TLD XML validation be turned on?"
+               description="Should the parsing of *.tld files be performed by a validating parser?"
                type="boolean"/>
 
     <attribute name="unloadDelay"
@@ -376,11 +368,11 @@
                type="java.lang.String"/>
 
     <attribute name="xmlValidation"
-               description="Should XML validation be turned on?"
+               description="Should the parsing of web.xml and web-fragment.xml files be performed by a validating parser?"
                type="boolean"/>
 
     <attribute name="xmlNamespaceAware"
-               description="Should XML namespace validation be turned on?"
+               description="Should the parsing of web.xml and web-fragment.xml files be performed by a namespace aware parser?"
                type="boolean"/>
 
     <operation name="addApplicationListener"

@@ -20,6 +20,8 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.cert.Certificate;
+import java.util.jar.Manifest;
 
 import org.apache.catalina.WebResourceRoot;
 import org.apache.juli.logging.Log;
@@ -104,7 +106,12 @@ public class JarResourceRoot extends AbstractResource {
     }
 
     @Override
-    public InputStream getInputStream() {
+    protected InputStream doGetInputStream() {
+        return null;
+    }
+
+    @Override
+    public byte[] getContent() {
         return null;
     }
 
@@ -129,5 +136,15 @@ public class JarResourceRoot extends AbstractResource {
     @Override
     protected Log getLog() {
         return log;
+    }
+
+    @Override
+    public Certificate[] getCertificates() {
+        return null;
+    }
+
+    @Override
+    public Manifest getManifest() {
+        return null;
     }
 }

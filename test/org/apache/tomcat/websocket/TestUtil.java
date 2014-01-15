@@ -16,6 +16,8 @@
  */
 package org.apache.tomcat.websocket;
 
+import java.util.List;
+
 import javax.websocket.EncodeException;
 import javax.websocket.Encoder;
 import javax.websocket.EndpointConfig;
@@ -98,6 +100,27 @@ public class TestUtil {
     public void testGetEncoderTypeGenericMultipleSubclassSwap() {
         Assert.assertEquals(String.class,
                 Util.getEncoderType(GenericMultipleSubSubSwapEncoder.class));
+    }
+
+
+    @Test
+    public void testGetEncoderTypeSimpleWithGenericType() {
+        Assert.assertEquals(List.class,
+                Util.getEncoderType(SimpleEncoderWithGenericType.class));
+    }
+
+
+    @Test
+    public void testGenericArrayEncoderString() {
+        Assert.assertEquals(String[].class,
+                Util.getEncoderType(GenericArrayEncoderString.class));
+    }
+
+
+    @Test
+    public void testGenericArraySubEncoderString() {
+        Assert.assertEquals(String[][].class,
+                Util.getEncoderType(GenericArraySubEncoderString.class));
     }
 
 
@@ -279,6 +302,72 @@ public class TestUtil {
         @Override
         public void doSomething(Boolean thing) {
             // NO-OP
+        }
+    }
+
+
+    private static class SimpleEncoderWithGenericType
+            implements Encoder.Text<List<String>> {
+
+        @Override
+        public void init(EndpointConfig endpointConfig) {
+            // NO-OP
+        }
+
+        @Override
+        public void destroy() {
+            // NO-OP
+        }
+
+        @Override
+        public String encode(List<String> object) throws EncodeException {
+            return null;
+        }
+    }
+
+
+    private abstract static class GenericArrayEncoder<T> implements Encoder.Text<T[]> {
+    }
+
+
+    private static class GenericArrayEncoderString extends GenericArrayEncoder<String> {
+
+        @Override
+        public void init(EndpointConfig endpointConfig) {
+            // NO-OP
+        }
+
+        @Override
+        public void destroy() {
+            // NO-OP
+        }
+
+        @Override
+        public String encode(String[] object) throws EncodeException {
+            return null;
+        }
+    }
+
+
+    private abstract static class GenericArraySubEncoder<T> extends GenericArrayEncoder<T[]> {
+    }
+
+
+    private static class GenericArraySubEncoderString extends GenericArraySubEncoder<String> {
+
+        @Override
+        public void init(EndpointConfig endpointConfig) {
+            // NO-OP
+        }
+
+        @Override
+        public void destroy() {
+            // NO-OP
+        }
+
+        @Override
+        public String encode(String[][] object) throws EncodeException {
+            return null;
         }
     }
 }

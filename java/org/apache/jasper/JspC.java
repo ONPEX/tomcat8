@@ -42,6 +42,7 @@ import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import javax.servlet.jsp.JspFactory;
 import javax.servlet.jsp.tagext.TagLibraryInfo;
 
 import org.apache.jasper.compiler.Compiler;
@@ -49,7 +50,8 @@ import org.apache.jasper.compiler.JspConfig;
 import org.apache.jasper.compiler.JspRuntimeContext;
 import org.apache.jasper.compiler.Localizer;
 import org.apache.jasper.compiler.TagPluginManager;
-import org.apache.jasper.compiler.TldLocationsCache;
+import org.apache.jasper.compiler.TldCache;
+import org.apache.jasper.runtime.JspFactoryImpl;
 import org.apache.jasper.servlet.JspCServletContext;
 import org.apache.jasper.servlet.TldScanner;
 import org.apache.juli.logging.Log;
@@ -94,6 +96,11 @@ import org.xml.sax.SAXException;
  */
 public class JspC extends Task implements Options {
 
+    static {
+        // the Validator uses this to access the EL ExpressionFactory
+        JspFactory.setDefaultFactory(new JspFactoryImpl());
+    }
+
     public static final String DEFAULT_IE_CLASS_ID =
             "clsid:8AD9C840-044E-11D1-B3E9-00805F499D93";
 
@@ -126,6 +133,8 @@ public class JspC extends Task implements Options {
     protected static final String SWITCH_ENCODING = "-javaEncoding";
     protected static final String SWITCH_SMAP = "-smap";
     protected static final String SWITCH_DUMP_SMAP = "-dumpsmap";
+    protected static final String SWITCH_VALIDATE_TLD = "-validateTld";
+    protected static final String SWITCH_BLOCK_EXTERNAL = "-blockExternal";
     protected static final String SHOW_SUCCESS ="-s";
     protected static final String LIST_ERRORS = "-l";
     protected static final int INC_WEBXML = 10;
@@ -156,7 +165,8 @@ public class JspC extends Task implements Options {
     protected ClassLoader loader = null;
     protected boolean trimSpaces = false;
     protected boolean genStringAsCharArray = false;
-    protected boolean validateXml;
+    protected boolean validateTld;
+    protected boolean blockExternal;
     protected boolean xpoweredBy;
     protected boolean mappedFile = false;
     protected boolean poolingEnabled = true;
@@ -234,7 +244,7 @@ public class JspC extends Task implements Options {
     /**
      * Cache for the TLD locations
      */
-    protected TldLocationsCache tldLocationsCache = null;
+    protected TldCache tldCache = null;
 
     protected JspConfig jspConfig = null;
     protected TagPluginManager tagPluginManager = null;
@@ -363,6 +373,10 @@ public class JspC extends Task implements Options {
                 smapSuppressed = false;
             } else if (tok.equals(SWITCH_DUMP_SMAP)) {
                 smapDumped = true;
+            } else if (tok.equals(SWITCH_VALIDATE_TLD)) {
+                setValidateTld(true);
+            } else if (tok.equals(SWITCH_BLOCK_EXTERNAL)) {
+                setBlockExternal(true);
             } else {
                 if (tok.startsWith("-")) {
                     throw new JasperException("Unrecognized option: " + tok +
@@ -705,8 +719,8 @@ public class JspC extends Task implements Options {
      * {@inheritDoc}
      */
     @Override
-    public TldLocationsCache getTldLocationsCache() {
-        return tldLocationsCache;
+    public TldCache getTldCache() {
+        return tldCache;
     }
 
     /**
@@ -842,9 +856,20 @@ public class JspC extends Task implements Options {
         }
     }
 
-    public void setValidateXml( boolean b ) {
-        this.validateXml = b;
-        org.apache.jasper.xmlparser.ParserUtils.validating=b;
+    public void setValidateTld( boolean b ) {
+        this.validateTld = b;
+    }
+
+    public boolean isValidateTld() {
+        return validateTld;
+    }
+
+    public void setBlockExternal( boolean b ) {
+        this.blockExternal = b;
+    }
+
+    public boolean isBlockExternal() {
+        return blockExternal;
     }
 
     public void setListErrors( boolean b ) {
@@ -1424,7 +1449,15 @@ public class JspC extends Task implements Options {
         URL resourceBase = new File(uriRoot).getCanonicalFile().toURI().toURL();
 
         context = new JspCServletContext(log, resourceBase, classLoader);
-        TldScanner scanner = new TldScanner(context, true, validateXml);
+        if (isValidateTld()) {
+            context.setInitParameter(Constants.XML_VALIDATION_TLD_INIT_PARAM, "true");
+        }
+        if (isBlockExternal()) {
+            context.setInitParameter(Constants.XML_BLOCK_EXTERNAL_INIT_PARAM, "true");
+        }
+
+        TldScanner scanner = new TldScanner(
+                context, true, isValidateTld(), isBlockExternal());
         scanner.setClassLoader(classLoader);
 
         try {
@@ -1432,8 +1465,9 @@ public class JspC extends Task implements Options {
         } catch (SAXException e) {
             throw new JasperException(e);
         }
-        tldLocationsCache = new TldLocationsCache(scanner.getTaglibMap());
-        context.setAttribute(TldLocationsCache.KEY, tldLocationsCache);
+        tldCache = new TldCache(context, scanner.getUriTldResourcePathMap(),
+                scanner.getTldResourcePathTaglibXmlMap());
+        context.setAttribute(TldCache.SERVLET_CONTEXT_ATTRIBUTE_NAME, tldCache);
         rctxt = new JspRuntimeContext(context, this);
         jspConfig = new JspConfig(context);
         tagPluginManager = new TagPluginManager(context);

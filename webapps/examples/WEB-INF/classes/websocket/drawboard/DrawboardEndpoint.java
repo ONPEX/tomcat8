@@ -40,10 +40,22 @@ public final class DrawboardEndpoint extends Endpoint {
     /**
      * Our room where players can join.
      */
-    private static final Room room = new Room();
+    private static volatile Room room = null;
+    private static final Object roomLock = new Object();
 
-    public static Room getRoom() {
-        return room;
+    public static Room getRoom(boolean create) {
+        if (create) {
+            if (room == null) {
+                synchronized (roomLock) {
+                    if (room == null) {
+                        room = new Room();
+                    }
+                }
+            }
+            return room;
+        } else {
+            return room;
+        }
     }
 
     /**
@@ -72,6 +84,7 @@ public final class DrawboardEndpoint extends Endpoint {
         session.addMessageHandler(stringHandler);
         final Client client = new Client(session);
 
+        final Room room = getRoom(true);
         room.invokeAndWait(new Runnable() {
             @Override
             public void run() {
@@ -100,23 +113,28 @@ public final class DrawboardEndpoint extends Endpoint {
 
     @Override
     public void onClose(Session session, CloseReason closeReason) {
-        room.invokeAndWait(new Runnable() {
-            @Override
-            public void run() {
-                try {
+        Room room = getRoom(false);
+        if (room != null) {
+            room.invokeAndWait(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        // Player can be null if it couldn't enter the room
+                        if (player != null) {
+                            // Remove this player from the room.
+                            player.removeFromRoom();
 
-                    // Player can be null if it couldn't enter the room
-                    if (player != null) {
-                        // Remove this player from the room.
-                        player.removeFromRoom();
+                            // Set player to null to prevent NPEs when onMessage events
+                            // are processed (from other threads) after onClose has been
+                            // called from different thread which closed the Websocket session.
+                            player = null;
+                        }
+                    } catch (RuntimeException ex) {
+                        log.error("Unexpected exception: " + ex.toString(), ex);
                     }
-
-                } catch (RuntimeException ex) {
-                    log.error("Unexpected exception: " + ex.toString(), ex);
                 }
-            }
-        });
-
+            });
+        }
     }
 
 
@@ -190,13 +208,14 @@ public final class DrawboardEndpoint extends Endpoint {
 
                                 break;
                             }
-
-                        } catch (RuntimeException|ParseException ex) {
+                        } catch (ParseException e) {
+                            // Client sent invalid data
+                            // Ignore, TODO: maybe close connection
+                        } catch (RuntimeException e) {
                             // Client sent invalid data.
                             // Ignore, TODO: maybe close connection
-                            if (dontSwallowException
-                                    && ex instanceof RuntimeException) {
-                                throw (RuntimeException) ex;
+                            if (dontSwallowException) {
+                                throw e;
                             }
                         }
 

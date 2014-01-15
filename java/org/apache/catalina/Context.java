@@ -56,7 +56,7 @@ import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
  * <p>
  *
  * @author Craig R. McClanahan
- * @version $Id: Context.java 1513712 2013-08-14 01:54:37Z jboynes $
+ * @version $Id: Context.java 1549528 2013-12-09 10:01:16Z markt $
  */
 public interface Context extends Container {
 
@@ -581,35 +581,77 @@ public interface Context extends Container {
 
 
     /**
-     * Get the server.xml <context> attribute's xmlNamespaceAware.
-     * @return true if namespace awareness is enabled.
+     * Will the parsing of web.xml and web-fragment.xml files for this Context
+     * be performed by a namespace aware parser?
      *
+     * @return true if namespace awareness is enabled.
      */
     public boolean getXmlNamespaceAware();
 
 
     /**
-     * Get the server.xml <context> attribute's xmlValidation.
-     * @return true if validation is enabled.
+     * Controls whether the parsing of web.xml and web-fragment.xml files for
+     * this Context will be performed by a namespace aware parser.
      *
+     * @param xmlNamespaceAware true to enable namespace awareness
+     */
+    public void setXmlNamespaceAware(boolean xmlNamespaceAware);
+
+
+    /**
+     * Will the parsing of web.xml and web-fragment.xml files for this Context
+     * be performed by a validating parser?
+     *
+     * @return true if validation is enabled.
      */
     public boolean getXmlValidation();
 
 
     /**
-     * Set the validation feature of the XML parser used when
-     * parsing xml instances.
-     * @param xmlValidation true to enable xml instance validation
+     * Controls whether the parsing of web.xml and web-fragment.xml files
+     * for this Context will be performed by a validating parser.
+     *
+     * @param xmlValidation true to enable xml validation
      */
     public void setXmlValidation(boolean xmlValidation);
 
 
-   /**
-     * Set the namespace aware feature of the XML parser used when
-     * parsing xml instances.
-     * @param xmlNamespaceAware true to enable namespace awareness
+    /**
+     * Will the parsing of web.xml, web-fragment.xml, *.tld, *.jspx, *.tagx and
+     * tagplugin.xml files for this Context block the use of external entities?
+     *
+     * @return true if access to external entities is blocked
      */
-    public void setXmlNamespaceAware(boolean xmlNamespaceAware);
+    public boolean getXmlBlockExternal();
+
+
+    /**
+     * Controls whether the parsing of web.xml, web-fragment.xml, *.tld, *.jspx,
+     * *.tagx and tagplugin.xml files for this Context will block the use of
+     * external entities.
+     *
+     * @param xmlBlockExternal true to block external entities
+     */
+    public void setXmlBlockExternal(boolean xmlBlockExternal);
+
+
+    /**
+     * Will the parsing of *.tld files for this Context be performed by a
+     * validating parser?
+     *
+     * @return true if validation is enabled.
+     */
+    public boolean getTldValidation();
+
+
+    /**
+     * Controls whether the parsing of *.tld files for this Context will be
+     * performed by a validating parser.
+     *
+     * @param tldValidation true to enable xml validation
+     */
+    public void setTldValidation(boolean tldValidation);
+
 
     /**
      * Get the Jar Scanner to be used to scan for JAR resources for this

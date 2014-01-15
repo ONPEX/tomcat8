@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterRegistration;
@@ -44,11 +45,11 @@ import javax.servlet.SessionCookieConfig;
 import javax.servlet.SessionTrackingMode;
 import javax.servlet.descriptor.JspConfigDescriptor;
 
+import org.apache.jasper.Constants;
 import org.apache.jasper.JasperException;
 import org.apache.jasper.compiler.Localizer;
 import org.apache.jasper.util.ExceptionUtils;
 import org.apache.tomcat.JarScanType;
-import org.apache.tomcat.util.descriptor.web.Constants;
 import org.apache.tomcat.util.descriptor.web.FragmentJarScannerCallback;
 import org.apache.tomcat.util.descriptor.web.WebXml;
 import org.apache.tomcat.util.descriptor.web.WebXmlParser;
@@ -73,6 +74,12 @@ public class JspCServletContext implements ServletContext {
      * Servlet context attributes.
      */
     private final Map<String,Object> myAttributes;
+
+
+    /**
+     * Servlet context initialization parameters.
+     */
+    private final ConcurrentHashMap<String,String> myParameters;
 
 
     /**
@@ -114,6 +121,7 @@ public class JspCServletContext implements ServletContext {
         throws JasperException {
 
         myAttributes = new HashMap<>();
+        myParameters = new ConcurrentHashMap<>();
         myLogWriter = aLogWriter;
         myResourceBaseURL = aResourceBaseURL;
         this.loader = classLoader;
@@ -124,13 +132,21 @@ public class JspCServletContext implements ServletContext {
 
     private WebXml buildMergedWebXml() throws JasperException {
         WebXml webXml = new WebXml();
-
-        WebXmlParser webXmlParser = new WebXmlParser(false, false);
+        String blockExternalString = getInitParameter(
+                Constants.XML_BLOCK_EXTERNAL_INIT_PARAM);
+        boolean blockExternal;
+        if (blockExternalString == null) {
+            blockExternal = Constants.IS_SECURITY_ENABLED;
+        } else {
+            blockExternal = Boolean.parseBoolean(blockExternalString);
+        }
+        WebXmlParser webXmlParser = new WebXmlParser(false, false, blockExternal);
         // Use this class's classloader as Ant will have set the TCCL to its own
         webXmlParser.setClassLoader(getClass().getClassLoader());
 
         try {
-            URL url = getResource(Constants.WEB_XML_LOCATION);
+            URL url = getResource(
+                    org.apache.tomcat.util.descriptor.web.Constants.WEB_XML_LOCATION);
             if (!webXmlParser.parseWebXml(url, webXml, false)) {
                 throw new JasperException(Localizer.getMessage("jspc.error.invalidWebXml"));
             }
@@ -140,6 +156,13 @@ public class JspCServletContext implements ServletContext {
 
         // if the application is metadata-complete then we can skip fragment processing
         if (webXml.isMetadataComplete()) {
+            return webXml;
+        }
+
+        // If an empty absolute ordering element is present, fragment processing
+        // may be skipped.
+        Set<String> absoluteOrdering = webXml.getAbsoluteOrdering();
+        if (absoluteOrdering != null && absoluteOrdering.isEmpty()) {
             return webXml;
         }
 
@@ -158,7 +181,8 @@ public class JspCServletContext implements ServletContext {
         // TODO - configure filter rules from Ant rather then system properties
         scanner.setJarScanFilter(new StandardJarScanFilter());
 
-        FragmentJarScannerCallback callback = new FragmentJarScannerCallback(webXmlParser, false);
+        FragmentJarScannerCallback callback =
+                new FragmentJarScannerCallback(webXmlParser, false, true);
         scanner.scan(JarScanType.PLUGGABILITY, this, callback);
         if (!callback.isOk()) {
             throw new JasperException(Localizer.getMessage("jspc.error.invalidFragment"));
@@ -216,7 +240,7 @@ public class JspCServletContext implements ServletContext {
      */
     @Override
     public String getInitParameter(String name) {
-        return null;
+        return myParameters.get(name);
     }
 
 
@@ -226,7 +250,7 @@ public class JspCServletContext implements ServletContext {
      */
     @Override
     public Enumeration<String> getInitParameterNames() {
-        return new Vector<String>().elements();
+        return myParameters.keys();
     }
 
 
@@ -603,7 +627,7 @@ public class JspCServletContext implements ServletContext {
 
     @Override
     public boolean setInitParameter(String name, String value) {
-        return false;
+        return myParameters.putIfAbsent(name, value) == null;
     }
 
 

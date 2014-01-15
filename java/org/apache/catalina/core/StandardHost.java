@@ -31,6 +31,7 @@ import javax.management.ObjectName;
 import org.apache.catalina.Container;
 import org.apache.catalina.Context;
 import org.apache.catalina.Engine;
+import org.apache.catalina.Globals;
 import org.apache.catalina.Host;
 import org.apache.catalina.JmxEnabled;
 import org.apache.catalina.Lifecycle;
@@ -48,7 +49,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardHost.java 1489549 2013-06-04 18:32:13Z markt $
+ * @version $Id: StandardHost.java 1545213 2013-11-25 10:26:26Z markt $
  */
 
 public class StandardHost extends ContainerBase implements Host {
@@ -128,7 +129,7 @@ public class StandardHost extends ContainerBase implements Host {
     /**
      * deploy Context XML config files property.
      */
-    private boolean deployXML = true;
+    private boolean deployXML = !Globals.IS_SECURITY_ENABLED;
 
 
     /**

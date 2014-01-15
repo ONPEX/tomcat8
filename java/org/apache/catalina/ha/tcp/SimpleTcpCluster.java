@@ -71,7 +71,7 @@ import org.apache.tomcat.util.res.StringManager;
  * @author Filip Hanik
  * @author Remy Maucherat
  * @author Peter Rossbach
- * @version $Id: SimpleTcpCluster.java 1526408 2013-09-26 08:03:03Z kfujino $
+ * @version $Id: SimpleTcpCluster.java 1539270 2013-11-06 08:44:00Z kfujino $
  */
 public class SimpleTcpCluster extends LifecycleMBeanBase
         implements CatalinaCluster, LifecycleListener, MembershipListener,
@@ -653,7 +653,7 @@ public class SimpleTcpCluster extends LifecycleMBeanBase
             channel.removeMembershipListener(this);
             this.unregisterClusterValve();
         } catch (Exception x) {
-            log.error("Unable to stop cluster valve.", x);
+            log.error("Unable to stop cluster.", x);
         }
     }
 

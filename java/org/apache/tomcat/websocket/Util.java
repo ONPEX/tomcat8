@@ -18,6 +18,7 @@ package org.apache.tomcat.websocket;
 
 import java.io.InputStream;
 import java.io.Reader;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -44,6 +45,7 @@ import javax.websocket.Encoder;
 import javax.websocket.EndpointConfig;
 import javax.websocket.MessageHandler;
 import javax.websocket.PongMessage;
+import javax.websocket.Session;
 
 import org.apache.tomcat.util.res.StringManager;
 import org.apache.tomcat.websocket.pojo.PojoMessageHandlerWholeBinary;
@@ -159,26 +161,25 @@ public class Util {
 
 
     static Class<?> getMessageType(MessageHandler listener) {
-        return (Class<?>) Util.getGenericType(MessageHandler.class,
-                listener.getClass());
+        return Util.getGenericType(MessageHandler.class,
+                listener.getClass()).getClazz();
     }
 
 
-    public static Class<?> getDecoderType(Class<? extends Decoder> Decoder) {
-        return (Class<?>) Util.getGenericType(Decoder.class, Decoder);
+    public static Class<?> getDecoderType(Class<? extends Decoder> decoder) {
+        return Util.getGenericType(Decoder.class, decoder).getClazz();
     }
 
 
     static Class<?> getEncoderType(Class<? extends Encoder> encoder) {
-        return (Class<?>) Util.getGenericType(Encoder.class, encoder);
+        return Util.getGenericType(Encoder.class, encoder).getClazz();
     }
 
 
-    private static <T> Object getGenericType(Class<T> type,
+    private static <T> TypeResult getGenericType(Class<T> type,
             Class<? extends T> clazz) {
 
-        // Look to see if this class implements the generic MessageHandler<>
-        // interface
+        // Look to see if this class implements the interface of interest
 
         // Get all the interfaces
         Type[] interfaces = clazz.getGenericInterfaces();
@@ -186,7 +187,7 @@ public class Util {
             // Only need to check interfaces that use generics
             if (iface instanceof ParameterizedType) {
                 ParameterizedType pi = (ParameterizedType) iface;
-                // Look for the MessageHandler<> interface
+                // Look for the interface of interest
                 if (pi.getRawType() instanceof Class) {
                     if (type.isAssignableFrom((Class<?>) pi.getRawType())) {
                         return getTypeParameter(
@@ -201,24 +202,52 @@ public class Util {
         Class<? extends T> superClazz =
                 (Class<? extends T>) clazz.getSuperclass();
 
-        Object result = getGenericType(type, superClazz);
-        if (result instanceof Class<?>) {
+        TypeResult superClassTypeResult = getGenericType(type, superClazz);
+        int dimension = superClassTypeResult.getDimension();
+        if (superClassTypeResult.getIndex() == -1 && dimension == 0) {
             // Superclass implements interface and defines explicit type for
-            // MessageHandler<>
-            return result;
-        } else if (result instanceof Integer) {
+            // the interface of interest
+            return superClassTypeResult;
+        }
+
+        if (superClassTypeResult.getIndex() > -1) {
             // Superclass implements interface and defines unknown type for
-            // MessageHandler<>
+            // the interface of interest
             // Map that unknown type to the generic types defined in this class
             ParameterizedType superClassType =
                     (ParameterizedType) clazz.getGenericSuperclass();
-            return getTypeParameter(clazz,
+            TypeResult result = getTypeParameter(clazz,
                     superClassType.getActualTypeArguments()[
-                            ((Integer) result).intValue()]);
-        } else {
-            // Error will be logged further up the call stack
-            return null;
+                            superClassTypeResult.getIndex()]);
+            result.incrementDimension(superClassTypeResult.getDimension());
+            if (result.getClazz() != null && result.getDimension() > 0) {
+                superClassTypeResult = result;
+            } else {
+                return result;
+            }
         }
+
+        if (superClassTypeResult.getDimension() > 0) {
+            StringBuilder className = new StringBuilder();
+            for (int i = 0; i < dimension; i++) {
+                className.append('[');
+            }
+            className.append('L');
+            className.append(superClassTypeResult.getClazz().getCanonicalName());
+            className.append(';');
+
+            Class<?> arrayClazz;
+            try {
+                arrayClazz = Class.forName(className.toString());
+            } catch (ClassNotFoundException e) {
+                throw new IllegalArgumentException(e);
+            }
+
+            return new TypeResult(arrayClazz, -1, 0);
+        }
+
+        // Error will be logged further up the call stack
+        return null;
     }
 
 
@@ -226,14 +255,21 @@ public class Util {
      * For a generic parameter, return either the Class used or if the type
      * is unknown, the index for the type in definition of the class
      */
-    private static Object getTypeParameter(Class<?> clazz, Type argType) {
+    private static TypeResult getTypeParameter(Class<?> clazz, Type argType) {
         if (argType instanceof Class<?>) {
-            return argType;
+            return new TypeResult((Class<?>) argType, -1, 0);
+        } else if (argType instanceof ParameterizedType) {
+            return new TypeResult((Class<?>)((ParameterizedType) argType).getRawType(), -1, 0);
+        } else if (argType instanceof GenericArrayType) {
+            Type arrayElementType = ((GenericArrayType) argType).getGenericComponentType();
+            TypeResult result = getTypeParameter(clazz, arrayElementType);
+            result.incrementDimension(1);
+            return result;
         } else {
             TypeVariable<?>[] tvs = clazz.getTypeParameters();
             for (int i = 0; i < tvs.length; i++) {
                 if (tvs[i].equals(argType)) {
-                    return Integer.valueOf(i);
+                    return new TypeResult(null, i, 0);
                 }
             }
             return null;
@@ -313,7 +349,8 @@ public class Util {
 
 
     public static Set<MessageHandlerResult> getMessageHandlers(
-            MessageHandler listener, EndpointConfig endpointConfig) {
+            MessageHandler listener, EndpointConfig endpointConfig,
+            Session session) {
 
         Class<?> target = Util.getMessageType(listener);
 
@@ -342,7 +379,7 @@ public class Util {
         } else if (byte[].class.isAssignableFrom(target)) {
             MessageHandlerResult result = new MessageHandlerResult(
                     new PojoMessageHandlerWholeBinary(listener,
-                            getOnMessageMethod(listener), null,
+                            getOnMessageMethod(listener), session,
                             endpointConfig, null, new Object[1], 0, true, -1,
                             false, -1),
                     MessageHandlerResultType.BINARY);
@@ -350,7 +387,7 @@ public class Util {
         } else if (InputStream.class.isAssignableFrom(target)) {
             MessageHandlerResult result = new MessageHandlerResult(
                     new PojoMessageHandlerWholeBinary(listener,
-                            getOnMessageMethod(listener), null,
+                            getOnMessageMethod(listener), session,
                             endpointConfig, null, new Object[1], 0, true, -1,
                             true, -1),
                     MessageHandlerResultType.BINARY);
@@ -358,7 +395,7 @@ public class Util {
         } else if (Reader.class.isAssignableFrom(target)) {
             MessageHandlerResult result = new MessageHandlerResult(
                     new PojoMessageHandlerWholeText(listener,
-                            getOnMessageMethod(listener), null,
+                            getOnMessageMethod(listener), session,
                             endpointConfig, null, new Object[1], 0, true, -1,
                             -1),
                     MessageHandlerResultType.TEXT);
@@ -379,7 +416,7 @@ public class Util {
             Method m = getOnMessageMethod(listener);
             if (decoderMatch.getBinaryDecoders().size() > 0) {
                 MessageHandlerResult result = new MessageHandlerResult(
-                        new PojoMessageHandlerWholeBinary(listener, m, null,
+                        new PojoMessageHandlerWholeBinary(listener, m, session,
                                 endpointConfig,
                                 decoderMatch.getBinaryDecoders(), new Object[1],
                                 0, false, -1, false, -1),
@@ -388,7 +425,7 @@ public class Util {
             }
             if (decoderMatch.getTextDecoders().size() > 0) {
                 MessageHandlerResult result = new MessageHandlerResult(
-                        new PojoMessageHandlerWholeText(listener, m, null,
+                        new PojoMessageHandlerWholeText(listener, m, session,
                                 endpointConfig,
                                 decoderMatch.getTextDecoders(), new Object[1],
                                 0, false, -1, -1),
@@ -471,6 +508,35 @@ public class Util {
 
         public boolean hasMatches() {
             return (textDecoders.size() > 0) || (binaryDecoders.size() > 0);
+        }
+    }
+
+
+    private static class TypeResult {
+        private final Class<?> clazz;
+        private final int index;
+        private int dimension;
+
+        public TypeResult(Class<?> clazz, int index, int dimension) {
+            this.clazz= clazz;
+            this.index = index;
+            this.dimension = dimension;
+        }
+
+        public Class<?> getClazz() {
+            return clazz;
+        }
+
+        public int getIndex() {
+            return index;
+        }
+
+        public int getDimension() {
+            return dimension;
+        }
+
+        public void incrementDimension(int inc) {
+            dimension += inc;
         }
     }
 }

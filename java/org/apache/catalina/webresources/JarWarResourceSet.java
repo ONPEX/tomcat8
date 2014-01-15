@@ -23,6 +23,7 @@ import java.net.MalformedURLException;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
+import java.util.jar.Manifest;
 
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.WebResource;
@@ -76,9 +77,9 @@ public class JarWarResourceSet extends AbstractArchiveResourceSet {
 
     @Override
     protected WebResource createArchiveResource(JarEntry jarEntry,
-            String webAppPath) {
-        return new JarWarResource(getRoot(), webAppPath, getBase(), getBaseUrl(),
-                jarEntry, archivePath, getInternalPath());
+            String webAppPath, Manifest manifest) {
+        return new JarWarResource(getRoot(), webAppPath, getBase(), getBaseUrlString(),
+                jarEntry, archivePath, getInternalPath(), manifest);
     }
 
     //-------------------------------------------------------- Lifecycle methods
@@ -95,14 +96,14 @@ public class JarWarResourceSet extends AbstractArchiveResourceSet {
                     getJarFileEntries().put(entry.getName(), entry);
                     entry = jarIs.getNextJarEntry();
                 }
+                setManifest(jarIs.getManifest());
             }
-
         } catch (IOException ioe) {
             throw new IllegalArgumentException(ioe);
         }
 
         try {
-            setBaseUrl((new File(getBase())).toURI().toURL().toString());
+            setBaseUrl((new File(getBase())).toURI().toURL());
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(e);
         }

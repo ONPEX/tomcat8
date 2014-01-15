@@ -26,6 +26,12 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
@@ -81,6 +87,8 @@ public class WsServerContainer extends WsWebSocketContainer
     private volatile boolean addAllowed = true;
     private final ConcurrentHashMap<String,Set<WsSession>> authenticatedSessions =
             new ConcurrentHashMap<>();
+    private final ExecutorService executorService;
+    private volatile boolean endpointsRegistered = false;
 
     WsServerContainer(ServletContext servletContext) {
 
@@ -104,15 +112,52 @@ public class WsServerContainer extends WsWebSocketContainer
         if (value != null) {
             setEnforceNoAddAfterHandshake(Boolean.parseBoolean(value));
         }
+        // Executor config
+        int executorCoreSize = 0;
+        int executorMaxSize = 10;
+        long executorKeepAliveTimeSeconds = 60;
+        value = servletContext.getInitParameter(
+                Constants.EXECUTOR_CORE_SIZE_INIT_PARAM);
+        if (value != null) {
+            executorCoreSize = Integer.parseInt(value);
+        }
+        value = servletContext.getInitParameter(
+                Constants.EXECUTOR_MAX_SIZE_INIT_PARAM);
+        if (value != null) {
+            executorMaxSize = Integer.parseInt(value);
+        }
+        value = servletContext.getInitParameter(
+                Constants.EXECUTOR_KEEPALIVETIME_SECONDS_INIT_PARAM);
+        if (value != null) {
+            executorKeepAliveTimeSeconds = Long.parseLong(value);
+        }
 
         FilterRegistration.Dynamic fr = servletContext.addFilter(
-                WsFilter.class.getName(), new WsFilter());
+                "Tomcat WebSocket (JSR356) Filter", new WsFilter());
         fr.setAsyncSupported(true);
 
         EnumSet<DispatcherType> types = EnumSet.of(DispatcherType.REQUEST,
                 DispatcherType.FORWARD);
 
         fr.addMappingForUrlPatterns(types, true, "/*");
+
+        // Use a per web application executor for any threads the the WebSocket
+        // server code needs to create. Group all of the threads under a single
+        // ThreadGroup.
+        StringBuffer threadGroupName = new StringBuffer("WebSocketServer-");
+        threadGroupName.append(servletContext.getVirtualServerName());
+        threadGroupName.append('-');
+        if ("".equals(servletContext.getContextPath())) {
+            threadGroupName.append("ROOT");
+        } else {
+            threadGroupName.append(servletContext.getContextPath());
+        }
+        ThreadGroup threadGroup = new ThreadGroup(threadGroupName.toString());
+        WsThreadFactory wsThreadFactory = new WsThreadFactory(threadGroup);
+
+        executorService = new ThreadPoolExecutor(executorCoreSize,
+                executorMaxSize, executorKeepAliveTimeSeconds, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<Runnable>(), wsThreadFactory);
     }
 
 
@@ -166,6 +211,8 @@ public class WsServerContainer extends WsWebSocketContainer
                         sm.getString("serverContainer.duplicatePaths", path));
             }
         }
+
+        endpointsRegistered = true;
     }
 
 
@@ -220,6 +267,11 @@ public class WsServerContainer extends WsWebSocketContainer
                 methodMapping);
 
         addEndpoint(sec);
+    }
+
+
+    boolean areEndpointsRegistered() {
+        return endpointsRegistered;
     }
 
 
@@ -359,7 +411,10 @@ public class WsServerContainer extends WsWebSocketContainer
     private void unregisterAuthenticatedSession(WsSession wsSession,
             String httpSessionId) {
         Set<WsSession> wsSessions = authenticatedSessions.get(httpSessionId);
-        wsSessions.remove(wsSession);
+        // wsSessions will be null if the HTTP session has ended
+        if (wsSessions != null) {
+            wsSessions.remove(wsSession);
+        }
     }
 
 
@@ -375,6 +430,24 @@ public class WsServerContainer extends WsWebSocketContainer
                     // onError method called.
                 }
             }
+        }
+    }
+
+
+    ExecutorService getExecutorService() {
+        return executorService;
+    }
+
+
+    void shutdownExecutor() {
+        if (executorService == null) {
+            return;
+        }
+        executorService.shutdown();
+        try {
+            executorService.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            // Ignore the interruption and carry on
         }
     }
 
@@ -394,6 +467,7 @@ public class WsServerContainer extends WsWebSocketContainer
             }
         }
     }
+
 
     private static class TemplatePathMatch {
         private final ServerEndpointConfig config;
@@ -439,6 +513,24 @@ public class WsServerContainer extends WsWebSocketContainer
         public int compare(TemplatePathMatch tpm1, TemplatePathMatch tpm2) {
             return tpm1.getUriTemplate().getNormalizedPath().compareTo(
                     tpm2.getUriTemplate().getNormalizedPath());
+        }
+    }
+
+
+    private static class WsThreadFactory implements ThreadFactory {
+
+        private final ThreadGroup tg;
+        private final AtomicLong count = new AtomicLong(0);
+
+        private WsThreadFactory(ThreadGroup tg) {
+            this.tg = tg;
+        }
+
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(tg, r);
+            t.setName(tg.getName() + "-" + count.incrementAndGet());
+            return t;
         }
     }
 }
