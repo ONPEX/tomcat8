@@ -28,6 +28,9 @@ T_VER_BUILD := $(shell echo $(T_VER) | cut -d'.' -f3)
 RWLOC := debian/default_root
 RWFILES := $(RWLOC)/index.html $(RWLOC)/META-INF/context.xml
 
+# Add distribution.name as system property to grab it when showing version
+TOMCAT_DISTRIBUTION := "$(shell lsb_release -si)"
+
 ANT_ARGS := -Dcompile.debug=true \
 	-Djdt.jar=/usr/share/java/ecj.jar \
 	-Djunit.jar=/usr/share/java/junit4.jar \
@@ -40,6 +43,7 @@ ANT_ARGS := -Dcompile.debug=true \
 	-Dversion.minor="$(T_VER_MINOR)" \
 	-Dversion.build="$(T_VER_BUILD)" \
 	-Dversion.patch="0" \
+        -Ddistribution.name=$(TOMCAT_DISTRIBUTION) \
 	-Dversion.suffix="" \
 	-Dno.build.dbcp=true
 

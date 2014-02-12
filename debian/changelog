@@ -1,4 +1,4 @@
-tomcat8 (8.0.3-1) UNRELEASED; urgency=low
+tomcat8 (8.0.3-1) UNRELEASED; urgency=medium
 
   * Team upload.
   * New upstream release (Closes: #722675)
@@ -12,6 +12,7 @@ tomcat8 (8.0.3-1) UNRELEASED; urgency=low
       the new javax prefix
     - Added the javax.websocket-api artifact to libservlet3.1-java
     - New build dependency on cglib, easymock and objenesis
+  * Added a patch to include the name of the distribution on the error pages
   * Use XZ compression for the upstream tarball
   * debian/control:
     - Replaced Sun Microsystems with Oracle in the packages descriptions
@@ -43,7 +44,7 @@ tomcat8 (8.0.3-1) UNRELEASED; urgency=low
   * Removed 0011-fix-classpath-lintian-warnings.patch and specified
     the classpath of jasper.jar in libtomcat8-java.manifest instead.
 
- -- Emmanuel Bourg <ebourg@apache.org>  Tue, 22 Oct 2013 10:11:08 +0200
+ -- Emmanuel Bourg <ebourg@apache.org>  Wed, 12 Feb 2014 10:29:01 +0100
 
 tomcat7 (7.0.42-2) UNRELEASED; urgency=low
 

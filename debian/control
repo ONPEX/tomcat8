@@ -20,6 +20,7 @@ Build-Depends-Indep: javahelper,
                      libjakarta-taglibs-standard-java,
                      libjstl1.1-java,
                      libobjenesis-java,
+                     lsb-release,
                      maven-repo-helper
 Standards-Version: 3.9.5
 Vcs-Git: git://anonscm.debian.org/pkg-java/tomcat8.git
