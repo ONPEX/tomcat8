@@ -6,10 +6,10 @@ Reviewed-By: Gianfranco Costamagna <costamagnagianfranco@yahoo.it>
 Last-Update: 2013-08-01
 --- a/webapps/host-manager/manager.xml
 +++ b/webapps/host-manager/manager.xml
-@@ -24,7 +24,7 @@
+@@ -20,7 +20,7 @@
+     Context configuration file for the Tomcat Manager Web App
+ 
  -->
- 
- 
 -<Context docBase="${catalina.home}/webapps/manager"
 +<Context docBase="${catalina.home}/../tomcat8-admin/manager"
           privileged="true" antiResourceLocking="false" >
@@ -28,7 +28,7 @@ Last-Update: 2013-08-01
  </Context>]]></source>
 --- a/conf/catalina.policy
 +++ b/conf/catalina.policy
-@@ -203,14 +203,14 @@
+@@ -201,14 +201,14 @@
  // - default CATALINA_HOME == CATALINA_BASE
  // - CATALINA_HOME != CATALINA_BASE, per instance Manager in CATALINA_BASE
  // - CATALINA_HOME != CATALINA_BASE, shared Manager in CATALINA_HOME
