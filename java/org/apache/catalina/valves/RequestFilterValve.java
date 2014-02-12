@@ -56,7 +56,6 @@ import org.apache.catalina.connector.Response;
  * of the filtering you wish to perform.
  *
  * @author Craig R. McClanahan
- * @version $Id: RequestFilterValve.java 1202565 2011-11-16 07:49:06Z kkolinko $
  */
 public abstract class RequestFilterValve extends ValveBase {
 

@@ -32,7 +32,6 @@ import org.apache.el.lang.EvaluationContext;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * $Id: Node.java 1187802 2011-10-22 21:17:12Z markt $
  */
 public interface Node {
 

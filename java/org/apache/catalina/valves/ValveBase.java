@@ -43,9 +43,7 @@ import org.apache.tomcat.util.res.StringManager;
  * management and lifecycle support.
  *
  * @author Craig R. McClanahan
- * @version $Id: ValveBase.java 1240108 2012-02-03 12:10:32Z markt $
  */
-
 public abstract class ValveBase extends LifecycleMBeanBase
     implements Contained, Valve {
 

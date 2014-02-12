@@ -33,9 +33,7 @@ import javax.servlet.ServletResponse;
  * as opposed to the Wrapper component that manages it.
  *
  * @author Craig R. McClanahan
- * @version $Id: InstanceEvent.java 1361817 2012-07-15 21:51:10Z markt $
  */
-
 public final class InstanceEvent extends EventObject {
 
     private static final long serialVersionUID = 1L;

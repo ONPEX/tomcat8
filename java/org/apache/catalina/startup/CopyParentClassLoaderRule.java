@@ -33,9 +33,7 @@ import org.xml.sax.Attributes;
  * <code>Container</code>).</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: CopyParentClassLoaderRule.java 1187791 2011-10-22 21:11:34Z markt $
  */
-
 public class CopyParentClassLoaderRule extends Rule {
 
 

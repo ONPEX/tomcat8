@@ -45,14 +45,11 @@ import java.util.ResourceBundle;
  * <p>Please see the documentation for java.util.ResourceBundle for
  * more information.
  *
- * @version $Id: StringManager.java 1521840 2013-09-11 13:46:43Z markt $
- *
  * @author James Duncan Davidson [duncan@eng.sun.com]
  * @author James Todd [gonzo@eng.sun.com]
  * @author Mel Martinez [mmartinez@g1440.com]
  * @see java.util.ResourceBundle
  */
-
 public class StringManager {
 
     private static int LOCALE_CACHE_SIZE = 10;

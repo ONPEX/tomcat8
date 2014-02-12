@@ -25,8 +25,6 @@ package org.apache.tomcat.util.http.fileupload;
  * checks for the extension ".png"), while, depending on the underlying
  * C library, it might create a file named "foo.exe", as the NUL
  * character is the string terminator in C.
- *
- * @version $Id: InvalidFileNameException.java 1456904 2013-03-15 11:36:53Z markt $
  */
 public class InvalidFileNameException extends RuntimeException {
 

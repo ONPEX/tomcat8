@@ -38,9 +38,7 @@ import org.apache.tomcat.util.modeler.Registry;
  * <code>org.apache.catalina.Group</code> component.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: GroupMBean.java 1361761 2012-07-15 19:12:31Z markt $
  */
-
 public class GroupMBean extends BaseModelMBean {
 
 

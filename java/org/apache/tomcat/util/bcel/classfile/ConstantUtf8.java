@@ -30,7 +30,6 @@ import org.apache.tomcat.util.bcel.Constants;
  * <A HREF="org.apache.tomcat.util.bcel.classfile.Constant.html">Constant</A> class
  * and represents a reference to a Utf8 encoded string.
  *
- * @version $Id: ConstantUtf8.java 1507013 2013-07-25 15:32:05Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Constant
  */

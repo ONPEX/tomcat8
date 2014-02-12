@@ -77,7 +77,6 @@ import org.apache.tomcat.util.res.StringManager;
  * requested sessions are migrated.
  *
  * @author Peter Rossbach
- * @version $Id: JvmRouteBinderValve.java 1469869 2013-04-19 15:04:59Z markt $
  */
 public class JvmRouteBinderValve extends ValveBase implements ClusterValve {
 

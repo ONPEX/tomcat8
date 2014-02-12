@@ -25,7 +25,6 @@ import java.io.IOException;
  * deprecated method.
  * It is instantiated from the <em>Attribute.readAttribute()</em> method.
  *
- * @version $Id: Deprecated.java 1397988 2012-10-14 01:00:48Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Attribute
  */

@@ -22,10 +22,7 @@ import org.apache.catalina.ha.ClusterMessageBase;
 /**
  * Session cluster message
  *
- * @author Filip Hanik
  * @author Peter Rossbach
- *
- * @version $Id: SessionMessageImpl.java 1361424 2012-07-13 22:31:38Z markt $
  */
 public class SessionMessageImpl extends ClusterMessageBase implements SessionMessage {
 

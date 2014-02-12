@@ -36,8 +36,6 @@ import org.apache.catalina.tribes.util.StringManager;
  * supported
  *
  * @author Peter Rossbach
- * @author Filip Hanik
- * @version $Id: BioSender.java 1370385 2012-08-07 17:42:22Z markt $
  * @since 5.5.16
  */
 public class BioSender extends AbstractSender {

@@ -30,9 +30,7 @@ import org.xml.sax.Attributes;
  * XML file processed by <code>MemoryRealm</code>.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: MemoryRuleSet.java 1361768 2012-07-15 19:34:05Z markt $
  */
-
 public class MemoryRuleSet extends RuleSetBase {
 
 

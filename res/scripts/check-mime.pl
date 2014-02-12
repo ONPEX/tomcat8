@@ -18,8 +18,6 @@
 # -----------------------------------------------------------------------------
 # Merge the MIME type definitions contained in the
 # file mime.types from the httpd project into Tomcat web.xml.
-#
-# $Id: check-mime.pl 1100724 2011-05-08 12:20:33Z rjung $
 # -----------------------------------------------------------------------------
 
 # The script uses two mime type lists to describe

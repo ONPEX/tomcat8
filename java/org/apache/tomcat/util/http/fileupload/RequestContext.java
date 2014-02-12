@@ -25,8 +25,6 @@ import java.io.InputStream;
  * handled by FileUpload, such as servlets and portlets.</p>
  *
  * @since FileUpload 1.1
- *
- * @version $Id: RequestContext.java 1456916 2013-03-15 12:08:38Z markt $
  */
 public interface RequestContext {
 

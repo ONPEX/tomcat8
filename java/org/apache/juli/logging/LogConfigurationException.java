@@ -24,9 +24,7 @@ package org.apache.juli.logging;
  * factory methods.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: LogConfigurationException.java 1382521 2012-09-09 15:58:04Z markt $
  */
-
 public class LogConfigurationException extends RuntimeException {
 
 

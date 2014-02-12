@@ -42,14 +42,11 @@ import java.util.ResourceBundle;
  * <p>Please see the documentation for java.util.ResourceBundle for
  * more information.
  *
- * @version $Id: StringManager.java 1380386 2012-09-03 22:21:30Z markt $
- *
  * @author James Duncan Davidson [duncan@eng.sun.com]
  * @author James Todd [gonzo@eng.sun.com]
  * @author Mel Martinez [mmartinez@g1440.com]
  * @see java.util.ResourceBundle
  */
-
 public class StringManager {
 
     /**

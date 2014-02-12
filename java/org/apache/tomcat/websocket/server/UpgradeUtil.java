@@ -115,11 +115,8 @@ public class UpgradeUtil {
         // Sub-protocols
         List<String> subProtocols = getTokensFromHeader(req,
                 "Sec-WebSocket-Protocol");
-        if (!subProtocols.isEmpty()) {
-            subProtocol = sec.getConfigurator().
-                    getNegotiatedSubprotocol(
-                            sec.getSubprotocols(), subProtocols);
-        }
+        subProtocol = sec.getConfigurator().getNegotiatedSubprotocol(
+                sec.getSubprotocols(), subProtocols);
 
         // Extensions
         // Currently no extensions are supported by this implementation
@@ -131,7 +128,8 @@ public class UpgradeUtil {
                 Constants.CONNECTION_HEADER_VALUE);
         resp.setHeader(HandshakeResponse.SEC_WEBSOCKET_ACCEPT,
                 getWebSocketAccept(key));
-        if (subProtocol != null) {
+        if (subProtocol != null && subProtocol.length() > 0) {
+            // RFC6455 4.2.2 explicitly states "" is not valid here
             resp.setHeader("Sec-WebSocket-Protocol", subProtocol);
         }
         if (!extensions.isEmpty()) {
@@ -144,18 +142,6 @@ public class UpgradeUtil {
                 sb.append(iter.next().getName());
             }
             resp.setHeader("Sec-WebSocket-Extensions", sb.toString());
-        }
-        Endpoint ep;
-        try {
-            Class<?> clazz = sec.getEndpointClass();
-            if (Endpoint.class.isAssignableFrom(clazz)) {
-                ep = (Endpoint) sec.getConfigurator().getEndpointInstance(
-                        clazz);
-            } else {
-                ep = new PojoEndpointServer();
-            }
-        } catch (InstantiationException e) {
-            throw new ServletException(e);
         }
 
         WsHandshakeRequest wsRequest = new WsHandshakeRequest(req);
@@ -172,6 +158,19 @@ public class UpgradeUtil {
             for (String headerValue: entry.getValue()) {
                 resp.addHeader(entry.getKey(), headerValue);
             }
+        }
+
+        Endpoint ep;
+        try {
+            Class<?> clazz = sec.getEndpointClass();
+            if (Endpoint.class.isAssignableFrom(clazz)) {
+                ep = (Endpoint) sec.getConfigurator().getEndpointInstance(
+                        clazz);
+            } else {
+                ep = new PojoEndpointServer();
+            }
+        } catch (InstantiationException e) {
+            throw new ServletException(e);
         }
 
         WsHttpUpgradeHandler wsHandler =

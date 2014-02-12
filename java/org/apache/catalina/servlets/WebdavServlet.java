@@ -117,9 +117,7 @@ import org.xml.sax.SAXException;
  * http://host:port/context/webdavedit/content
  *
  * @author Remy Maucherat
- * @version $Id: WebdavServlet.java 1508214 2013-07-29 22:17:59Z markt $
  */
-
 public class WebdavServlet
     extends DefaultServlet {
 
@@ -464,7 +462,7 @@ public class WebdavServlet
         }
 
         String path = getRelativePath(req);
-        if (path.endsWith("/"))
+        if (path.length() > 1 && path.endsWith("/"))
             path = path.substring(0, path.length() - 1);
 
         // Properties which are to be displayed.

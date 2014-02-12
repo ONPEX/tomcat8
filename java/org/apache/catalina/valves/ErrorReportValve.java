@@ -45,9 +45,7 @@ import org.apache.tomcat.util.res.StringManager;
  * @author <a href="mailto:nicolaken@supereva.it">Nicola Ken Barozzi</a> Aisa
  * @author <a href="mailto:stefano@apache.org">Stefano Mazzocchi</a>
  * @author Yoav Shapira
- * @version $Id: ErrorReportValve.java 1526224 2013-09-25 16:31:22Z kpreisser $
  */
-
 public class ErrorReportValve extends ValveBase {
 
     //------------------------------------------------------ Constructor
@@ -82,8 +80,8 @@ public class ErrorReportValve extends ValveBase {
         Throwable throwable =
                 (Throwable) request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
 
-        if (request.isAsyncStarted() && response.getStatus() < 400 &&
-                throwable == null) {
+        if (request.isAsyncStarted() && ((response.getStatus() < 400 &&
+                throwable == null) || request.isAsyncDispatching())) {
             return;
         }
 

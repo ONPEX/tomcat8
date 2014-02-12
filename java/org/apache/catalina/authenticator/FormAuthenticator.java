@@ -49,9 +49,7 @@ import org.apache.tomcat.util.http.MimeHeaders;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: FormAuthenticator.java 1500964 2013-07-08 21:24:05Z markt $
  */
-
 public class FormAuthenticator
     extends AuthenticatorBase {
 

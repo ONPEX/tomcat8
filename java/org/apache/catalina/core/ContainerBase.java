@@ -1234,7 +1234,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
                 keyProperties.insert(9, c.getName());
             } else if (c instanceof Context) {
                 keyProperties.insert(0, ",context=");
-                ContextName cn = new ContextName(c.getName());
+                ContextName cn = new ContextName(c.getName(), false);
                 keyProperties.insert(9,cn.getDisplayName());
             } else if (c instanceof Host) {
                 keyProperties.insert(0, ",host=");
@@ -1348,12 +1348,10 @@ public abstract class ContainerBase extends LifecycleMBeanBase
                     if (loader == null) {
                         return;
                     }
+
                     // Ensure background processing for Contexts and Wrappers
                     // is performed under the web app's class loader
-                    originalClassLoader =
-                            Thread.currentThread().getContextClassLoader();
-                    Thread.currentThread().setContextClassLoader(
-                            loader.getClassLoader());
+                    originalClassLoader = ((Context) container).bind(false, null);
                 }
                 container.backgroundProcess();
                 Container[] children = container.findChildren();
@@ -1366,10 +1364,9 @@ public abstract class ContainerBase extends LifecycleMBeanBase
                 ExceptionUtils.handleThrowable(t);
                 log.error("Exception invoking periodic operation: ", t);
             } finally {
-                if (originalClassLoader != null) {
-                    Thread.currentThread().setContextClassLoader(
-                            originalClassLoader);
-                }
+                if (container instanceof Context) {
+                    ((Context) container).unbind(false, originalClassLoader);
+               }
             }
         }
     }

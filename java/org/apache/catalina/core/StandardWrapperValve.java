@@ -48,9 +48,7 @@ import org.apache.tomcat.util.res.StringManager;
  * <code>StandardWrapper</code> container implementation.
  *
  * @author Craig R. McClanahan
- * @version $Id: StandardWrapperValve.java 1530172 2013-10-08 07:19:36Z markt $
  */
-
 final class StandardWrapperValve
     extends ValveBase {
 

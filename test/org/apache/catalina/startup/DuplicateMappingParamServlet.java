@@ -30,7 +30,6 @@ import javax.servlet.http.HttpServletResponse;
  * Test Mock with wrong Annotation!
  *
  * @author Peter Rossbach
- * @version $Revision: 1187806 $
  */
 @WebServlet(value = "/annotation/overwrite", urlPatterns = { "/param2" }, name = "param", initParams = {
         @WebInitParam(name = "foo", value = "Hello"),

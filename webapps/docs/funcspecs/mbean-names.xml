@@ -26,7 +26,6 @@
     <author email="craigmcc@apache.org">Craig McClanahan</author>
     <author email="amyroh@apache.org">Amy Roh</author>
     <title>Tomcat MBean Names</title>
-    <revision>$Id: mbean-names.xml 1529692 2013-10-06 21:21:45Z kpreisser $</revision>
   </properties>
 
 <body>

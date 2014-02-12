@@ -76,9 +76,7 @@ import org.apache.tomcat.util.res.StringManager;
  * with each context and server.
  *
  * @author Remy Maucherat
- * @version $Id: NamingContextListener.java 1550123 2013-12-11 12:36:17Z markt $
  */
-
 public class NamingContextListener
     implements LifecycleListener, ContainerListener, PropertyChangeListener {
 

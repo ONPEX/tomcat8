@@ -50,8 +50,6 @@ import java.io.OutputStream;
  * closing streams after use.
  * <p>
  * Origin of code: Excalibur.
- *
- * @version $Id: IOUtils.java 1456963 2013-03-15 14:21:24Z markt $
  */
 public class IOUtils {
     // NOTE: This class is focussed on InputStream, OutputStream, Reader and

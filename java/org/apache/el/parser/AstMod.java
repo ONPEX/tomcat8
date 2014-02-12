@@ -26,7 +26,6 @@ import org.apache.el.lang.EvaluationContext;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: AstMod.java 939311 2010-04-29 14:01:02Z kkolinko $
  */
 public final class AstMod extends ArithmeticNode {
     public AstMod(int id) {

@@ -33,7 +33,6 @@ import org.apache.catalina.util.IOTools;
  *
  * @author Dan Sandberg
  * @author David Becker
- * @version $Id: SSIProcessor.java 1430550 2013-01-08 21:41:44Z markt $
  */
 public class SSIProcessor {
     /** The start pattern */

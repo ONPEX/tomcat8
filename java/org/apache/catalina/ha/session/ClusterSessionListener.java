@@ -27,9 +27,7 @@ import org.apache.juli.logging.LogFactory;
 
 /**
  * Receive replicated SessionMessage form other cluster node.
- * @author Filip Hanik
  * @author Peter Rossbach
- * @version $Id: ClusterSessionListener.java 1195407 2011-10-31 10:59:49Z markt $
  */
 public class ClusterSessionListener extends ClusterListener {
 

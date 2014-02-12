@@ -45,9 +45,7 @@ import org.apache.catalina.startup.Catalina;
  * class in its constructor(s).
  *
  * @author Craig R. McClanahan
- * @version $Id: Server.java 1500947 2013-07-08 21:02:07Z markt $
  */
-
 public interface Server extends Lifecycle {
 
     // ------------------------------------------------------------- Properties

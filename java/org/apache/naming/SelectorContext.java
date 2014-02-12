@@ -32,9 +32,7 @@ import javax.naming.NamingException;
  * Catalina JNDI Context implementation.
  *
  * @author Remy Maucherat
- * @version $Id: SelectorContext.java 1373003 2012-08-14 18:14:42Z markt $
  */
-
 public class SelectorContext implements Context {
 
 

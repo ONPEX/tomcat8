@@ -41,9 +41,7 @@ import java.util.StringTokenizer;
  * @author Craig McClanahan
  * @author Justyna Horwat
  * @author Greg Murray
- * @version $Id: Extension.java 1187792 2011-10-22 21:11:51Z markt $
  */
-
 public final class Extension {
 
 

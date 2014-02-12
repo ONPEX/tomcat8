@@ -32,7 +32,6 @@ import org.apache.el.util.MessageFactory;
  * @see javax.el.ExpressionFactory
  *
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: ExpressionFactoryImpl.java 1503217 2013-07-15 12:58:44Z markt $
  */
 public class ExpressionFactoryImpl extends ExpressionFactory {
 

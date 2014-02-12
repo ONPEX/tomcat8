@@ -14,14 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.catalina.core;
 
-
 import java.io.IOException;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.RequestDispatcher;
@@ -43,7 +38,6 @@ import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.descriptor.web.ErrorPage;
 import org.apache.tomcat.util.res.StringManager;
 
-
 /**
  * Valve that implements the default basic behavior for the
  * <code>StandardHost</code> container implementation.
@@ -53,9 +47,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardHostValve.java 1500964 2013-07-08 21:24:05Z markt $
  */
-
 final class StandardHostValve extends ValveBase {
 
     private static final Log log = LogFactory.getLog(StandardHostValve.class);
@@ -124,19 +116,8 @@ final class StandardHostValve extends ValveBase {
             return;
         }
 
-        // Bind the context CL to the current thread
-        if( context.getLoader() != null ) {
-            // Not started - it should check for availability first
-            // This should eventually move to Engine, it's generic.
-            if (Globals.IS_SECURITY_ENABLED) {
-                PrivilegedAction<Void> pa = new PrivilegedSetTccl(
-                        context.getLoader().getClassLoader());
-                AccessController.doPrivileged(pa);
-            } else {
-                Thread.currentThread().setContextClassLoader
-                        (context.getLoader().getClassLoader());
-            }
-        }
+        context.bind(Globals.IS_SECURITY_ENABLED, MY_CLASSLOADER);
+
         if (request.isAsyncSupported()) {
             request.setAsyncSupported(context.getPipeline().isAsyncSupported());
         }
@@ -199,13 +180,7 @@ final class StandardHostValve extends ValveBase {
             request.getSession(false);
         }
 
-        // Restore the context classloader
-        if (Globals.IS_SECURITY_ENABLED) {
-            PrivilegedAction<Void> pa = new PrivilegedSetTccl(MY_CLASSLOADER);
-            AccessController.doPrivileged(pa);
-        } else {
-            Thread.currentThread().setContextClassLoader(MY_CLASSLOADER);
-        }
+        context.unbind(Globals.IS_SECURITY_ENABLED, MY_CLASSLOADER);
     }
 
 
@@ -226,13 +201,7 @@ final class StandardHostValve extends ValveBase {
         // Select the Context to be used for this Request
         Context context = request.getContext();
 
-        // Bind the context CL to the current thread
-        if( context.getLoader() != null ) {
-            // Not started - it should check for availability first
-            // This should eventually move to Engine, it's generic.
-            Thread.currentThread().setContextClassLoader
-                    (context.getLoader().getClassLoader());
-        }
+        context.bind(false, MY_CLASSLOADER);
 
         // Ask this Context to process this request
         context.getPipeline().getFirst().event(request, response, event);
@@ -257,9 +226,7 @@ final class StandardHostValve extends ValveBase {
         }
 
         // Restore the context classloader
-        Thread.currentThread().setContextClassLoader
-            (StandardHostValve.class.getClassLoader());
-
+        context.unbind(false, MY_CLASSLOADER);
     }
 
 
@@ -502,21 +469,5 @@ final class StandardHostValve extends ValveBase {
         }
         return (null);
 
-    }
-
-
-    private static class PrivilegedSetTccl implements PrivilegedAction<Void> {
-
-        private final ClassLoader cl;
-
-        PrivilegedSetTccl(ClassLoader cl) {
-            this.cl = cl;
-        }
-
-        @Override
-        public Void run() {
-            Thread.currentThread().setContextClassLoader(cl);
-            return null;
-        }
     }
 }

@@ -20,9 +20,6 @@ import javax.servlet.ServletConfig;
 
 import org.apache.tomcat.InstanceManager;
 
-/**
- * @version $Id: InstanceManagerFactory.java 1187803 2011-10-22 21:18:03Z markt $
- */
 public class InstanceManagerFactory {
 
     private InstanceManagerFactory() {

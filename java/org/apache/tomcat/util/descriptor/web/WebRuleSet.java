@@ -35,9 +35,7 @@ import org.xml.sax.Attributes;
  * deployment descriptor (<code>/WEB-INF/web.xml</code>) resource.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: WebRuleSet.java 1501195 2013-07-09 10:41:35Z markt $
  */
-
 public class WebRuleSet extends RuleSetBase {
 
     /**
@@ -528,6 +526,7 @@ public class WebRuleSet extends RuleSetBase {
         digester.addSetNext(fullPrefix + "/env-entry",
                             "addEnvEntry",
                             "org.apache.tomcat.util.descriptor.web.ContextEnvironment");
+        digester.addRule(fullPrefix + "/env-entry", new SetOverrideRule());
         digester.addCallMethod(fullPrefix + "/env-entry/description",
                                "setDescription", 0);
         digester.addCallMethod(fullPrefix + "/env-entry/env-entry-name",
@@ -1350,5 +1349,21 @@ final class LifecycleCallbackRule extends CallMethodRule {
             }
         }
         super.end(namespace, name);
+    }
+}
+
+final class SetOverrideRule extends Rule {
+
+    public SetOverrideRule() {
+        // no-op
+    }
+
+    @Override
+    public void begin(String namespace, String name, Attributes attributes) throws Exception {
+        ContextEnvironment envEntry = (ContextEnvironment) digester.peek();
+        envEntry.setOverride(false);
+        if (digester.getLogger().isDebugEnabled()) {
+            digester.getLogger().debug(envEntry.getClass().getName() + ".setOverride(false)");
+        }
     }
 }

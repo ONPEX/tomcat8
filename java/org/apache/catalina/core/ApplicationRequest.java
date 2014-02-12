@@ -41,9 +41,7 @@ import javax.servlet.ServletRequestWrapper;
  * keep these two classes in synchronization when making changes!
  *
  * @author Craig R. McClanahan
- * @version $Id: ApplicationRequest.java 1360933 2012-07-12 20:51:27Z markt $
  */
-
 class ApplicationRequest extends ServletRequestWrapper {
 
 

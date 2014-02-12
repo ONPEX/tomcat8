@@ -40,9 +40,7 @@ import java.io.IOException;
  * </ul>
  *
  * @author Craig R. McClanahan
- * @version $Id: Manager.java 1446072 2013-02-14 08:57:43Z kfujino $
  */
-
 public interface Manager {
 
 

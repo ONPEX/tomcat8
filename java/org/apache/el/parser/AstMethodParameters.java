@@ -22,9 +22,6 @@ import java.util.ArrayList;
 
 import org.apache.el.lang.EvaluationContext;
 
-/**
- * $Id: AstMethodParameters.java 1504256 2013-07-17 20:07:48Z markt $
- */
 public final class AstMethodParameters extends SimpleNode {
     public AstMethodParameters(int id) {
         super(id);

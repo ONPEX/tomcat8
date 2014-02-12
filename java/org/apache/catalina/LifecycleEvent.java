@@ -29,9 +29,7 @@ import java.util.EventObject;
  * Tomcat 3.x.
  *
  * @author Craig R. McClanahan
- * @version $Id: LifecycleEvent.java 1361818 2012-07-15 21:51:26Z markt $
  */
-
 public final class LifecycleEvent extends EventObject {
 
     private static final long serialVersionUID = 1L;

@@ -23,6 +23,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -92,6 +94,7 @@ import org.apache.catalina.Loader;
 import org.apache.catalina.Manager;
 import org.apache.catalina.Pipeline;
 import org.apache.catalina.Realm;
+import org.apache.catalina.ThreadBindingListener;
 import org.apache.catalina.Valve;
 import org.apache.catalina.WebResource;
 import org.apache.catalina.WebResourceRoot;
@@ -134,9 +137,7 @@ import org.apache.tomcat.util.scan.StandardJarScanner;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: StandardContext.java 1552029 2013-12-18 17:09:08Z markt $
  */
-
 public class StandardContext extends ContainerBase
         implements Context, NotificationEmitter {
 
@@ -644,36 +645,6 @@ public class StandardContext extends ContainerBase
     private String namingContextName = null;
 
 
-    /**
-     * Caching allowed flag.
-     */
-    private boolean cachingAllowed = true;
-
-
-    /**
-     * Allow linking.
-     */
-    protected boolean allowLinking = false;
-
-
-    /**
-     * Cache max size in KB.
-     */
-    protected int cacheMaxSize = 10240; // 10 MB
-
-
-    /**
-     * Cache object max size in KB.
-     */
-    protected int cacheObjectMaxSize = 512; // 512K
-
-
-    /**
-     * Cache TTL in ms.
-     */
-    protected int cacheTTL = 5000;
-
-
     private WebResourceRoot resources;
     private final ReadWriteLock resourcesLock = new ReentrantReadWriteLock();
 
@@ -704,7 +675,7 @@ public class StandardContext extends ContainerBase
     /**
      * Attribute used to turn on/off the use of external entities.
      */
-    private boolean xmlBlockExternal = Globals.IS_SECURITY_ENABLED;
+    private boolean xmlBlockExternal = true;
 
 
     /**
@@ -835,8 +806,29 @@ public class StandardContext extends ContainerBase
     private Map<String, String> postConstructMethods = new HashMap<>();
     private Map<String, String> preDestroyMethods = new HashMap<>();
 
+    private String containerSciFilter;
+
+    protected static final ThreadBindingListener DEFAULT_NAMING_LISTENER = (new ThreadBindingListener() {
+        @Override
+        public void bind() {}
+        @Override
+        public void unbind() {}
+    });
+    protected ThreadBindingListener threadBindingListener = DEFAULT_NAMING_LISTENER;
 
     // ----------------------------------------------------- Context Properties
+
+    @Override
+    public void setContainerSciFilter(String containerSciFilter) {
+        this.containerSciFilter = containerSciFilter;
+    }
+
+
+    @Override
+    public String getContainerSciFilter() {
+        return containerSciFilter;
+    }
+
 
     @Override
     public boolean getSendRedirectBody() {
@@ -1027,37 +1019,6 @@ public class StandardContext extends ContainerBase
 
 
     /**
-     * Is caching allowed ?
-     */
-    public boolean isCachingAllowed() {
-        return cachingAllowed;
-    }
-
-
-    /**
-     * Set caching allowed flag.
-     */
-    public void setCachingAllowed(boolean cachingAllowed) {
-        this.cachingAllowed = cachingAllowed;
-    }
-
-
-    /**
-     * Set allow linking.
-     */
-    public void setAllowLinking(boolean allowLinking) {
-        this.allowLinking = allowLinking;
-    }
-
-
-    /**
-     * Is linking allowed.
-     */
-    public boolean isAllowLinking() {
-        return allowLinking;
-    }
-
-    /**
      * Set to <code>true</code> to allow requests mapped to servlets that
      * do not explicitly declare @MultipartConfig or have
      * &lt;multipart-config&gt; specified in web.xml to parse
@@ -1108,54 +1069,6 @@ public class StandardContext extends ContainerBase
     public boolean getSwallowAbortedUploads() {
         return this.swallowAbortedUploads;
     }
-
-    /**
-     * Set cache TTL.
-     */
-    public void setCacheTTL(int cacheTTL) {
-        this.cacheTTL = cacheTTL;
-    }
-
-
-    /**
-     * Get cache TTL.
-     */
-    public int getCacheTTL() {
-        return cacheTTL;
-    }
-
-
-    /**
-     * Return the maximum size of the cache in KB.
-     */
-    public int getCacheMaxSize() {
-        return cacheMaxSize;
-    }
-
-
-    /**
-     * Set the maximum size of the cache in KB.
-     */
-    public void setCacheMaxSize(int cacheMaxSize) {
-        this.cacheMaxSize = cacheMaxSize;
-    }
-
-
-    /**
-     * Return the maximum size of objects to be cached in KB.
-     */
-    public int getCacheObjectMaxSize() {
-        return cacheObjectMaxSize;
-    }
-
-
-    /**
-     * Set the maximum size of objects to be placed the cache in KB.
-     */
-    public void setCacheObjectMaxSize(int cacheObjectMaxSize) {
-        this.cacheObjectMaxSize = cacheObjectMaxSize;
-    }
-
 
     /**
      * Add a ServletContainerInitializer instance to this web application.
@@ -2480,6 +2393,17 @@ public class StandardContext extends ContainerBase
     public void setJspConfigDescriptor(JspConfigDescriptor descriptor) {
         this.jspConfigDescriptor = descriptor;
     }
+
+    @Override
+    public ThreadBindingListener getThreadBindingListener() {
+        return threadBindingListener;
+    }
+
+    @Override
+    public void setThreadBindingListener(ThreadBindingListener threadBindingListener) {
+        this.threadBindingListener = threadBindingListener;
+    }
+
 
     // ------------------------------------------------------ Public Properties
 
@@ -4494,7 +4418,11 @@ public class StandardContext extends ContainerBase
             path = "/";
         }
         if (resources != null) {
-            return resources.getResource(path).getCanonicalPath();
+            try {
+                return resources.getResource(path).getCanonicalPath();
+            } catch (IllegalArgumentException iae) {
+                // ServletContext.getRealPath() does not allow this to be thrown
+            }
         }
         return null;
     }
@@ -4907,13 +4835,6 @@ public class StandardContext extends ContainerBase
      */
     public void resourcesStart() throws LifecycleException {
 
-        resources.setAllowLinking(isAllowLinking());
-
-        resources.setCachingAllowed(isCachingAllowed());
-        resources.setCacheTtl(getCacheTTL());
-        resources.setCacheMaxSize(getCacheMaxSize());
-        resources.setCacheMaxObjectSize(getCacheObjectMaxSize());
-
         // May have been started (but not fully configured) in init() so no need
         // to start the resources if they are already available
         if (!resources.getState().isAvailable()) {
@@ -5098,9 +5019,7 @@ public class StandardContext extends ContainerBase
         ClassLoader oldCCL = bindThread();
 
         try {
-
             if (ok) {
-
                 // Start our subordinate components, if any
                 Loader loader = getLoader();
                 if ((loader != null) && (loader instanceof Lifecycle))
@@ -5187,40 +5106,31 @@ public class StandardContext extends ContainerBase
                 }
             }
 
-        } finally {
-            // Unbinding thread
-            unbindThread(oldCCL);
-        }
-
-        if (!getConfigured()) {
-            log.error( "Error getConfigured");
-            ok = false;
-        }
-
-        // We put the resources into the servlet context
-        if (ok)
-            getServletContext().setAttribute
-                (Globals.RESOURCES_ATTR, getResources());
-
-        // Binding thread
-        oldCCL = bindThread();
-
-        if (ok ) {
-            if (getInstanceManager() == null) {
-                javax.naming.Context context = null;
-                if (isUseNaming() && getNamingContextListener() != null) {
-                    context = getNamingContextListener().getEnvContext();
-                }
-                Map<String, Map<String, String>> injectionMap = buildInjectionMap(
-                        getIgnoreAnnotations() ? new NamingResourcesImpl(): getNamingResources());
-                setInstanceManager(new DefaultInstanceManager(context,
-                        injectionMap, this, this.getClass().getClassLoader()));
-                getServletContext().setAttribute(
-                        InstanceManager.class.getName(), getInstanceManager());
+            if (!getConfigured()) {
+                log.error( "Error getConfigured");
+                ok = false;
             }
-        }
 
-        try {
+            // We put the resources into the servlet context
+            if (ok)
+                getServletContext().setAttribute
+                    (Globals.RESOURCES_ATTR, getResources());
+
+            if (ok ) {
+                if (getInstanceManager() == null) {
+                    javax.naming.Context context = null;
+                    if (isUseNaming() && getNamingContextListener() != null) {
+                        context = getNamingContextListener().getEnvContext();
+                    }
+                    Map<String, Map<String, String>> injectionMap = buildInjectionMap(
+                            getIgnoreAnnotations() ? new NamingResourcesImpl(): getNamingResources());
+                    setInstanceManager(new DefaultInstanceManager(context,
+                            injectionMap, this, this.getClass().getClassLoader()));
+                    getServletContext().setAttribute(
+                            InstanceManager.class.getName(), getInstanceManager());
+                }
+            }
+
             // Create context attributes that will be required
             if (ok) {
                 getServletContext().setAttribute(
@@ -5439,33 +5349,27 @@ public class StandardContext extends ContainerBase
         ClassLoader oldCCL = bindThread();
 
         try {
-
             // Stop our child containers, if any
             final Container[] children = findChildren();
 
-            ClassLoader old = bindThread();
-            try {
-                // Stop ContainerBackgroundProcessor thread
-                threadStop();
+            // Stop ContainerBackgroundProcessor thread
+            threadStop();
 
-                for (int i = 0; i < children.length; i++) {
-                    children[i].stop();
-                }
-
-                // Stop our filters
-                filterStop();
-
-                Manager manager = getManager();
-                if (manager != null && manager instanceof Lifecycle &&
-                        ((Lifecycle) manager).getState().isAvailable()) {
-                    ((Lifecycle) manager).stop();
-                }
-
-                // Stop our application listeners
-                listenerStop();
-            } finally{
-                unbindThread(old);
+            for (int i = 0; i < children.length; i++) {
+                children[i].stop();
             }
+
+            // Stop our filters
+            filterStop();
+
+            Manager manager = getManager();
+            if (manager != null && manager instanceof Lifecycle &&
+                    ((Lifecycle) manager).getState().isAvailable()) {
+                ((Lifecycle) manager).stop();
+            }
+
+            // Stop our application listeners
+            listenerStop();
 
             // Finalize our character set mapper
             setCharsetMapper(null);
@@ -5807,13 +5711,7 @@ public class StandardContext extends ContainerBase
      */
     protected ClassLoader bindThread() {
 
-        ClassLoader oldContextClassLoader =
-            Thread.currentThread().getContextClassLoader();
-
-        if (getLoader() != null && getLoader().getClassLoader() != null) {
-            Thread.currentThread().setContextClassLoader
-                (getLoader().getClassLoader());
-        }
+        ClassLoader oldContextClassLoader = bind(false, null);
 
         if (isUseNaming()) {
             try {
@@ -5837,7 +5735,102 @@ public class StandardContext extends ContainerBase
             ContextBindings.unbindThread(this, this);
         }
 
-        Thread.currentThread().setContextClassLoader(oldContextClassLoader);
+        unbind(false, oldContextClassLoader);
+    }
+
+
+    @Override
+    public ClassLoader bind(boolean usePrivilegedAction, ClassLoader originalClassLoader) {
+        Loader loader = getLoader();
+        ClassLoader webApplicationClassLoader = null;
+        if (loader != null) {
+            webApplicationClassLoader = loader.getClassLoader();
+        }
+
+        if (originalClassLoader == null) {
+            if (usePrivilegedAction) {
+                PrivilegedAction<ClassLoader> pa = new PrivilegedGetTccl();
+                originalClassLoader = AccessController.doPrivileged(pa);
+            } else {
+                originalClassLoader = Thread.currentThread().getContextClassLoader();
+            }
+        }
+
+        if (webApplicationClassLoader == null ||
+                webApplicationClassLoader == originalClassLoader) {
+            // Not possible or not necessary to switch class loaders. Return
+            // null to indicate this.
+            return null;
+        }
+
+        ThreadBindingListener threadBindingListener = getThreadBindingListener();
+
+        if (usePrivilegedAction) {
+            PrivilegedAction<Void> pa = new PrivilegedSetTccl(webApplicationClassLoader);
+            AccessController.doPrivileged(pa);
+        } else {
+            Thread.currentThread().setContextClassLoader(webApplicationClassLoader);
+        }
+        if (threadBindingListener != null) {
+            try {
+                threadBindingListener.bind();
+            } catch (Throwable t) {
+                ExceptionUtils.handleThrowable(t);
+                log.error(sm.getString(
+                        "standardContext.threadBindingListenerError", getName()), t);
+            }
+        }
+
+        return originalClassLoader;
+    }
+
+
+    @Override
+    public void unbind(boolean usePrivilegedAction, ClassLoader originalClassLoader) {
+        if (originalClassLoader == null) {
+            return;
+        }
+
+        if (threadBindingListener != null) {
+            try {
+                threadBindingListener.unbind();
+            } catch (Throwable t) {
+                ExceptionUtils.handleThrowable(t);
+                log.error(sm.getString(
+                        "standardContext.threadBindingListenerError", getName()), t);
+            }
+        }
+
+        if (usePrivilegedAction) {
+            PrivilegedAction<Void> pa = new PrivilegedSetTccl(originalClassLoader);
+            AccessController.doPrivileged(pa);
+        } else {
+            Thread.currentThread().setContextClassLoader(originalClassLoader);
+        }
+    }
+
+
+    private static class PrivilegedSetTccl implements PrivilegedAction<Void> {
+
+        private ClassLoader cl;
+
+        PrivilegedSetTccl(ClassLoader cl) {
+            this.cl = cl;
+        }
+
+        @Override
+        public Void run() {
+            Thread.currentThread().setContextClassLoader(cl);
+            return null;
+        }
+    }
+
+
+    private static class PrivilegedGetTccl implements PrivilegedAction<ClassLoader> {
+        @Override
+        public ClassLoader run() {
+            return Thread.currentThread().getContextClassLoader();
+        }
     }
 
 

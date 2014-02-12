@@ -19,7 +19,6 @@ package org.apache.tomcat.jni;
 /** Poll
  *
  * @author Mladen Turk
- * @version $Id: Poll.java 1528407 2013-10-02 10:11:00Z markt $
  */
 public class Poll {
 

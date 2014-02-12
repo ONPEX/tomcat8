@@ -8,14 +8,6 @@
   <xsd:annotation>
     <xsd:documentation>
 
-      $Id: javaee_6.xsd 1302376 2012-03-19 11:16:16Z markt $
-
-    </xsd:documentation>
-  </xsd:annotation>
-
-  <xsd:annotation>
-    <xsd:documentation>
-
       DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
       Copyright 2003-2009 Sun Microsystems, Inc. All rights reserved.

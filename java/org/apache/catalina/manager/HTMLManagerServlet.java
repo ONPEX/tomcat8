@@ -27,11 +27,9 @@ import java.net.UnknownHostException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -75,10 +73,8 @@ import org.apache.tomcat.util.res.StringManager;
 * @author Bip Thelin
 * @author Malcolm Edgar
 * @author Glenn L. Nielsen
-* @version $Id: HTMLManagerServlet.java 1550920 2013-12-14 10:52:56Z kkolinko $
 * @see ManagerServlet
 */
-
 public final class HTMLManagerServlet extends ManagerServlet {
 
     private static final long serialVersionUID = 1L;
@@ -236,33 +232,18 @@ public final class HTMLManagerServlet extends ManagerServlet {
         list(request, response, message, smClient);
     }
 
-    protected String upload(HttpServletRequest request, StringManager smClient)
-            throws IOException, ServletException {
+    protected String upload(HttpServletRequest request, StringManager smClient) {
         String message = "";
 
-        Part warPart = null;
-        String filename = null;
-
-        Collection<Part> parts = request.getParts();
-        Iterator<Part> iter = parts.iterator();
-
         try {
-            while (iter.hasNext()) {
-                Part part = iter.next();
-                if (part.getName().equals("deployWar") && warPart == null) {
-                    warPart = part;
-                } else {
-                    part.delete();
-                }
-            }
-
             while (true) {
+                Part warPart = request.getPart("deployWar");
                 if (warPart == null) {
                     message = smClient.getString(
                             "htmlManagerServlet.deployUploadNoFile");
                     break;
                 }
-                filename = warPart.getSubmittedFileName();
+                String filename = warPart.getSubmittedFileName();
                 if (!filename.toLowerCase(Locale.ENGLISH).endsWith(".war")) {
                     message = smClient.getString(
                             "htmlManagerServlet.deployUploadNotWar", filename);
@@ -288,7 +269,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
                     break;
                 }
 
-                ContextName cn = new ContextName(filename);
+                ContextName cn = new ContextName(filename, true);
                 String name = cn.getName();
 
                 if ((host.findChild(name) != null) && !isDeployed(name)) {
@@ -314,11 +295,6 @@ public final class HTMLManagerServlet extends ManagerServlet {
             message = smClient.getString
                 ("htmlManagerServlet.deployUploadFail", e.getMessage());
             log(message, e);
-        } finally {
-            if (warPart != null) {
-                warPart.delete();
-            }
-            warPart = null;
         }
         return message;
     }
@@ -762,7 +738,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
      */
     @Override
     public String getServletInfo() {
-        return "HTMLManagerServlet, Copyright (c) 1999-2013, The Apache Software Foundation";
+        return "HTMLManagerServlet, Copyright (c) 1999-2014, The Apache Software Foundation";
     }
 
     /**

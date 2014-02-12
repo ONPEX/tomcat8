@@ -27,8 +27,6 @@ import java.util.jar.Manifest;
  *
  * @author Greg Murray
  * @author Justyna Horwat
- * @version $Id: ManifestResource.java 1370972 2012-08-08 21:17:59Z markt $
- *
  */
 public class ManifestResource {
 

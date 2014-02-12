@@ -35,9 +35,7 @@ import javax.servlet.ServletResponseWrapper;
  * keep these two classes in synchronization when making changes!
  *
  * @author Craig R. McClanahan
- * @version $Id: ApplicationResponse.java 1354855 2012-06-28 08:23:12Z markt $
  */
-
 class ApplicationResponse extends ServletResponseWrapper {
 
     // ----------------------------------------------------------- Constructors

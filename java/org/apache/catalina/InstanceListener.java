@@ -25,9 +25,7 @@ package org.apache.catalina;
  * is managing that instance.
  *
  * @author Craig R. McClanahan
- * @version $Id: InstanceListener.java 1187801 2011-10-22 21:16:40Z markt $
  */
-
 public interface InstanceListener {
 
 

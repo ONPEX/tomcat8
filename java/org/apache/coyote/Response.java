@@ -464,11 +464,14 @@ public final class Response {
 
         this.contentType = m.toStringNoCharset();
 
-        String charsetValue = m.getCharset().trim();
+        String charsetValue = m.getCharset();
 
-        if (charsetValue != null && charsetValue.length() > 0) {
-            charsetSet = true;
-            this.characterEncoding = charsetValue;
+        if (charsetValue != null) {
+            charsetValue = charsetValue.trim();
+            if (charsetValue.length() > 0) {
+                charsetSet = true;
+                this.characterEncoding = charsetValue;
+            }
         }
     }
 
@@ -537,7 +540,10 @@ public final class Response {
         commitTime = -1;
         errorException = null;
         headers.clear();
+        // Servlet 3.1 non-blocking write listener
         listener = null;
+        fireListener = false;
+        registeredForWrite = false;
 
         // update counters
         contentWritten=0;

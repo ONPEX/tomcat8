@@ -24,9 +24,7 @@ import java.util.Hashtable;
  * Handles the access control on the JNDI contexts.
  *
  * @author Remy Maucherat
- * @version $Id: ContextAccessController.java 1380386 2012-09-03 22:21:30Z markt $
  */
-
 public class ContextAccessController {
 
 

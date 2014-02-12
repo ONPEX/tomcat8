@@ -22,9 +22,7 @@ import java.nio.ByteBuffer;
 /** Buffer
  *
  * @author Mladen Turk
- * @version $Id: Buffer.java 1442914 2013-02-06 11:25:06Z rjung $
  */
-
 public class Buffer {
 
     /**

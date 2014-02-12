@@ -83,9 +83,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: HostManagerServlet.java 1514291 2013-08-15 14:25:30Z markt $
  */
-
 public class HostManagerServlet
     extends HttpServlet implements ContainerServlet {
 

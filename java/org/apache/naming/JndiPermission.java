@@ -33,9 +33,7 @@ import java.security.BasicPermission;
  * </p>
  *
  * @author Glenn Nielsen
- * @version $Id: JndiPermission.java 1187782 2011-10-22 21:03:58Z markt $
  */
-
 public final class JndiPermission extends BasicPermission {
 
     private static final long serialVersionUID = 1L;

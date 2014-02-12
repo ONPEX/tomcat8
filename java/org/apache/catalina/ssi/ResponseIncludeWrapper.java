@@ -39,7 +39,6 @@ import org.apache.tomcat.util.ExceptionUtils;
  *
  * @author Bip Thelin
  * @author David Becker
- * @version $Id: ResponseIncludeWrapper.java 1361823 2012-07-15 22:16:06Z markt $
  */
 public class ResponseIncludeWrapper extends HttpServletResponseWrapper {
     /**

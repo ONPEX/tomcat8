@@ -27,7 +27,6 @@ import org.apache.tomcat.util.bcel.Constants;
  * <A HREF="org.apache.tomcat.util.bcel.classfile.Constant.html">Constant</A> class
  * and represents a reference to a String object.
  *
- * @version $Id: ConstantString.java 1397950 2012-10-13 21:22:37Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Constant
  */

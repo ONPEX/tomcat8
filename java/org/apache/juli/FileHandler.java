@@ -75,10 +75,7 @@ import java.util.logging.LogRecord;
  *    implementation class name for this Handler. Default value:
  *    <code>java.util.logging.SimpleFormatter</code></li>
  * </ul>
- *
- * @version $Id: FileHandler.java 1511501 2013-08-07 21:14:55Z markt $
  */
-
 public class FileHandler
     extends Handler {
 

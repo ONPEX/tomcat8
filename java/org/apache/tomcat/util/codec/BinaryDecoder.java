@@ -18,8 +18,6 @@ package org.apache.tomcat.util.codec;
 
 /**
  * Defines common decoding methods for byte array decoders.
- *
- * @version $Id: BinaryDecoder.java 1459218 2013-03-21 10:31:50Z markt $
  */
 public interface BinaryDecoder extends Decoder {
 

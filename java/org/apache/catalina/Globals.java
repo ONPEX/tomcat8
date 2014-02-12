@@ -16,11 +16,12 @@
  */
 package org.apache.catalina;
 
+import java.util.Locale;
+
 /**
  * Global constants that are applicable to multiple packages within Catalina.
  *
  * @author Craig R. McClanahan
- * @version $Id: Globals.java 1549528 2013-12-09 10:01:16Z markt $
  */
 public final class Globals {
 
@@ -219,6 +220,19 @@ public final class Globals {
 
 
     /**
+     * The request attribute set by the RemoteIpFilter, RemoteIpValve (and may
+     * be set by other similar components) that identifies for the connector the
+     * remote IP address claimed to be associated with this request when a
+     * request is received via one or more proxies. It is typically provided via
+     * the X-Forwarded-For HTTP header.
+     *
+     * Duplicated here for neater code in the catalina packages.
+     */
+    public static final String REMOTE_ADDR_ATTRIBUTE =
+            org.apache.coyote.Constants.REMOTE_ADDR_ATTRIBUTE;
+
+
+    /**
      *
      */
     public static final String ASYNC_SUPPORTED_ATTR =
@@ -290,4 +304,31 @@ public final class Globals {
      */
     public static final String JASPER_XML_BLOCK_EXTERNAL_INIT_PARAM =
             "org.apache.jasper.XML_BLOCK_EXTERNAL";
+
+    static {
+        /**
+         * There are a few places where Tomcat either accesses JVM internals
+         * (e.g. the memory leak protection) or where feature support varies
+         * between JVMs (e.g. SPNEGO). These flags exist to enable Tomcat to
+         * adjust its behaviour based on the vendor of the JVM. In an ideal
+         * world this code would not exist.
+         */
+        String vendor = System.getProperty("java.vendor", "");
+        vendor = vendor.toLowerCase(Locale.ENGLISH);
+
+        if (vendor.startsWith("oracle") || vendor.startsWith("sun")) {
+            IS_ORACLE_JVM = true;
+            IS_IBM_JVM = false;
+        } else if (vendor.contains("ibm")) {
+            IS_ORACLE_JVM = false;
+            IS_IBM_JVM = true;
+        } else {
+            IS_ORACLE_JVM = false;
+            IS_IBM_JVM = false;
+        }
+    }
+
+    public static final boolean IS_ORACLE_JVM;
+
+    public static final boolean IS_IBM_JVM;
 }

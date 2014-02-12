@@ -42,8 +42,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <li><b>DATA</b>      - should be as many bytes as the prev SIZE</li>
  * <li><b>END_DATA</b>  - 7 bytes - <i>TLF2003</i></lI>
  * </ul>
- * @author Filip Hanik
- * @version $Id: XByteBuffer.java 1366889 2012-07-29 19:03:46Z markt $
  */
 public class XByteBuffer
 {
@@ -81,9 +79,9 @@ public class XByteBuffer
     protected boolean discard = true;
 
     /**
-     * Constructs a new XByteBuffer
-     * @param size - the initial size of the byte buffer
+     * Constructs a new XByteBuffer.<br>
      * TODO use a pool of byte[] for performance
+     * @param size - the initial size of the byte buffer
      */
     public XByteBuffer(int size, boolean discard) {
         buf = new byte[size];

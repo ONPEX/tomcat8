@@ -16,57 +16,9 @@
  */
 package org.apache.catalina.webresources;
 
-import java.io.File;
+public class TestFileResourceSet extends AbstractTestFileResourceSet {
 
-import org.junit.Test;
-
-import org.apache.catalina.WebResourceRoot;
-import org.apache.catalina.WebResourceSet;
-
-public class TestFileResourceSet extends AbstractTestResourceSet {
-
-    @Override
-    public WebResourceRoot getWebResourceRoot() {
-        File f = new File(getBaseDir());
-        TesterWebResourceRoot root = new TesterWebResourceRoot();
-        WebResourceSet webResourceSet =
-                new DirResourceSet(new TesterWebResourceRoot(), "/",
-                        f.getAbsolutePath(), "/");
-        root.setMainResources(webResourceSet);
-
-        WebResourceSet f1 = new FileResourceSet(root, "/f1.txt",
-                "test/webresources/dir1/f1.txt", "/");
-        root.addPreResources(f1);
-
-        WebResourceSet f2 = new FileResourceSet(root, "/f2.txt",
-                "test/webresources/dir1/f2.txt", "/");
-        root.addPreResources(f2);
-
-        WebResourceSet d1f1 = new FileResourceSet(root, "/d1/d1-f1.txt",
-                "test/webresources/dir1/d1/d1-f1.txt", "/");
-        root.addPreResources(d1f1);
-
-        WebResourceSet d2f1 = new FileResourceSet(root, "/d2/d2-f1.txt",
-                "test/webresources/dir1/d2/d2-f1.txt", "/");
-        root.addPreResources(d2f1);
-
-        return root;
-    }
-
-    @Override
-    protected boolean isWriteable() {
-        return true;
-    }
-
-    @Override
-    public String getBaseDir() {
-        return "test/webresources/dir2";
-    }
-
-    @Override
-    @Test
-    public void testNoArgConstructor() {
-        @SuppressWarnings("unused")
-        Object obj = new FileResourceSet();
+    public TestFileResourceSet() {
+        super(false);
     }
 }

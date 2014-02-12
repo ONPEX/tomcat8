@@ -19,7 +19,6 @@ package org.apache.catalina.ant.jmx;
 /**
  *
  * @author Peter Rossbach
- * @version $Id: Arg.java 1360839 2012-07-12 18:10:32Z markt $
  * @since 5.5.10
  */
 public class Arg {

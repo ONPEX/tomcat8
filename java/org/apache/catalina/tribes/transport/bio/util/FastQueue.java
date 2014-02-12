@@ -30,9 +30,7 @@ import org.apache.catalina.tribes.group.InterceptorPayload;
  * length when you have strange producer thread problems.
  *
  * FIXME add i18n support to log messages
- * @author Rainer Jung
  * @author Peter Rossbach
- * @version $Id: FastQueue.java 1370382 2012-08-07 17:39:29Z markt $
  */
 public class FastQueue {
 

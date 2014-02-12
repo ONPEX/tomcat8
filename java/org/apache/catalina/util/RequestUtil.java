@@ -31,7 +31,6 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Tim Tye
- * @version $Id: RequestUtil.java 1500934 2013-07-08 20:32:53Z markt $
  */
 public final class RequestUtil {
 

@@ -22,7 +22,6 @@ package org.apache.catalina.filters;
  *
  *
  * @author Craig R. McClanahan
- * @version $Id: Constants.java 1188823 2011-10-25 17:43:47Z markt $
  */
 public final class Constants {
 

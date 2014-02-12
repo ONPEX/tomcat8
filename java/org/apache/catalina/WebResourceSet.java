@@ -74,8 +74,7 @@ public interface WebResourceSet extends Lifecycle {
 
     /**
      * Create a new resource at the requested path using the provided
-     * InputStream. If a resource already exists at the provided path it will
-     * not be overwritten.
+     * InputStream.
      *
      * @param path      The path to be used for the new Resource. It is relative
      *                  to the root of the web application and must start with
@@ -96,9 +95,9 @@ public interface WebResourceSet extends Lifecycle {
      * Are resources provided by this resource set only intended for use by
      * calls to {@link WebResourceRoot#getClassLoaderResource(String)}.
      *
-     * @return true if these resources should only be used for calls to
-     *         {@link WebResourceRoot#getClassLoaderResource(String)}, otherwise
-     *         false
+     * @return <code>true</code> if these resources should only be used for
+     *         calls to {@link WebResourceRoot#getClassLoaderResource(String)},
+     *         otherwise <code>false</code>
      */
     boolean getClassLoaderOnly();
 
@@ -110,4 +109,25 @@ public interface WebResourceSet extends Lifecycle {
      * manager.
      */
     URL getBaseUrl();
+
+    /**
+     * Configures whether or not this set of resources is read-only.
+     *
+     * @param readOnly <code>true</code> if this set of resources should be
+     *                 configured to be read-only
+     *
+     * @throws IllegalArgumentException if an attempt is made to configure a
+     *         {@link WebResourceSet} that is hard-coded to be read-only as
+     *         writable
+     */
+    void setReadOnly(boolean readOnly);
+
+    /**
+     * Obtains the current value of the read-only setting for this set of
+     * resources.
+     *
+     * @return <code>true</code> if this set of resources is configured to be
+     *         read-only, otherwise <code>false</code>
+     */
+    boolean isReadOnly();
 }

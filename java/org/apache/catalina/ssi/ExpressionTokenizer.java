@@ -22,7 +22,6 @@ package org.apache.catalina.ssi;
  * patterned similar to the StreamTokenizer in the JDK but customized for SSI
  * conditional expression parsing.
  *
- * @version $Revision: 1498693 $
  * @author Paul Speed
  */
 public class ExpressionTokenizer {

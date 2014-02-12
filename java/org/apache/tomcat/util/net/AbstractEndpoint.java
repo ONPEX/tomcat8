@@ -40,7 +40,6 @@ import org.apache.tomcat.util.threads.TaskThreadFactory;
 import org.apache.tomcat.util.threads.ThreadPoolExecutor;
 /**
  *
- * @author fhanik
  * @author Mladen Turk
  * @author Remy Maucherat
  */
@@ -752,7 +751,12 @@ public abstract class AbstractEndpoint<S> {
     }
 
 
-    public String adjustRelativePath(String path, String relativeTo) {
+    private String adjustRelativePath(String path, String relativeTo) {
+        // Empty or null path can't point to anything useful. The assumption is
+        // that the value is deliberately empty / null so leave it that way.
+        if (path == null || path.length() == 0) {
+            return path;
+        }
         String newPath = path;
         File f = new File(newPath);
         if ( !f.isAbsolute()) {
@@ -851,9 +855,8 @@ public abstract class AbstractEndpoint<S> {
     private String keystoreFile = System.getProperty("user.home")+"/.keystore";
     public String getKeystoreFile() { return keystoreFile;}
     public void setKeystoreFile(String s ) {
-        String file = adjustRelativePath(s,
+        keystoreFile = adjustRelativePath(s,
                 System.getProperty(Constants.CATALINA_BASE_PROP));
-        this.keystoreFile = file;
     }
 
     private String keystorePass = null;
@@ -872,20 +875,10 @@ public abstract class AbstractEndpoint<S> {
     public String getSslProtocol() { return sslProtocol;}
     public void setSslProtocol(String s) { sslProtocol = s;}
 
-    // Note: Some implementations use the comma separated string, some use
-    // the array
     private String ciphers = null;
-    private String[] ciphersarr = new String[0];
-    public String[] getCiphersArray() { return this.ciphersarr;}
     public String getCiphers() { return ciphers;}
     public void setCiphers(String s) {
         ciphers = s;
-        if ( s == null ) ciphersarr = new String[0];
-        else {
-            StringTokenizer t = new StringTokenizer(s,",");
-            ciphersarr = new String[t.countTokens()];
-            for (int i=0; i<ciphersarr.length; i++ ) ciphersarr[i] = t.nextToken();
-        }
     }
     /**
      * @return  The ciphers in use by this Endpoint
@@ -903,13 +896,8 @@ public abstract class AbstractEndpoint<S> {
     private String truststoreFile = System.getProperty("javax.net.ssl.trustStore");
     public String getTruststoreFile() {return truststoreFile;}
     public void setTruststoreFile(String s) {
-        if (s == null) {
-            this.truststoreFile = null;
-        } else {
-            String file = adjustRelativePath(s,
-                    System.getProperty(Constants.CATALINA_BASE_PROP));
-            this.truststoreFile = file;
-        }
+        truststoreFile = adjustRelativePath(s,
+                System.getProperty(Constants.CATALINA_BASE_PROP));
     }
 
     private String truststorePass =

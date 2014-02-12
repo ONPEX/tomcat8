@@ -64,9 +64,7 @@ import org.apache.tomcat.util.digester.Digester;
  * the functionality required of a <code>Realm</code> implementation.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: JAASMemoryLoginModule.java 1239520 2012-02-02 10:30:58Z markt $
  */
-
 public class JAASMemoryLoginModule extends MemoryRealm implements LoginModule {
     // We need to extend MemoryRealm to avoid class cast
 

@@ -16,7 +16,7 @@
 -->
 <!--
         DTD for XML Schemas: Part 2: Datatypes
-        $Id: datatypes.dtd 1302376 2012-03-19 11:16:16Z markt $
+
         Note this DTD is NOT normative, or even definitive. - - the
         prose copy in the datatypes REC is the definitive version
         (which shouldn't differ from this one except for this comment

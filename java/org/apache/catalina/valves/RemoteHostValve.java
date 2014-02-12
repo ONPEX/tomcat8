@@ -30,7 +30,6 @@ import org.apache.catalina.connector.Response;
  * based on the remote client's host name.
  *
  * @author Craig R. McClanahan
- * @version $Id: RemoteHostValve.java 1187756 2011-10-22 19:25:55Z markt $
  */
 public final class RemoteHostValve extends RequestFilterValve {
 

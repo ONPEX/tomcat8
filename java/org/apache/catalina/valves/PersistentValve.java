@@ -41,9 +41,7 @@ import org.apache.catalina.connector.Response;
  *                              per session at any one time.
  *
  * @author Jean-Frederic Clere
- * @version $Id: PersistentValve.java 1240047 2012-02-03 09:44:00Z markt $
  */
-
 public class PersistentValve extends ValveBase {
 
     //------------------------------------------------------ Constructor

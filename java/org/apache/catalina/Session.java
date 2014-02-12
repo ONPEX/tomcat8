@@ -31,9 +31,7 @@ import javax.servlet.http.HttpSession;
  * between requests for a particular user of a web application.
  *
  * @author Craig R. McClanahan
- * @version $Id: Session.java 1446081 2013-02-14 09:35:42Z markt $
  */
-
 public interface Session {
 
 

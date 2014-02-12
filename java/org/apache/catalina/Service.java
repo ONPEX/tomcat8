@@ -32,9 +32,7 @@ import org.apache.catalina.mapper.Mapper;
  * and classes on the system class path.
  *
  * @author Craig R. McClanahan
- * @version $Id: Service.java 1367329 2012-07-30 21:53:56Z markt $
  */
-
 public interface Service extends Lifecycle {
 
     // ------------------------------------------------------------- Properties

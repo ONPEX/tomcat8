@@ -473,8 +473,6 @@ import java.util.Hashtable;
  *
  * @author TAMURA Kent, IBM
  * @author Andy Clark, IBM
- *
- * @version $Id: EncodingMap.java 1446959 2013-02-16 21:58:21Z markt $
  */
 public class EncodingMap {
 

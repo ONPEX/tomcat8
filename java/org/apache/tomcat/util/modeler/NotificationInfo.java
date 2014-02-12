@@ -27,7 +27,6 @@ import javax.management.MBeanNotificationInfo;
  * descriptor.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: NotificationInfo.java 1410732 2012-11-17 14:53:03Z markt $
  */
 public class NotificationInfo extends FeatureInfo {
 

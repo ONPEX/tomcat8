@@ -45,9 +45,7 @@ import javax.management.ServiceNotFoundException;
  * descriptor.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: ManagedBean.java 1457748 2013-03-18 13:08:25Z markt $
  */
-
 public class ManagedBean implements java.io.Serializable {
 
     private static final long serialVersionUID = 1L;

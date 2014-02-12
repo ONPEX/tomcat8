@@ -26,9 +26,7 @@ package org.apache.catalina;
  * change has taken place.
  *
  * @author Craig R. McClanahan
- * @version $Id: LifecycleListener.java 1187801 2011-10-22 21:16:40Z markt $
  */
-
 public interface LifecycleListener {
 
 

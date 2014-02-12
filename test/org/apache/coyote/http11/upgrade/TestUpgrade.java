@@ -23,6 +23,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.io.Writer;
 import java.net.Socket;
 
@@ -72,6 +73,53 @@ public class TestUpgrade extends TomcatBaseTest {
         doTestMessages(EchoNonBlocking.class);
     }
 
+    @Test
+    public void testSetNullReadListener() throws Exception {
+        doTestCheckClosed(SetNullReadListener.class);
+    }
+
+    @Test
+    public void testSetNullWriteListener() throws Exception {
+        doTestCheckClosed(SetNullWriteListener.class);
+    }
+
+    @Test
+    public void testSetReadListenerTwice() throws Exception {
+        doTestCheckClosed(SetReadListenerTwice.class);
+    }
+
+    @Test
+    public void testSetWriteListenerTwice() throws Exception {
+        doTestCheckClosed(SetWriteListenerTwice.class);
+    }
+
+    @Test
+    public void testFirstCallToOnWritePossible() throws Exception {
+        doTestFixedResponse(FixedResponseNonBlocking.class);
+    }
+
+    private void doTestCheckClosed(
+            Class<? extends HttpUpgradeHandler> upgradeHandlerClass)
+                    throws Exception {
+        UpgradeConnection conn = doUpgrade(upgradeHandlerClass);
+
+        Reader r = conn.getReader();
+        int c = r.read();
+
+        Assert.assertEquals(-1, c);
+    }
+
+    private void doTestFixedResponse(
+            Class<? extends HttpUpgradeHandler> upgradeHandlerClass)
+                    throws Exception {
+        UpgradeConnection conn = doUpgrade(upgradeHandlerClass);
+
+        Reader r = conn.getReader();
+        int c = r.read();
+
+        Assert.assertEquals(FixedResponseNonBlocking.FIXED_RESPONSE, c);
+    }
+
     private void doTestMessages (
             Class<? extends HttpUpgradeHandler> upgradeHandlerClass)
             throws Exception {
@@ -116,7 +164,7 @@ public class TestUpgrade extends TomcatBaseTest {
         Socket socket =
                 SocketFactory.getDefault().createSocket("localhost", getPort());
 
-        socket.setSoTimeout(10000);
+        socket.setSoTimeout(5000);
 
         InputStream is = socket.getInputStream();
         OutputStream os = socket.getOutputStream();
@@ -218,7 +266,7 @@ public class TestUpgrade extends TomcatBaseTest {
             }
 
             sis.setReadListener(new EchoReadListener());
-            sos.setWriteListener(new EchoWriteListener());
+            sos.setWriteListener(new NoOpWriteListener());
         }
 
         @Override
@@ -226,7 +274,7 @@ public class TestUpgrade extends TomcatBaseTest {
             // NO-OP
         }
 
-        private class EchoReadListener implements ReadListener {
+        private class EchoReadListener extends NoOpReadListener {
 
             private byte[] buffer = new byte[8096];
 
@@ -248,29 +296,169 @@ public class TestUpgrade extends TomcatBaseTest {
                     throw new RuntimeException(ioe);
                 }
             }
+        }
+    }
 
-            @Override
-            public void onAllDataRead() {
-                // NO-OP for HTTP Upgrade
-            }
 
-            @Override
-            public void onError(Throwable throwable) {
-                // NO-OP
+    public static class SetNullReadListener implements HttpUpgradeHandler {
+
+        @Override
+        public void init(WebConnection connection) {
+            ServletInputStream sis;
+            try {
+                sis = connection.getInputStream();
+            } catch (IOException ioe) {
+                throw new IllegalStateException(ioe);
             }
+            sis.setReadListener(null);
         }
 
-        private class EchoWriteListener implements WriteListener {
+        @Override
+        public void destroy() {
+            // NO-OP
+        }
+    }
 
+
+    public static class SetNullWriteListener implements HttpUpgradeHandler {
+
+        @Override
+        public void init(WebConnection connection) {
+            ServletOutputStream sos;
+            try {
+                sos = connection.getOutputStream();
+            } catch (IOException ioe) {
+                throw new IllegalStateException(ioe);
+            }
+            sos.setWriteListener(null);
+        }
+
+        @Override
+        public void destroy() {
+            // NO-OP
+        }
+    }
+
+
+    public static class SetReadListenerTwice implements HttpUpgradeHandler {
+
+        @Override
+        public void init(WebConnection connection) {
+            ServletInputStream sis;
+            ServletOutputStream sos;
+            try {
+                sis = connection.getInputStream();
+                sos = connection.getOutputStream();
+            } catch (IOException ioe) {
+                throw new IllegalStateException(ioe);
+            }
+            sos.setWriteListener(new NoOpWriteListener());
+            ReadListener rl = new NoOpReadListener();
+            sis.setReadListener(rl);
+            sis.setReadListener(rl);
+        }
+
+        @Override
+        public void destroy() {
+            // NO-OP
+        }
+    }
+
+
+    public static class SetWriteListenerTwice implements HttpUpgradeHandler {
+
+        @Override
+        public void init(WebConnection connection) {
+            ServletInputStream sis;
+            ServletOutputStream sos;
+            try {
+                sis = connection.getInputStream();
+                sos = connection.getOutputStream();
+            } catch (IOException ioe) {
+                throw new IllegalStateException(ioe);
+            }
+            sis.setReadListener(new NoOpReadListener());
+            WriteListener wl = new NoOpWriteListener();
+            sos.setWriteListener(wl);
+            sos.setWriteListener(wl);
+        }
+
+        @Override
+        public void destroy() {
+            // NO-OP
+        }
+    }
+
+
+    public static class FixedResponseNonBlocking implements HttpUpgradeHandler {
+
+        public static final char FIXED_RESPONSE = 'F';
+
+        private ServletInputStream sis;
+        private ServletOutputStream sos;
+
+        @Override
+        public void init(WebConnection connection) {
+
+            try {
+                sis = connection.getInputStream();
+                sos = connection.getOutputStream();
+            } catch (IOException ioe) {
+                throw new IllegalStateException(ioe);
+            }
+
+            sis.setReadListener(new NoOpReadListener());
+            sos.setWriteListener(new FixedResponseWriteListener());
+        }
+
+        @Override
+        public void destroy() {
+            // NO-OP
+        }
+
+        private class FixedResponseWriteListener extends NoOpWriteListener {
             @Override
             public void onWritePossible() {
-                // NO-OP
+                try {
+                    sos.write(FIXED_RESPONSE);
+                    sos.flush();
+                } catch (IOException ioe) {
+                    throw new IllegalStateException(ioe);
+                }
             }
+        }
+    }
 
-            @Override
-            public void onError(Throwable throwable) {
-                // NO-OP
-            }
+
+    private static class NoOpReadListener implements ReadListener {
+
+        @Override
+        public void onDataAvailable() {
+            // NO-OP
+        }
+
+        @Override
+        public void onAllDataRead() {
+            // Always NO-OP for HTTP Upgrade
+        }
+
+        @Override
+        public void onError(Throwable throwable) {
+            // NO-OP
+        }
+    }
+
+
+    private static class NoOpWriteListener implements WriteListener {
+
+        @Override
+        public void onWritePossible() {
+            // NO-OP
+        }
+
+        @Override
+        public void onError(Throwable throwable) {
+            // NO-OP
         }
     }
 }

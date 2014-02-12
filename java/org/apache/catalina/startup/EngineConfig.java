@@ -33,9 +33,7 @@ import org.apache.tomcat.util.res.StringManager;
  * of that Engine, and the associated defined contexts.
  *
  * @author Craig R. McClanahan
- * @version $Id: EngineConfig.java 1187791 2011-10-22 21:11:34Z markt $
  */
-
 public class EngineConfig
     implements LifecycleListener {
 

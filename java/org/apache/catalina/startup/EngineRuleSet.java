@@ -30,9 +30,7 @@ import org.apache.tomcat.util.digester.RuleSetBase;
  * <code>HostRuleSet</code>.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: EngineRuleSet.java 1364147 2012-07-21 18:52:54Z markt $
  */
-
 public class EngineRuleSet extends RuleSetBase {
 
 

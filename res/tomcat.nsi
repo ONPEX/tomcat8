@@ -14,7 +14,6 @@
 ; limitations under the License.
 
 ; Tomcat script for Nullsoft Installer
-; $Id: tomcat.nsi 1231630 2012-01-15 05:53:59Z kkolinko $
 
   ;Compression options
   CRCCheck on

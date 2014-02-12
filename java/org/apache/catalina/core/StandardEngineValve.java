@@ -36,9 +36,7 @@ import org.apache.tomcat.util.res.StringManager;
  * when processing HTTP requests.
  *
  * @author Craig R. McClanahan
- * @version $Id: StandardEngineValve.java 1187756 2011-10-22 19:25:55Z markt $
  */
-
 final class StandardEngineValve extends ValveBase {
 
     //------------------------------------------------------ Constructor

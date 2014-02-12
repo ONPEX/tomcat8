@@ -31,7 +31,6 @@ import org.apache.catalina.util.IOTools;
  * @author Paul Speed
  * @author Dan Sandberg
  * @author David Becker
- * @version $Id: SSIExec.java 1361823 2012-07-15 22:16:06Z markt $
  */
 public class SSIExec implements SSICommand {
     protected final SSIInclude ssiInclude = new SSIInclude();

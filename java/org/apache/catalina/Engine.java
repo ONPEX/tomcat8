@@ -41,9 +41,7 @@ package org.apache.catalina;
  * should throw <code>IllegalArgumentException</code>.
  *
  * @author Craig R. McClanahan
- * @version $Id: Engine.java 1187801 2011-10-22 21:16:40Z markt $
  */
-
 public interface Engine extends Container {
 
 

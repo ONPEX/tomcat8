@@ -45,6 +45,7 @@ import javax.websocket.WebSocketContainer;
 
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
+import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.res.StringManager;
 
 public class WsSession implements Session {
@@ -455,6 +456,9 @@ public class WsSession implements Session {
         t.setContextClassLoader(applicationClassLoader);
         try {
             localEndpoint.onClose(this, closeReason);
+        } catch (Throwable throwable) {
+            ExceptionUtils.handleThrowable(throwable);
+            localEndpoint.onError(this, throwable);
         } finally {
             t.setContextClassLoader(cl);
         }
@@ -465,7 +469,13 @@ public class WsSession implements Session {
         // 125 is maximum size for the payload of a control message
         ByteBuffer msg = ByteBuffer.allocate(125);
         CloseCode closeCode = closeReason.getCloseCode();
-        msg.putShort((short) closeCode.getCode());
+        // CLOSED_ABNORMALLY should not be put on the wire
+        if (closeCode == CloseCodes.CLOSED_ABNORMALLY) {
+            // PROTOCOL_ERROR is probably better than GOING_AWAY here
+            msg.putShort((short) CloseCodes.PROTOCOL_ERROR.getCode());
+        } else {
+            msg.putShort((short) closeCode.getCode());
+        }
 
         String reason = closeReason.getReasonPhrase();
         if (reason != null && reason.length() > 0) {

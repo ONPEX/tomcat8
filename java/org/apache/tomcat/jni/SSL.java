@@ -19,7 +19,6 @@ package org.apache.tomcat.jni;
 /** SSL
  *
  * @author Mladen Turk
- * @version $Id: SSL.java 1435767 2013-01-20 00:04:29Z markt $
  */
 public final class SSL {
 

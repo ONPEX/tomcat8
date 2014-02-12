@@ -24,10 +24,7 @@ package org.apache.catalina.security;
  * RuntimePermission does not trigger an AccessControlException.
  *
  * @author Glenn L. Nielsen
- * @author Jean-Francois Arcand
- * @version $Id: SecurityClassLoad.java 1551658 2013-12-17 19:10:07Z markt $
  */
-
 public final class SecurityClassLoad {
 
     public static void securityClassLoad(ClassLoader loader) throws Exception {
@@ -81,12 +78,6 @@ public final class SecurityClassLoad {
             "AsyncContextImpl$1");
         loader.loadClass
             (basePackage +
-            "AsyncContextImpl$PrivilegedGetTccl");
-        loader.loadClass
-            (basePackage +
-            "AsyncContextImpl$PrivilegedSetTccl");
-        loader.loadClass
-            (basePackage +
             "AsyncListenerWrapper");
         loader.loadClass
             (basePackage +
@@ -109,6 +100,12 @@ public final class SecurityClassLoad {
         loader.loadClass
             (basePackage +
              "ApplicationHttpRequest$AttributeNamesEnumerator");
+        loader.loadClass
+            (basePackage +
+             "StandardContext$PrivilegedGetTccl");
+        loader.loadClass
+            (basePackage +
+             "StandardContext$PrivilegedSetTccl");
     }
 
 
@@ -135,8 +132,6 @@ public final class SecurityClassLoad {
         loader.loadClass
             (basePackage + "StandardSession");
         loader.loadClass
-            (basePackage + "StandardSession$PrivilegedSetTccl");
-        loader.loadClass
             (basePackage + "StandardSession$1");
         loader.loadClass
             (basePackage + "StandardManager$PrivilegedDoUnload");
@@ -153,7 +148,7 @@ public final class SecurityClassLoad {
     private static final void loadValvesPackage(ClassLoader loader)
             throws Exception {
         final String basePackage = "org.apache.catalina.valves.";
-        loader.loadClass(basePackage + "AccessLogValve$3");
+        loader.loadClass(basePackage + "AbstractAccessLogValve$3");
     }
 
 

@@ -29,9 +29,7 @@ import org.apache.tomcat.util.digester.RuleSetBase;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: NamingRuleSet.java 1501082 2013-07-09 04:33:04Z violetagg $
  */
-
 public class NamingRuleSet extends RuleSetBase {
 
 

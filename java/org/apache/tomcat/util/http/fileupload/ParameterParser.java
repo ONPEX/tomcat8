@@ -33,8 +33,6 @@ import org.apache.tomcat.util.http.fileupload.util.mime.MimeUtility;
  * <p>
  *  <code>param1 = value; param2 = "anything goes; really"; param3</code>
  * </p>
- *
- * @version $Id: ParameterParser.java 1456932 2013-03-15 12:34:48Z markt $
  */
 public class ParameterParser {
 

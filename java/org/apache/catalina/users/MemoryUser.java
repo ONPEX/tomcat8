@@ -32,10 +32,8 @@ import org.apache.catalina.util.RequestUtil;
  * {@link MemoryUserDatabase} implementation of {@link UserDatabase}.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: MemoryUser.java 1370479 2012-08-07 19:59:00Z markt $
  * @since 4.1
  */
-
 public class MemoryUser extends AbstractUser {
 
 

@@ -24,7 +24,6 @@ package org.apache.catalina.ssi;
  *
  * @author Paul Speed
  * @author Dan Sandberg
- * @version $Id: SSIStopProcessingException.java 1187798 2011-10-22 21:14:59Z markt $
  */
 public class SSIStopProcessingException extends Exception {
 

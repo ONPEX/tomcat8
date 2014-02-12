@@ -43,7 +43,6 @@ import org.apache.catalina.Globals;
  * from within web.xml.
  *
  * @author David Becker
- * @version $Id: SSIFilter.java 1361823 2012-07-15 22:16:06Z markt $
  * @see org.apache.catalina.ssi.SSIServlet
  */
 public class SSIFilter implements Filter {

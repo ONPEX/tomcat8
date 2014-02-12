@@ -40,7 +40,6 @@ import org.apache.naming.ContextBindings;
 * @author Craig R. McClanahan
 * @author Carson McDonald
 * @author Ignacio Ortega
-* @version $Revision: 1548182 $
 */
 public class DataSourceRealm extends RealmBase {
 

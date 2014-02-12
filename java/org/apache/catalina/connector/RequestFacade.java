@@ -50,10 +50,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @author Jean-Francois Arcand
- * @version $Id: RequestFacade.java 1499642 2013-07-04 04:03:09Z violetagg $
  */
-
 @SuppressWarnings("deprecation")
 public class RequestFacade implements HttpServletRequest {
 

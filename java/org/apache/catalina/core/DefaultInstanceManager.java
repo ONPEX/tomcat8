@@ -53,9 +53,6 @@ import org.apache.tomcat.InstanceManager;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.res.StringManager;
 
-/**
- * @version $Id: DefaultInstanceManager.java 1513806 2013-08-14 10:47:00Z markt $
- */
 public class DefaultInstanceManager implements InstanceManager {
 
     // Used when there are no annotations in a class

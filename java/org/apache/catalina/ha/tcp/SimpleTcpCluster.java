@@ -68,10 +68,8 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * FIXME wrote testcases
  *
- * @author Filip Hanik
  * @author Remy Maucherat
  * @author Peter Rossbach
- * @version $Id: SimpleTcpCluster.java 1539270 2013-11-06 08:44:00Z kfujino $
  */
 public class SimpleTcpCluster extends LifecycleMBeanBase
         implements CatalinaCluster, LifecycleListener, MembershipListener,
@@ -407,15 +405,15 @@ public class SimpleTcpCluster extends LifecycleMBeanBase
             log.debug("Creating ClusterManager for context " + name +
                     " using class " + getManagerTemplate().getClass().getName());
         }
-        Manager manager = null;
+        ClusterManager manager = null;
         try {
             manager = managerTemplate.cloneFromTemplate();
-            ((ClusterManager)manager).setName(name);
+            manager.setName(name);
         } catch (Exception x) {
             log.error("Unable to clone cluster manager, defaulting to org.apache.catalina.ha.session.DeltaManager", x);
             manager = new org.apache.catalina.ha.session.DeltaManager();
         } finally {
-            if ( manager != null && (manager instanceof ClusterManager)) ((ClusterManager)manager).setCluster(this);
+            if ( manager != null) manager.setCluster(this);
         }
         return manager;
     }

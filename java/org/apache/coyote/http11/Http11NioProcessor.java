@@ -43,7 +43,6 @@ import org.apache.tomcat.util.net.SocketWrapper;
  * Processes HTTP requests.
  *
  * @author Remy Maucherat
- * @author Filip Hanik
  */
 public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
 
@@ -155,17 +154,20 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
 
     @Override
     protected void registerForEvent(boolean read, boolean write) {
+        final NioChannel socket = socketWrapper.getSocket();
         final NioEndpoint.KeyAttachment attach =
-                (NioEndpoint.KeyAttachment)socketWrapper.getSocket().getAttachment(
-                        false);
+                (NioEndpoint.KeyAttachment) socket.getAttachment(false);
         if (attach == null) {
             return;
         }
+        SelectionKey key = socket.getIOChannel().keyFor(socket.getPoller().getSelector());
         if (read) {
             attach.interestOps(attach.interestOps() | SelectionKey.OP_READ);
+            key.interestOps(key.interestOps() | SelectionKey.OP_READ);
         }
         if (write) {
             attach.interestOps(attach.interestOps() | SelectionKey.OP_WRITE);
+            key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
         }
     }
 
@@ -276,6 +278,7 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
     @Override
     protected boolean breakKeepAliveLoop(
             SocketWrapper<NioChannel> socketWrapper) {
+        openSocket = keepAlive;
         // Do sendfile as needed: add socket to sendfile and end
         if (sendfileData != null && !error) {
             ((KeyAttachment) socketWrapper).setSendfileData(sendfileData);
@@ -283,8 +286,16 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
             SelectionKey key = socketWrapper.getSocket().getIOChannel().keyFor(
                     socketWrapper.getSocket().getPoller().getSelector());
             //do the first write on this thread, might as well
-            openSocket = socketWrapper.getSocket().getPoller().processSendfile(key,
-                    (KeyAttachment) socketWrapper, true);
+            if (socketWrapper.getSocket().getPoller().processSendfile(key,
+                    (KeyAttachment) socketWrapper, true)) {
+                sendfileInProgress = true;
+            } else {
+                // Write failed
+                if (log.isDebugEnabled()) {
+                    log.debug(sm.getString("http11processor.sendfile.error"));
+                }
+                error = true;
+            }
             return true;
         }
         return false;

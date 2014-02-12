@@ -113,8 +113,6 @@ import org.xml.sax.SAXParseException;
  * of that Context, and the associated defined servlets.
  *
  * @author Craig R. McClanahan
- * @author Jean-Francois Arcand
- * @version $Id: ContextConfig.java 1549528 2013-12-09 10:01:16Z markt $
  */
 public class ContextConfig implements LifecycleListener {
 
@@ -1595,7 +1593,7 @@ public class ContextConfig implements LifecycleListener {
         List<ServletContainerInitializer> detectedScis;
         try {
             WebappServiceLoader<ServletContainerInitializer> loader =
-                    new WebappServiceLoader<>(servletContext);
+                    new WebappServiceLoader<>(servletContext, context.getContainerSciFilter());
             detectedScis = loader.load(ServletContainerInitializer.class);
         } catch (IOException e) {
             log.error(sm.getString(
@@ -1735,7 +1733,6 @@ public class ContextConfig implements LifecycleListener {
      * Identify the application web.xml to be used and obtain an input source
      * for it.
      */
-    @SuppressWarnings("resource") // stream is meant to be left open here
     protected InputSource getContextWebXmlSource() {
         InputStream stream = null;
         InputSource source = null;
@@ -1746,8 +1743,7 @@ public class ContextConfig implements LifecycleListener {
         // Open the application web.xml file, if it exists
         ServletContext servletContext = context.getServletContext();
         if (servletContext != null) {
-            altDDName = (String)servletContext.getAttribute(
-                                                        Globals.ALT_DD_ATTR);
+            altDDName = (String)servletContext.getAttribute(Globals.ALT_DD_ATTR);
             if (altDDName != null) {
                 try {
                     stream = new FileInputStream(altDDName);

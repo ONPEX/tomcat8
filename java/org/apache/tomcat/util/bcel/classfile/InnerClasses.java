@@ -26,7 +26,6 @@ import java.io.IOException;
  * to the source file of this class.
  * It is instantiated from the <em>Attribute.readAttribute()</em> method.
  *
- * @version $Id: InnerClasses.java 1398089 2012-10-14 14:26:18Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Attribute
  */

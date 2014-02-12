@@ -28,7 +28,6 @@ import javax.servlet.WriteListener;
  * <code>SsiInclude</code>
  *
  * @author Bip Thelin
- * @version $Id: ByteArrayServletOutputStream.java 1444951 2013-02-11 20:28:56Z markt $
  * @see ServletOutputStream and ByteArrayOutputStream
  */
 public class ByteArrayServletOutputStream extends ServletOutputStream {

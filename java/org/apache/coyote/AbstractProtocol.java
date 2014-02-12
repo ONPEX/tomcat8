@@ -609,6 +609,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
             }
 
             wrapper.setAsync(false);
+            ContainerThreadMarker.markAsContainerThread();
 
             try {
                 if (processor == null) {
@@ -628,8 +629,13 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                         // these calls may result in a nested call to process()
                         connections.put(socket, processor);
                         DispatchType nextDispatch = dispatches.next();
-                        state = processor.asyncDispatch(
-                                nextDispatch.getSocketStatus());
+                        if (processor.isUpgrade()) {
+                            state = processor.upgradeDispatch(
+                                    nextDispatch.getSocketStatus());
+                        } else {
+                            state = processor.asyncDispatch(
+                                    nextDispatch.getSocketStatus());
+                        }
                     } else if (status == SocketStatus.DISCONNECT &&
                             !processor.isComet()) {
                         // Do nothing here, just wait for it to get recycled

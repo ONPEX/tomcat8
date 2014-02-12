@@ -25,7 +25,6 @@ import org.apache.el.lang.EvaluationContext;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: AstDeferredExpression.java 939311 2010-04-29 14:01:02Z kkolinko $
  */
 public final class AstDeferredExpression extends SimpleNode {
     public AstDeferredExpression(int id) {

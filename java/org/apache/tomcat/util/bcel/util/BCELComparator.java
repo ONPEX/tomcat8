@@ -21,7 +21,6 @@ package org.apache.tomcat.util.bcel.util;
  * Used for BCEL comparison strategy
  *
  * @author <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
- * @version $Id: BCELComparator.java 1187781 2011-10-22 21:02:40Z markt $
  * @since 5.2
  */
 public interface BCELComparator {

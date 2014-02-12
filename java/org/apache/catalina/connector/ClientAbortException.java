@@ -23,7 +23,6 @@ import java.io.IOException;
  * of a request by a remote client.
  *
  * @author Glenn L. Nielsen
- * @version $Id: ClientAbortException.java 1360468 2012-07-11 23:10:53Z markt $
  */
 public final class ClientAbortException extends IOException {
 

@@ -37,9 +37,6 @@ import java.util.logging.LogRecord;
  * </ul>
  *
  * <p>See the System Properties page in the configuration reference of Tomcat.</p>
- *
- * @author Filip Hanik
- *
  */
 public class AsyncFileHandler extends FileHandler {
 

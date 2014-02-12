@@ -25,7 +25,6 @@ import org.apache.el.lang.EvaluationContext;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: AstLessThan.java 939311 2010-04-29 14:01:02Z kkolinko $
  */
 public final class AstLessThan extends BooleanNode {
     public AstLessThan(int id) {

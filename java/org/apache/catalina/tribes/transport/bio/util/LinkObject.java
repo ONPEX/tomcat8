@@ -27,13 +27,8 @@ import org.apache.catalina.tribes.group.InterceptorPayload;
  * for a linked list, consisting of a general
  * data object and a pointer to the next element.
  *
- * @author Rainer Jung
  * @author Peter Rossbach
- * @author Filip Hanik
- * @version $Id: LinkObject.java 1370384 2012-08-07 17:41:06Z markt $
-
  */
-
 public class LinkObject {
 
     private final ChannelMessage msg;

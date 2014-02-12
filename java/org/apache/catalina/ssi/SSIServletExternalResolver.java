@@ -43,7 +43,6 @@ import org.apache.tomcat.util.http.RequestUtil;
  *
  * @author Dan Sandberg
  * @author David Becker
- * @version $Id: SSIServletExternalResolver.java 1361823 2012-07-15 22:16:06Z markt $
  */
 public class SSIServletExternalResolver implements SSIExternalResolver {
     protected final String VARIABLE_NAMES[] = {"AUTH_TYPE", "CONTENT_LENGTH",

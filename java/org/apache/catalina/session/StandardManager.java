@@ -56,10 +56,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * <code>stop()</code> methods of this class at the correct times.
  *
  * @author Craig R. McClanahan
- * @author Jean-Francois Arcand
- * @version $Id: StandardManager.java 1361802 2012-07-15 21:18:36Z markt $
  */
-
 public class StandardManager extends ManagerBase {
 
     private final Log log = LogFactory.getLog(StandardManager.class); // must not be static

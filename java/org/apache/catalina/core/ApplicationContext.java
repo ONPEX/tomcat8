@@ -80,9 +80,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: ApplicationContext.java 1549528 2013-12-09 10:01:16Z markt $
  */
-
 public class ApplicationContext
     implements ServletContext {
 
@@ -311,9 +309,7 @@ public class ApplicationContext
             return "true";
         }
         if (Globals.JASPER_XML_BLOCK_EXTERNAL_INIT_PARAM.equals(name)) {
-            if (context.getXmlBlockExternal()) {
-                return "true";
-            } else if (Globals.IS_SECURITY_ENABLED) {
+            if (!context.getXmlBlockExternal()) {
                 // System admin has explicitly changed the default
                 return "false";
             }
@@ -335,7 +331,7 @@ public class ApplicationContext
         if (context.getTldValidation()) {
             names.add(Globals.JASPER_XML_VALIDATION_TLD_INIT_PARAM);
         }
-        if (context.getXmlBlockExternal() || Globals.IS_SECURITY_ENABLED) {
+        if (!context.getXmlBlockExternal()) {
             names.add(Globals.JASPER_XML_BLOCK_EXTERNAL_INIT_PARAM);
         }
         return Collections.enumeration(names);

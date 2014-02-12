@@ -25,7 +25,6 @@ import java.io.PrintWriter;
  * @author Bip Thelin
  * @author Dan Sandberg
  * @author David Becker
- * @version $Id: SSICommand.java 1187798 2011-10-22 21:14:59Z markt $
  */
 public interface SSICommand {
     /**

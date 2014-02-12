@@ -65,8 +65,6 @@ import java.io.Serializable;
  * </code></pre>
  *
  * For example usage @see org.apache.catalina.tribes.group.GroupChannel
- * @author Filip Hanik
- * @version $Id: Channel.java 939305 2010-04-29 13:43:39Z kkolinko $
  */
 public interface Channel {
 

@@ -27,11 +27,6 @@ import org.apache.catalina.tribes.transport.RxTaskPool;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 
-/**
- *
- * @author Filip Hanik
- * @version $Id: BioReceiver.java 1358612 2012-07-07 18:30:50Z markt $
- */
 public class BioReceiver extends ReceiverBase implements Runnable {
 
     private static final Log log = LogFactory.getLog(BioReceiver.class);

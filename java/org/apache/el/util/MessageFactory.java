@@ -21,7 +21,6 @@ import java.util.ResourceBundle;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: MessageFactory.java 1187802 2011-10-22 21:17:12Z markt $
  */
 public final class MessageFactory {
 

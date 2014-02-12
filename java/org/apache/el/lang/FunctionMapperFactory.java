@@ -23,7 +23,6 @@ import javax.el.FunctionMapper;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: FunctionMapperFactory.java 1502522 2013-07-12 12:00:26Z markt $
  */
 public class FunctionMapperFactory extends FunctionMapper {
 

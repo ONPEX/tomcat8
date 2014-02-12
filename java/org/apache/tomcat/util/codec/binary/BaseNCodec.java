@@ -28,8 +28,6 @@ import org.apache.tomcat.util.codec.EncoderException;
  * <p>
  * This class is thread-safe.
  * </p>
- *
- * @version $Id: BaseNCodec.java 1493615 2013-06-16 23:32:31Z markt $
  */
 public abstract class BaseNCodec implements BinaryEncoder, BinaryDecoder {
 

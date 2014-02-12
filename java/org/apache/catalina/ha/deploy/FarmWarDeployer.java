@@ -47,17 +47,15 @@ import org.apache.tomcat.util.res.StringManager;
  * </p>
  * Any host can act as the admin, and will have three directories
  * <ul>
- * <li>deployDir - the directory where we watch for changes</li>
- * <li>applicationDir - the directory where we install applications</li>
+ * <li>watchDir - the directory where we watch for changes</li>
+ * <li>deployDir - the directory where we install applications</li>
  * <li>tempDir - a temporaryDirectory to store binary data when downloading a
  * war from the cluster</li>
  * </ul>
  * Currently we only support deployment of WAR files since they are easier to
  * send across the wire.
  *
- * @author Filip Hanik
  * @author Peter Rossbach
- * @version $Revision: 1479805 $
  */
 public class FarmWarDeployer extends ClusterListener
         implements ClusterDeployer, FileChangeListener {
@@ -452,7 +450,7 @@ public class FarmWarDeployer extends ClusterListener
     public void fileModified(File newWar) {
         try {
             File deployWar = new File(getDeployDirFile(), newWar.getName());
-            ContextName cn = new ContextName(deployWar.getName());
+            ContextName cn = new ContextName(deployWar.getName(), true);
             if (deployWar.exists() && deployWar.lastModified() > newWar.lastModified()) {
                 if (log.isInfoEnabled())
                     log.info(sm.getString("farmWarDeployer.alreadyDeployed", cn.getName()));
@@ -488,7 +486,7 @@ public class FarmWarDeployer extends ClusterListener
     @Override
     public void fileRemoved(File removeWar) {
         try {
-            ContextName cn = new ContextName(removeWar.getName());
+            ContextName cn = new ContextName(removeWar.getName(), true);
             if (log.isInfoEnabled())
                 log.info(sm.getString("farmWarDeployer.removeLocal",
                         cn.getName()));

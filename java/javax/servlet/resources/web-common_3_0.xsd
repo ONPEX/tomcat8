@@ -9,14 +9,6 @@
   <xsd:annotation>
     <xsd:documentation>
 
-      $Id: web-common_3_0.xsd 1187778 2011-10-22 20:54:57Z markt $
-
-    </xsd:documentation>
-  </xsd:annotation>
-
-  <xsd:annotation>
-    <xsd:documentation>
-
       DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
       Copyright 2003-2009 Sun Microsystems, Inc. All rights reserved.

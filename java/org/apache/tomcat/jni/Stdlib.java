@@ -20,9 +20,7 @@ package org.apache.tomcat.jni;
 /** Stdlib
  *
  * @author Mladen Turk
- * @version $Id: Stdlib.java 939309 2010-04-29 13:54:26Z kkolinko $
  */
-
 public class Stdlib {
 
     /**

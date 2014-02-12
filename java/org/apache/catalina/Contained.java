@@ -25,9 +25,7 @@ package org.apache.catalina;
  *
  * @author Craig R. McClanahan
  * @author Peter Donald
- * @version $Id: Contained.java 1187801 2011-10-22 21:16:40Z markt $
  */
-
 public interface Contained {
 
 

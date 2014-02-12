@@ -38,7 +38,6 @@ import org.apache.el.util.ReflectionUtil;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: AstValue.java 1518328 2013-08-28 19:02:39Z markt $
  */
 public final class AstValue extends SimpleNode {
 

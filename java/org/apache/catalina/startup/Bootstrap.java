@@ -46,7 +46,6 @@ import org.apache.juli.logging.LogFactory;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: Bootstrap.java 1529816 2013-10-07 10:55:18Z markt $
  */
 public final class Bootstrap {
 

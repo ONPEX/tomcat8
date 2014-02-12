@@ -17,7 +17,6 @@
 package javax.servlet;
 
 /**
- * $Id: AsyncContext.java 1354112 2012-06-26 17:07:22Z fhanik $
  * TODO SERVLET3 - Add comments
  * @since Servlet 3.0
  */

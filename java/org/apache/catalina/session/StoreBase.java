@@ -33,9 +33,7 @@ import org.apache.tomcat.util.res.StringManager;
  * support most of the functionality required by a Store.
  *
  * @author Bip Thelin
- * @version $Id: StoreBase.java 1361802 2012-07-15 21:18:36Z markt $
  */
-
 public abstract class StoreBase extends LifecycleBase implements Store {
 
     // ----------------------------------------------------- Instance Variables

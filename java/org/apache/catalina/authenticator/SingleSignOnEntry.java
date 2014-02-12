@@ -29,7 +29,6 @@ import org.apache.catalina.Session;
  * reauthentications when SingleSignOn is in use.
  *
  * @author  B Stansberry, based on work by Craig R. McClanahan
- * @version $Revision: 1188402 $
  *
  * @see SingleSignOn
  * @see AuthenticatorBase#reauthenticateFromSSO

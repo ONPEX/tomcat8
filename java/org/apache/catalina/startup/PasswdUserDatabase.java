@@ -31,9 +31,7 @@ import java.util.Hashtable;
  * that processes the <code>/etc/passwd</code> file on a Unix system.
  *
  * @author Craig R. McClanahan
- * @version $Id: PasswdUserDatabase.java 1364147 2012-07-21 18:52:54Z markt $
  */
-
 public final class PasswdUserDatabase
     implements UserDatabase {
 

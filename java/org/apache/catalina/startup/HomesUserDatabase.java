@@ -30,9 +30,7 @@ import java.util.Hashtable;
  * to our constructor to be "home" directories for those users.
  *
  * @author Craig R. McClanahan
- * @version $Id: HomesUserDatabase.java 1364147 2012-07-21 18:52:54Z markt $
  */
-
 public final class HomesUserDatabase
     implements UserDatabase {
 

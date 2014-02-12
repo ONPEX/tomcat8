@@ -67,9 +67,7 @@ import org.ietf.jgss.GSSName;
  * location) are identical to those currently supported by Tomcat 3.X.
  *
  * @author Craig R. McClanahan
- * @version $Id: RealmBase.java 1548169 2013-12-05 15:36:36Z markt $
  */
-
 public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
 
     private static final Log log = LogFactory.getLog(RealmBase.class);

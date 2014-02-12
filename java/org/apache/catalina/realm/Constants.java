@@ -24,9 +24,7 @@ package org.apache.catalina.realm;
  *
  *
  * @author Craig R. McClanahan
- * @version $Id: Constants.java 1187797 2011-10-22 21:14:22Z markt $
  */
-
 public final class Constants {
 
     public static final String Package = "org.apache.catalina.realm";

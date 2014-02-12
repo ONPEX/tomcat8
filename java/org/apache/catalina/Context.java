@@ -56,7 +56,6 @@ import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
  * <p>
  *
  * @author Craig R. McClanahan
- * @version $Id: Context.java 1549528 2013-12-09 10:01:16Z markt $
  */
 public interface Context extends Container {
 
@@ -694,8 +693,33 @@ public interface Context extends Container {
      */
     public void setInstanceManager(InstanceManager instanceManager);
 
-    // --------------------------------------------------------- Public Methods
+    /**
+     * Sets the regular expression that specifies which container provided SCIs
+     * should be filtered out and not used for this context. Matching uses
+     * {@link java.util.regex.Matcher#find()} so the regular expression only has
+     * to match a sub-string of the fully qualified class name of the container
+     * provided SCI for it to be filtered out.
+     *
+     * @param containerSciFilter The regular expression against which the fully
+     *                           qualified class name of each container provided
+     *                           SCI should be checked
+     */
+    public void setContainerSciFilter(String containerSciFilter);
 
+    /**
+     * Obtains the regular expression that specifies which container provided
+     * SCIs should be filtered out and not used for this context. Matching uses
+     * {@link java.util.regex.Matcher#find()} so the regular expression only has
+     * to match a sub-string of the fully qualified class name of the container
+     * provided SCI for it to be filtered out.
+     *
+     * @return The regular expression against which the fully qualified class
+     *         name of each container provided SCI will be checked
+     */
+    public String getContainerSciFilter();
+
+
+    // --------------------------------------------------------- Public Methods
 
     /**
      * Add a new Listener class name to the set of Listeners
@@ -1041,6 +1065,18 @@ public interface Context extends Container {
      * is returned.
      */
     public int[] findStatusPages();
+
+
+    /**
+     * Get the associated ThreadBindingListener.
+     */
+    public ThreadBindingListener getThreadBindingListener();
+
+
+    /**
+     * Get the associated ThreadBindingListener.
+     */
+    public void setThreadBindingListener(ThreadBindingListener threadBindingListener);
 
 
     /**
@@ -1557,4 +1593,43 @@ public interface Context extends Container {
      *         method names.
      */
     public Map<String, String> findPreDestroyMethods();
+
+    /**
+     * Change the current thread context class loader to the web application
+     * class loader. If no web application class loader is defined, or if the
+     * current thread is already using the web application class loader then no
+     * change will be made. If the class loader is changed and a
+     * {@link ThreadBindingListener} is configured then
+     * {@link ThreadBindingListener#bind()} will be called after the change has
+     * been made.
+     *
+     * @param usePrivilegedAction
+     *          Should a {@link java.security.PrivilegedAction} be used when
+     *          obtaining the current thread context class loader and setting
+     *          the new one?
+     * @param originalClassLoader
+     *          The current class loader if known to save this method having to
+     *          look it up
+     *
+     * @return If the class loader has been changed by the method it will return
+     *         the thread context class loader in use when the method was
+     *         called. If no change was made then this method returns null.
+     */
+    public ClassLoader bind(boolean usePrivilegedAction, ClassLoader originalClassLoader);
+
+    /**
+     * Restore the current thread context class loader to the original class
+     * loader in used before {@link #bind(boolean, ClassLoader)} was called. If
+     * no original class loader is passed to this method then no change will be
+     * made. If the class loader is changed and a {@link ThreadBindingListener}
+     * is configured then {@link ThreadBindingListener#unbind()} will be called
+     * before the change is made.
+     *
+     * @param usePrivilegedAction
+     *          Should a {@link java.security.PrivilegedAction} be used when
+     *          setting the current thread context class loader?
+     * @param originalClassLoader
+     *          The class loader to restore as the thread context class loader
+     */
+    public void unbind(boolean usePrivilegedAction, ClassLoader originalClassLoader);
 }

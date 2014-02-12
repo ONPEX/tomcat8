@@ -55,9 +55,7 @@ import org.apache.catalina.util.RequestUtil;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: ApplicationHttpRequest.java 1498409 2013-07-01 12:26:02Z violetagg $
  */
-
 class ApplicationHttpRequest extends HttpServletRequestWrapper {
 
 
