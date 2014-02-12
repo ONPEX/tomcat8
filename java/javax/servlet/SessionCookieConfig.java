@@ -18,9 +18,8 @@ package javax.servlet;
 
 /**
  *
- * @since Servlet 3.0
- * $Id: SessionCookieConfig.java 1187778 2011-10-22 20:54:57Z markt $
  * TODO SERVLET3 - Add comments
+ * @since Servlet 3.0
  */
 public interface SessionCookieConfig {
 

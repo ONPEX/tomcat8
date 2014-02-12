@@ -139,10 +139,14 @@
   <!-- Embedded JARs & source JARs -->
   <property name="tomcat-embed-core.jar" value="${tomcat.embed}/tomcat-embed-core.jar"/>
   <property name="tomcat-embed-jasper.jar" value="${tomcat.embed}/tomcat-embed-jasper.jar"/>
+  <property name="tomcat-embed-el.jar" value="${tomcat.embed}/tomcat-embed-el.jar"/>
+  <property name="tomcat-embed-websocket.jar" value="${tomcat.embed}/tomcat-embed-websocket.jar"/>
   <property name="tomcat-embed-juli.jar" value="${tomcat.embed}/tomcat-embed-logging-juli.jar"/>
 
   <property name="tomcat-embed-core-sources.jar" value="${tomcat.embed.sources}/tomcat-embed-core-src.jar"/>
   <property name="tomcat-embed-jasper-sources.jar" value="${tomcat.embed.sources}/tomcat-embed-jasper-src.jar"/>
+  <property name="tomcat-embed-el-sources.jar" value="${tomcat.embed.sources}/tomcat-embed-el-src.jar"/>
+  <property name="tomcat-embed-websocket-sources.jar" value="${tomcat.embed.sources}/tomcat-embed-websocket-src.jar"/>
   <property name="tomcat-embed-juli-sources.jar" value="${tomcat.embed.sources}/tomcat-embed-logging-juli-src.jar"/>
   <property name="tomcat-embed-dbcp-sources.jar" value="${tomcat.embed.sources}/tomcat-dbcp-src.jar"/>
 
@@ -282,6 +286,7 @@
   <patternset id="files.annotations-api">
     <include name="javax/annotation/*" />
     <include name="javax/annotation/security/*" />
+    <include name="javax/annotation/sql/*" />
     <include name="javax/ejb/*" />
     <include name="javax/persistence/*" />
     <include name="javax/xml/ws/*" />
@@ -415,10 +420,7 @@
     <patternset refid="files.annotations-api" />
     <patternset refid="files.bootstrap" />
     <patternset refid="files.catalina" />
-    <patternset refid="files.el-api" />
     <patternset refid="files.servlet-api" />
-    <patternset refid="files.websocket-api" />
-    <patternset refid="files.tomcat-websocket" />
     <patternset refid="files.tomcat-api" />
     <!-- These pattern sets conflict so include files directly
       <patternset refid="files.tomcat-coyote" />
@@ -434,8 +436,17 @@
 
   <patternset id="files.tomcat-embed-jasper" >
     <patternset refid="files.jasper" />
-    <patternset refid="files.jasper-el" />
     <patternset refid="files.jsp-api" />
+  </patternset>
+
+  <patternset id="files.tomcat-embed-el" >
+    <patternset refid="files.el-api" />
+    <patternset refid="files.jasper-el" />
+  </patternset>
+
+  <patternset id="files.tomcat-embed-websocket" >
+    <patternset refid="files.websocket-api" />
+    <patternset refid="files.tomcat-websocket" />
   </patternset>
 
   <!-- Pattern sets used directly -->
@@ -1180,10 +1191,19 @@
     <jarIt jarfile="${tomcat-embed-core.jar}"
            filesDir="${tomcat.classes}"
            filesId="files.tomcat-embed-core"
-           meta-inf="${tomcat.manifests}/tomcat-websocket.jar"/>
+           notice="${tomcat.manifests}/servlet-api.jar.notice"
+           license="${tomcat.manifests}/servlet-api.jar.license"/>
     <jarIt jarfile="${tomcat-embed-jasper.jar}"
            filesDir="${tomcat.classes}"
-           filesId="files.tomcat-embed-jasper"/>
+           filesId="files.tomcat-embed-jasper"
+           meta-inf="${tomcat.manifests}/jasper.jar"/>
+    <jarIt jarfile="${tomcat-embed-el.jar}"
+           filesDir="${tomcat.classes}"
+           filesId="files.tomcat-embed-el"/>
+    <jarIt jarfile="${tomcat-embed-websocket.jar}"
+           filesDir="${tomcat.classes}"
+           filesId="files.tomcat-embed-websocket"
+           meta-inf="${tomcat.manifests}/tomcat-websocket.jar"/>
     <jarIt jarfile="${tomcat-embed-juli.jar}"
            filesDir="${tomcat.classes}"
            filesId="files.tomcat-juli"/>
@@ -1199,11 +1219,17 @@
     <jarIt jarfile="${tomcat-embed-core-sources.jar}"
            filesDir="java"
            filesId="files.tomcat-embed-core"
-           notice="${tomcat.manifests}/tomcat-embed-core.jar.notice"
-           license="${tomcat.manifests}/tomcat-embed-core.jar.license"/>
+            notice="${tomcat.manifests}/servlet-api.jar.notice"
+            license="${tomcat.manifests}/servlet-api.jar.license"/>
     <jarIt jarfile="${tomcat-embed-jasper-sources.jar}"
            filesDir="java"
            filesId="files.tomcat-embed-jasper"/>
+    <jarIt jarfile="${tomcat-embed-el-sources.jar}"
+           filesDir="java"
+           filesId="files.tomcat-embed-el"/>
+    <jarIt jarfile="${tomcat-embed-websocket-sources.jar}"
+           filesDir="java"
+           filesId="files.tomcat-embed-websocket"/>
     <jarIt jarfile="${tomcat-embed-juli-sources.jar}"
            filesDir="java"
            filesId="files.tomcat-juli"/>
@@ -2697,7 +2723,6 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
   <!-- ================  be built rather than used directly ================ -->
 
   <target name="build-tomcat-dbcp" depends="build-manifests" unless="no.build.dbcp">
-    <!-- Pool2 and DBCP2 currently have slightly different source structures -->
     <copy todir="${tomcat-dbcp.home}/src">
       <fileset dir="${commons-pool.home}/src/main">
         <include name="**/*.java" />
@@ -2705,11 +2730,16 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
         <exclude name="**/proxy/**" />
       </fileset>
     </copy>
-    <copy todir="${tomcat-dbcp.home}">
-      <fileset dir="${commons-dbcp.home}">
+    <copy todir="${tomcat-dbcp.home}/src">
+      <fileset dir="${commons-dbcp.home}/src/main">
         <include name="**/*.java" />
         <exclude name="**/test/**" />
         <exclude name="**/managed/**" />
+      </fileset>
+    </copy>
+    <copy todir="${tomcat-dbcp.home}/src/java">
+      <fileset dir="${commons-dbcp.home}/src/main/resources">
+        <include name="**/*.properties" />
       </fileset>
     </copy>
 
@@ -2732,6 +2762,18 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
       <fileset dir="${tomcat-dbcp.home}/src/java/org/apache/commons" />
     </move>
     <mkdir dir="${tomcat-dbcp.home}/classes"/>
+    <!-- Make sure the build fails if the DBCP sources haven't been copied -->
+    <!-- correctly. Other problems should be detected by the following     -->
+    <!-- compilation step failing.                                         -->
+    <fail message="Repackaged DBCP factory is missing">
+      <condition>
+        <not>
+          <resourceexists>
+            <file file="${tomcat-dbcp.home}/src/java/org/apache/tomcat/dbcp/dbcp2/BasicDataSourceFactory.java"/>
+          </resourceexists>
+        </not>
+      </condition>
+    </fail>
     <javac destdir="${tomcat-dbcp.home}/classes"
            optimize="off"
            debug="${compile.debug}"
@@ -2745,6 +2787,11 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
       <include name="**" />
       <classpath path="${tomcat.classes}" />
     </javac>
+    <copy todir="${tomcat-dbcp.home}/classes">
+      <fileset dir="${tomcat-dbcp.home}/src/java">
+        <include name="**/*.properties" />
+      </fileset>
+    </copy>
     <jarIt jarfile="${tomcat-dbcp.jar}"
       filesDir="${tomcat-dbcp.home}/classes"
       filesId="files.tomcat-dbcp" />

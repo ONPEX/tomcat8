@@ -42,9 +42,7 @@ import java.util.Locale;
  * package someplace.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: URL.java 1448122 2013-02-20 12:30:14Z markt $
  */
-
 public final class URL implements Serializable {
 
     private static final long serialVersionUID = 1L;

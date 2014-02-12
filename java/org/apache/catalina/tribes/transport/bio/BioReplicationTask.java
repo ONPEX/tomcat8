@@ -40,10 +40,6 @@ import org.apache.juli.logging.LogFactory;
  * serviceChannel() method stores the key reference in the thread object then
  * calls notify() to wake it up. When the channel has been drained, the worker
  * thread returns itself to its parent pool.
- *
- * @author Filip Hanik
- *
- * @version $Id: BioReplicationTask.java 1187789 2011-10-22 21:09:52Z markt $
  */
 public class BioReplicationTask extends AbstractRxTask {
 

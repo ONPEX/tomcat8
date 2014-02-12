@@ -26,8 +26,6 @@ import java.io.IOException;
  * at the bottom layer, the IO layer (for layers see the javadoc for the {@link Channel} interface).<br>
  * The channel sender must support "silent" members, ie, be able to send a message to a member
  * that is not in the membership, but is part of the destination parameter
- * @author Filip Hanik
- * @version $Id: ChannelSender.java 1187789 2011-10-22 21:09:52Z markt $
  */
 public interface ChannelSender extends Heartbeat
 {

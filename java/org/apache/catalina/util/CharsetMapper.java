@@ -35,9 +35,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * your own version for a particular web application.
  *
  * @author Craig R. McClanahan
- * @version $Id: CharsetMapper.java 1187792 2011-10-22 21:11:51Z markt $
  */
-
 public class CharsetMapper {
 
 

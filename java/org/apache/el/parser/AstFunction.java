@@ -34,7 +34,6 @@ import org.apache.el.util.MessageFactory;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: AstFunction.java 1515744 2013-08-20 08:38:29Z violetagg $
  */
 public final class AstFunction extends SimpleNode {
 

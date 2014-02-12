@@ -25,7 +25,6 @@
   <properties>
     <author email="craigmcc@apache.org">Craig McClanahan</author>
     <title>JNDIRealm</title>
-    <revision>$Id: fs-jndi-realm.xml 1529692 2013-10-06 21:21:45Z kpreisser $</revision>
   </properties>
 
 <body>

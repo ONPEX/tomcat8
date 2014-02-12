@@ -41,9 +41,7 @@ import org.apache.catalina.connector.Response;
  * @author Craig R. McClanahan
  * @author Gunnar Rjnning
  * @author Peter Donald
- * @version $Id: Valve.java 1187756 2011-10-22 19:25:55Z markt $
  */
-
 public interface Valve {
 
 

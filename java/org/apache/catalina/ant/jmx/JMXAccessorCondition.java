@@ -85,9 +85,7 @@ import org.apache.tools.ant.taskdefs.condition.Condition;
  * <b>NOTE</b>:  For numeric expressions the type must be set and use xml entities as operations.<br/>
  * As type we currently support <em>long</em> and <em>double</em>.
  * @author Peter Rossbach
- * @version $Id: JMXAccessorCondition.java 1187783 2011-10-22 21:07:41Z markt $
  * @since 5.5.10
- *
  */
 public class JMXAccessorCondition extends ProjectComponent implements Condition {
 

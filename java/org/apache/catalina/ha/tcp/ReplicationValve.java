@@ -58,11 +58,8 @@ import org.apache.tomcat.util.res.StringManager;
  * </p>
  *
  * @author Craig R. McClanahan
- * @author Filip Hanik
  * @author Peter Rossbach
- * @version $Id: ReplicationValve.java 1482690 2013-05-15 06:27:51Z kfujino $
  */
-
 public class ReplicationValve
     extends ValveBase implements ClusterValve {
 

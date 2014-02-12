@@ -14,9 +14,6 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-/* $Id: RequestHeaderExample.java 1551814 2013-12-18 02:53:35Z kpreisser $
- *
- */
 
 import java.io.IOException;
 import java.io.PrintWriter;

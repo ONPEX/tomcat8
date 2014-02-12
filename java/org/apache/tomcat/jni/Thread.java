@@ -20,9 +20,7 @@ package org.apache.tomcat.jni;
 /** Thread
  *
  * @author Mladen Turk
- * @version $Id: Thread.java 1444300 2013-02-09 00:46:07Z kkolinko $
  */
-
 public class Thread {
 
     /**

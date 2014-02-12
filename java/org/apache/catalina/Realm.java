@@ -35,9 +35,7 @@ import org.ietf.jgss.GSSContext;
  * Container.
  *
  * @author Craig R. McClanahan
- * @version $Id: Realm.java 1500964 2013-07-08 21:24:05Z markt $
  */
-
 public interface Realm {
 
 

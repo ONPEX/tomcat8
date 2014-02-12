@@ -27,7 +27,6 @@ import org.apache.el.lang.EvaluationContext;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: AstInteger.java 1003861 2010-10-02 18:53:30Z markt $
  */
 public final class AstInteger extends SimpleNode {
     public AstInteger(int id) {

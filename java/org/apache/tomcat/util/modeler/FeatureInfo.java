@@ -30,9 +30,7 @@ import javax.management.MBeanFeatureInfo;
  * information for the <code>ModelMBean</code> beans exposed for management.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: FeatureInfo.java 1222798 2011-12-23 19:03:49Z markt $
  */
-
 public class FeatureInfo implements Serializable {
     static final long serialVersionUID = -911529176124712296L;
 

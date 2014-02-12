@@ -24,7 +24,6 @@ package org.apache.tomcat.util.descriptor.web;
  *
  * @author Craig R. McClanahan
  * @author Peter Rossbach (pero@apache.org)
- * @version $Id: ContextResourceEnvRef.java 1500964 2013-07-08 21:24:05Z markt $
  */
 public class ContextResourceEnvRef extends ResourceBase {
 

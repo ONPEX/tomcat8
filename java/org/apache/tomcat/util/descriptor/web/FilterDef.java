@@ -30,9 +30,7 @@ import org.apache.tomcat.util.res.StringManager;
  * in a <code>&lt;filter&gt;</code> element in the deployment descriptor.
  *
  * @author Craig R. McClanahan
- * @version $Id: FilterDef.java 1500964 2013-07-08 21:24:05Z markt $
  */
-
 public class FilterDef implements Serializable {
 
     private static final long serialVersionUID = 1L;

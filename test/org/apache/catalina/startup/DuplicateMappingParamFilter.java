@@ -30,7 +30,6 @@ import javax.servlet.annotation.WebFilter;
  * Test Mock with wrong Annotation!
  *
  * @author Peter Rossbach
- * @version $Id: DuplicateMappingParamFilter.java 1187806 2011-10-22 21:23:07Z markt $
  *
  */
 @WebFilter(value = "/param", filterName="paramDFilter",

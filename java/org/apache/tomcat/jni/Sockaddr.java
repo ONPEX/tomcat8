@@ -20,9 +20,7 @@ package org.apache.tomcat.jni;
 /** Sockaddr
  *
  * @author Mladen Turk
- * @version $Id: Sockaddr.java 939309 2010-04-29 13:54:26Z kkolinko $
  */
-
 public class Sockaddr {
 
    /** The pool to use... */

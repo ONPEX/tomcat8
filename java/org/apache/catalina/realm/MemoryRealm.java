@@ -39,9 +39,7 @@ import org.apache.tomcat.util.digester.Digester;
  * synchronization is performed around accesses to the principals collection.
  *
  * @author Craig R. McClanahan
- * @version $Id: MemoryRealm.java 1548185 2013-12-05 16:11:55Z markt $
  */
-
 public class MemoryRealm  extends RealmBase {
 
     private static final Log log = LogFactory.getLog(MemoryRealm.class);

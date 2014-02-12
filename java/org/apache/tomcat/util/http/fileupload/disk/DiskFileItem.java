@@ -55,8 +55,6 @@ import org.apache.tomcat.util.http.fileupload.util.Streams;
  * deleted later on.</p>
  *
  * @since FileUpload 1.1
- *
- * @version $Id: DiskFileItem.java 1489419 2013-06-04 12:48:18Z markt $
  */
 public class DiskFileItem
     implements FileItem {

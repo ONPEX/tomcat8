@@ -24,7 +24,6 @@ import java.io.IOException;
  * This class is derived from <em>Attribute</em> and represents a reference
  * to a PMG attribute.
  *
- * @version $Id: PMGClass.java 1397988 2012-10-14 01:00:48Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Attribute
  */

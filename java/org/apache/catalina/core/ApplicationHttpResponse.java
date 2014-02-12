@@ -37,9 +37,7 @@ import javax.servlet.http.HttpServletResponseWrapper;
  * keep these two classes in synchronization when making changes!
  *
  * @author Craig R. McClanahan
- * @version $Id: ApplicationHttpResponse.java 1354855 2012-06-28 08:23:12Z markt $
  */
-
 class ApplicationHttpResponse extends HttpServletResponseWrapper {
 
     // ----------------------------------------------------------- Constructors

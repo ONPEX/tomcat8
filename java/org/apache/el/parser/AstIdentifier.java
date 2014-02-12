@@ -35,7 +35,6 @@ import org.apache.el.util.Validation;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: AstIdentifier.java 1504286 2013-07-17 21:38:48Z markt $
  */
 public final class AstIdentifier extends SimpleNode {
     public AstIdentifier(int id) {

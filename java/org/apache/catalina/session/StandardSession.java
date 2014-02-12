@@ -76,9 +76,7 @@ import org.apache.tomcat.util.res.StringManager;
  * @author Craig R. McClanahan
  * @author Sean Legassick
  * @author <a href="mailto:jon@latchkey.com">Jon S. Stevens</a>
- * @version $Id: StandardSession.java 1520349 2013-09-05 15:42:48Z markt $
  */
-
 public class StandardSession implements HttpSession, Session, Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -802,20 +800,9 @@ public class StandardSession implements HttpSession, Session, Serializable {
             // The call to expire() may not have been triggered by the webapp.
             // Make sure the webapp's class loader is set when calling the
             // listeners
-            ClassLoader oldTccl = null;
-            if (context.getLoader() != null &&
-                    context.getLoader().getClassLoader() != null) {
-                oldTccl = Thread.currentThread().getContextClassLoader();
-                if (Globals.IS_SECURITY_ENABLED) {
-                    PrivilegedAction<Void> pa = new PrivilegedSetTccl(
-                            context.getLoader().getClassLoader());
-                    AccessController.doPrivileged(pa);
-                } else {
-                    Thread.currentThread().setContextClassLoader(
-                            context.getLoader().getClassLoader());
-                }
-            }
+            ClassLoader oldContextClassLoader = null;
             try {
+                oldContextClassLoader = context.bind(Globals.IS_SECURITY_ENABLED, null);
                 if (notify) {
                     Object listeners[] = context.getApplicationLifecycleListeners();
                     if (listeners != null && listeners.length > 0) {
@@ -848,15 +835,7 @@ public class StandardSession implements HttpSession, Session, Serializable {
                     }
                 }
             } finally {
-                if (oldTccl != null) {
-                    if (Globals.IS_SECURITY_ENABLED) {
-                        PrivilegedAction<Void> pa =
-                            new PrivilegedSetTccl(oldTccl);
-                        AccessController.doPrivileged(pa);
-                    } else {
-                        Thread.currentThread().setContextClassLoader(oldTccl);
-                    }
-                }
+                context.unbind(Globals.IS_SECURITY_ENABLED, oldContextClassLoader);
             }
 
             if (ACTIVITY_CHECK) {
@@ -1837,22 +1816,6 @@ public class StandardSession implements HttpSession, Session, Serializable {
 
     }
 
-
-    private static class PrivilegedSetTccl
-    implements PrivilegedAction<Void> {
-
-        private ClassLoader cl;
-
-        PrivilegedSetTccl(ClassLoader cl) {
-            this.cl = cl;
-        }
-
-        @Override
-        public Void run() {
-            Thread.currentThread().setContextClassLoader(cl);
-            return null;
-        }
-    }
 
 }
 

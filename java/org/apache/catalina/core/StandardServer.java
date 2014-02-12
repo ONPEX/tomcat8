@@ -55,7 +55,6 @@ import org.apache.tomcat.util.res.StringManager;
  * (but not required) when deploying and starting Catalina.
  *
  * @author Craig R. McClanahan
- * @version $Id: StandardServer.java 1500947 2013-07-08 21:02:07Z markt $
  */
 public final class StandardServer extends LifecycleMBeanBase implements Server {
 

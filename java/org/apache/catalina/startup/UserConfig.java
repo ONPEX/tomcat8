@@ -43,9 +43,7 @@ import org.apache.tomcat.util.res.StringManager;
  * xxxxx is the username of the owning user for that web application
  *
  * @author Craig R. McClanahan
- * @version $Id: UserConfig.java 1364147 2012-07-21 18:52:54Z markt $
  */
-
 public final class UserConfig
     implements LifecycleListener {
 

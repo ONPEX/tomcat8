@@ -23,10 +23,7 @@ import org.apache.catalina.tribes.Member;
 
 /**
  * Abstract class for the interceptor base class.
- * @author Filip Hanik
- * @version $Id: ChannelInterceptorBase.java 1222402 2011-12-22 19:10:35Z markt $
  */
-
 public abstract class ChannelInterceptorBase implements ChannelInterceptor {
 
     private ChannelInterceptor next;

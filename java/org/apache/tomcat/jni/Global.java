@@ -20,9 +20,7 @@ package org.apache.tomcat.jni;
 /** Global
  *
  * @author Mladen Turk
- * @version $Id: Global.java 939309 2010-04-29 13:54:26Z kkolinko $
  */
-
 public class Global {
 
     /**

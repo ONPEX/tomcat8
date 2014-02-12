@@ -28,9 +28,7 @@ package org.apache.catalina.util;
  * method with the appropriate saved offset values.
  *
  * @author Craig R. McClanahan
- * @version $Id: StringParser.java 1370972 2012-08-08 21:17:59Z markt $
  */
-
 public final class StringParser {
 
 

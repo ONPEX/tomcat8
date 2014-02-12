@@ -41,10 +41,6 @@ import org.apache.catalina.tribes.util.StringManager;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 
-/**
- * @author Filip Hanik
- * @version $Id: NioReceiver.java 1498363 2013-07-01 10:57:50Z markt $
- */
 public class NioReceiver extends ReceiverBase implements Runnable {
 
     private static final Log log = LogFactory.getLog(NioReceiver.class);

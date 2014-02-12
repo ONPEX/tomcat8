@@ -20,9 +20,7 @@ package org.apache.tomcat.jni;
 /** SSL Context
  *
  * @author Mladen Turk
- * @version $Id: SSLContext.java 1437083 2013-01-22 18:30:45Z schultz $
  */
-
 public final class SSLContext {
 
 

@@ -34,9 +34,7 @@ import org.ietf.jgss.GSSCredential;
  * is available for use by <code>Realm</code> implementations.
  *
  * @author Craig R. McClanahan
- * @version $Id: GenericPrincipal.java 1361771 2012-07-15 19:40:18Z markt $
  */
-
 public class GenericPrincipal implements TomcatPrincipal {
 
 

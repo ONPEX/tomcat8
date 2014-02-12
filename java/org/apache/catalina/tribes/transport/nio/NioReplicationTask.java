@@ -47,10 +47,6 @@ import org.apache.catalina.tribes.util.Logs;
  * serviceChannel() method stores the key reference in the thread object then
  * calls notify() to wake it up. When the channel has been drained, the worker
  * thread returns itself to its parent pool.
- *
- * @author Filip Hanik
- *
- * @version $Id: NioReplicationTask.java 1370396 2012-08-07 17:50:46Z markt $
  */
 public class NioReplicationTask extends AbstractRxTask {
 

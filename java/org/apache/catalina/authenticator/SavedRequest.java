@@ -39,9 +39,7 @@ import org.apache.tomcat.util.buf.ByteChunk;
  * internal collection classes is performed.
  *
  * @author Craig R. McClanahan
- * @version $Id: SavedRequest.java 1372390 2012-08-13 12:25:57Z markt $
  */
-
 public final class SavedRequest {
 
 

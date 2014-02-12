@@ -28,8 +28,6 @@ import org.apache.jasper.compiler.Localizer;
  * byte streams that only contain 7-bit ASCII characters.
  *
  * @author Andy Clark, IBM
- *
- * @version $Id: ASCIIReader.java 1446966 2013-02-16 22:26:32Z markt $
  */
 public class ASCIIReader extends Reader {
 

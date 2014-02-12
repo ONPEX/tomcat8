@@ -32,10 +32,7 @@ import java.lang.reflect.Proxy;
  *
  * @author Craig R. McClanahan
  * @author Bip Thelin
- * @author Filip Hanik
- * @version $Id: ReplicationStream.java 1366910 2012-07-29 19:26:41Z markt $
  */
-
 public final class ReplicationStream extends ObjectInputStream {
 
 

@@ -90,10 +90,6 @@ rem   TITLE           (Optional) Specify the title of Tomcat window. The default
 rem                   TITLE is Tomcat if it's not specified.
 rem                   Example (all one line)
 rem                   set TITLE=Tomcat.Cluster#1.Server#1 [%DATE% %TIME%]
-rem
-rem
-rem
-rem $Id: catalina.bat 1531673 2013-10-13 12:15:10Z kkolinko $
 rem ---------------------------------------------------------------------------
 
 rem Suppress Terminate batch job on CTRL+C

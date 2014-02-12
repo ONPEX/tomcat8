@@ -31,9 +31,7 @@ import java.io.IOException;
  * server or context restarts.
  *
  * @author Craig R. McClanahan
- * @version $Id: Store.java 1187801 2011-10-22 21:16:40Z markt $
  */
-
 public interface Store {
 
     // ------------------------------------------------------------- Properties

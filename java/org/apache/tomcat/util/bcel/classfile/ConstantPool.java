@@ -31,7 +31,6 @@ import org.apache.tomcat.util.bcel.Constants;
  * programatically should see <a href="../generic/ConstantPoolGen.html">
  * ConstantPoolGen</a>.
 
- * @version $Id: ConstantPool.java 1540404 2013-11-09 21:39:37Z markt $
  * @see     Constant
  * @author <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */

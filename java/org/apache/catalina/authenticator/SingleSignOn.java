@@ -54,9 +54,7 @@ import org.apache.catalina.valves.ValveBase;
  * </ul>
  *
  * @author Craig R. McClanahan
- * @version $Id: SingleSignOn.java 1439780 2013-01-29 08:24:02Z kfujino $
  */
-
 public class SingleSignOn extends ValveBase implements SessionListener {
 
     //------------------------------------------------------ Constructor
@@ -423,7 +421,6 @@ public class SingleSignOn extends ValveBase implements SessionListener {
         // in the cache
 
     }
-
 
     /**
      * Attempts reauthentication to the given <code>Realm</code> using

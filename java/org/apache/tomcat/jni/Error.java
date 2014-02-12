@@ -20,9 +20,7 @@ package org.apache.tomcat.jni;
 /** Error
  *
  * @author Mladen Turk
- * @version $Id: Error.java 1447080 2013-02-17 20:48:51Z markt $
  */
-
 public class Error extends Exception {
 
     private static final long serialVersionUID = 1L;

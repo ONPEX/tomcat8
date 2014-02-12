@@ -46,9 +46,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * use XSLT, that is unnecessarily complex.
  *
  * @author Peter Lin
- * @version $Id: StatusTransformer.java 1453105 2013-03-06 00:40:04Z kkolinko $
  */
-
 public class StatusTransformer {
 
 
@@ -336,7 +334,7 @@ public class StatusTransformer {
                                     (grpName, "bytesSent"), true));
             writer.print("</p>");
 
-            writer.print("<table border=\"0\"><tr><th>Stage</th><th>Time</th><th>B Sent</th><th>B Recv</th><th>Client</th><th>VHost</th><th>Request</th></tr>");
+            writer.print("<table border=\"0\"><tr><th>Stage</th><th>Time</th><th>B Sent</th><th>B Recv</th><th>Client (Forwarded)</th><th>Client (Actual)</th><th>VHost</th><th>Request</th></tr>");
 
             enumeration = requestProcessors.elements();
             while (enumeration.hasMoreElements()) {
@@ -482,6 +480,10 @@ public class StatusTransformer {
                 } else {
                     writer.write("?");
                 }
+                writer.write("</td>");
+                writer.write("<td>");
+                writer.print(filter(mBeanServer.getAttribute
+                                    (pName, "remoteAddrForwarded")));
                 writer.write("</td>");
                 writer.write("<td>");
                 writer.print(filter(mBeanServer.getAttribute

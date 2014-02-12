@@ -17,19 +17,16 @@
 
 package org.apache.catalina.ha;
 
-/**
- * A <b>ClusterDeployer</b> interface allows to plug in and out the
- * different deployment implementations
- *
- * @author Filip Hanik
- * @version $Id: ClusterDeployer.java 1187786 2011-10-22 21:08:24Z markt $
- */
 import java.io.File;
 import java.io.IOException;
 
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.tribes.ChannelListener;
 
+/**
+ * A <b>ClusterDeployer</b> interface allows to plug in and out the
+ * different deployment implementations
+ */
 public interface ClusterDeployer extends ChannelListener {
 
     /**

@@ -59,7 +59,6 @@ import java.util.logging.LogManager;
  * @author Craig R. McClanahan
  * @author Costin Manolache
  * @author Richard A. Sitze
- * @version $Id: LogFactory.java 1225467 2011-12-29 08:07:54Z markt $
  */
 public class LogFactory {
 

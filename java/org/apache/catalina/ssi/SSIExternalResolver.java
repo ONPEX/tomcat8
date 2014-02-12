@@ -25,7 +25,6 @@ import java.util.Date;
  * servlet )
  *
  * @author Dan Sandberg
- * @version $Id: SSIExternalResolver.java 1187798 2011-10-22 21:14:59Z markt $
  */
 public interface SSIExternalResolver {
     /**

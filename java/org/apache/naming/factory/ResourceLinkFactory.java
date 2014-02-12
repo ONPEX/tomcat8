@@ -34,9 +34,7 @@ import org.apache.naming.ResourceLinkRef;
  * <p>Object factory for resource links.</p>
  *
  * @author Remy Maucherat
- * @version $Id: ResourceLinkFactory.java 1187782 2011-10-22 21:03:58Z markt $
  */
-
 public class ResourceLinkFactory
     implements ObjectFactory {
 

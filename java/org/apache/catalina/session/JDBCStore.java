@@ -51,9 +51,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  * saved are still subject to being expired based on inactivity.
  *
  * @author Bip Thelin
- * @version $Id: JDBCStore.java 1514281 2013-08-15 14:06:20Z violetagg $
  */
-
 public class JDBCStore extends StoreBase {
 
     /**

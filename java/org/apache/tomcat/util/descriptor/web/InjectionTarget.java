@@ -18,9 +18,6 @@ package org.apache.tomcat.util.descriptor.web;
 
 import java.io.Serializable;
 
-/**
- * @version $Id: InjectionTarget.java 1500964 2013-07-08 21:24:05Z markt $
- */
 public class InjectionTarget implements Serializable {
 
     private static final long serialVersionUID = 1L;

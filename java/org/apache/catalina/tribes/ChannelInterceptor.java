@@ -25,10 +25,7 @@ import org.apache.catalina.tribes.group.InterceptorPayload;
  * other actions when a message is sent or received.<br>
  * Interceptors are tied together in a linked list.
  * @see org.apache.catalina.tribes.group.ChannelInterceptorBase
- * @author Filip Hanik
- * @version $Id: ChannelInterceptor.java 1187789 2011-10-22 21:09:52Z markt $
  */
-
 public interface ChannelInterceptor extends MembershipListener, Heartbeat {
 
     /**

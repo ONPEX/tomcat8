@@ -45,10 +45,8 @@ import org.apache.tomcat.util.modeler.Registry;
  * management.
  *
  * @author Craig R. McClanahan
- * @version $Id: GlobalResourcesLifecycleListener.java 1361761 2012-07-15 19:12:31Z markt $
  * @since 4.1
  */
-
 public class GlobalResourcesLifecycleListener
     implements LifecycleListener {
     private static final Log log = LogFactory.getLog(GlobalResourcesLifecycleListener.class);

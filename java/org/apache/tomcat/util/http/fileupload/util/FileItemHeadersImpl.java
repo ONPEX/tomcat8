@@ -32,8 +32,6 @@ import org.apache.tomcat.util.http.fileupload.FileItemHeaders;
  * Default implementation of the {@link FileItemHeaders} interface.
  *
  * @since 1.2.1
- *
- * @version $Id: FileItemHeadersImpl.java 1458564 2013-03-19 23:13:15Z markt $
  */
 public class FileItemHeadersImpl implements FileItemHeaders, Serializable {
 

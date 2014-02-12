@@ -38,7 +38,6 @@ import org.apache.tomcat.util.buf.MessageBytes;
  * when processing HTTP requests.
  *
  * @author Craig R. McClanahan
- * @version $Id: StandardContextValve.java 1335692 2012-05-08 18:54:44Z markt $
  */
 final class StandardContextValve extends ValveBase {
 

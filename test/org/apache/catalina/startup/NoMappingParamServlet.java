@@ -29,7 +29,6 @@ import javax.servlet.http.HttpServletResponse;
 /**
  *
  * @author Peter Rossbach
- * @version $Id: NoMappingParamServlet.java 1187806 2011-10-22 21:23:07Z markt $
  */
 @WebServlet(name = "param1", initParams = {
         @WebInitParam(name = "foo", value = "Hello"),

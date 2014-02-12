@@ -44,9 +44,7 @@ import org.apache.tomcat.util.res.StringManager;
  * @author Craig R. McClanahan
  * @author Remy Maucherat
  * @author Glenn L. Nielsen
- * @version $Revision: 1402667 $
  */
-
 public class ExpandWar {
 
     private static final Log log = LogFactory.getLog(ExpandWar.class);

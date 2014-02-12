@@ -64,9 +64,7 @@ import org.apache.tools.ant.taskdefs.condition.Condition;
  * </pre>
  *
  * @author Peter Rossbach
- * @version $Id: JMXAccessorEqualsCondition.java 1187783 2011-10-22 21:07:41Z markt $
  * @since 5.5.10
- *
  */
 public class JMXAccessorEqualsCondition  extends ProjectComponent  implements Condition {
 

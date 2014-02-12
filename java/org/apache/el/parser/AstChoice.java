@@ -25,7 +25,6 @@ import org.apache.el.lang.EvaluationContext;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: AstChoice.java 1503937 2013-07-16 23:01:27Z markt $
  */
 public final class AstChoice extends SimpleNode {
     public AstChoice(int id) {

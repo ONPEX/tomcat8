@@ -26,11 +26,8 @@ import java.io.Serializable;
  * represented in a <code>&lt;security-role-ref&gt;</code> element
  * in the deployment descriptor.</p>
  *
- * @author Mark Thomas
- * @version $Id: SecurityRoleRef.java 1500964 2013-07-08 21:24:05Z markt $
  * @since Tomcat 5.5
  */
-
 public class SecurityRoleRef implements Serializable {
 
     private static final long serialVersionUID = 1L;

@@ -36,7 +36,6 @@ import org.apache.el.util.MessageFactory;
  * A helper class that implements the EL Specification
  *
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: ELSupport.java 1503937 2013-07-16 23:01:27Z markt $
  */
 public class ELSupport {
 

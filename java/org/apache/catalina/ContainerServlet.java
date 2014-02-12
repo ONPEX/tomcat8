@@ -27,9 +27,7 @@ package org.apache.catalina;
  * this servlet is put into service.
  *
  * @author Craig R. McClanahan
- * @version $Id: ContainerServlet.java 1187801 2011-10-22 21:16:40Z markt $
  */
-
 public interface ContainerServlet {
 
 

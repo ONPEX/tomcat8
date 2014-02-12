@@ -49,9 +49,7 @@ import org.apache.tomcat.util.res.StringManager;
 
 /**
  * @author Amy Roh
- * @version $Id: MBeanFactory.java 1513712 2013-08-14 01:54:37Z jboynes $
  */
-
 public class MBeanFactory {
 
     private static final org.apache.juli.logging.Log log =

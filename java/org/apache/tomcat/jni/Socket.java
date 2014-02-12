@@ -23,9 +23,7 @@ import java.nio.ByteBuffer;
 /** Socket
  *
  * @author Mladen Turk
- * @version $Id: Socket.java 939309 2010-04-29 13:54:26Z kkolinko $
  */
-
 public class Socket {
 
     /* Standard socket defines */

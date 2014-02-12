@@ -44,7 +44,6 @@ import javax.naming.spi.NamingManager;
  * Catalina JNDI Context implementation.
  *
  * @author Remy Maucherat
- * @version $Id: NamingContext.java 1382526 2012-09-09 16:07:16Z markt $
  */
 public class NamingContext implements Context {
 

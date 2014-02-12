@@ -45,7 +45,6 @@ import org.apache.tomcat.util.net.SocketWrapper;
  *
  * @author Remy Maucherat
  * @author Costin Manolache
- * @author Filip Hanik
  */
 public class Http11NioProtocol extends AbstractHttp11JsseProtocol<NioChannel> {
 
@@ -124,7 +123,7 @@ public class Http11NioProtocol extends AbstractHttp11JsseProtocol<NioChannel> {
 
 
     public boolean getUseSendfile() {
-        return ((NioEndpoint)endpoint).getUseSendfile();
+        return endpoint.getUseSendfile();
     }
 
     public void setUseSendfile(boolean useSendfile) {

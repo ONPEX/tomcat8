@@ -24,7 +24,6 @@ import org.apache.el.lang.EvaluationContext;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: ArithmeticNode.java 1502957 2013-07-14 11:21:17Z markt $
  */
 public abstract class ArithmeticNode extends SimpleNode {
 

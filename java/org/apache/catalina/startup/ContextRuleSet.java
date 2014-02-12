@@ -28,9 +28,7 @@ import org.apache.tomcat.util.digester.RuleSetBase;
  * Context definition element.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: ContextRuleSet.java 1501082 2013-07-09 04:33:04Z violetagg $
  */
-
 public class ContextRuleSet extends RuleSetBase {
 
 

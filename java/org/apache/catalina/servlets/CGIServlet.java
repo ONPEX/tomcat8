@@ -233,12 +233,8 @@ import org.apache.catalina.util.IOTools;
  *
  * @author Martin T Dengler [root@martindengler.com]
  * @author Amy Roh
- * @version $Id: CGIServlet.java 1402643 2012-10-26 19:58:57Z markt $
  * @since Tomcat 4.0
- *
  */
-
-
 public final class CGIServlet extends HttpServlet {
 
     /* some vars below copied from Craig R. McClanahan's InvokerServlet */
@@ -646,9 +642,7 @@ public final class CGIServlet extends HttpServlet {
      * <p>
      * </p>
      *
-     * @version  $Id: CGIServlet.java 1402643 2012-10-26 19:58:57Z markt $
      * @since    Tomcat 4.0
-     *
      */
     protected class CGIEnvironment {
 
@@ -1378,10 +1372,7 @@ public final class CGIServlet extends HttpServlet {
      * The input and output streams can be set by the <code>setInput</code>
      * and <code>setResponse</code> methods, respectively.
      * </p>
-     *
-     * @version $Id: CGIServlet.java 1402643 2012-10-26 19:58:57Z markt $
      */
-
     protected class CGIRunner {
 
         /** script/command to be executed */

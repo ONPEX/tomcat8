@@ -25,7 +25,6 @@
   <properties>
     <author email="craigmcc@apache.org">Craig McClanahan</author>
     <title>Administrative Apps - Supported Operations</title>
-    <revision>$Id: fs-admin-opers.xml 1529692 2013-10-06 21:21:45Z kpreisser $</revision>
   </properties>
 
 <body>

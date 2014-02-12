@@ -468,7 +468,6 @@ import java.util.Map;
  *  </TR>
  * </TABLE>
  *
- * @version $Id: MIME2Java.java 1370934 2012-08-08 20:14:36Z kkolinko $
  * @author TAMURA Kent &lt;kent@trl.ibm.co.jp&gt;
  */
 public class MIME2Java {

@@ -26,9 +26,6 @@ import org.apache.catalina.tribes.transport.nio.PooledParallelSender;
  * Transmit message to other cluster members
  * Actual senders are created based on the replicationMode
  * type
- *
- * @author Filip Hanik
- * @version $Id: ReplicationTransmitter.java 1370458 2012-08-07 19:24:21Z markt $
  */
 public class ReplicationTransmitter implements ChannelSender {
 

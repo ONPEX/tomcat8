@@ -25,8 +25,6 @@ import org.apache.tomcat.util.http.fileupload.InvalidFileNameException;
 
 /**
  * Utility class for working with streams.
- *
- * @version $Id: Streams.java 1507052 2013-07-25 16:18:43Z markt $
  */
 public final class Streams {
 

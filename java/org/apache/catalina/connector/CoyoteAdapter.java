@@ -59,7 +59,6 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: CoyoteAdapter.java 1545801 2013-11-26 19:56:54Z markt $
  */
 public class CoyoteAdapter implements Adapter {
 
@@ -316,15 +315,12 @@ public class CoyoteAdapter implements Adapter {
                 req.getAttributes().remove(RequestDispatcher.ERROR_EXCEPTION);
                 ReadListener readListener = req.getReadListener();
                 if (readListener != null) {
-                    ClassLoader oldCL =
-                            Thread.currentThread().getContextClassLoader();
-                    ClassLoader newCL =
-                            request.getContext().getLoader().getClassLoader();
+                    ClassLoader oldCL = null;
                     try {
-                        Thread.currentThread().setContextClassLoader(newCL);
+                        oldCL = request.getContext().bind(false, null);
                         readListener.onError(t);
                     } finally {
-                        Thread.currentThread().setContextClassLoader(oldCL);
+                        request.getContext().unbind(false, oldCL);
                     }
                 }
                 if (t != null) {
@@ -339,15 +335,12 @@ public class CoyoteAdapter implements Adapter {
                         RequestDispatcher.ERROR_EXCEPTION);
                 req.getAttributes().remove(RequestDispatcher.ERROR_EXCEPTION);
                 if (res.getWriteListener() != null) {
-                    ClassLoader oldCL =
-                            Thread.currentThread().getContextClassLoader();
-                    ClassLoader newCL =
-                            request.getContext().getLoader().getClassLoader();
+                    ClassLoader oldCL = null;
                     try {
-                        Thread.currentThread().setContextClassLoader(newCL);
+                        oldCL = request.getContext().bind(false, null);
                         res.getWriteListener().onError(t);
                     } finally {
-                        Thread.currentThread().setContextClassLoader(oldCL);
+                        request.getContext().unbind(false, oldCL);
                     }
                 }
                 if (t != null) {
@@ -360,12 +353,9 @@ public class CoyoteAdapter implements Adapter {
                 WriteListener writeListener = res.getWriteListener();
                 ReadListener readListener = req.getReadListener();
                 if (writeListener != null && status == SocketStatus.OPEN_WRITE) {
-                    ClassLoader oldCL =
-                            Thread.currentThread().getContextClassLoader();
-                    ClassLoader newCL =
-                            request.getContext().getLoader().getClassLoader();
+                    ClassLoader oldCL = null;
                     try {
-                        Thread.currentThread().setContextClassLoader(newCL);
+                        oldCL = request.getContext().bind(false, null);
                         res.onWritePossible();
                         if (request.isFinished() && req.sendAllDataReadEvent() &&
                                 readListener != null) {
@@ -376,17 +366,21 @@ public class CoyoteAdapter implements Adapter {
                         writeListener.onError(t);
                         throw t;
                     } finally {
-                        Thread.currentThread().setContextClassLoader(oldCL);
+                        request.getContext().unbind(false, oldCL);
                     }
                     success = true;
                 } else if (readListener != null && status == SocketStatus.OPEN_READ) {
-                    ClassLoader oldCL =
-                            Thread.currentThread().getContextClassLoader();
-                    ClassLoader newCL =
-                            request.getContext().getLoader().getClassLoader();
+                    ClassLoader oldCL = null;
                     try {
-                        Thread.currentThread().setContextClassLoader(newCL);
-                        readListener.onDataAvailable();
+                        oldCL = request.getContext().bind(false, null);
+                        // If data is being read on a non-container thread a
+                        // dispatch with status OPEN_READ will be used to get
+                        // execution back on a container thread for the
+                        // onAllDataRead() event. Therefore, make sure
+                        // onDataAvailable() is not called in this case.
+                        if (!request.isFinished()) {
+                            readListener.onDataAvailable();
+                        }
                         if (request.isFinished() && req.sendAllDataReadEvent()) {
                             readListener.onAllDataRead();
                         }
@@ -395,7 +389,7 @@ public class CoyoteAdapter implements Adapter {
                         readListener.onError(t);
                         throw t;
                     } finally {
-                        Thread.currentThread().setContextClassLoader(oldCL);
+                        request.getContext().unbind(false, oldCL);
                     }
                     success = true;
                 }
@@ -548,17 +542,14 @@ public class CoyoteAdapter implements Adapter {
                 if (readListener != null && request.isFinished()) {
                     // Possible the all data may have been read during service()
                     // method so this needs to be checked here
-                    ClassLoader oldCL =
-                            Thread.currentThread().getContextClassLoader();
-                    ClassLoader newCL =
-                            request.getContext().getLoader().getClassLoader();
+                    ClassLoader oldCL = null;
                     try {
-                        Thread.currentThread().setContextClassLoader(newCL);
+                        oldCL = request.getContext().bind(false, null);
                         if (req.sendAllDataReadEvent()) {
                             req.getReadListener().onAllDataRead();
                         }
                     } finally {
-                        Thread.currentThread().setContextClassLoader(oldCL);
+                        request.getContext().unbind(false, oldCL);
                     }
                 }
             } else if (!comet) {

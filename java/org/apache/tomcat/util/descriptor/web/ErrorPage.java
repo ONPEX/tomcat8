@@ -26,9 +26,7 @@ import org.apache.tomcat.util.buf.UDecoder;
  * deployment descriptor.
  *
  * @author Craig R. McClanahan
- * @version $Id: ErrorPage.java 1500964 2013-07-08 21:24:05Z markt $
  */
-
 public class ErrorPage implements Serializable {
 
     private static final long serialVersionUID = 1L;

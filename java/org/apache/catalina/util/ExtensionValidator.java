@@ -44,8 +44,6 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Greg Murray
  * @author Justyna Horwat
- * @version $Id: ExtensionValidator.java 1538838 2013-11-05 00:08:25Z markt $
- *
  */
 public final class ExtensionValidator {
 

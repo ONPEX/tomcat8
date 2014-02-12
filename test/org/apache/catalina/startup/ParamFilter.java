@@ -32,7 +32,6 @@ import javax.servlet.annotation.WebInitParam;
 /**
  * Test Mock to check Filter Annotations
  * @author Peter Rossbach
- * @version $Id: ParamFilter.java 1187806 2011-10-22 21:23:07Z markt $
  */
 @WebFilter(value = "/param", filterName = "paramFilter", dispatcherTypes = {
         DispatcherType.ERROR, DispatcherType.ASYNC }, initParams = { @WebInitParam(name = "message", value = "Servlet says: ") })

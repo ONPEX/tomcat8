@@ -28,8 +28,6 @@ import org.apache.catalina.tribes.Member;
  * node is failed.
  *
  * @author Peter Rossbach
- * @author Filip Hanik
- * @version $Id: ClusterListener.java 1187786 2011-10-22 21:08:24Z markt $
  */
 public abstract class ClusterListener implements ChannelListener {
 

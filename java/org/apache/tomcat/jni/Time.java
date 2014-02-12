@@ -20,9 +20,7 @@ package org.apache.tomcat.jni;
 /** Time
  *
  * @author Mladen Turk
- * @version $Id: Time.java 939309 2010-04-29 13:54:26Z kkolinko $
  */
-
 public class Time {
 
     /** number of microseconds per second */

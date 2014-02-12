@@ -57,13 +57,9 @@ import org.apache.tomcat.util.res.StringManager;
  * reloading depends upon external calls to the <code>start()</code> and
  * <code>stop()</code> methods of this class at the correct times.
  *
- * @author Filip Hanik
  * @author Craig R. McClanahan
- * @author Jean-Francois Arcand
  * @author Peter Rossbach
- * @version $Id: DeltaManager.java 1551494 2013-12-17 09:28:14Z kfujino $
  */
-
 public class DeltaManager extends ClusterManagerBase{
 
     // ---------------------------------------------------- Security Classes
@@ -646,14 +642,9 @@ public class DeltaManager extends ClusterManagerBase{
      */
     protected void deserializeSessions(byte[] data) throws ClassNotFoundException,IOException {
 
-        // Initialize our internal data structures
-        //sessions.clear(); //should not do this
         // Open an input stream to the specified pathname, if any
-        ClassLoader originalLoader = Thread.currentThread().getContextClassLoader();
-        ObjectInputStream ois = null;
         // Load the previously unloaded active sessions
-        try {
-            ois = getReplicationStream(data);
+        try (ObjectInputStream ois = getReplicationStream(data)) {
             Integer count = (Integer) ois.readObject();
             int n = count.intValue();
             for (int i = 0; i < n; i++) {
@@ -694,19 +685,7 @@ public class DeltaManager extends ClusterManagerBase{
         } catch (IOException e) {
             log.error(sm.getString("deltaManager.loading.ioe", e), e);
             throw e;
-        } finally {
-            // Close the input stream
-            try {
-                if (ois != null) ois.close();
-            } catch (IOException f) {
-                // ignored
-            }
-            ois = null;
-            if (originalLoader != null) {
-                Thread.currentThread().setContextClassLoader(originalLoader);
-            }
         }
-
     }
 
 
@@ -721,12 +700,8 @@ public class DeltaManager extends ClusterManagerBase{
     protected byte[] serializeSessions(Session[] currentSessions) throws IOException {
 
         // Open an output stream to the specified pathname, if any
-        ByteArrayOutputStream fos = null;
-        ObjectOutputStream oos = null;
-
-        try {
-            fos = new ByteArrayOutputStream();
-            oos = new ObjectOutputStream(new BufferedOutputStream(fos));
+        ByteArrayOutputStream fos = new ByteArrayOutputStream();
+        try (ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(fos))) {
             oos.writeObject(Integer.valueOf(currentSessions.length));
             for(int i=0 ; i < currentSessions.length;i++) {
                 ((DeltaSession)currentSessions[i]).writeObjectData(oos);
@@ -736,16 +711,8 @@ public class DeltaManager extends ClusterManagerBase{
         } catch (IOException e) {
             log.error(sm.getString("deltaManager.unloading.ioe", e), e);
             throw e;
-        } finally {
-            if (oos != null) {
-                try {
-                    oos.close();
-                } catch (IOException f) {
-                    // Ignore
-                }
-                oos = null;
-            }
         }
+
         // send object data as byte[]
         return fos.toByteArray();
     }

@@ -23,8 +23,6 @@
 //
 // * Read access to the web application's document root directory
 // * Read, write and delete access to the web application's working directory
-//
-// $Id: catalina.policy 1542952 2013-11-18 09:02:13Z markt $
 // ============================================================================
 
 

@@ -32,7 +32,6 @@ import org.apache.coyote.ActionCode;
  * that utilizes SSL certificates to identify client users.
  *
  * @author Craig R. McClanahan
- * @version $Id: SSLAuthenticator.java 1241162 2012-02-06 20:32:36Z markt $
  */
 public class SSLAuthenticator extends AuthenticatorBase {
 

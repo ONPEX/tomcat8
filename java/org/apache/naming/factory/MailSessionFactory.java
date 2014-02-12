@@ -63,9 +63,7 @@ import javax.naming.spi.ObjectFactory;
  * </pre>
  *
  * @author Craig R. McClanahan
- * @version $Id: MailSessionFactory.java 1187782 2011-10-22 21:03:58Z markt $
  */
-
 public class MailSessionFactory implements ObjectFactory {
 
 

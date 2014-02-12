@@ -24,7 +24,6 @@ import javax.naming.StringRefAddr;
  * Represents a reference address to a resource.
  *
  * @author Remy Maucherat
- * @version $Id: ResourceLinkRef.java 1225625 2011-12-29 19:35:29Z markt $
  */
 public class ResourceLinkRef extends Reference {
 

@@ -66,7 +66,6 @@ import org.apache.tomcat.util.res.StringManager;
  * requests.  Requests of any other type will simply be passed through.
  *
  * @author Craig R. McClanahan
- * @version $Id: AuthenticatorBase.java 1546630 2013-11-29 19:23:13Z markt $
  */
 public abstract class AuthenticatorBase extends ValveBase
         implements Authenticator {

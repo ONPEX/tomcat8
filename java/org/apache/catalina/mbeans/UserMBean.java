@@ -38,9 +38,7 @@ import org.apache.tomcat.util.modeler.Registry;
  * <code>org.apache.catalina.User</code> component.</p>
  *
  * @author Craig R. McClanahan
- * @version $Id: UserMBean.java 1361761 2012-07-15 19:12:31Z markt $
  */
-
 public class UserMBean extends BaseModelMBean {
 
 

@@ -23,7 +23,6 @@ import java.io.IOException;
 /**
  * Abstract super class for Fieldref and Methodref constants.
  *
- * @version $Id: ConstantCP.java 1397950 2012-10-13 21:22:37Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     ConstantFieldref
  * @see     ConstantMethodref

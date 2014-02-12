@@ -44,9 +44,7 @@ import org.apache.catalina.util.CustomObjectInputStream;
  * saved are still subject to being expired based on inactivity.
  *
  * @author Craig R. McClanahan
- * @version $Id: FileStore.java 1514281 2013-08-15 14:06:20Z violetagg $
  */
-
 public final class FileStore extends StoreBase {
 
 

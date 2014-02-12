@@ -20,9 +20,7 @@ package org.apache.tomcat.jni;
 /** Library
  *
  * @author Mladen Turk
- * @version $Id: Library.java 1447080 2013-02-17 20:48:51Z markt $
  */
-
 public final class Library {
 
     /* Default library names */

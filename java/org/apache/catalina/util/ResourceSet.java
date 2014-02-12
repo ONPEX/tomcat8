@@ -33,9 +33,7 @@ import org.apache.tomcat.util.res.StringManager;
  * is not locked.
  *
  * @author Craig R. McClanahan
- * @version $Id: ResourceSet.java 1187792 2011-10-22 21:11:51Z markt $
  */
-
 public final class ResourceSet<T> extends HashSet<T> {
 
     private static final long serialVersionUID = 1L;

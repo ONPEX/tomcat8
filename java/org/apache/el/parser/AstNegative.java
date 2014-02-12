@@ -28,7 +28,6 @@ import org.apache.el.lang.EvaluationContext;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: AstNegative.java 1049572 2010-12-15 14:54:23Z markt $
  */
 public final class AstNegative extends SimpleNode {
     public AstNegative(int id) {

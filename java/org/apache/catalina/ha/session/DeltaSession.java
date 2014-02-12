@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.catalina.ha.session;
 
 import java.io.Externalizable;
@@ -41,7 +40,6 @@ import org.apache.catalina.ha.ClusterMessage;
 import org.apache.catalina.ha.ClusterSession;
 import org.apache.catalina.realm.GenericPrincipal;
 import org.apache.catalina.session.ManagerBase;
-import org.apache.catalina.session.StandardManager;
 import org.apache.catalina.session.StandardSession;
 import org.apache.catalina.tribes.io.ReplicationStream;
 import org.apache.catalina.tribes.tipis.ReplicatedMapEntry;
@@ -51,11 +49,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * Similar to the StandardSession except that this session will keep
  * track of deltas during a request.
- *
- * @author Filip Hanik
- * @version $Id: DeltaSession.java 1520349 2013-09-05 15:42:48Z markt $
  */
-
 public class DeltaSession extends StandardSession implements Externalizable,ClusterSession,ReplicatedMapEntry {
 
     public static final org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(DeltaSession.class);
@@ -147,15 +141,12 @@ public class DeltaSession extends StandardSession implements Externalizable,Clus
     }
 
     public ClassLoader[] getClassLoaders() {
-        if ( manager instanceof BackupManager ) return ((BackupManager)manager).getClassLoaders();
-        else if ( manager instanceof ClusterManagerBase ) return ((ClusterManagerBase)manager).getClassLoaders();
-        else if ( manager instanceof StandardManager ) {
-            StandardManager sm = (StandardManager)manager;
-            return ClusterManagerBase.getClassLoaders(sm.getContext());
-        } else if ( manager instanceof ManagerBase ) {
+        if (manager instanceof ClusterManagerBase) {
+            return ((ClusterManagerBase)manager).getClassLoaders();
+        } else if (manager instanceof ManagerBase) {
             ManagerBase mb = (ManagerBase)manager;
             return ClusterManagerBase.getClassLoaders(mb.getContext());
-        }//end if
+        }
         return null;
     }
 

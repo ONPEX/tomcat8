@@ -33,9 +33,7 @@ import org.apache.naming.ResourceRef;
  * Object factory for Resources.
  *
  * @author Remy Maucherat
- * @version $Id: ResourceFactory.java 1187782 2011-10-22 21:03:58Z markt $
  */
-
 public class ResourceFactory
     implements ObjectFactory {
 

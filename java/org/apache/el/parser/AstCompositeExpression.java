@@ -26,7 +26,6 @@ import org.apache.el.lang.EvaluationContext;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: AstCompositeExpression.java 1024224 2010-10-19 13:03:01Z markt $
  */
 public final class AstCompositeExpression extends SimpleNode {
 

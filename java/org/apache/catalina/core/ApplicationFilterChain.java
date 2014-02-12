@@ -51,9 +51,7 @@ import org.apache.tomcat.util.res.StringManager;
  * method itself.
  *
  * @author Craig R. McClanahan
- * @version $Id: ApplicationFilterChain.java 1360933 2012-07-12 20:51:27Z markt $
  */
-
 final class ApplicationFilterChain implements FilterChain, CometFilterChain {
 
     // Used to enforce requirements of SRV.8.2 / SRV.14.2.5.1

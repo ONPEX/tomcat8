@@ -23,8 +23,6 @@ import org.apache.catalina.tribes.util.Arrays;
  * package.
  *
  * @author Peter Rossbach
- * @version $Id: Constants.java 1187789 2011-10-22 21:09:52Z markt $
- * @author Filip Hanik
  */
 public class Constants {
 

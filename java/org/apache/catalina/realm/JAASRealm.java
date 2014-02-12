@@ -120,13 +120,11 @@ org.foobar.auth.DatabaseLoginModule REQUIRED
  *     the <code>&lt;Realm&gt;</code> element in <code>server.xml</code> contains a
  *     <code>digest</code> attribute; <code>JAASCallbackHandler</code> will digest the password
  *     prior to passing it back to the <code>LoginModule</code></li>
-* </ul>
-*
+ * </ul>
+ *
 * @author Craig R. McClanahan
 * @author Yoav Shapira
- * @version $Id: JAASRealm.java 1511907 2013-08-08 18:07:43Z markt $
  */
-
 public class JAASRealm extends RealmBase {
 
     private static final Log log = LogFactory.getLog(JAASRealm.class);

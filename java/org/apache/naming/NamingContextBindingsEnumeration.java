@@ -30,9 +30,7 @@ import javax.naming.NamingException;
  * Naming enumeration implementation.
  *
  * @author Remy Maucherat
- * @version $Id: NamingContextBindingsEnumeration.java 1225625 2011-12-29 19:35:29Z markt $
  */
-
 public class NamingContextBindingsEnumeration
     implements NamingEnumeration<Binding> {
 

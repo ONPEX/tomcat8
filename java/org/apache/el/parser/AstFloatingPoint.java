@@ -27,7 +27,6 @@ import org.apache.el.lang.EvaluationContext;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: AstFloatingPoint.java 1003861 2010-10-02 18:53:30Z markt $
  */
 public final class AstFloatingPoint extends SimpleNode {
     public AstFloatingPoint(int id) {

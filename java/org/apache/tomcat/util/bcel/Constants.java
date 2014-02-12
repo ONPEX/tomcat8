@@ -20,7 +20,6 @@ package org.apache.tomcat.util.bcel;
 /**
  * Constants for the project, mostly defined in the JVM specification.
  *
- * @version $Id: Constants.java 1547760 2013-12-04 10:50:59Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */
 public interface Constants {

@@ -36,9 +36,7 @@ import org.apache.catalina.connector.Response;
  * user - appears as a single request.</p>
  *
  * @author Remy Maucherat
- * @version $Id: SemaphoreValve.java 1187756 2011-10-22 19:25:55Z markt $
  */
-
 public class SemaphoreValve extends ValveBase {
 
     //------------------------------------------------------ Constructor

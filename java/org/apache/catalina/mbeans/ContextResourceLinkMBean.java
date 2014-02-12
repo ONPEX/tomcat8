@@ -34,9 +34,7 @@ import org.apache.tomcat.util.modeler.BaseModelMBean;
  * <code>org.apache.tomcat.util.descriptor.web.ContextResourceLink</code> component.</p>
  *
  * @author Amy Roh
- * @version $Id: ContextResourceLinkMBean.java 1501082 2013-07-09 04:33:04Z violetagg $
  */
-
 public class ContextResourceLinkMBean extends BaseModelMBean {
 
 

@@ -27,7 +27,6 @@ import java.util.Iterator;
  * deployment descriptor.
  *
  * @author Fabien Carrion
- * @version $Id: ContextService.java 1500964 2013-07-08 21:24:05Z markt $
  */
 public class ContextService extends ResourceBase {
 

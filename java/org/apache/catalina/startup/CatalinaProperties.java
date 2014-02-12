@@ -28,7 +28,6 @@ import java.util.Properties;
  * Utility class to read the bootstrap Catalina configuration.
  *
  * @author Remy Maucherat
- * @version $Id: CatalinaProperties.java 1364151 2012-07-21 19:00:28Z markt $
  */
 public class CatalinaProperties {
 

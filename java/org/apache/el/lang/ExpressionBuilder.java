@@ -46,7 +46,6 @@ import org.apache.el.util.MessageFactory;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: ExpressionBuilder.java 1504437 2013-07-18 11:40:26Z markt $
  */
 public final class ExpressionBuilder implements NodeVisitor {
 

@@ -87,10 +87,8 @@ import org.apache.tools.ant.BuildException;
  * These tasks require Ant 1.6 or later interface.
  *
  * @author Peter Rossbach
- * @version $Id: JMXAccessorInvokeTask.java 1360839 2012-07-12 18:10:32Z markt $
  * @since 5.5.10
  */
-
 public class JMXAccessorInvokeTask extends JMXAccessorTask {
 
 

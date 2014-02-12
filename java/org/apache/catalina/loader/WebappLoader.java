@@ -59,7 +59,6 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: WebappLoader.java 1551238 2013-12-16 15:46:02Z markt $
  */
 public class WebappLoader extends LifecycleMBeanBase
     implements Loader, PropertyChangeListener {

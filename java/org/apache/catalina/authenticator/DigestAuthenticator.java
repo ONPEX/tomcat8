@@ -44,7 +44,6 @@ import org.apache.tomcat.util.http.parser.HttpParser;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: DigestAuthenticator.java 1508214 2013-07-29 22:17:59Z markt $
  */
 public class DigestAuthenticator extends AuthenticatorBase {
 

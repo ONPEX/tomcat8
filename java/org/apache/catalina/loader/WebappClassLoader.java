@@ -120,7 +120,6 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
- * @version $Id: WebappClassLoader.java 1543223 2013-11-18 23:09:47Z markt $
  */
 public class WebappClassLoader extends URLClassLoader
         implements Lifecycle, InstrumentableClassLoader {
@@ -216,14 +215,26 @@ public class WebappClassLoader extends URLClassLoader
     public WebappClassLoader() {
 
         super(new URL[0]);
-        this.parent = getParent();
-        system = getSystemClassLoader();
-        securityManager = System.getSecurityManager();
 
+        ClassLoader p = getParent();
+        if (p == null) {
+            p = getSystemClassLoader();
+        }
+        this.parent = p;
+
+        ClassLoader j = String.class.getClassLoader();
+        if (j == null) {
+            j = getSystemClassLoader();
+            while (j.getParent() != null) {
+                j = j.getParent();
+            }
+        }
+        this.j2seClassLoader = j;
+
+        securityManager = System.getSecurityManager();
         if (securityManager != null) {
             refreshPolicy();
         }
-
     }
 
 
@@ -240,11 +251,22 @@ public class WebappClassLoader extends URLClassLoader
 
         super(new URL[0], parent);
 
-        this.parent = getParent();
+        ClassLoader p = getParent();
+        if (p == null) {
+            p = getSystemClassLoader();
+        }
+        this.parent = p;
 
-        system = getSystemClassLoader();
+        ClassLoader j = String.class.getClassLoader();
+        if (j == null) {
+            j = getSystemClassLoader();
+            while (j.getParent() != null) {
+                j = j.getParent();
+            }
+        }
+        this.j2seClassLoader = j;
+
         securityManager = System.getSecurityManager();
-
         if (securityManager != null) {
             refreshPolicy();
         }
@@ -310,13 +332,16 @@ public class WebappClassLoader extends URLClassLoader
     /**
      * The parent class loader.
      */
-    protected ClassLoader parent = null;
+    protected final ClassLoader parent;
 
 
     /**
-     * The system class loader.
+     * The bootstrap class loader used to load the J2SE classes. In some
+     * implementations this class loader is always <code>null</null> and in
+     * those cases {@link ClassLoader#getParent()} will be called recursively on
+     * the system class loader and the last non-null result used.
      */
-    protected final ClassLoader system;
+    protected final ClassLoader j2seClassLoader;
 
 
     /**
@@ -510,110 +535,102 @@ public class WebappClassLoader extends URLClassLoader
     }
 
 
-     /**
-      * Utility method for use in subclasses.
-      * Must be called before Lifecycle methods to have any effect.
-      */
-     protected void setParentClassLoader(ClassLoader pcl) {
-         parent = pcl;
-     }
-
-     /**
-      * Return the clearReferencesStatic flag for this Context.
-      */
-     public boolean getClearReferencesStatic() {
-         return (this.clearReferencesStatic);
-     }
+    /**
+     * Return the clearReferencesStatic flag for this Context.
+     */
+    public boolean getClearReferencesStatic() {
+        return (this.clearReferencesStatic);
+    }
 
 
-     /**
-      * Set the clearReferencesStatic feature for this Context.
-      *
-      * @param clearReferencesStatic The new flag value
-      */
-     public void setClearReferencesStatic(boolean clearReferencesStatic) {
-         this.clearReferencesStatic = clearReferencesStatic;
-     }
+    /**
+     * Set the clearReferencesStatic feature for this Context.
+     *
+     * @param clearReferencesStatic The new flag value
+     */
+    public void setClearReferencesStatic(boolean clearReferencesStatic) {
+        this.clearReferencesStatic = clearReferencesStatic;
+    }
 
 
-     /**
-      * Return the clearReferencesStopThreads flag for this Context.
-      */
-     public boolean getClearReferencesStopThreads() {
-         return (this.clearReferencesStopThreads);
-     }
+    /**
+     * Return the clearReferencesStopThreads flag for this Context.
+     */
+    public boolean getClearReferencesStopThreads() {
+        return (this.clearReferencesStopThreads);
+    }
 
 
-     /**
-      * Set the clearReferencesStopThreads feature for this Context.
-      *
-      * @param clearReferencesStopThreads The new flag value
-      */
-     public void setClearReferencesStopThreads(
-             boolean clearReferencesStopThreads) {
-         this.clearReferencesStopThreads = clearReferencesStopThreads;
-     }
+    /**
+     * Set the clearReferencesStopThreads feature for this Context.
+     *
+     * @param clearReferencesStopThreads The new flag value
+     */
+    public void setClearReferencesStopThreads(
+            boolean clearReferencesStopThreads) {
+        this.clearReferencesStopThreads = clearReferencesStopThreads;
+    }
 
 
-     /**
-      * Return the clearReferencesStopTimerThreads flag for this Context.
-      */
-     public boolean getClearReferencesStopTimerThreads() {
-         return (this.clearReferencesStopTimerThreads);
-     }
+    /**
+     * Return the clearReferencesStopTimerThreads flag for this Context.
+     */
+    public boolean getClearReferencesStopTimerThreads() {
+        return (this.clearReferencesStopTimerThreads);
+    }
 
 
-     /**
-      * Set the clearReferencesStopTimerThreads feature for this Context.
-      *
-      * @param clearReferencesStopTimerThreads The new flag value
-      */
-     public void setClearReferencesStopTimerThreads(
-             boolean clearReferencesStopTimerThreads) {
-         this.clearReferencesStopTimerThreads = clearReferencesStopTimerThreads;
-     }
+    /**
+     * Set the clearReferencesStopTimerThreads feature for this Context.
+     *
+     * @param clearReferencesStopTimerThreads The new flag value
+     */
+    public void setClearReferencesStopTimerThreads(
+            boolean clearReferencesStopTimerThreads) {
+        this.clearReferencesStopTimerThreads = clearReferencesStopTimerThreads;
+    }
 
 
-     /**
-      * Return the clearReferencesLogFactoryRelease flag for this Context.
-      */
-     public boolean getClearReferencesLogFactoryRelease() {
-         return (this.clearReferencesLogFactoryRelease);
-     }
+    /**
+     * Return the clearReferencesLogFactoryRelease flag for this Context.
+     */
+    public boolean getClearReferencesLogFactoryRelease() {
+        return (this.clearReferencesLogFactoryRelease);
+    }
 
 
-     /**
-      * Set the clearReferencesLogFactoryRelease feature for this Context.
-      *
-      * @param clearReferencesLogFactoryRelease The new flag value
-      */
-     public void setClearReferencesLogFactoryRelease(
-             boolean clearReferencesLogFactoryRelease) {
-         this.clearReferencesLogFactoryRelease =
-             clearReferencesLogFactoryRelease;
-     }
+    /**
+     * Set the clearReferencesLogFactoryRelease feature for this Context.
+     *
+     * @param clearReferencesLogFactoryRelease The new flag value
+     */
+    public void setClearReferencesLogFactoryRelease(
+            boolean clearReferencesLogFactoryRelease) {
+        this.clearReferencesLogFactoryRelease =
+            clearReferencesLogFactoryRelease;
+    }
 
 
-     /**
-      * Return the clearReferencesHttpClientKeepAliveThread flag for this
-      * Context.
-      */
-     public boolean getClearReferencesHttpClientKeepAliveThread() {
-         return (this.clearReferencesHttpClientKeepAliveThread);
-     }
+    /**
+     * Return the clearReferencesHttpClientKeepAliveThread flag for this
+     * Context.
+     */
+    public boolean getClearReferencesHttpClientKeepAliveThread() {
+        return (this.clearReferencesHttpClientKeepAliveThread);
+    }
 
 
-     /**
-      * Set the clearReferencesHttpClientKeepAliveThread feature for this
-      * Context.
-      *
-      * @param clearReferencesHttpClientKeepAliveThread The new flag value
-      */
-     public void setClearReferencesHttpClientKeepAliveThread(
-             boolean clearReferencesHttpClientKeepAliveThread) {
-         this.clearReferencesHttpClientKeepAliveThread =
-             clearReferencesHttpClientKeepAliveThread;
-     }
+    /**
+     * Set the clearReferencesHttpClientKeepAliveThread feature for this
+     * Context.
+     *
+     * @param clearReferencesHttpClientKeepAliveThread The new flag value
+     */
+    public void setClearReferencesHttpClientKeepAliveThread(
+            boolean clearReferencesHttpClientKeepAliveThread) {
+        this.clearReferencesHttpClientKeepAliveThread =
+            clearReferencesHttpClientKeepAliveThread;
+    }
 
 
     // ------------------------------------------------------- Reloader Methods
@@ -686,7 +703,7 @@ public class WebappClassLoader extends URLClassLoader
     @Override
     public WebappClassLoader copyWithoutTransformers() {
 
-        WebappClassLoader result = new WebappClassLoader(this.parent);
+        WebappClassLoader result = new WebappClassLoader(getParent());
 
         result.resources = this.resources;
         result.delegate = this.delegate;
@@ -735,21 +752,15 @@ public class WebappClassLoader extends URLClassLoader
 
         // Check if JARs have been added or removed
         WebResource[] jars = resources.listResources("/WEB-INF/lib");
-        if (jars.length > jarModificationTimes.size()) {
-            log.info(sm.getString("webappClassLoader.jarsAdded",
-                    resources.getContext().getName()));
-            return true;
-        } else if (jars.length < jarModificationTimes.size()){
-            log.info(sm.getString("webappClassLoader.jarsRemoved",
-                    resources.getContext().getName()));
-            return true;
-        }
+        // Filter out non-JAR resources
 
+        int jarCount = 0;
         for (WebResource jar : jars) {
             if (jar.getName().endsWith(".jar") && jar.isFile() && jar.canRead()) {
+                jarCount++;
                 Long recordedLastModified = jarModificationTimes.get(jar.getName());
                 if (recordedLastModified == null) {
-                    // Jars have been added and removed
+                    // Jar has been added
                     log.info(sm.getString("webappClassLoader.jarsAdded",
                             resources.getContext().getName()));
                     return true;
@@ -760,10 +771,15 @@ public class WebappClassLoader extends URLClassLoader
                             resources.getContext().getName()));
                     return true;
                 }
-                jarModificationTimes.put(
-                        jar.getName(), Long.valueOf(jar.getLastModified()));
             }
         }
+
+        if (jarCount < jarModificationTimes.size()){
+            log.info(sm.getString("webappClassLoader.jarsRemoved",
+                    resources.getContext().getName()));
+            return true;
+        }
+
 
         // No classes have been modified
         return false;
@@ -996,10 +1012,7 @@ public class WebappClassLoader extends URLClassLoader
         if (delegate) {
             if (log.isDebugEnabled())
                 log.debug("  Delegating to parent classloader " + parent);
-            ClassLoader loader = parent;
-            if (loader == null)
-                loader = system;
-            url = loader.getResource(name);
+            url = parent.getResource(name);
             if (url != null) {
                 if (log.isDebugEnabled())
                     log.debug("  --> Returning '" + url.toString() + "'");
@@ -1017,10 +1030,7 @@ public class WebappClassLoader extends URLClassLoader
 
         // (3) Delegate to parent unconditionally if not already attempted
         if( !delegate ) {
-            ClassLoader loader = parent;
-            if (loader == null)
-                loader = system;
-            url = loader.getResource(name);
+            url = parent.getResource(name);
             if (url != null) {
                 if (log.isDebugEnabled())
                     log.debug("  --> Returning '" + url.toString() + "'");
@@ -1064,10 +1074,7 @@ public class WebappClassLoader extends URLClassLoader
         if (delegate) {
             if (log.isDebugEnabled())
                 log.debug("  Delegating to parent classloader " + parent);
-            ClassLoader loader = parent;
-            if (loader == null)
-                loader = system;
-            stream = loader.getResourceAsStream(name);
+            stream = parent.getResourceAsStream(name);
             if (stream != null) {
                 // FIXME - cache???
                 if (log.isDebugEnabled())
@@ -1093,10 +1100,7 @@ public class WebappClassLoader extends URLClassLoader
         if (!delegate) {
             if (log.isDebugEnabled())
                 log.debug("  Delegating to parent classloader unconditionally " + parent);
-            ClassLoader loader = parent;
-            if (loader == null)
-                loader = system;
-            stream = loader.getResourceAsStream(name);
+            stream = parent.getResourceAsStream(name);
             if (stream != null) {
                 // FIXME - cache???
                 if (log.isDebugEnabled())
@@ -1195,9 +1199,9 @@ public class WebappClassLoader extends URLClassLoader
         // (0.2) Try loading the class with the system class loader, to prevent
         //       the webapp from overriding J2SE classes
         String resourceName = binaryNameToPath(name, false);
-        if (system.getResource(resourceName) != null) {
+        if (j2seClassLoader.getResource(resourceName) != null) {
             try {
-                clazz = system.loadClass(name);
+                clazz = j2seClassLoader.loadClass(name);
                 if (clazz != null) {
                     if (resolve)
                         resolveClass(clazz);
@@ -1229,11 +1233,8 @@ public class WebappClassLoader extends URLClassLoader
         if (delegateLoad) {
             if (log.isDebugEnabled())
                 log.debug("  Delegating to parent classloader1 " + parent);
-            ClassLoader loader = parent;
-            if (loader == null)
-                loader = system;
             try {
-                clazz = Class.forName(name, false, loader);
+                clazz = Class.forName(name, false, parent);
                 if (clazz != null) {
                     if (log.isDebugEnabled())
                         log.debug("  Loading class from parent");
@@ -1266,11 +1267,8 @@ public class WebappClassLoader extends URLClassLoader
         if (!delegateLoad) {
             if (log.isDebugEnabled())
                 log.debug("  Delegating to parent classloader at end: " + parent);
-            ClassLoader loader = parent;
-            if (loader == null)
-                loader = system;
             try {
-                clazz = Class.forName(name, false, loader);
+                clazz = Class.forName(name, false, parent);
                 if (clazz != null) {
                     if (log.isDebugEnabled())
                         log.debug("  Loading class from parent");
@@ -1452,7 +1450,6 @@ public class WebappClassLoader extends URLClassLoader
         resourceEntries.clear();
         jarModificationTimes.clear();
         resources = null;
-        parent = null;
 
         permissionList.clear();
         loaderPC.clear();
@@ -2293,14 +2290,14 @@ public class WebappClassLoader extends URLClassLoader
                     "webappClassLoader.clearReferencesResourceBundlesFail",
                     getContextName()), e);
         } catch (NoSuchFieldException e) {
-            if (System.getProperty("java.vendor").startsWith("Sun")) {
+            if (Globals.IS_ORACLE_JVM) {
                 log.error(sm.getString(
-                "webappClassLoader.clearReferencesResourceBundlesFail",
-                getContextName()), e);
+                        "webappClassLoader.clearReferencesResourceBundlesFail",
+                        getContextName()), e);
             } else {
                 log.debug(sm.getString(
-                "webappClassLoader.clearReferencesResourceBundlesFail",
-                getContextName()), e);
+                        "webappClassLoader.clearReferencesResourceBundlesFail",
+                        getContextName()), e);
             }
         } catch (IllegalArgumentException e) {
             log.error(sm.getString(

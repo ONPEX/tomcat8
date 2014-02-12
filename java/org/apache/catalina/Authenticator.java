@@ -29,7 +29,6 @@ import org.apache.catalina.connector.Request;
  * provides some sort of authentication service.
  *
  * @author Craig R. McClanahan
- * @version $Id: Authenticator.java 1546630 2013-11-29 19:23:13Z markt $
  */
 public interface Authenticator {
 

@@ -24,10 +24,8 @@ package org.apache.catalina.users;
  *
  *
  * @author Craig R. McClanahan
- * @version $Id: Constants.java 1187799 2011-10-22 21:15:28Z markt $
  * @since 4.1
  */
-
 public final class Constants {
 
     public static final String Package = "org.apache.catalina.users";

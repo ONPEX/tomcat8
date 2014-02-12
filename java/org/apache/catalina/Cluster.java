@@ -28,10 +28,7 @@ package org.apache.catalina;
  *
  * @author Bip Thelin
  * @author Remy Maucherat
- * @author Filip Hanik
- * @version $Id: Cluster.java 1237984 2012-01-30 20:40:37Z markt $
  */
-
 public interface Cluster {
 
     // ------------------------------------------------------------- Properties

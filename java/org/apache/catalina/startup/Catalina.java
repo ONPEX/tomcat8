@@ -64,7 +64,6 @@ import org.xml.sax.SAXParseException;
  *
  * @author Craig R. McClanahan
  * @author Remy Maucherat
- * @version $Id: Catalina.java 1533117 2013-10-17 15:26:13Z markt $
  */
 public class Catalina {
 
@@ -763,8 +762,7 @@ public class Catalina {
 
     protected void initDirs() {
         String temp = System.getProperty("java.io.tmpdir");
-        if (temp == null || (!(new File(temp)).exists())
-                || (!(new File(temp)).isDirectory())) {
+        if (temp == null || (!(new File(temp)).isDirectory())) {
             log.error(sm.getString("embedded.notmp", temp));
         }
     }

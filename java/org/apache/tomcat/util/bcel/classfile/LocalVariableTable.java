@@ -24,7 +24,6 @@ import java.io.IOException;
  * This class represents colection of local variables in a
  * method. This attribute is contained in the <em>Code</em> attribute.
  *
- * @version $Id: LocalVariableTable.java 1398107 2012-10-14 17:59:38Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Code
  */

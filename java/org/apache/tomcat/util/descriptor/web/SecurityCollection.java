@@ -33,9 +33,7 @@ import org.apache.tomcat.util.buf.UDecoder;
  * this class is synchronized.
  *
  * @author Craig R. McClanahan
- * @version $Id: SecurityCollection.java 1500964 2013-07-08 21:24:05Z markt $
  */
-
 public class SecurityCollection implements Serializable {
 
     private static final long serialVersionUID = 1L;

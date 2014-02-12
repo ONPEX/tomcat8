@@ -14,11 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.catalina;
+package org.apache.catalina.webresources;
 
-import java.io.Closeable;
+public class TestFileResourceSetReadOnly extends AbstractTestFileResourceSet {
 
-public interface WebResourceTraceWrapper extends Closeable {
-    Exception getCreatedBy();
-    String getName();
+    public TestFileResourceSetReadOnly() {
+        super(false);
+    }
 }

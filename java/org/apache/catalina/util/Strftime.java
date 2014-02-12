@@ -40,7 +40,6 @@ import java.util.TimeZone;
  *
  * @author Bip Thelin
  * @author Dan Sandberg
- * @version $Id: Strftime.java 1370972 2012-08-08 21:17:59Z markt $
  */
 public class Strftime {
     protected static final Properties translate;

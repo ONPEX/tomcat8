@@ -53,8 +53,6 @@ import org.apache.juli.logging.LogFactory;
  * message being sent and received with membership announcements.
  * The channel has an chain of interceptors that can modify the message or perform other logic.<br>
  * It manages a complete group, both membership and replication.
- * @author Filip Hanik
- * @version $Id: GroupChannel.java 1513829 2013-08-14 12:16:32Z markt $
  */
 public class GroupChannel extends ChannelInterceptorBase implements ManagedChannel {
     private static final Log log = LogFactory.getLog(GroupChannel.class);

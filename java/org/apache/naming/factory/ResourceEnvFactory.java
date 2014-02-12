@@ -33,9 +33,7 @@ import org.apache.naming.ResourceEnvRef;
  * Object factory for Resources env.
  *
  * @author Remy Maucherat
- * @version $Id: ResourceEnvFactory.java 1187782 2011-10-22 21:03:58Z markt $
  */
-
 public class ResourceEnvFactory
     implements ObjectFactory {
 

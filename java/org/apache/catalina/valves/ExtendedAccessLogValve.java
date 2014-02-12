@@ -16,7 +16,6 @@
  */
 package org.apache.catalina.valves;
 
-
 import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.io.StringReader;
@@ -40,8 +39,6 @@ import org.apache.catalina.util.ServerInfo;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
-
-
 
 /**
  * An implementation of the W3c Extended Log File Format. See
@@ -125,13 +122,8 @@ import org.apache.tomcat.util.ExceptionUtils;
  * control characters.
  * </p>
  *
- *
- * @author Tim Funk
  * @author Peter Rossbach
- *
- * @version $Id: ExtendedAccessLogValve.java 1393372 2012-10-03 09:33:25Z markt $
  */
-
 public class ExtendedAccessLogValve extends AccessLogValve {
 
     private static final Log log = LogFactory.getLog(ExtendedAccessLogValve.class);

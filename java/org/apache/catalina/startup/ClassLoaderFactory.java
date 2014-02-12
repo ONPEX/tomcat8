@@ -46,7 +46,6 @@ import org.apache.juli.logging.LogFactory;
  * </ul>
  *
  * @author Craig R. McClanahan
- * @version $Id: ClassLoaderFactory.java 1364147 2012-07-21 18:52:54Z markt $
  */
 public final class ClassLoaderFactory {
 

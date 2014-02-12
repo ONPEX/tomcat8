@@ -25,7 +25,6 @@
   <properties>
     <author email="craigmcc@apache.org">Craig McClanahan</author>
     <title>Administrative Apps - Administered Objects</title>
-    <revision>$Id: fs-admin-objects.xml 1529692 2013-10-06 21:21:45Z kpreisser $</revision>
   </properties>
 
 <body>

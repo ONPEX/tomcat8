@@ -25,7 +25,6 @@ import java.util.Iterator;
  *
  * @author Dan Sandberg
  * @author David Becker
- * @version $Id: SSIPrintenv.java 1187798 2011-10-22 21:14:59Z markt $
  */
 public class SSIPrintenv implements SSICommand {
     /**

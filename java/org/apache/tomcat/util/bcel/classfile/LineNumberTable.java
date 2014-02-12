@@ -25,7 +25,6 @@ import java.io.IOException;
  * purposes. This attribute is used by the <em>Code</em> attribute. It
  * contains pairs of PCs and line numbers.
  *
- * @version $Id: LineNumberTable.java 1398107 2012-10-14 17:59:38Z markt $
  * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  * @see     Code
  */

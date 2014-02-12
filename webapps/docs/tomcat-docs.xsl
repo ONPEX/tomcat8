@@ -17,8 +17,6 @@
 -->
 <!-- Content Stylesheet for "tomcat-docs" Documentation -->
 
-<!-- $Id: tomcat-docs.xsl 1546661 2013-11-29 23:26:09Z kpreisser $ -->
-
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   version="3.0">
 

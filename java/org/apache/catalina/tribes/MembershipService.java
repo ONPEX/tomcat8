@@ -22,11 +22,7 @@ package org.apache.catalina.tribes;
  * MembershipService Interface<br>
  * The <code>MembershipService</code> interface is the membership component
  * at the bottom layer, the IO layer (for layers see the javadoc for the {@link Channel} interface).<br>
- * @author Filip Hanik
- * @version $Id: MembershipService.java 1401103 2012-10-22 22:03:00Z markt $
  */
-
-
 public interface MembershipService {
 
     public static final int MBR_RX = Channel.MBR_RX_SEQ;

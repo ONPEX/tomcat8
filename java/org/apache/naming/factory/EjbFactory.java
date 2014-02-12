@@ -32,7 +32,6 @@ import org.apache.naming.EjbRef;
  * Object factory for EJBs.
  *
  * @author Remy Maucherat
- * @version $Id: EjbFactory.java 1225468 2011-12-29 08:08:33Z markt $
  */
 public class EjbFactory implements ObjectFactory {
 

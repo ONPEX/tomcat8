@@ -23,9 +23,7 @@ package org.apache.catalina.ha.tcp;
  * package.
  *
  * @author Peter Rossbach
- * @version $Id: Constants.java 1187786 2011-10-22 21:08:24Z markt $
  */
-
 public class Constants {
 
     public static final String Package = "org.apache.catalina.ha.tcp";

@@ -32,7 +32,6 @@ import org.apache.el.util.MessageFactory;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Id: SimpleNode.java 1225464 2011-12-29 08:06:24Z markt $
  */
 public abstract class SimpleNode extends ELSupport implements Node {
     protected Node parent;

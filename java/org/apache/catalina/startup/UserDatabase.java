@@ -27,9 +27,7 @@ import java.util.Enumeration;
  * current server platform.
  *
  * @author Craig R. McClanahan
- * @version $Id: UserDatabase.java 1187791 2011-10-22 21:11:34Z markt $
  */
-
 public interface UserDatabase {
 
 

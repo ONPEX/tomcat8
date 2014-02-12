@@ -20,9 +20,7 @@ package org.apache.tomcat.jni;
 /** Mmap
  *
  * @author Mladen Turk
- * @version $Id: Mmap.java 939309 2010-04-29 13:54:26Z kkolinko $
  */
-
 public class Mmap {
     /** MMap opened for reading */
     public static final int APR_MMAP_READ  = 1;

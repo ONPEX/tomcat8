@@ -43,8 +43,6 @@ import org.apache.tomcat.util.http.fileupload.FileUploadException;
  * <p>How the data for individual parts is stored is determined by the factory
  * used to create them; a given part may be in memory, on disk, or somewhere
  * else.</p>
- *
- * @version $Id: ServletFileUpload.java 1456916 2013-03-15 12:08:38Z markt $
  */
 public class ServletFileUpload extends FileUpload {
 

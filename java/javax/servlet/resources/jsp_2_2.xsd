@@ -9,14 +9,6 @@
   <xsd:annotation>
     <xsd:documentation>
 
-      $Id: jsp_2_2.xsd 1500632 2013-07-08 09:33:59Z markt $
-
-    </xsd:documentation>
-  </xsd:annotation>
-
-  <xsd:annotation>
-    <xsd:documentation>
-
       DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
       Copyright 2003-2009 Sun Microsystems, Inc. All rights reserved.

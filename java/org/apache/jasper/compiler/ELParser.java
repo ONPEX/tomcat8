@@ -38,6 +38,7 @@ public class ELParser {
 
     private Token curToken;  // current token
     private Token prevToken; // previous token
+    private String whiteSpace = "";
 
     private final ELNode.Nodes expr;
 
@@ -95,29 +96,36 @@ public class ELParser {
      *
      * @return An ELNode.Nodes representing the EL expression
      *
-     * TODO: Can this be refactored to use the standard EL implementation?
+     * Note: This can not be refactored to use the standard EL implementation as
+     *       the EL API does not provide the level of access required to the
+     *       parsed expression.
      */
     private ELNode.Nodes parseEL() {
 
         StringBuilder buf = new StringBuilder();
         ELexpr = new ELNode.Nodes();
+        curToken = null;
+        prevToken = null;
         while (hasNext()) {
             curToken = nextToken();
             if (curToken instanceof Char) {
                 if (curToken.toChar() == '}') {
                     break;
                 }
-                buf.append(curToken.toChar());
+                buf.append(curToken.toString());
             } else {
                 // Output whatever is in buffer
                 if (buf.length() > 0) {
                     ELexpr.add(new ELNode.ELText(buf.toString()));
-                    buf = new StringBuilder();
+                    buf.setLength(0);
                 }
                 if (!parseFunction()) {
                     ELexpr.add(new ELNode.ELText(curToken.toString()));
                 }
             }
+        }
+        if (curToken != null) {
+            buf.append(curToken.getWhiteSpace());
         }
         if (buf.length() > 0) {
             ELexpr.add(new ELNode.ELText(buf.toString()));
@@ -132,21 +140,23 @@ public class ELParser {
      * arguments
      */
     private boolean parseFunction() {
-        if (!(curToken instanceof Id) || isELReserved(curToken.toString()) ||
+        if (!(curToken instanceof Id) || isELReserved(curToken.toTrimmedString()) ||
                 prevToken instanceof Char && prevToken.toChar() == '.') {
             return false;
         }
         String s1 = null; // Function prefix
-        String s2 = curToken.toString(); // Function name
+        String s2 = curToken.toTrimmedString(); // Function name
+        int start = index - curToken.toString().length();
+        Token original = curToken;
         if (hasNext()) {
-            int mark = getIndex();
+            int mark = getIndex() - whiteSpace.length();
             curToken = nextToken();
             if (curToken.toChar() == ':') {
                 if (hasNext()) {
                     Token t2 = nextToken();
                     if (t2 instanceof Id) {
                         s1 = s2;
-                        s2 = t2.toString();
+                        s2 = t2.toTrimmedString();
                         if (hasNext()) {
                             curToken = nextToken();
                         }
@@ -154,10 +164,10 @@ public class ELParser {
                 }
             }
             if (curToken.toChar() == '(') {
-                ELexpr.add(new ELNode.Function(s1, s2));
+                ELexpr.add(new ELNode.Function(s1, s2, expression.substring(start, index - 1)));
                 return true;
             }
-            curToken = prevToken;
+            curToken = original;
             setIndex(mark);
         }
         return false;
@@ -237,31 +247,37 @@ public class ELParser {
         return hasNextChar();
     }
 
+    private String getAndResetWhiteSpace() {
+        String result = whiteSpace;
+        whiteSpace = "";
+        return result;
+    }
+
     /*
+     * Implementation note: This method assumes that it is always preceded by a
+     * call to hasNext() in order for whitespace handling to be correct.
+     *
      * @return The next token in the EL expression buffer.
      */
     private Token nextToken() {
         prevToken = curToken;
-        skipSpaces();
         if (hasNextChar()) {
             char ch = nextChar();
             if (Character.isJavaIdentifierStart(ch)) {
-                StringBuilder buf = new StringBuilder();
-                buf.append(ch);
+                int start = index - 1;
                 while (index < expression.length() &&
                         Character.isJavaIdentifierPart(
                                 ch = expression.charAt(index))) {
-                    buf.append(ch);
                     nextChar();
                 }
-                return new Id(buf.toString());
+                return new Id(getAndResetWhiteSpace(), expression.substring(start, index));
             }
 
             if (ch == '\'' || ch == '"') {
                 return parseQuotedChars(ch);
             } else {
                 // For now...
-                return new Char(ch);
+                return new Char(getAndResetWhiteSpace(), ch);
             }
         }
         return null;
@@ -289,7 +305,7 @@ public class ELParser {
                 buf.append(ch);
             }
         }
-        return new QuotedString(buf.toString());
+        return new QuotedString(getAndResetWhiteSpace(), buf.toString());
     }
 
     /*
@@ -298,11 +314,14 @@ public class ELParser {
      */
 
     private void skipSpaces() {
+        int start = index;
         while (hasNextChar()) {
-            if (expression.charAt(index) > ' ')
+            char c = expression.charAt(index);
+            if (c > ' ')
                 break;
             index++;
         }
+        whiteSpace = expression.substring(start, index);
     }
 
     private boolean hasNextChar() {
@@ -329,13 +348,27 @@ public class ELParser {
      */
     private static class Token {
 
+        protected final String whiteSpace;
+
+        Token(String whiteSpace) {
+            this.whiteSpace = whiteSpace;
+        }
+
         char toChar() {
             return 0;
         }
 
         @Override
         public String toString() {
+            return whiteSpace;
+        }
+
+        String toTrimmedString() {
             return "";
+        }
+
+        String getWhiteSpace() {
+            return whiteSpace;
         }
     }
 
@@ -345,12 +378,18 @@ public class ELParser {
     private static class Id extends Token {
         String id;
 
-        Id(String id) {
+        Id(String whiteSpace, String id) {
+            super(whiteSpace);
             this.id = id;
         }
 
         @Override
         public String toString() {
+            return whiteSpace + id;
+        }
+
+        @Override
+        String toTrimmedString() {
             return id;
         }
     }
@@ -362,7 +401,8 @@ public class ELParser {
 
         private char ch;
 
-        Char(char ch) {
+        Char(String whiteSpace, char ch) {
+            super(whiteSpace);
             this.ch = ch;
         }
 
@@ -373,7 +413,12 @@ public class ELParser {
 
         @Override
         public String toString() {
-            return (new Character(ch)).toString();
+            return whiteSpace + ch;
+        }
+
+        @Override
+        String toTrimmedString() {
+            return "" + ch;
         }
     }
 
@@ -384,12 +429,18 @@ public class ELParser {
 
         private String value;
 
-        QuotedString(String v) {
+        QuotedString(String whiteSpace, String v) {
+            super(whiteSpace);
             this.value = v;
         }
 
         @Override
         public String toString() {
+            return whiteSpace + value;
+        }
+
+        @Override
+        String toTrimmedString() {
             return value;
         }
     }
@@ -417,11 +468,7 @@ public class ELParser {
 
         @Override
         public void visit(Function n) throws JasperException {
-            if (n.getPrefix() != null) {
-                output.append(n.getPrefix());
-                output.append(':');
-            }
-            output.append(n.getName());
+            output.append(n.getOriginalText());
             output.append('(');
         }
 

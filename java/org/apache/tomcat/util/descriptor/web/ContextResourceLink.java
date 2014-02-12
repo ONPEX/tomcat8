@@ -25,7 +25,6 @@ package org.apache.tomcat.util.descriptor.web;
  *
  * @author Remy Maucherat
  * @author Peter Rossbach (Peter Rossbach (pero@apache.org))
- * @version $Id: ContextResourceLink.java 1500964 2013-07-08 21:24:05Z markt $
  */
 public class ContextResourceLink extends ResourceBase {
 
