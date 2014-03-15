@@ -1,4 +1,4 @@
-tomcat8 (8.0.3-1) UNRELEASED; urgency=medium
+tomcat8 (8.0.3-1) unstable; urgency=medium
 
   * Team upload.
   * New upstream release (Closes: #722675)
@@ -44,7 +44,7 @@ tomcat8 (8.0.3-1) UNRELEASED; urgency=medium
   * Removed 0011-fix-classpath-lintian-warnings.patch and specified
     the classpath of jasper.jar in libtomcat8-java.manifest instead.
 
- -- Emmanuel Bourg <ebourg@apache.org>  Wed, 12 Feb 2014 10:29:01 +0100
+ -- Emmanuel Bourg <ebourg@apache.org>  Sat, 15 Mar 2014 23:23:14 +0100
 
 tomcat7 (7.0.42-2) UNRELEASED; urgency=low
 
