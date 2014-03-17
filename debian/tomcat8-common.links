@@ -21,5 +21,6 @@
 /usr/share/java/tomcat8-spdy.jar                 /usr/share/tomcat8/lib/tomcat-spdy.jar
 /usr/share/java/tomcat8-tribes.jar               /usr/share/tomcat8/lib/catalina-tribes.jar
 /usr/share/java/tomcat8-util.jar                 /usr/share/tomcat8/lib/tomcat-util.jar
+/usr/share/java/tomcat8-util-scan.jar            /usr/share/tomcat8/lib/tomcat-util-scan.jar
 /usr/share/java/tomcat8-websocket.jar            /usr/share/tomcat8/lib/tomcat-websocket.jar
 /usr/share/java/tomcat8-websocket-api.jar        /usr/share/tomcat8/lib/websocket-api.jar
