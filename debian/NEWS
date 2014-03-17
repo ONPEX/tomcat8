@@ -1,6 +1,0 @@
-tomcat7 (7.0.35-1~exp2) experimental; urgency=low
-
-  The Tomcat JDBC Pool module is now enabled by default instead of the 
-  commons-dbcp implementation used in previous versions of this package.
-
- -- James Page <james.page@ubuntu.com>  Sun, 24 Feb 2013 22:08:22 +0000
