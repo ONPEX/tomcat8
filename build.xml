@@ -177,6 +177,9 @@
   <property name="tomcat.classes.cobertura" value="${tomcat.classes}-cobertura"/>
   <property name="cobertura.report.format" value="html"/>
 
+  <!-- Workaround against http://bugs.sun.com/view_bug.do?bug_id=6202721 -->
+  <available file="/dev/urandom" property="test.jvmarg.egd" value="-Djava.security.egd=file:/dev/./urandom"/>
+  <property name="test.jvmarg.egd" value="" />
 
   <!-- Include .gitignore in src distributions. -->
   <!-- .git and .gitignore are in defaultexcludes since Ant 1.8.2 -->
@@ -284,20 +287,19 @@
   <!-- ========= Pattern sets used to control content of JAR files ========= -->
   <!-- Pattern sets for jar files in standard distributions -->
   <patternset id="files.annotations-api">
-    <include name="javax/annotation/*" />
-    <include name="javax/annotation/security/*" />
-    <include name="javax/annotation/sql/*" />
-    <include name="javax/ejb/*" />
-    <include name="javax/persistence/*" />
-    <include name="javax/xml/ws/*" />
+    <include name="javax/annotation/**" />
+    <include name="javax/ejb/**" />
+    <include name="javax/persistence/**" />
+    <include name="javax/xml/ws/**" />
   </patternset>
 
   <patternset id="files.servlet-api">
     <include name="javax/servlet/*" />
-    <include name="javax/servlet/annotation/*" />
-    <include name="javax/servlet/descriptor/*" />
-    <include name="javax/servlet/http/*" />
-    <include name="javax/servlet/resources/*" />
+    <include name="javax/servlet/annotation/**" />
+    <include name="javax/servlet/descriptor/**" />
+    <include name="javax/servlet/http/**" />
+    <include name="javax/servlet/resources/**" />
+    <exclude name="javax/servlet/jsp"/>
   </patternset>
 
   <patternset id="files.jsp-api">
@@ -305,7 +307,7 @@
   </patternset>
 
   <patternset id="files.el-api">
-    <include name="javax/el/*" />
+    <include name="javax/el/**" />
   </patternset>
 
   <patternset id="files.websocket-api">
@@ -333,6 +335,11 @@
 
   <patternset id="files.tomcat-api">
     <include name="org/apache/tomcat/*" />
+    <exclude name="org/apache/tomcat/buildutil" />
+    <exclude name="org/apache/tomcat/jni" />
+    <exclude name="org/apache/tomcat/spdy" />
+    <exclude name="org/apache/tomcat/util" />
+    <exclude name="org/apache/tomcat/websocket" />
   </patternset>
 
   <patternset id="files.tomcat-util">
@@ -342,6 +349,15 @@
     <include name="org/apache/tomcat/util/res/**" />
     <include name="org/apache/tomcat/util/threads/**" />
     <include name="org/apache/tomcat/util/*" />
+    <exclude name="org/apache/tomcat/util/bcel" />
+    <exclude name="org/apache/tomcat/util/collections" />
+    <exclude name="org/apache/tomcat/util/descriptor" />
+    <exclude name="org/apache/tomcat/util/digester" />
+    <exclude name="org/apache/tomcat/util/http" />
+    <exclude name="org/apache/tomcat/util/log" />
+    <exclude name="org/apache/tomcat/util/modeler" />
+    <exclude name="org/apache/tomcat/util/net" />
+    <exclude name="org/apache/tomcat/util/scan" />
   </patternset>
 
   <patternset id="files.tomcat-util-scan">
@@ -372,8 +388,7 @@
   </patternset>
 
   <patternset id="files.catalina-ant">
-    <include name="org/apache/catalina/ant/*" />
-    <include name="org/apache/catalina/ant/jmx/*" />
+    <include name="org/apache/catalina/ant/**" />
   </patternset>
 
   <patternset id="files.catalina-storeconfig">
@@ -580,7 +595,6 @@
            deprecation="${compile.deprecation}"
            source="${compile.source}"
            target="${compile.target}"
-           optimize="${compile.optimize}"
            excludes="**/.svn/**"
            encoding="ISO-8859-1"
            includeAntRuntime="true" >
@@ -635,7 +649,6 @@
            deprecation="${compile.deprecation}"
            source="${compile.source}"
            target="${compile.target}"
-           optimize="${compile.optimize}"
            excludes="**/.svn/**"
            encoding="ISO-8859-1"
            includeAntRuntime="true" >
@@ -799,7 +812,7 @@
 
     <!-- i18n JARs -->
     <jar jarfile="${tomcat.build}/lib/tomcat-i18n-es.jar"
-      manifest="${tomcat.manifests}/default.manifest" >
+      manifest="${tomcat.manifests}/default.manifest">
       <fileset dir="${tomcat.classes}">
         <include name="**/LocalStrings_es.properties" />
       </fileset>
@@ -809,7 +822,7 @@
         fullpath="META-INF/LICENSE" />
     </jar>
     <jar jarfile="${tomcat.build}/lib/tomcat-i18n-fr.jar"
-      manifest="${tomcat.manifests}/default.manifest" >
+      manifest="${tomcat.manifests}/default.manifest">
       <fileset dir="${tomcat.classes}">
         <include name="**/LocalStrings_fr.properties" />
       </fileset>
@@ -819,7 +832,7 @@
         fullpath="META-INF/LICENSE" />
     </jar>
     <jar jarfile="${tomcat.build}/lib/tomcat-i18n-ja.jar"
-      manifest="${tomcat.manifests}/default.manifest" >
+      manifest="${tomcat.manifests}/default.manifest">
       <fileset dir="${tomcat.classes}">
         <include name="**/LocalStrings_ja.properties" />
       </fileset>
@@ -1038,7 +1051,6 @@
              debug="${compile.debug}" deprecation="${compile.deprecation}"
              source="${compile.source}"
              target="${compile.target}"
-             optimize="${compile.optimize}"
              classpath="${tomcat.classes}"
              excludes="**/CVS/**,**/.svn/**"
              encoding="ISO-8859-1"
@@ -1050,7 +1062,6 @@
              debug="${compile.debug}" deprecation="${compile.deprecation}"
              source="${compile.source}"
              target="${compile.target}"
-             optimize="${compile.optimize}"
              classpath="$tomcat.lcasses}"
              excludes="**/CVS/**,**/.svn/**"
              encoding="ISO-8859-1"
@@ -1286,7 +1297,6 @@
            debug="${compile.debug}"
            deprecation="${compile.deprecation}"
            source="${compile.source}"
-           optimize="${compile.optimize}"
            encoding="ISO-8859-1"
            includeantruntime="true">
       <classpath refid="tomcat.test.classpath" />
@@ -1307,7 +1317,7 @@
   <property name="junit.formatter.extension" value=".txt" />
 
   <target name="test" description="Runs the JUnit test cases"
-          depends="test-bio,test-nio,test-apr,cobertura-report" >
+          depends="test-bio,test-nio,test-nio2,test-apr,cobertura-report" >
     <fail if="test.result.error" message='Some tests completed with an Error. See ${tomcat.build}/logs for details, search for "FAILED".' />
     <fail if="test.result.failure" message='Some tests completed with a Failure. See ${tomcat.build}/logs for details, search for "FAILED".' />
   </target>
@@ -1322,6 +1332,12 @@
           depends="test-compile,deploy,cobertura-instrument" if="${execute.test.nio}">
     <runtests protocol="org.apache.coyote.http11.Http11NioProtocol"
               extension=".NIO" />
+  </target>
+
+  <target name="test-nio2" description="Runs the JUnit test cases for NIO2. Does not stop on errors."
+          depends="test-compile,deploy,cobertura-instrument" if="${execute.test.nio2}">
+    <runtests protocol="org.apache.coyote.http11.Http11Nio2Protocol"
+              extension=".NIO2" />
   </target>
 
   <target name="test-apr" description="Runs the JUnit test cases for APR. Does not stop on errors."
@@ -1370,7 +1386,12 @@
                    extension="@{extension}${junit.formatter.extension}" />
 
         <!-- If test.entry is defined, run a single test, otherwise run all valid tests -->
-        <test todir="${tomcat.build}/logs" name="${test.entry}" if="test.entry"/>
+        <test todir="${tomcat.build}/logs" name="${test.entry}"
+              if="test.entry" unless="test.entry.methods"
+           />
+        <test todir="${tomcat.build}/logs" name="${test.entry}" methods="${test.entry.methods}"
+              if="test.entry.methods"
+           />
         <batchtest todir="${tomcat.build}/logs" unless="test.entry">
           <fileset dir="test" >
             <!-- Include all by default -->
@@ -1436,7 +1457,7 @@
   </target>
 
   <target name="cobertura-report" if="${test.cobertura}"
-          depends="test-bio,test-nio,test-apr"
+          depends="test-bio,test-nio,test-nio2,test-apr"
           description="Creates report from gathered Cobertura results">
 
     <cobertura-report srcdir="${basedir}/java" destdir="${cobertura.out}"
@@ -1531,9 +1552,9 @@
          target="compile" />
 
     <jar jarfile="${tomcat-juli-extras.jar}"
-         manifest="${tomcat.manifests}/default.manifest" >
+         manifest="${tomcat.manifests}/default.manifest">
       <fileset dir="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src/target/classes">
-        <include name="org/apache/juli/logging/*.class" />
+        <include name="org/apache/juli/logging/*" />
         <include name="org/apache/juli/logging/impl/LogFactoryImpl*.class" />
         <include name="org/apache/juli/logging/impl/WeakHashtable*.class" />
         <include name="org/apache/juli/logging/impl/SimpleLog*.class" />
@@ -1567,7 +1588,7 @@
 
     <!-- Source JARs -->
     <jar jarfile="${tomcat-juli-extras-src.jar}"
-         manifest="${tomcat.manifests}/default.manifest" >
+         manifest="${tomcat.manifests}/default.manifest">
       <fileset dir="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src/src/main/java">
         <include name="org/apache/juli/logging/*.java" />
         <include name="org/apache/juli/logging/impl/LogFactoryImpl*.java" />
@@ -1627,7 +1648,6 @@
            debug="${compile.debug}"
            deprecation="${compile.deprecation}"
            source="${compile.source}"
-           optimize="${compile.optimize}"
            encoding="ISO-8859-1"
            includeantruntime="false">
       <classpath refid="tomcat.webservices.classpath" />
@@ -1675,10 +1695,10 @@
           description="Embedded packaging for those extras that can use it">
 
     <jar jarfile="${tomcat-embed-log4j.jar}"
-         manifest="${tomcat.manifests}/default.manifest" >
+         manifest="${tomcat.manifests}/default.manifest">
       <fileset dir="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src/target/classes">
-        <include name="org/apache/juli/logging/*.class" />
-        <include name="org/apache/juli/logging/impl/*.class" />
+        <include name="org/apache/juli/logging/*" />
+        <include name="org/apache/juli/logging/impl/*" />
         <!-- Javadoc and i18n exclusions -->
         <exclude name="**/package.html" />
         <exclude name="**/LocalStrings_*" />
@@ -1696,7 +1716,7 @@
     </jar>
 
     <jar jarfile="${tomcat-embed-log4j-src.jar}"
-         manifest="${tomcat.manifests}/default.manifest" >
+         manifest="${tomcat.manifests}/default.manifest">
       <fileset dir="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src/src/main/java">
         <include name="org/apache/juli/logging/*.java" />
         <include name="org/apache/juli/logging/impl/*.java" />
@@ -1933,7 +1953,20 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
           <include name="org/apache/catalina/util/SchemaResolver.class" />
           <include name="org/apache/catalina/util/StringManager.class" />
           <include name="org/apache/tomcat/util/*" />
-          <include name="org/apache/tomcat/util/digester/*" />
+          <include name="org/apache/tomcat/util/digester/**" />
+          <exclude name="org/apache/tomcat/util/bcel" />
+          <exclude name="org/apache/tomcat/util/buf" />
+          <exclude name="org/apache/tomcat/util/codec" />
+          <exclude name="org/apache/tomcat/util/collections" />
+          <exclude name="org/apache/tomcat/util/descriptor" />
+          <exclude name="org/apache/tomcat/util/file" />
+          <exclude name="org/apache/tomcat/util/http" />
+          <exclude name="org/apache/tomcat/util/log" />
+          <exclude name="org/apache/tomcat/util/modeler" />
+          <exclude name="org/apache/tomcat/util/net" />
+          <exclude name="org/apache/tomcat/util/res" />
+          <exclude name="org/apache/tomcat/util/scan" />
+          <exclude name="org/apache/tomcat/util/threads" />
           <exclude name="**/package.html" />
           <exclude name="**/LocalStrings_*" />
        </fileset>
@@ -2549,9 +2582,6 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
   <target name="clean-depend"
           description="Deletes the dependencies that are built from source">
     <delete dir="${tomcat-dbcp.home}"/>
-    <!-- Only required while working with snapshots -->
-    <delete dir="${commons-pool.home}"/>
-    <delete dir="${commons-dbcp.home}"/>
   </target>
 
   <target name="clean"
@@ -2775,7 +2805,6 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
       </condition>
     </fail>
     <javac destdir="${tomcat-dbcp.home}/classes"
-           optimize="off"
            debug="${compile.debug}"
            deprecation="${compile.deprecation}"
            source="${compile.source}"
@@ -2824,14 +2853,14 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
 
   <target name="downloadgz" unless="exist" depends="setproxy,testexist">
     <!-- Download and extract the package -->
-    <get src="${sourcefile}" dest="${base.path}/file.tar.gz" />
+    <get src="${sourcefile}" httpusecaches="${trydownload.httpusecaches}" dest="${base.path}/file.tar.gz" />
     <gunzip src="${base.path}/file.tar.gz" dest="${base.path}/file.tar"/>
     <untar src="${base.path}/file.tar" dest="${base.path}"/>
     <delete file="${base.path}/file.tar"/>
     <delete file="${base.path}/file.tar.gz"/>
   </target>
 
-  <target name="downloadgz-2" unless="exist" depends="setproxy,testexist">
+  <target name="downloadgz-2" unless="exist" depends="testexist">
     <!-- Download and extract the package from the two alternative locations -->
     <delete file="${base.path}/file.tar" quiet="true" />
     <delete file="${base.path}/file.tar.gz" quiet="true" />
@@ -2851,7 +2880,7 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
 
   <target name="downloadzip" unless="exist" depends="setproxy,testexist">
     <!-- Download and extract the package -->
-    <get src="${sourcefile}" dest="${base.path}/file.zip" />
+    <get src="${sourcefile}" httpusecaches="${trydownload.httpusecaches}" dest="${base.path}/file.zip" />
     <mkdir dir="${destdir}" />
     <unzip src="${base.path}/file.zip" dest="${destdir}"/>
     <delete file="${base.path}/file.zip"/>
@@ -2876,7 +2905,7 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
   <target name="downloadfile" unless="exist" depends="setproxy,testexist">
     <!-- Download extract the file -->
     <mkdir dir="${destdir}" />
-    <get src="${sourcefile}" dest="${destfile}" />
+    <get src="${sourcefile}" httpusecaches="${trydownload.httpusecaches}" dest="${destfile}" />
   </target>
 
   <target name="downloadfile-2" unless="exist" depends="testexist">
@@ -2908,7 +2937,7 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
 
   <target name="trydownload" if="trydownload.run" depends="trydownload.check">
     <!-- Downloads a file if not yet downloaded and the source URL is available -->
-    <get src="${sourcefile}" dest="${destfile}" />
+    <get src="${sourcefile}" httpusecaches="${trydownload.httpusecaches}" dest="${destfile}" />
   </target>
 
   <!-- ============================ IDE Support ============================ -->

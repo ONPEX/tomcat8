@@ -33,6 +33,8 @@ import javax.net.ssl.SSLSocketFactory;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Test;
 
 import org.apache.catalina.Context;
@@ -89,7 +91,6 @@ public class TestSsl extends TomcatBaseTest {
             "/examples/servlets/servlet/HelloWorldExample");
         assertTrue(res.toString().indexOf("<h1>Hello World!</h1>") > 0);
     }
-
 
     boolean handshakeDone = false;
 
@@ -165,9 +166,8 @@ public class TestSsl extends TomcatBaseTest {
     public void testRenegotiateWorks() throws Exception {
         Tomcat tomcat = getTomcatInstance();
 
-        if (!TesterSupport.isRenegotiationSupported(tomcat)) {
-            return;
-        }
+        Assume.assumeTrue("SSL renegotiation has to be supported for this test",
+                TesterSupport.isRenegotiationSupported(getTomcatInstance()));
 
         File appDir = new File(getBuildDirectory(), "webapps/examples");
         // app dir is relative to server home
@@ -204,6 +204,7 @@ public class TestSsl extends TomcatBaseTest {
         Reader r = new InputStreamReader(is);
         BufferedReader br = new BufferedReader(r);
         String line = br.readLine();
+        Assert.assertEquals("HTTP/1.1 200 OK", line);
         while (line != null) {
             // For debugging System.out.println(line);
             // Linux clients see a Connection Reset in some circumstances and a

@@ -34,6 +34,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.StringTokenizer;
 
 import javax.servlet.RequestDispatcher;
@@ -46,13 +47,18 @@ import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
+import org.apache.catalina.Context;
 import org.apache.catalina.Globals;
 import org.apache.catalina.WebResource;
 import org.apache.catalina.WebResourceRoot;
@@ -62,6 +68,10 @@ import org.apache.catalina.util.RequestUtil;
 import org.apache.catalina.util.ServerInfo;
 import org.apache.catalina.util.URLEncoder;
 import org.apache.tomcat.util.res.StringManager;
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.ext.EntityResolver2;
 
 
 /**
@@ -106,92 +116,124 @@ import org.apache.tomcat.util.res.StringManager;
  * @author Craig R. McClanahan
  * @author Remy Maucherat
  */
-public class DefaultServlet
-    extends HttpServlet {
+public class DefaultServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
-    // ----------------------------------------------------- Instance Variables
-
-
     /**
-     * The debugging detail level for this servlet.
+     * The string manager for this package.
      */
-    protected int debug = 0;
-
-
-    /**
-     * The input buffer size to use when serving resources.
-     */
-    protected int input = 2048;
-
-
-    /**
-     * Should we generate directory listings?
-     */
-    protected boolean listings = false;
-
-
-    /**
-     * Read only flag. By default, it's set to true.
-     */
-    protected boolean readOnly = true;
-
-
-    /**
-     * Should be serve gzip versions of files. By default, it's set to false.
-     */
-    protected boolean gzip = false;
-
-
-    /**
-     * The output buffer size to use when serving resources.
-     */
-    protected int output = 2048;
-
+    protected static final StringManager sm = StringManager.getManager(Constants.Package);
 
     /**
      * Array containing the safe characters set.
      */
     protected static final URLEncoder urlEncoder;
 
+    private static final DocumentBuilderFactory factory;
+
+    private static final SecureEntityResolver secureEntityResolver =
+            new SecureEntityResolver();
+
+    /**
+     * Full range marker.
+     */
+    protected static final ArrayList<Range> FULL = new ArrayList<>();
+
+    /**
+     * MIME multipart separation string
+     */
+    protected static final String mimeSeparation = "CATALINA_MIME_BOUNDARY";
+
+    /**
+     * JNDI resources name.
+     */
+    protected static final String RESOURCES_JNDI_NAME = "java:/comp/Resources";
+
+    /**
+     * Size of file transfer buffer in bytes.
+     */
+    protected static final int BUFFER_SIZE = 4096;
+
+
+    // ----------------------------------------------------- Static Initializer
+
+    static {
+        urlEncoder = new URLEncoder();
+        urlEncoder.addSafeCharacter('-');
+        urlEncoder.addSafeCharacter('_');
+        urlEncoder.addSafeCharacter('.');
+        urlEncoder.addSafeCharacter('*');
+        urlEncoder.addSafeCharacter('/');
+
+        factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setValidating(false);
+    }
+
+
+    // ----------------------------------------------------- Instance Variables
+
+    /**
+     * The debugging detail level for this servlet.
+     */
+    protected int debug = 0;
+
+    /**
+     * The input buffer size to use when serving resources.
+     */
+    protected int input = 2048;
+
+    /**
+     * Should we generate directory listings?
+     */
+    protected boolean listings = false;
+
+    /**
+     * Read only flag. By default, it's set to true.
+     */
+    protected boolean readOnly = true;
+
+    /**
+     * Should be serve gzip versions of files. By default, it's set to false.
+     */
+    protected boolean gzip = false;
+
+    /**
+     * The output buffer size to use when serving resources.
+     */
+    protected int output = 2048;
 
     /**
      * Allow customized directory listing per directory.
      */
     protected String localXsltFile = null;
 
-
     /**
      * Allow customized directory listing per context.
      */
     protected String contextXsltFile = null;
-
 
     /**
      * Allow customized directory listing per instance.
      */
     protected String globalXsltFile = null;
 
-
     /**
      * Allow a readme file to be included.
      */
     protected String readmeFile = null;
-
 
     /**
      * The complete set of web application resources
      */
     protected transient WebResourceRoot resources = null;
 
-
     /**
      * File encoding to be used when reading static files. If none is specified
      * the platform default is used.
      */
     protected String fileEncoding = null;
-
 
     /**
      * Minimum size for sendfile usage in bytes.
@@ -203,55 +245,8 @@ public class DefaultServlet
      */
     protected boolean useAcceptRanges = true;
 
-    /**
-     * Full range marker.
-     */
-    protected static final ArrayList<Range> FULL = new ArrayList<>();
-
-
-    // ----------------------------------------------------- Static Initializer
-
-
-    /**
-     * GMT timezone - all HTTP dates are on GMT
-     */
-    static {
-        urlEncoder = new URLEncoder();
-        urlEncoder.addSafeCharacter('-');
-        urlEncoder.addSafeCharacter('_');
-        urlEncoder.addSafeCharacter('.');
-        urlEncoder.addSafeCharacter('*');
-        urlEncoder.addSafeCharacter('/');
-    }
-
-
-    /**
-     * MIME multipart separation string
-     */
-    protected static final String mimeSeparation = "CATALINA_MIME_BOUNDARY";
-
-
-    /**
-     * JNDI resources name.
-     */
-    protected static final String RESOURCES_JNDI_NAME = "java:/comp/Resources";
-
-
-    /**
-     * The string manager for this package.
-     */
-    protected static final StringManager sm =
-        StringManager.getManager(Constants.Package);
-
-
-    /**
-     * Size of file transfer buffer in bytes.
-     */
-    protected static final int BUFFER_SIZE = 4096;
-
 
     // --------------------------------------------------------- Public Methods
-
 
     /**
      * Finalize this servlet.
@@ -1214,13 +1209,12 @@ public class DefaultServlet
     protected InputStream render(String contextPath, WebResource resource)
         throws IOException, ServletException {
 
-        InputStream xsltInputStream =
-            findXsltInputStream(resource);
+        Source xsltSource = findXsltSource(resource);
 
-        if (xsltInputStream==null) {
+        if (xsltSource == null) {
             return renderHtml(contextPath, resource);
         }
-        return renderXml(contextPath, resource, xsltInputStream);
+        return renderXml(contextPath, resource, xsltSource);
 
     }
 
@@ -1233,7 +1227,7 @@ public class DefaultServlet
      */
     protected InputStream renderXml(String contextPath,
                                     WebResource resource,
-                                    InputStream xsltInputStream)
+                                    Source xsltSource)
         throws IOException, ServletException {
 
         StringBuilder sb = new StringBuilder();
@@ -1314,8 +1308,7 @@ public class DefaultServlet
         try {
             TransformerFactory tFactory = TransformerFactory.newInstance();
             Source xmlSource = new StreamSource(new StringReader(sb.toString()));
-            Source xslSource = new StreamSource(xsltInputStream);
-            Transformer transformer = tFactory.newTransformer(xslSource);
+            Transformer transformer = tFactory.newTransformer(xsltSource);
 
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             OutputStreamWriter osWriter = new OutputStreamWriter(stream, "UTF8");
@@ -1518,9 +1511,9 @@ public class DefaultServlet
 
 
     /**
-     * Return the xsl template inputstream (if possible)
+     * Return a Source for the xsl template (if possible)
      */
-    protected InputStream findXsltInputStream(WebResource directory)
+    protected Source findXsltSource(WebResource directory)
         throws IOException {
 
         if (localXsltFile != null) {
@@ -1529,7 +1522,11 @@ public class DefaultServlet
             if (resource.isFile()) {
                 InputStream is = resource.getInputStream();
                 if (is != null) {
-                    return is;
+                    if (Globals.IS_SECURITY_ENABLED) {
+                        return secureXslt(is);
+                    } else {
+                        return new StreamSource(is);
+                    }
                 }
             }
             if (debug > 10) {
@@ -1540,8 +1537,13 @@ public class DefaultServlet
         if (contextXsltFile != null) {
             InputStream is =
                 getServletContext().getResourceAsStream(contextXsltFile);
-            if (is != null)
-                return is;
+            if (is != null) {
+                if (Globals.IS_SECURITY_ENABLED) {
+                    return secureXslt(is);
+                } else {
+                    return new StreamSource(is);
+                }
+            }
 
             if (debug > 10)
                 log("contextXsltFile '" + contextXsltFile + "' not found");
@@ -1550,20 +1552,14 @@ public class DefaultServlet
         /*  Open and read in file in one fell swoop to reduce chance
          *  chance of leaving handle open.
          */
-        if (globalXsltFile!=null) {
-            FileInputStream fis = null;
-
-            try {
-                File f = new File(globalXsltFile);
-                if (f.exists()){
-                    fis =new FileInputStream(f);
+        if (globalXsltFile != null) {
+            File f = validateGlobalXsltFile();
+            if (f != null){
+                try (FileInputStream fis = new FileInputStream(f)){
                     byte b[] = new byte[(int)f.length()]; /* danger! */
                     fis.read(b);
-                    return new ByteArrayInputStream(b);
+                    return new StreamSource(new ByteArrayInputStream(b));
                 }
-            } finally {
-                if (fis!=null)
-                    fis.close();
             }
         }
 
@@ -1571,8 +1567,77 @@ public class DefaultServlet
     }
 
 
-    // -------------------------------------------------------- protected Methods
+    private File validateGlobalXsltFile() {
+        Context context = resources.getContext();
 
+        File baseConf = new File(context.getCatalinaBase(), "conf");
+        File result = validateGlobalXsltFile(baseConf);
+        if (result == null) {
+            File homeConf = new File(context.getCatalinaHome(), "conf");
+            if (!baseConf.equals(homeConf)) {
+                result = validateGlobalXsltFile(homeConf);
+            }
+        }
+
+        return result;
+    }
+
+
+    private File validateGlobalXsltFile(File base) {
+        File candidate = new File(globalXsltFile);
+        if (!candidate.isAbsolute()) {
+            candidate = new File(base, globalXsltFile);
+        }
+
+        if (!candidate.isFile()) {
+            return null;
+        }
+
+        // First check that the resulting path is under the provided base
+        try {
+            if (!candidate.getCanonicalPath().startsWith(base.getCanonicalPath())) {
+                return null;
+            }
+        } catch (IOException ioe) {
+            return null;
+        }
+
+        // Next check that an .xsl or .xslt file has been specified
+        String nameLower = candidate.getName().toLowerCase(Locale.ENGLISH);
+        if (!nameLower.endsWith(".xslt") && !nameLower.endsWith(".xsl")) {
+            return null;
+        }
+
+        return candidate;
+    }
+
+
+    private Source secureXslt(InputStream is) {
+        // Need to filter out any external entities
+        Source result = null;
+        try {
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            builder.setEntityResolver(secureEntityResolver);
+            Document document = builder.parse(is);
+            result = new DOMSource(document);
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            if (debug > 0) {
+                log(e.getMessage(), e);
+            }
+        } finally {
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    // Ignore
+                }
+            }
+        }
+        return result;
+    }
+
+
+    // -------------------------------------------------------- protected Methods
 
     /**
      * Check if sendfile can be used.
@@ -2066,9 +2131,6 @@ public class DefaultServlet
     }
 
 
-    // ------------------------------------------------------ Range Inner Class
-
-
     protected static class Range {
 
         public long start;
@@ -2082,6 +2144,36 @@ public class DefaultServlet
             if (end >= length)
                 end = length - 1;
             return (start >= 0) && (end >= 0) && (start <= end) && (length > 0);
+        }
+    }
+
+
+    /**
+     * This is secure in the sense that any attempt to use an external entity
+     * will trigger an exception.
+     */
+    private static class SecureEntityResolver implements EntityResolver2  {
+
+        @Override
+        public InputSource resolveEntity(String publicId, String systemId)
+                throws SAXException, IOException {
+            throw new SAXException(sm.getString("defaultServlet.blockExternalEntity",
+                    publicId, systemId));
+        }
+
+        @Override
+        public InputSource getExternalSubset(String name, String baseURI)
+                throws SAXException, IOException {
+            throw new SAXException(sm.getString("defaultServlet.blockExternalSubset",
+                    name, baseURI));
+        }
+
+        @Override
+        public InputSource resolveEntity(String name, String publicId,
+                String baseURI, String systemId) throws SAXException,
+                IOException {
+            throw new SAXException(sm.getString("defaultServlet.blockExternalEntity2",
+                    name, publicId, baseURI, systemId));
         }
     }
 }
