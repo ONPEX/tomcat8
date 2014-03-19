@@ -81,7 +81,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
     protected AbstractOutputBuffer<S> outputBuffer;
 
 
-    /*
+    /**
      * Tracks how many internal filters are in the filter library so they
      * are skipped when looking for pluggable filters.
      */
@@ -795,6 +795,8 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             internalBuffer.addActiveFilter(savedBody);
         } else if (actionCode == ActionCode.ASYNC_START) {
             asyncStateMachine.asyncStart((AsyncContextCallback) param);
+            // Async time out is based on SocketWrapper access time
+            getSocketWrapper().access();
         } else if (actionCode == ActionCode.ASYNC_DISPATCHED) {
             asyncStateMachine.asyncDispatched();
         } else if (actionCode == ActionCode.ASYNC_TIMEOUT) {

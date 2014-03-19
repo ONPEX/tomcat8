@@ -229,7 +229,7 @@ public class WebappClassLoader extends URLClassLoader
                 j = j.getParent();
             }
         }
-        this.j2seClassLoader = j;
+        this.javaseClassLoader = j;
 
         securityManager = System.getSecurityManager();
         if (securityManager != null) {
@@ -264,7 +264,7 @@ public class WebappClassLoader extends URLClassLoader
                 j = j.getParent();
             }
         }
-        this.j2seClassLoader = j;
+        this.javaseClassLoader = j;
 
         securityManager = System.getSecurityManager();
         if (securityManager != null) {
@@ -277,8 +277,6 @@ public class WebappClassLoader extends URLClassLoader
 
     /**
      * Associated web resources for this webapp.
-     * TODO Review the use of resources in this class to see if further
-     *      simplifications can be made.
      */
     protected WebResourceRoot resources = null;
 
@@ -336,12 +334,12 @@ public class WebappClassLoader extends URLClassLoader
 
 
     /**
-     * The bootstrap class loader used to load the J2SE classes. In some
+     * The bootstrap class loader used to load the JavaSE classes. In some
      * implementations this class loader is always <code>null</null> and in
      * those cases {@link ClassLoader#getParent()} will be called recursively on
      * the system class loader and the last non-null result used.
      */
-    protected final ClassLoader j2seClassLoader;
+    private ClassLoader javaseClassLoader;
 
 
     /**
@@ -418,6 +416,13 @@ public class WebappClassLoader extends URLClassLoader
      */
     private final List<ClassFileTransformer> transformers = new CopyOnWriteArrayList<>();
 
+
+    /**
+     * Flag that indicates that {@link #addURL(URL)} has been called which
+     * creates a requirement to check the super class when searching for
+     * resources.
+     */
+    private boolean hasExternalRepositories = false;
 
     // ------------------------------------------------------------- Properties
 
@@ -870,9 +875,9 @@ public class WebappClassLoader extends URLClassLoader
             try {
                 clazz = findClassInternal(name);
             } catch(ClassNotFoundException cnfe) {
-                if (log.isDebugEnabled())
-                    log.debug("    --> Returning ClassNotFoundException");
-                throw cnfe;
+                if (!hasExternalRepositories) {
+                    throw cnfe;
+                }
             } catch(AccessControlException ace) {
                 log.warn("WebappClassLoader.findClassInternal(" + name
                         + ") security exception: " + ace.getMessage(), ace);
@@ -881,6 +886,24 @@ public class WebappClassLoader extends URLClassLoader
                 if (log.isTraceEnabled())
                     log.trace("      -->RuntimeException Rethrown", e);
                 throw e;
+            }
+            if ((clazz == null) && hasExternalRepositories) {
+                try {
+                    clazz = super.findClass(name);
+                } catch(AccessControlException ace) {
+                    log.warn("WebappClassLoader.findClassInternal(" + name
+                            + ") security exception: " + ace.getMessage(), ace);
+                    throw new ClassNotFoundException(name, ace);
+                } catch (RuntimeException e) {
+                    if (log.isTraceEnabled())
+                        log.trace("      -->RuntimeException Rethrown", e);
+                    throw e;
+                }
+            }
+            if (clazz == null) {
+                if (log.isDebugEnabled())
+                    log.debug("    --> Returning ClassNotFoundException");
+                throw new ClassNotFoundException(name);
             }
         } catch (ClassNotFoundException e) {
             if (log.isTraceEnabled())
@@ -938,6 +961,10 @@ public class WebappClassLoader extends URLClassLoader
             url = entry.source;
         }
 
+        if ((url == null) && hasExternalRepositories) {
+            url = super.findResource(name);
+        }
+
         if (log.isDebugEnabled()) {
             if (url != null)
                 log.debug("    --> Returning '" + url.toString() + "'");
@@ -972,6 +999,14 @@ public class WebappClassLoader extends URLClassLoader
         for (WebResource webResource : webResources) {
             if (webResource.exists()) {
                 result.add(webResource.getURL());
+            }
+        }
+
+        // Adding the results of a call to the superclass
+        if (hasExternalRepositories) {
+            Enumeration<URL> otherResourcePaths = super.findResources(name);
+            while (otherResourcePaths.hasMoreElements()) {
+                result.add(otherResourcePaths.nextElement());
             }
         }
 
@@ -1092,6 +1127,12 @@ public class WebappClassLoader extends URLClassLoader
             if (log.isDebugEnabled())
                 log.debug("  --> Returning stream from local");
             stream = findLoadedResource(name);
+            try {
+                if (hasExternalRepositories && (stream == null))
+                    stream = url.openStream();
+            } catch (IOException e) {
+                // Ignore
+            }
             if (stream != null)
                 return (stream);
         }
@@ -1199,9 +1240,10 @@ public class WebappClassLoader extends URLClassLoader
         // (0.2) Try loading the class with the system class loader, to prevent
         //       the webapp from overriding J2SE classes
         String resourceName = binaryNameToPath(name, false);
-        if (j2seClassLoader.getResource(resourceName) != null) {
+        ClassLoader javaseLoader = getJavaseClassLoader();
+        if (javaseLoader.getResource(resourceName) != null) {
             try {
-                clazz = j2seClassLoader.loadClass(name);
+                clazz = javaseLoader.loadClass(name);
                 if (clazz != null) {
                     if (resolve)
                         resolveClass(clazz);
@@ -1464,6 +1506,18 @@ public class WebappClassLoader extends URLClassLoader
 
     // ------------------------------------------------------ Protected Methods
 
+    protected ClassLoader getJavaseClassLoader() {
+        return javaseClassLoader;
+    }
+
+    protected void setJavaseClassLoader(ClassLoader classLoader) {
+        if (classLoader == null) {
+            throw new IllegalArgumentException(
+                    sm.getString("webappClassLoader.javaseClassLoaderNull"));
+        }
+        javaseClassLoader = classLoader;
+    }
+
     /**
      * Clear references.
      */
@@ -1718,6 +1772,8 @@ public class WebappClassLoader extends URLClassLoader
                         continue;
                     }
 
+                    final String threadName = thread.getName();
+
                     // JVM controlled threads
                     ThreadGroup tg = thread.getThreadGroup();
                     if (tg != null &&
@@ -1725,7 +1781,7 @@ public class WebappClassLoader extends URLClassLoader
 
                         // HttpClient keep-alive threads
                         if (clearReferencesHttpClientKeepAliveThread &&
-                                thread.getName().equals("Keep-Alive-Timer")) {
+                                threadName.equals("Keep-Alive-Timer")) {
                             thread.setContextClassLoader(parent);
                             log.debug(sm.getString(
                                     "webappClassLoader.checkThreadsHttpClient"));
@@ -1751,10 +1807,14 @@ public class WebappClassLoader extends URLClassLoader
 
                     if (isRequestThread(thread)) {
                         log.error(sm.getString("webappClassLoader.warnRequestThread",
-                                getContextName(), thread.getName()));
+                                getContextName(), threadName));
+                        log.error(sm.getString("webappClassLoader.stackTraceRequestThread",
+                                threadName, getStackTrace(thread)));
                     } else {
                         log.error(sm.getString("webappClassLoader.warnThread",
-                                getContextName(), thread.getName()));
+                                getContextName(), threadName));
+                        log.error(sm.getString("webappClassLoader.stackTrace",
+                                threadName, getStackTrace(thread)));
                     }
 
                     // Don't try an stop the threads unless explicitly
@@ -2069,6 +2129,14 @@ public class WebappClassLoader extends URLClassLoader
             name = clazz.getName();
         }
         return name;
+    }
+
+    private String getStackTrace(Thread thread) {
+        StringBuilder builder = new StringBuilder();
+        for (StackTraceElement ste : thread.getStackTrace()) {
+            builder.append("\n ").append(ste);
+        }
+        return builder.toString();
     }
 
     /**
@@ -2722,5 +2790,12 @@ public class WebappClassLoader extends URLClassLoader
         // Assume everything else is OK
         return true;
 
+    }
+
+
+    @Override
+    protected void addURL(URL url) {
+        super.addURL(url);
+        hasExternalRepositories = true;
     }
 }

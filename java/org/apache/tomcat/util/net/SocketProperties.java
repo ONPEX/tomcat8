@@ -16,9 +16,13 @@
  */
 package org.apache.tomcat.util.net;
 
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.StandardSocketOptions;
+import java.nio.channels.AsynchronousServerSocketChannel;
+import java.nio.channels.AsynchronousSocketChannel;
 
 /**
  * Properties that can be set in the &lt;Connector&gt; element
@@ -27,13 +31,13 @@ import java.net.SocketException;
  */
 public class SocketProperties {
     /**
-     * Enable/disable key cache, this bounded cache stores
-     * KeyAttachment objects to reduce GC
+     * Enable/disable socket wrapper cache, this bounded cache stores
+     * SocketWrapper objects to reduce GC
      * Default is 500
      * -1 is unlimited
      * 0 is disabled
      */
-    protected int keyCache = 500;
+    protected int socketWrapperCache = 500;
 
     /**
      * Enable/disable socket processor cache, this bounded cache stores
@@ -59,6 +63,12 @@ public class SocketProperties {
      * Default value is enabled
      */
     protected boolean directBuffer = false;
+
+    /**
+     * Enable/disable direct buffers for the network buffers for SSL
+     * Default value is enabled
+     */
+    protected boolean directSslBuffer = false;
 
     /**
      * Socket receive buffer size in bytes (SO_RCVBUF).
@@ -212,9 +222,34 @@ public class SocketProperties {
             socket.setSoTimeout(soTimeout.intValue());
     }
 
+    public void setProperties(AsynchronousSocketChannel socket) throws IOException {
+        if (rxBufSize != null)
+            socket.setOption(StandardSocketOptions.SO_RCVBUF, rxBufSize);
+        if (txBufSize != null)
+            socket.setOption(StandardSocketOptions.SO_SNDBUF, txBufSize);
+        if (soKeepAlive != null)
+            socket.setOption(StandardSocketOptions.SO_KEEPALIVE, soKeepAlive);
+        if (soReuseAddress != null)
+            socket.setOption(StandardSocketOptions.SO_REUSEADDR, soReuseAddress);
+        if (soLingerOn != null && soLingerOn.booleanValue() && soLingerTime != null)
+            socket.setOption(StandardSocketOptions.SO_LINGER, soLingerTime);
+        if (tcpNoDelay != null)
+            socket.setOption(StandardSocketOptions.TCP_NODELAY, tcpNoDelay);
+    }
+
+    public void setProperties(AsynchronousServerSocketChannel socket) throws IOException {
+        if (rxBufSize != null)
+            socket.setOption(StandardSocketOptions.SO_RCVBUF, rxBufSize);
+        if (soReuseAddress != null)
+            socket.setOption(StandardSocketOptions.SO_REUSEADDR, soReuseAddress);
+    }
 
     public boolean getDirectBuffer() {
         return directBuffer;
+    }
+
+    public boolean getDirectSslBuffer() {
+        return directSslBuffer;
     }
 
     public boolean getOoBInline() {
@@ -278,7 +313,11 @@ public class SocketProperties {
     }
 
     public int getKeyCache() {
-        return keyCache;
+        return socketWrapperCache;
+    }
+
+    public int getSocketWrapperCache() {
+        return socketWrapperCache;
     }
 
     public int getAppReadBufSize() {
@@ -350,6 +389,10 @@ public class SocketProperties {
         this.directBuffer = directBuffer;
     }
 
+    public void setDirectSslBuffer(boolean directSslBuffer) {
+        this.directSslBuffer = directSslBuffer;
+    }
+
     public void setSoLingerOn(boolean soLingerOn) {
         this.soLingerOn = Boolean.valueOf(soLingerOn);
     }
@@ -366,8 +409,12 @@ public class SocketProperties {
         this.eventCache = eventCache;
     }
 
+    public void setSocketWrapperCache(int socketWrapperCache) {
+        this.socketWrapperCache = socketWrapperCache;
+    }
+
     public void setKeyCache(int keyCache) {
-        this.keyCache = keyCache;
+        this.socketWrapperCache = keyCache;
     }
 
     public void setAppReadBufSize(int appReadBufSize) {

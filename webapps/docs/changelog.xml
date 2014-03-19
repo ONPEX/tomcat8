@@ -44,7 +44,284 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues to not "pop up" wrt. others).
 -->
-<section name="Tomcat 8.0.3 (markt)">
+<section name="Tomcat 8.0.4 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        Restore the ability to use the <code>addURL()</code> method of the
+        web application class loader to add external resources to the web
+        application. (markt)
+      </fix>
+      <fix>
+        Improve the robustness of web application undeployment based on some
+        code analysis triggered by the report for <bug>54315</bug>. (markt)
+      </fix>
+      <fix>
+        <bug>56125</bug>: Correctly construct the URL for a resource that
+        represents the root of a JAR file. (markt)
+      </fix>
+      <fix>
+        Generate a valid root element for the effective web.xml for a web
+        application for all supported versions of web.xml. (markt)
+      </fix>
+      <add>
+        Make it easier for applications embedding and/or extending Tomcat to
+        modify the <code>javaseClassLoader</code> attribute of the
+        <code>WebappClassLoader</code>. (markt)
+      </add>
+      <fix>
+        Add missing support for <code>&lt;deny-uncovered-http-methods&gt;</code>
+        element when merging web.xml files. (markt)
+      </fix>
+      <fix>
+        Improve merging process for web.xml files to take account of the
+        elements and attributes supported by the Servlet version of the merged
+        file. (markt)
+      </fix>
+      <fix>
+        Avoid <code>NullPointerException</code> in resource cache when making an
+        invalid request for a resource outside of the web application. (markt)
+      </fix>
+      <fix>
+        Remove an unnecessary null check identified by FindBugs. (markt)
+      </fix>
+      <add>
+        In WebappClassLoader, when reporting threads that are still running
+        while web application is being stopped, print their stack traces to
+        the log. (kkolinko)
+      </add>
+      <fix>
+        <bug>56190</bug>: The response should be closed (i.e. no further output
+        is permitted) when a call to <code>AsyncContext.complete()</code> takes
+        effect. (markt)
+      </fix>
+      <fix>
+        <bug>56236</bug>: Enable Tomcat to work with alternative Servlet and
+        JSP API JARs that package the XML schemas in such as way as to require
+        a dependency on the JSP API before enabling validation for web.xml.
+        Tomcat has no such dependency. (markt)
+      </fix>
+      <fix>
+        <bug>56244</bug>: Fix MBeans descriptor for WebappClassLoader MBean.
+        (kkolinko)
+      </fix>
+      <add>
+        Add a work around for validating XML documents (often TLDs) that use
+        just the file name to refer to refer to the JavaEE schema on which they
+        are based. (markt)
+      </add>
+      <add>
+        Add methods of get the idle time from last client access time to
+        <code>org.apache.catalina.Session</code>. (kfujino)
+      </add>
+      <fix>
+        <bug>56246</bug>: Fix NullPointerException in MemoryRealm when
+        authenticating an unknown user. (markt)
+      </fix>
+      <fix>
+        <bug>56248</bug>: Allow the deployer to update an existing WAR file
+        without undeploying the existing application if the update flag is set.
+        This allows any existing custom context.xml for the application to be
+        retained. To update an application and remove any existing context.xml
+        simply undeploy the old version of the application before deploying the
+        new version. (markt)
+      </fix>
+      <fix>
+        <bug>56253</bug>: When listing resources that are provided by a JAR, fix
+        possible <code>StringIndexOutOfBoundsException</code>s. Add some unit
+        tests for this and similar scenarios and fix the additional issues those
+        unit tests identified. Based on a patch by Larry Isaacs. (markt)
+      </fix>
+      <fix>
+        Redefine the <code>globalXsltFile</code> initialisation parameter of the
+        DefaultServlet as relative to CATALINA_BASE/conf or CATALINA_HOME/conf.
+        Prevent user supplied XSLTs used by the DefaultServlet from defining
+        external entities. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        In some circumstances asynchronous requests could time out too soon.
+        (markt)
+      </fix>
+      <fix>
+        <bug>56172</bug>: Avoid possible request corruption when using the AJP
+        NIO connector and a request is sent using more than one AJP message.
+        Patch provided by Amund Elstad. (markt)
+      </fix>
+      <add>
+        Add experimental NIO2 connector. Based on code developed by
+        Nabil Benothman. (remm)
+      </add>
+      <fix>
+        Improve processing of chuck size from chunked headers. Avoid overflow
+        and use a bit shift instead of a multiplication as it is marginally
+        faster. (markt/kkolinko)
+      </fix>
+      <fix>
+        Correct regression introduced in 8.0.0-RC2 as part of the Servlet 3.1
+        non-blocking IO support that broke handling of requests with an explicit
+        content length of zero. (markt/kkolinko)
+      </fix>
+      <fix>
+        Fix possible overflow when parsing long values from a byte array.
+        (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        Change the default compiler source and compiler target versions to 1.7
+        since Tomcat 8 requires a minimum of Java 7. (markt)
+      </fix>
+      <fix>
+        <bug>56179</bug>: Fix parsing of EL expressions that contain unnecessary
+        parentheses. (markt)
+      </fix>
+      <fix>
+        <bug>56177</bug>: Handle dependency tracking for TLDs when using JspC
+        with a tag library JAR that is located outside of the web application.
+        (markt)
+      </fix>
+      <fix>
+        Remove an unnecessary null check identified by FindBugs. (markt)
+      </fix>
+      <fix>
+        <bug>56199</bug>: Restore validateXml option for JspC which determines
+        if web.xml will be parsed with a validating parser. (markt)
+      </fix>
+      <fix>
+        <bug>56223</bug>: Throw an <code>IllegalStateException</code> if a call
+        is made to <code>ServletContext.setInitParameter()</code> after the
+        ServletContext has been initialized. (markt)
+      </fix>
+      <fix>
+        <bug>56265</bug>: Do not escape values of dynamic tag attributes
+        containing EL expressions. (kkolinko)
+      </fix>
+      <fix>
+        Make the default compiler source and target versions for JSPs Java 7
+        since Tomcat 8 requires Java 7 as a minimum. (markt)
+      </fix>
+      <update>
+        <bug>56283</bug>: Update to the Eclipse JDT Compiler P20140317-1600
+        which adds support for Java 8 syntax to JSPs. Add support for value
+        "1.8" for the <code>compilerSourceVM</code> and
+        <code>compilerTargetVM</code> options. (markt)
+      </update>
+    </changelog>
+  </subsection>
+  <subsection name="WebSocket">
+    <changelog>
+      <fix>
+        Avoid a possible deadlock when one thread is shutting down a connection
+        while another thread is trying to write to it. (markt)
+      </fix>
+      <fix>
+        Avoid NPE when flushing batched messages. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web Applications">
+    <changelog>
+      <add>
+        <bug>56093</bug>: Add the SSL Valve to the documentation web
+        application. (markt)
+      </add>
+      <fix>
+        <bug>56217</bug>: Improve readability by using left alignment for the
+        table cell containing the request information on the Manager application
+        status page. (markt)
+      </fix>
+      <fix>
+        Fixed <code>java.lang.NegativeArraySizeException</code> when using
+        "Expire sessions" command in the manager web application on a
+        context where the session timeout is disabled. (kfujino)
+      </fix>
+      <fix>
+         Add support for <code>LAST_ACCESS_AT_START</code> system property to
+         Manager web application. (kfujino)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <fix>
+        <bug>56115</bug>: Expose the <code>httpusecaches</code> property of
+        Ant&apos;s <code>get</code> task as some users may need to change the
+        default. Based on a suggestion by Anthony. (markt)
+      </fix>
+      <fix>
+        <bug>56143</bug>: Improve <code>service.bat</code> so that it can be
+        launched from a non-UAC console. This includes using a single call to
+        <code>tomcat8.exe</code> to install the Windows service rather than
+        three calls, and using command line arguments instead of environment
+        variables to pass the settings. (markt/kkolinko)
+      </fix>
+      <scode>
+        Simplify Windows *.bat files: remove %OS% checks, as current java does
+        not run on ancient non-NT operating systems. (kkolinko)
+      </scode>
+      <fix>
+        Align options between <code>service.bat</code> and <code>exe</code>
+        Windows installer. For <code>service.bat</code> the changes are in
+        --Classpath, --DisplayName, --StartPath, --StopPath. For
+        <code>exe</code> installer the changes are in --JvmMs, --JvmMx options,
+        which are now 128 Mb and 256 Mb respectively instead of being empty.
+        Explicitly specify --LogPath path when uninstalling Windows service,
+        avoiding default value for that option. (kkolinko)
+      </fix>
+      <fix>
+        <bug>56137</bug>: Explicitly use NIO connector in SSL example in
+        server.xml so it doesn't break if APR is enabled. (markt)
+      </fix>
+      <fix>
+        <bug>56139</bug>: Avoid a web application class loader leak in some unit
+        tests when running on Windows. (markt)
+      </fix>
+      <fix>
+        Correct build script to avoid building JARs with empty packages. (markt)
+      </fix>
+      <add>
+        Allow to limit JUnit test run to a number of selected test case
+        methods. (kkolinko)
+      </add>
+      <update>
+        Update Commons Pool 2 to 2.2. (markt)
+      </update>
+      <update>
+        Update Commons DBCP 2 to the 2.0 release. (markt)
+      </update>
+      <fix>
+        <bug>56189</bug>: Remove used file cpappend.bat from the distribution.
+        (markt)
+      </fix>
+      <fix>
+        <bug>56204</bug>: Remove unnecessary dependency between tasks in the
+        build script. (markt)
+      </fix>
+      <fix>
+         Add definition of <code>org.apache.catalina.ant.FindLeaksTask</code>.
+         (kfujino)
+      </fix>
+      <fix>
+         Implement <code>org.apache.catalina.ant.VminfoTask</code>,
+         <code>org.apache.catalina.ant.ThreaddumpTask</code> and
+         <code>org.apache.catalina.ant.SslConnectorCiphersTask</code>. (kfujino)
+      </fix>
+      <add>
+         Add the option to the Apache Ant tasks to ignore the constraint of the
+         first line of the response message that must be "OK -"
+         (<code>ignoreResponseConstraint</code> in <code>AbstractCatalinaTask</code>).
+         Default is false. (kfujino)
+      </add>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.0.3 (markt)" rtext="beta, 2014-02-11">
   <subsection name="Other">
     <changelog>
       <fix>
