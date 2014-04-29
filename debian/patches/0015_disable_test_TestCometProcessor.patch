@@ -2,19 +2,19 @@ Description: Disables TestCometProcessor.testConnectionClose()
 Author: tony mancill <tmancill@debian.org>
 --- a/test/org/apache/catalina/comet/TestCometProcessor.java
 +++ b/test/org/apache/catalina/comet/TestCometProcessor.java
-@@ -34,6 +34,7 @@
- 
+@@ -35,6 +35,7 @@
  import org.junit.Assert;
+ import org.junit.Assume;
  import org.junit.Test;
 +import org.junit.Ignore;
  
  import org.apache.catalina.Context;
  import org.apache.catalina.Wrapper;
-@@ -191,6 +192,7 @@
+@@ -188,6 +189,7 @@
      }
  
      @Test
 +    @Ignore("fails consistently on Debian/Linux")
      public void testConnectionClose() throws Exception {
- 
-         if (!isCometSupported()) {
+         Assume.assumeTrue(
+                 "This test is skipped, because this connector does not support Comet.",

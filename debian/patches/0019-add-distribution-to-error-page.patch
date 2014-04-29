@@ -16,7 +16,7 @@ Bug-Debian: http://bugs.debian.org/729840
 \ No newline at end of file
 --- a/build.xml
 +++ b/build.xml
-@@ -229,6 +229,7 @@
+@@ -232,6 +232,7 @@
      <filter token="YEAR" value="${year}"/>
      <filter token="VERSION" value="${version}"/>
      <filter token="VERSION_NUMBER" value="${version.number}"/>
