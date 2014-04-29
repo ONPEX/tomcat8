@@ -381,7 +381,20 @@ public class InternalNio2OutputBuffer extends AbstractOutputBuffer<Nio2Channel> 
                         byteBuffer.flip();
                         flipped = true;
                     }
-                    socket.getSocket().write(byteBuffer).get(socket.getTimeout(), TimeUnit.MILLISECONDS);
+                    if (bufferedWrites.size() > 0) {
+                        for (ByteBuffer buffer : bufferedWrites) {
+                            buffer.flip();
+                            if (socket.getSocket().write(buffer).get(socket.getTimeout(), TimeUnit.MILLISECONDS).intValue() < 0) {
+                                throw new EOFException(sm.getString("iob.failedwrite"));
+                            }
+                        }
+                        bufferedWrites.clear();
+                    }
+                    if (byteBuffer.hasRemaining()) {
+                        if (socket.getSocket().write(byteBuffer).get(socket.getTimeout(), TimeUnit.MILLISECONDS).intValue() < 0) {
+                            throw new EOFException(sm.getString("iob.failedwrite"));
+                        }
+                    }
                 } catch (InterruptedException | ExecutionException e) {
                     throw new IOException(e);
                 } catch (TimeoutException e) {
@@ -445,15 +458,24 @@ public class InternalNio2OutputBuffer extends AbstractOutputBuffer<Nio2Channel> 
 
     @Override
     protected boolean hasMoreDataToFlush() {
-        return (flipped && socket.getSocket().getBufHandler().getWriteBuffer().remaining() > 0) ||
-                (!flipped && socket.getSocket().getBufHandler().getWriteBuffer().position() > 0) ||
-                (writePending.availablePermits() == 0) || bufferedWrites.size() > 0 || e != null;
+        synchronized (completionHandler) {
+            return (flipped && socket.getSocket().getBufHandler().getWriteBuffer().remaining() > 0) ||
+                    (!flipped && socket.getSocket().getBufHandler().getWriteBuffer().position() > 0) ||
+                    bufferedWrites.size() > 0 || e != null;
+        }
     }
 
 
     @Override
     protected void registerWriteInterest() throws IOException {
-        interest = true;
+        synchronized (completionHandler) {
+            if (writePending.availablePermits() == 0) {
+                interest = true;
+            } else {
+                // If no write is pending, notify
+                endpoint.processSocket(socket, SocketStatus.OPEN_WRITE, true);
+            }
+        }
     }
 
 
