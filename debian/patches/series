@@ -13,3 +13,4 @@
 0017-use-jdbc-pool-default.patch
 0018-fix-manager-webapp.patch
 0019-add-distribution-to-error-page.patch
+0020-disable-java8-support-with-jdtcompiler.patch

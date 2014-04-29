@@ -1,0 +1,27 @@
+Description: Drop Java 8 support in JSP files until the Eclipse compiler is updated
+Author: Emmanuel Bourg <ebourg@apache.org>
+Forwarded: not-needed
+--- a/java/org/apache/jasper/compiler/JDTCompiler.java
++++ b/java/org/apache/jasper/compiler/JDTCompiler.java
+@@ -332,9 +332,6 @@
+             } else if(opt.equals("1.7")) {
+                 settings.put(CompilerOptions.OPTION_Source,
+                              CompilerOptions.VERSION_1_7);
+-            } else if(opt.equals("1.8")) {
+-                settings.put(CompilerOptions.OPTION_Source,
+-                             CompilerOptions.VERSION_1_8);
+             } else {
+                 log.warn("Unknown source VM " + opt + " ignored.");
+                 settings.put(CompilerOptions.OPTION_Source,
+@@ -376,11 +373,6 @@
+                              CompilerOptions.VERSION_1_7);
+                 settings.put(CompilerOptions.OPTION_Compliance,
+                         CompilerOptions.VERSION_1_7);
+-            } else if(opt.equals("1.8")) {
+-                settings.put(CompilerOptions.OPTION_TargetPlatform,
+-                             CompilerOptions.VERSION_1_8);
+-                settings.put(CompilerOptions.OPTION_Compliance,
+-                        CompilerOptions.VERSION_1_8);
+             } else {
+                 log.warn("Unknown target VM " + opt + " ignored.");
+                 settings.put(CompilerOptions.OPTION_TargetPlatform,
