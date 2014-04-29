@@ -1,4 +1,4 @@
-Document: servlet30-api
+Document: servlet31-api
 Title: Java Servlet 3.1 API Documentation
 Author: Apache Software Foundation
 Abstract: Javadoc documentation for Java Servlet 3.1 API.
@@ -7,4 +7,3 @@ Section: Programming
 Format: HTML
 Index: /usr/share/doc/libservlet3.1-java/api/index.html
 Files: /usr/share/doc/libservlet3.1-java/api/*
-
