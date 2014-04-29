@@ -301,9 +301,12 @@ public class TestCoyoteAdapter extends TomcatBaseTest {
         client.disconnect();
 
         // Wait for server thread to stop
-        while (servlet.getThread().isAlive()) {
+        int count = 0;
+        while (servlet.getThread().isAlive() && count < 10) {
             Thread.sleep(250);
+            count ++;
         }
+        Assert.assertTrue(servlet.isCompleted());
     }
 
     private static class AsyncServlet extends HttpServlet {
@@ -313,9 +316,14 @@ public class TestCoyoteAdapter extends TomcatBaseTest {
         // This is a hack that won't work generally as servlets are expected to
         // handle more than one request.
         private Thread t;
+        private volatile boolean completed = false;
 
         public Thread getThread() {
             return t;
+        }
+
+        public boolean isCompleted() {
+            return completed;
         }
 
         @Override
@@ -334,14 +342,23 @@ public class TestCoyoteAdapter extends TomcatBaseTest {
 
                 @Override
                 public void run() {
-                    while (true) {
+                    for (int i = 0; i < 20; i++) {
                         try {
                             os.write("TEST".getBytes(StandardCharsets.UTF_8));
                             os.flush();
                             Thread.sleep(1000);
                         } catch (Exception e) {
-                            asyncCtxt.complete();
-                            break;
+                            try {
+                                // Note if request times out before this
+                                // exception is thrown and the complete call
+                                // below is made, the complete call below will
+                                // fail since the timeout will have completed
+                                // the request.
+                                asyncCtxt.complete();
+                                break;
+                            } finally {
+                                completed = true;
+                            }
                         }
                     }
                 }

@@ -44,6 +44,61 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues to not "pop up" wrt. others).
 -->
+<section name="Tomcat 8.0.5 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        Rework the fix for <bug>56190</bug> as the previous fix did not recycle
+        the request in all cases leading to mis-routing of requests. (markt)
+      </fix>
+      <fix>
+        Allow web applications to package tomcat-jdbc.jar and their JDBC driver
+        of choice in the web application. (markt)
+      </fix>
+      <fix>
+        <bug>56293</bug>: Cache resources loaded by the class loader from
+        <code>/META-INF/services/</code> for better performance for repeated
+        look ups. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        Fix possibly incomplete final flush with NIO2 when using non blocking
+        mode. (remm)
+      </fix>
+      <fix>
+        Cleanup NIO2 endpoint shutdown. (remm)
+      </fix>
+      <fix>
+        Fix rare race condition notifying onWritePossible in the NIO2
+        HTTP/1.1 connector. (remm)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        <bug>54475</bug>: Add Java 8 support to SMAP generation for JSPs. Patch
+        by Robbie Gibson. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <fix>
+        <bug>56273</bug>: If the Manager web application does not perform an
+        operation because the web application is already being serviced, report
+        an error rather than reporting success. (markt)
+      </fix>
+      <fix>
+        <bug>56304</bug>: Add a note to the documentation about not using
+        WebSocket with BIO HTTP in production. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+</section>
 <section name="Tomcat 8.0.4 (markt)">
   <subsection name="Catalina">
     <changelog>
