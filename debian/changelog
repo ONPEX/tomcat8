@@ -4,6 +4,7 @@ tomcat8 (8.0.5-1) unstable; urgency=medium
     - Refreshed the patches
     - Disabled Java 8 support in JSPs (requires an Eclipse compiler update)
   * Fixed the name of the doc-base file for libservlet3.1-java (Closes: #746338)
+  * Update email addresses of maintainers.
 
  -- Emmanuel Bourg <ebourg@apache.org>  Tue, 29 Apr 2014 10:22:45 +0200
 
