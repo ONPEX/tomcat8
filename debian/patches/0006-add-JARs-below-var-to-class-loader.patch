@@ -3,7 +3,7 @@ Date: Mon, 28 Jun 2010 21:32:57 +0200
 Subject: [PATCH] add JARs below /var to class loader
 --- a/conf/catalina.properties
 +++ b/conf/catalina.properties
-@@ -47,7 +47,7 @@
+@@ -48,7 +48,7 @@
  #
  # Note: Values are enclosed in double quotes ("...") in case either the
  #       ${catalina.base} path or the ${catalina.home} path contains a comma.
@@ -12,7 +12,7 @@ Subject: [PATCH] add JARs below /var to class loader
  
  #
  # List of comma-separated paths defining the contents of the "server"
-@@ -60,7 +60,7 @@
+@@ -61,7 +61,7 @@
  #     "foo/*.jar": Add all the JARs of the specified folder as class
  #                  repositories
  #     "foo/bar.jar": Add bar.jar as a class repository
@@ -21,7 +21,7 @@ Subject: [PATCH] add JARs below /var to class loader
  
  #
  # List of comma-separated paths defining the contents of the "shared"
-@@ -74,7 +74,7 @@
+@@ -75,7 +75,7 @@
  #     "foo/bar.jar": Add bar.jar as a class repository
  # Please note that for single jars, e.g. bar.jar, you need the URL form
  # starting with file:.

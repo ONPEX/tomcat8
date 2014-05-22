@@ -3,7 +3,7 @@ Author: Emmanuel Bourg <ebourg@apache.org>
 Forwarded: not-needed
 --- a/java/org/apache/jasper/compiler/JDTCompiler.java
 +++ b/java/org/apache/jasper/compiler/JDTCompiler.java
-@@ -332,9 +332,6 @@
+@@ -305,9 +305,6 @@
              } else if(opt.equals("1.7")) {
                  settings.put(CompilerOptions.OPTION_Source,
                               CompilerOptions.VERSION_1_7);
@@ -13,7 +13,7 @@ Forwarded: not-needed
              } else {
                  log.warn("Unknown source VM " + opt + " ignored.");
                  settings.put(CompilerOptions.OPTION_Source,
-@@ -376,11 +373,6 @@
+@@ -349,11 +346,6 @@
                               CompilerOptions.VERSION_1_7);
                  settings.put(CompilerOptions.OPTION_Compliance,
                          CompilerOptions.VERSION_1_7);

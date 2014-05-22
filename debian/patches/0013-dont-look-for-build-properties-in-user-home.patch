@@ -3,7 +3,7 @@ Date: Mon, 9 Jul 2012 20:53:38 +0000
 Subject: 0013-dont-look-for-build-properties-in-user-home
 --- a/build.xml
 +++ b/build.xml
-@@ -515,7 +515,6 @@
+@@ -514,7 +514,6 @@
      <!-- Property that determines if manifests need updating -->
      <uptodate property="manifests.uptodate"
          targetfile="${tomcat.manifests}/default.manifest" >

@@ -5,7 +5,7 @@ Author: tony mancill <tmancill@debian.org>
 Forwarded: not-needed
 --- a/java/org/apache/jasper/compiler/JDTCompiler.java
 +++ b/java/org/apache/jasper/compiler/JDTCompiler.java
-@@ -165,7 +165,7 @@
+@@ -145,7 +145,7 @@
                  return result;
              }
  

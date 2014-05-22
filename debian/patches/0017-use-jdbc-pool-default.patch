@@ -22,7 +22,7 @@ Forwarded: not-needed
          Package + ".OpenEjbFactory";
 --- a/webapps/docs/config/systemprops.xml
 +++ b/webapps/docs/config/systemprops.xml
-@@ -589,9 +589,7 @@
+@@ -590,9 +590,7 @@
      <property name="javax.sql.DataSource.Factory">
        <p>The class name of the factory to use to create resources of type
        <code>javax.sql.DataSource</code>. If not specified the default of
@@ -35,7 +35,7 @@ Forwarded: not-needed
      <property name="javax.mail.Session.Factory">
 --- a/webapps/docs/jndi-resources-howto.xml
 +++ b/webapps/docs/jndi-resources-howto.xml
-@@ -659,7 +659,7 @@
+@@ -662,7 +662,7 @@
  
      <p>The configuration properties for Tomcat's standard data source
      resource factory
