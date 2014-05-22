@@ -155,20 +155,15 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
     @Override
     protected void registerForEvent(boolean read, boolean write) {
         final NioChannel socket = socketWrapper.getSocket();
-        final NioEndpoint.KeyAttachment attach =
-                (NioEndpoint.KeyAttachment) socket.getAttachment(false);
-        if (attach == null) {
-            return;
-        }
-        SelectionKey key = socket.getIOChannel().keyFor(socket.getPoller().getSelector());
+
+        int interestOps = 0;
         if (read) {
-            attach.interestOps(attach.interestOps() | SelectionKey.OP_READ);
-            key.interestOps(key.interestOps() | SelectionKey.OP_READ);
+            interestOps = SelectionKey.OP_READ;
         }
         if (write) {
-            attach.interestOps(attach.interestOps() | SelectionKey.OP_WRITE);
-            key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
+            interestOps = interestOps | SelectionKey.OP_WRITE;
         }
+        socket.getPoller().add(socket, interestOps);
     }
 
 
@@ -505,26 +500,6 @@ public class Http11NioProcessor extends AbstractHttp11Processor<NioChannel> {
             RequestInfo rp = request.getRequestProcessor();
             if ( rp.getStage() != org.apache.coyote.Constants.STAGE_SERVICE ) {
                 attach.setTimeout(timeout);
-            }
-        } else if (actionCode == ActionCode.ASYNC_COMPLETE) {
-            socketWrapper.clearDispatches();
-            if (asyncStateMachine.asyncComplete()) {
-                ((NioEndpoint)endpoint).dispatchForEvent(this.socketWrapper.getSocket(),SocketStatus.OPEN_READ, true);
-            }
-        } else if (actionCode == ActionCode.ASYNC_SETTIMEOUT) {
-            if (param==null) {
-                return;
-            }
-            if (socketWrapper==null || socketWrapper.getSocket().getAttachment(false)==null) {
-                return;
-            }
-            NioEndpoint.KeyAttachment attach = (NioEndpoint.KeyAttachment)socketWrapper.getSocket().getAttachment(false);
-            long timeout = ((Long)param).longValue();
-            //if we are not piggy backing on a worker thread, set the timeout
-            attach.setTimeout(timeout);
-        } else if (actionCode == ActionCode.ASYNC_DISPATCH) {
-            if (asyncStateMachine.asyncDispatch()) {
-                ((NioEndpoint)endpoint).dispatchForEvent(this.socketWrapper.getSocket(),SocketStatus.OPEN_READ, true);
             }
         }
     }

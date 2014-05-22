@@ -467,26 +467,7 @@ public class Http11AprProcessor extends AbstractHttp11Processor<Long> {
                     SocketStatus.OPEN_READ, true);
         } else if (actionCode == ActionCode.COMET_SETTIMEOUT) {
             //no op
-        } else if (actionCode == ActionCode.ASYNC_COMPLETE) {
-            socketWrapper.clearDispatches();
-            if (asyncStateMachine.asyncComplete()) {
-                ((AprEndpoint)endpoint).processSocket(this.socketWrapper,
-                        SocketStatus.OPEN_READ, true);
-            }
-        } else if (actionCode == ActionCode.ASYNC_SETTIMEOUT) {
-            if (param==null) {
-                return;
-            }
-            long timeout = ((Long)param).longValue();
-            socketWrapper.setTimeout(timeout);
-        } else if (actionCode == ActionCode.ASYNC_DISPATCH) {
-            if (asyncStateMachine.asyncDispatch()) {
-                ((AprEndpoint)endpoint).processSocket(this.socketWrapper,
-                        SocketStatus.OPEN_READ, true);
-            }
         }
-
-
     }
 
 

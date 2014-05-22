@@ -380,6 +380,44 @@ public class TestParser extends TomcatBaseTest {
                 result.contains("[4: [data-test]: [window.alert('Hello 'World <&>'!')]]"));
     }
 
+    @Test
+    public void testBug56334() throws Exception {
+        Tomcat tomcat = getTomcatInstance();
+
+        File appDir = new File("test/webapp");
+        // app dir is relative to server home
+        StandardContext ctxt = (StandardContext) tomcat.addWebapp(null,
+                "/test", appDir.getAbsolutePath());
+
+        // This test needs the JSTL libraries
+        File lib = new File("webapps/examples/WEB-INF/lib");
+        ctxt.setResources(new StandardRoot(ctxt));
+        ctxt.getResources().createWebResourceSet(
+                WebResourceRoot.ResourceSetType.POST, "/WEB-INF/lib",
+                lib.getAbsolutePath(), null, "/");
+
+        tomcat.start();
+
+        ByteChunk res = getUrl("http://localhost:" + getPort() +
+                "/test/bug5nnnn/bug56334.jspx");
+
+        String result = res.toString();
+
+        // NOTE: The expected values must themselves be \ escaped below
+        Assert.assertTrue(result, result.contains("01a\\?resize01a"));
+        Assert.assertTrue(result, result.contains("01b\\\\x\\?resize01b"));
+        Assert.assertTrue(result, result.contains("<set data-value=\"02a\\\\?resize02a\"/>"));
+        Assert.assertTrue(result, result.contains("<set data-value=\"02b\\\\\\\\x\\\\?resize02b\"/>"));
+        Assert.assertTrue(result, result.contains("<set data-value=\"03a\\?resize03a\"/>"));
+        Assert.assertTrue(result, result.contains("<set data-value=\"03b\\\\x\\?resize03b\"/>"));
+        Assert.assertTrue(result, result.contains("<04a\\?resize04a/>"));
+        Assert.assertTrue(result, result.contains("<04b\\\\x\\?resize04b/>"));
+        Assert.assertTrue(result, result.contains("<set data-value=\"05a$${&amp;\"/>"));
+        Assert.assertTrue(result, result.contains("<set data-value=\"05b$${&amp;2\"/>"));
+        Assert.assertTrue(result, result.contains("<set data-value=\"05c##{&gt;hello&lt;\"/>"));
+        Assert.assertTrue(result, result.contains("<set xmlns:foo=\"urn:06a\\bar\\baz\"/>"));
+    }
+
     /** Assertion for text printed by tags:echo */
     private static void assertEcho(String result, String expected) {
         assertTrue(result.indexOf("<p>" + expected + "</p>") > 0);

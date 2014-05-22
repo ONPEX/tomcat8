@@ -38,42 +38,45 @@ public class Nio2ServletOutputStream extends AbstractServletOutputStream<Nio2Cha
     private final AbstractEndpoint<Nio2Channel> endpoint;
     private final Nio2Channel channel;
     private final int maxWrite;
-    private final CompletionHandler<Integer, SocketWrapper<Nio2Channel>> completionHandler;
+    private final CompletionHandler<Integer, ByteBuffer> completionHandler;
     private final Semaphore writePending = new Semaphore(1);
 
-    public Nio2ServletOutputStream(AbstractEndpoint<Nio2Channel> endpoint0, SocketWrapper<Nio2Channel> socketWrapper) {
-        super(socketWrapper);
+    public Nio2ServletOutputStream(AbstractEndpoint<Nio2Channel> endpoint0, SocketWrapper<Nio2Channel> socketWrapper0) {
+        super(socketWrapper0);
         this.endpoint = endpoint0;
-        channel = socketWrapper.getSocket();
+        channel = socketWrapper0.getSocket();
         maxWrite = channel.getBufHandler().getWriteBuffer().capacity();
-        this.completionHandler = new CompletionHandler<Integer, SocketWrapper<Nio2Channel>>() {
+        this.completionHandler = new CompletionHandler<Integer, ByteBuffer>() {
             @Override
-            public void completed(Integer nBytes, SocketWrapper<Nio2Channel> attachment) {
+            public void completed(Integer nBytes, ByteBuffer attachment) {
                 if (nBytes.intValue() < 0) {
                     failed(new EOFException(), attachment);
-                    return;
-                }
-                writePending.release();
-                if (!Nio2Endpoint.isInline()) {
-                    try {
-                        onWritePossible();
-                    } catch (IOException e) {
-                        attachment.setError(true);
-                        onError(e);
-                        endpoint.processSocket(attachment, SocketStatus.ERROR, true);
+                } else if (attachment.hasRemaining()) {
+                    channel.write(attachment, socketWrapper.getTimeout(),
+                            TimeUnit.MILLISECONDS, attachment, completionHandler);
+                } else {
+                    writePending.release();
+                    if (!Nio2Endpoint.isInline()) {
+                        try {
+                            onWritePossible();
+                        } catch (IOException e) {
+                            socketWrapper.setError(true);
+                            onError(e);
+                            endpoint.processSocket(socketWrapper, SocketStatus.ERROR, false);
+                        }
                     }
                 }
             }
             @Override
-            public void failed(Throwable exc, SocketWrapper<Nio2Channel> attachment) {
-                attachment.setError(true);
+            public void failed(Throwable exc, ByteBuffer attachment) {
+                socketWrapper.setError(true);
                 writePending.release();
                 if (exc instanceof AsynchronousCloseException) {
                     // If already closed, don't call onError and close again
                     return;
                 }
                 onError(exc);
-                endpoint.processSocket(attachment, SocketStatus.ERROR, true);
+                endpoint.processSocket(socketWrapper, SocketStatus.ERROR, true);
             }
         };
     }
@@ -126,7 +129,15 @@ public class Nio2ServletOutputStream extends AbstractServletOutputStream<Nio2Cha
             buffer.flip();
             try {
                 written = channel.write(buffer).get(socketWrapper.getTimeout(), TimeUnit.MILLISECONDS).intValue();
-            } catch (InterruptedException | ExecutionException e) {
+            } catch (ExecutionException e) {
+                if (e.getCause() instanceof IOException) {
+                    onError(e.getCause());
+                    throw (IOException) e.getCause();
+                } else {
+                    onError(e);
+                    throw new IOException(e);
+                }
+            } catch (InterruptedException e) {
                 onError(e);
                 throw new IOException(e);
             } catch (TimeoutException e) {
@@ -140,7 +151,7 @@ public class Nio2ServletOutputStream extends AbstractServletOutputStream<Nio2Cha
                 buffer.put(b, off, len);
                 buffer.flip();
                 Nio2Endpoint.startInline();
-                channel.write(buffer, socketWrapper.getTimeout(), TimeUnit.MILLISECONDS, socketWrapper, completionHandler);
+                channel.write(buffer, socketWrapper.getTimeout(), TimeUnit.MILLISECONDS, buffer, completionHandler);
                 Nio2Endpoint.endInline();
                 written = len;
             }
@@ -158,7 +169,15 @@ public class Nio2ServletOutputStream extends AbstractServletOutputStream<Nio2Cha
             } else {
                 throw new TimeoutException();
             }
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof IOException) {
+                onError(e.getCause());
+                throw (IOException) e.getCause();
+            } else {
+                onError(e);
+                throw new IOException(e);
+            }
+        } catch (InterruptedException e) {
             onError(e);
             throw new IOException(e);
         } catch (TimeoutException e) {
@@ -172,4 +191,5 @@ public class Nio2ServletOutputStream extends AbstractServletOutputStream<Nio2Cha
     protected void doClose() throws IOException {
         channel.close(true);
     }
+
 }
