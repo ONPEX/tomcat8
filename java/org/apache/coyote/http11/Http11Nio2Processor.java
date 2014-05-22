@@ -90,25 +90,24 @@ public class Http11Nio2Processor extends AbstractHttp11Processor<Nio2Channel> {
         long soTimeout = endpoint.getSoTimeout();
 
         RequestInfo rp = request.getRequestProcessor();
-        final SocketWrapper<Nio2Channel> attach = socketWrapper;
         try {
             rp.setStage(org.apache.coyote.Constants.STAGE_SERVICE);
             error = !getAdapter().event(request, response, status);
-            if ( !error ) {
-                if (attach != null) {
-                    attach.setComet(comet);
+            if (!error) {
+                if (socketWrapper != null) {
+                    socketWrapper.setComet(comet);
                     if (comet) {
                         Integer comettimeout = (Integer) request.getAttribute(
                                 org.apache.coyote.Constants.COMET_TIMEOUT_ATTR);
                         if (comettimeout != null) {
-                            attach.setTimeout(comettimeout.longValue());
+                            socketWrapper.setTimeout(comettimeout.longValue());
                         }
                     } else {
                         //reset the timeout
                         if (keepAlive) {
-                            attach.setTimeout(keepAliveTimeout);
+                            socketWrapper.setTimeout(keepAliveTimeout);
                         } else {
-                            attach.setTimeout(soTimeout);
+                            socketWrapper.setTimeout(soTimeout);
                         }
                     }
 
@@ -133,7 +132,13 @@ public class Http11Nio2Processor extends AbstractHttp11Processor<Nio2Channel> {
             if (keepAlive) {
                 inputBuffer.nextRequest();
                 outputBuffer.nextRequest();
-                return SocketState.OPEN;
+                if (((InternalNio2InputBuffer) inputBuffer).isPending()) {
+                    // Following comet processing, a read is still pending, so
+                    // keep the processor associated
+                    return SocketState.LONG;
+                } else {
+                    return SocketState.OPEN;
+                }
             } else {
                 return SocketState.CLOSED;
             }
@@ -143,17 +148,24 @@ public class Http11Nio2Processor extends AbstractHttp11Processor<Nio2Channel> {
     }
 
     @Override
-    protected void registerForEvent(boolean read, boolean write) {
-        final Nio2Endpoint.Nio2SocketWrapper attach =
-                (Nio2Endpoint.Nio2SocketWrapper) socketWrapper;
-        if (attach == null) {
-            return;
+    public SocketState asyncDispatch(SocketStatus status) {
+        SocketState state = super.asyncDispatch(status);
+        if (state == SocketState.OPEN && ((InternalNio2InputBuffer) inputBuffer).isPending()) {
+            // Following async processing, a read is still pending, so
+            // keep the processor associated
+            return SocketState.LONG;
+        } else {
+            return state;
         }
+    }
+
+    @Override
+    protected void registerForEvent(boolean read, boolean write) {
         if (read) {
-            attach.interestOps(attach.interestOps() | Nio2Endpoint.OP_READ);
+            ((InternalNio2InputBuffer) inputBuffer).registerReadInterest();
         }
         if (write) {
-            attach.interestOps(attach.interestOps() | Nio2Endpoint.OP_WRITE);
+            ((InternalNio2OutputBuffer) outputBuffer).registerWriteInterest();
         }
     }
 
@@ -235,21 +247,19 @@ public class Http11Nio2Processor extends AbstractHttp11Processor<Nio2Channel> {
 
     @Override
     protected void setSocketTimeout(int timeout) throws IOException {
-        // Not relevant for NIO2
+        socketWrapper.setTimeout(timeout);
     }
 
 
     @Override
     protected void setCometTimeouts(SocketWrapper<Nio2Channel> socketWrapper) {
-        final Nio2Endpoint.Nio2SocketWrapper attach =
-                (Nio2Endpoint.Nio2SocketWrapper)socketWrapper;
-        if (attach != null)  {
-            attach.setComet(comet);
+        if (socketWrapper != null)  {
+            socketWrapper.setComet(comet);
             if (comet) {
                 Integer comettimeout = (Integer) request.getAttribute(
                         org.apache.coyote.Constants.COMET_TIMEOUT_ATTR);
                 if (comettimeout != null) {
-                    attach.setTimeout(comettimeout.longValue());
+                    socketWrapper.setTimeout(comettimeout.longValue());
                 }
             }
         }
@@ -464,7 +474,7 @@ public class Http11Nio2Processor extends AbstractHttp11Processor<Nio2Channel> {
                                 .getSslImplementation().getSSLSupport(
                                         engine.getSession());
                     } catch (IOException ioe) {
-                        log.warn(sm.getString("http11processor.socket.sslreneg",ioe));
+                        log.warn(sm.getString("http11processor.socket.sslreneg"), ioe);
                     }
                 }
 
@@ -507,25 +517,6 @@ public class Http11Nio2Processor extends AbstractHttp11Processor<Nio2Channel> {
             RequestInfo rp = request.getRequestProcessor();
             if ( rp.getStage() != org.apache.coyote.Constants.STAGE_SERVICE ) {
                 socketWrapper.setTimeout(timeout);
-            }
-        } else if (actionCode == ActionCode.ASYNC_COMPLETE) {
-            socketWrapper.clearDispatches();
-            if (asyncStateMachine.asyncComplete()) {
-                endpoint.processSocket(this.socketWrapper, SocketStatus.OPEN_READ, true);
-            }
-        } else if (actionCode == ActionCode.ASYNC_SETTIMEOUT) {
-            if (param == null) {
-                return;
-            }
-            if (socketWrapper == null) {
-                return;
-            }
-            long timeout = ((Long)param).longValue();
-            //if we are not piggy backing on a worker thread, set the timeout
-            socketWrapper.setTimeout(timeout);
-        } else if (actionCode == ActionCode.ASYNC_DISPATCH) {
-            if (asyncStateMachine.asyncDispatch()) {
-                endpoint.processSocket(this.socketWrapper, SocketStatus.OPEN_READ, true);
             }
         }
     }

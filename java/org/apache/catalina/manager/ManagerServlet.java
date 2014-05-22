@@ -720,15 +720,7 @@ public class ManagerServlet extends HttpServlet implements ContainerServlet {
             return;
         }
 
-        context = (Context) host.findChild(name);
-        if (context != null && context.getConfigured()) {
-            writer.println(smClient.getString(
-                    "managerServlet.deployed", displayPath));
-        } else {
-            // Something failed
-            writer.println(smClient.getString(
-                    "managerServlet.deployFailed", displayPath));
-        }
+        writeDeployResult(writer, smClient, name, displayPath);
     }
 
 
@@ -786,16 +778,7 @@ public class ManagerServlet extends HttpServlet implements ContainerServlet {
             return;
         }
 
-        context = (Context) host.findChild(name);
-        if (context != null && context.getConfigured()) {
-            writer.println(smClient.getString("managerServlet.deployed",
-                    displayPath));
-        } else {
-            // Something failed
-            writer.println(smClient.getString("managerServlet.deployFailed",
-                    displayPath));
-        }
-
+        writeDeployResult(writer, smClient, name, displayPath);
     }
 
 
@@ -903,19 +886,7 @@ public class ManagerServlet extends HttpServlet implements ContainerServlet {
                     removeServiced(name);
                 }
             }
-            context = (Context) host.findChild(name);
-            if (context != null && context.getConfigured() &&
-                    context.getState().isAvailable()) {
-                writer.println(smClient.getString(
-                        "managerServlet.deployed", displayPath));
-            } else if (context!=null && !context.getState().isAvailable()) {
-                writer.println(smClient.getString(
-                        "managerServlet.deployedButNotStarted", displayPath));
-            } else {
-                // Something failed
-                writer.println(smClient.getString(
-                        "managerServlet.deployFailed", displayPath));
-            }
+            writeDeployResult(writer, smClient, name, displayPath);
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
             log("ManagerServlet.install[" + displayPath + "]", t);
@@ -923,6 +894,24 @@ public class ManagerServlet extends HttpServlet implements ContainerServlet {
                     t.toString()));
         }
 
+    }
+
+
+    private void writeDeployResult(PrintWriter writer, StringManager smClient,
+            String name, String displayPath) {
+        Context deployed = (Context) host.findChild(name);
+        if (deployed != null && deployed.getConfigured() &&
+                deployed.getState().isAvailable()) {
+            writer.println(smClient.getString(
+                    "managerServlet.deployed", displayPath));
+        } else if (deployed!=null && !deployed.getState().isAvailable()) {
+            writer.println(smClient.getString(
+                    "managerServlet.deployedButNotStarted", displayPath));
+        } else {
+            // Something failed
+            writer.println(smClient.getString(
+                    "managerServlet.deployFailed", displayPath));
+        }
     }
 
 
@@ -1531,12 +1520,10 @@ public class ManagerServlet extends HttpServlet implements ContainerServlet {
             String msg = smClient.getString("managerServlet.deleteFail", war);
             throw new IOException(msg);
         }
-        ServletInputStream istream = null;
-        BufferedOutputStream ostream = null;
-        try {
-            istream = request.getInputStream();
-            ostream =
-                new BufferedOutputStream(new FileOutputStream(war), 1024);
+
+        try (ServletInputStream istream = request.getInputStream();
+                BufferedOutputStream ostream =
+                        new BufferedOutputStream(new FileOutputStream(war), 1024)) {
             byte buffer[] = new byte[1024];
             while (true) {
                 int n = istream.read(buffer);
@@ -1545,34 +1532,12 @@ public class ManagerServlet extends HttpServlet implements ContainerServlet {
                 }
                 ostream.write(buffer, 0, n);
             }
-            ostream.flush();
-            ostream.close();
-            ostream = null;
-            istream.close();
-            istream = null;
         } catch (IOException e) {
             if (war.exists() && !war.delete()) {
                 writer.println(
                         smClient.getString("managerServlet.deleteFail", war));
             }
             throw e;
-        } finally {
-            if (ostream != null) {
-                try {
-                    ostream.close();
-                } catch (Throwable t) {
-                    ExceptionUtils.handleThrowable(t);
-                }
-                ostream = null;
-            }
-            if (istream != null) {
-                try {
-                    istream.close();
-                } catch (Throwable t) {
-                    ExceptionUtils.handleThrowable(t);
-                }
-                istream = null;
-            }
         }
 
     }
@@ -1643,11 +1608,8 @@ public class ManagerServlet extends HttpServlet implements ContainerServlet {
             if (fileSrc.isDirectory()) {
                 result = copyInternal(fileSrc, fileDest, buf);
             } else {
-                FileInputStream is = null;
-                FileOutputStream os = null;
-                try {
-                    is = new FileInputStream(fileSrc);
-                    os = new FileOutputStream(fileDest);
+                try (FileInputStream is = new FileInputStream(fileSrc);
+                        FileOutputStream os = new FileOutputStream(fileDest)){
                     int len = 0;
                     while (true) {
                         len = is.read(buf);
@@ -1658,21 +1620,6 @@ public class ManagerServlet extends HttpServlet implements ContainerServlet {
                 } catch (IOException e) {
                     e.printStackTrace();
                     result = false;
-                } finally {
-                    if (is != null) {
-                        try {
-                            is.close();
-                        } catch (IOException e) {
-                            // Ignore
-                        }
-                    }
-                    if (os != null) {
-                        try {
-                            os.close();
-                        } catch (IOException e) {
-                            // Ignore
-                        }
-                    }
                 }
             }
         }

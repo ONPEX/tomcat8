@@ -890,6 +890,8 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
      */
     @Override
     public void recycle(boolean socketClosing) {
+        getAdapter().checkRecycled(request, response);
+
         asyncStateMachine.recycle();
 
         // Recycle Request object
@@ -1656,7 +1658,7 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
 
         while (written > 0 && responseMsgPos < len) {
             written = output(
-                    responseMessage.getBuffer(), responseMsgPos, len, block);
+                    responseMessage.getBuffer(), responseMsgPos, len - responseMsgPos, block);
             responseMsgPos += written;
         }
 

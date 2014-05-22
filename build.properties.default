@@ -25,7 +25,7 @@
 # ----- Version Control Flags -----
 version.major=8
 version.minor=0
-version.build=5
+version.build=8
 version.patch=0
 version.suffix=
 
@@ -144,25 +144,13 @@ npn.jar=${npn.home}/npn-${npn.version}.jar
 npn.loc=http://repo1.maven.org/maven2/org/eclipse/jetty/npn/npn-api/${npn.version}/npn-api-${npn.version}.jar
 
 # ----- Tomcat native library -----
-tomcat-native.version=1.1.29
+tomcat-native.version=1.1.30
 tomcat-native.home=${base.path}/tomcat-native-${tomcat-native.version}
 tomcat-native.tar.gz=${tomcat-native.home}/tomcat-native.tar.gz
 tomcat-native.loc.1=${base-tomcat.loc.1}/tomcat-connectors/native/${tomcat-native.version}/source/tomcat-native-${tomcat-native.version}-src.tar.gz
 tomcat-native.loc.2=${base-tomcat.loc.2}/tomcat-connectors/native/${tomcat-native.version}/source/tomcat-native-${tomcat-native.version}-src.tar.gz
 tomcat-native.win.1=${base-tomcat.loc.1}/tomcat-connectors/native/${tomcat-native.version}/binaries/tomcat-native-${tomcat-native.version}-win32-bin.zip
 tomcat-native.win.2=${base-tomcat.loc.2}/tomcat-connectors/native/${tomcat-native.version}/binaries/tomcat-native-${tomcat-native.version}-win32-bin.zip
-
-# ----- Commons DBCP, version 2.0 or later -----
-commons-dbcp.version=2.0
-commons-dbcp.home=${base.path}/commons-dbcp2-${commons-dbcp.version}-src
-commons-dbcp-src.loc.1=${base-commons.loc.1}/dbcp/source/commons-dbcp2-${commons-dbcp.version}-src.tar.gz
-commons-dbcp-src.loc.2=${base-commons.loc.2}/dbcp/source/commons-dbcp2-${commons-dbcp.version}-src.tar.gz
-
-# ----- Commons Pool, version 2.1 or later -----
-commons-pool.version=2.2
-commons-pool.home=${base.path}/commons-pool2-${commons-pool.version}-src
-commons-pool-src.loc.1=${base-commons.loc.1}/pool/source/commons-pool2-${commons-pool.version}-src.tar.gz
-commons-pool-src.loc.2=${base-commons.loc.2}/pool/source/commons-pool2-${commons-pool.version}-src.tar.gz
 
 # ----- NSIS, version 2.0 or later -----
 nsis.home=${base.path}/nsis-2.46

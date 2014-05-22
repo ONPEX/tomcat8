@@ -40,6 +40,17 @@ import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestCoyoteAdapter extends TomcatBaseTest {
 
+    public static final String TEXT_8K;
+    public static final byte[] BYTES_8K;
+
+    static {
+        StringBuilder sb = new StringBuilder(8192);
+        for (int i = 0; i < 512; i++) {
+            sb.append("0123456789ABCDEF");
+        }
+        TEXT_8K = sb.toString();
+        BYTES_8K = TEXT_8K.getBytes(StandardCharsets.UTF_8);
+    }
     @Test
     public void testPathParmsRootNone() throws Exception {
         pathParamTest("/", "none");
@@ -295,17 +306,22 @@ public class TestCoyoteAdapter extends TomcatBaseTest {
         client.sendRequest();
 
         for (int i = 0; i < 10; i++) {
-            System.out.println(client.readLine());
+            String line = client.readLine();
+            if (line != null && line.length() > 20)
+            System.err.println(line.subSequence(0, 20) + "...");
         }
 
         client.disconnect();
 
         // Wait for server thread to stop
         int count = 0;
-        while (servlet.getThread().isAlive() && count < 10) {
+        while (servlet.getThread().isAlive() && count < 20) {
             Thread.sleep(250);
             count ++;
         }
+        System.err.println("Waited for servlet thread to stop for "
+                + (count * 250) + " ms");
+
         Assert.assertTrue(servlet.isCompleted());
     }
 
@@ -344,10 +360,11 @@ public class TestCoyoteAdapter extends TomcatBaseTest {
                 public void run() {
                     for (int i = 0; i < 20; i++) {
                         try {
-                            os.write("TEST".getBytes(StandardCharsets.UTF_8));
+                            os.write(BYTES_8K);
                             os.flush();
                             Thread.sleep(1000);
                         } catch (Exception e) {
+                            System.err.println("Exception caught " + e.getMessage());
                             try {
                                 // Note if request times out before this
                                 // exception is thrown and the complete call

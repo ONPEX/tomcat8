@@ -129,6 +129,8 @@ import org.apache.tomcat.util.descriptor.web.MessageDestinationRef;
 import org.apache.tomcat.util.descriptor.web.SecurityCollection;
 import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
 import org.apache.tomcat.util.scan.StandardJarScanner;
+import org.apache.tomcat.util.security.PrivilegedGetTccl;
+import org.apache.tomcat.util.security.PrivilegedSetTccl;
 
 /**
  * Standard implementation of the <b>Context</b> interface.  Each
@@ -816,7 +818,16 @@ public class StandardContext extends ContainerBase
     });
     protected ThreadBindingListener threadBindingListener = DEFAULT_NAMING_LISTENER;
 
+    private final Object namingToken = new Object();
+
+
     // ----------------------------------------------------- Context Properties
+
+    @Override
+    public Object getNamingToken() {
+        return namingToken;
+    }
+
 
     @Override
     public void setContainerSciFilter(String containerSciFilter) {
@@ -5716,7 +5727,7 @@ public class StandardContext extends ContainerBase
 
         if (isUseNaming()) {
             try {
-                ContextBindings.bindThread(this, this);
+                ContextBindings.bindThread(this, getNamingToken());
             } catch (NamingException e) {
                 // Silent catch, as this is a normal case during the early
                 // startup stages
@@ -5733,7 +5744,7 @@ public class StandardContext extends ContainerBase
     protected void unbindThread(ClassLoader oldContextClassLoader) {
 
         if (isUseNaming()) {
-            ContextBindings.unbindThread(this, this);
+            ContextBindings.unbindThread(this, getNamingToken());
         }
 
         unbind(false, oldContextClassLoader);
@@ -5807,30 +5818,6 @@ public class StandardContext extends ContainerBase
             AccessController.doPrivileged(pa);
         } else {
             Thread.currentThread().setContextClassLoader(originalClassLoader);
-        }
-    }
-
-
-    private static class PrivilegedSetTccl implements PrivilegedAction<Void> {
-
-        private ClassLoader cl;
-
-        PrivilegedSetTccl(ClassLoader cl) {
-            this.cl = cl;
-        }
-
-        @Override
-        public Void run() {
-            Thread.currentThread().setContextClassLoader(cl);
-            return null;
-        }
-    }
-
-
-    private static class PrivilegedGetTccl implements PrivilegedAction<ClassLoader> {
-        @Override
-        public ClassLoader run() {
-            return Thread.currentThread().getContextClassLoader();
         }
     }
 
@@ -6144,11 +6131,15 @@ public class StandardContext extends ContainerBase
      */
     private void checkUnusualURLPattern(String urlPattern) {
         if (log.isInfoEnabled()) {
-            if(urlPattern.endsWith("*") && (urlPattern.length() < 2 ||
-                    urlPattern.charAt(urlPattern.length()-2) != '/')) {
+            // First group checks for '*' or '/foo*' style patterns
+            // Second group checks for *.foo.bar style patterns
+            if((urlPattern.endsWith("*") && (urlPattern.length() < 2 ||
+                        urlPattern.charAt(urlPattern.length()-2) != '/')) ||
+                    urlPattern.startsWith("*.") && urlPattern.length() > 2 &&
+                        urlPattern.lastIndexOf('.') > 1) {
                 log.info("Suspicious url pattern: \"" + urlPattern + "\"" +
                         " in context [" + getName() + "] - see" +
-                        " section SRV.11.2 of the Servlet specification" );
+                        " sections 12.1 and 12.2 of the Servlet specification");
             }
         }
     }
@@ -6174,9 +6165,7 @@ public class StandardContext extends ContainerBase
             return "";
         }
         StringBuilder sb = new StringBuilder();
-        BufferedReader br = null;
-        try {
-            br = new BufferedReader(new InputStreamReader(stream));
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(stream))) {
             String strRead = "";
             while (strRead != null) {
                 sb.append(strRead);
@@ -6184,12 +6173,6 @@ public class StandardContext extends ContainerBase
             }
         } catch (IOException e) {
             return "";
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (IOException ioe) {/*Ignore*/}
-            }
         }
 
         return sb.toString();
