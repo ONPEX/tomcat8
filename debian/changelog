@@ -2,6 +2,7 @@ tomcat8 (8.0.8-2) UNRELEASED; urgency=medium
 
   * Search for OpenJDK 8 and Oracle JDKs when starting the server
   * Removed the dependency on the non existent java-7-runtime package
+  * Fixed a link still pointing to the Tomcat 7 documentation in README.Debian
 
  -- Emmanuel Bourg <ebourg@apache.org>  Mon, 26 May 2014 12:13:02 +0200
 

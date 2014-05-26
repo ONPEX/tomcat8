@@ -11,7 +11,7 @@ Getting started:
     expose your Tomcat instance to the internet, please consider editing
     your /etc/default/tomcat8 file and set TOMCAT8_SECURITY="yes", then
     adjust policy files in /etc/tomcat8/policy.d/ as explained in
-    http://tomcat.apache.org/tomcat-7.0-doc/security-manager-howto.html
+    http://tomcat.apache.org/tomcat-8.0-doc/security-manager-howto.html
   * To run more than one Tomcat instance on your server, install the package
     tomcat8-user and run the tomcat8-instance-create utility.
     You should remove the tomcat8 package if you don't want Tomcat to
