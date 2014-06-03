@@ -44,7 +44,7 @@ Package: tomcat8
 Architecture: all
 Depends: adduser, tomcat8-common (>= ${source:Version}), ucf, ${misc:Depends}
 Recommends: authbind
-Suggests: libtcnative-1 (>= 1.1.24),
+Suggests: libtcnative-1 (>= 1.1.30),
           tomcat8-admin (>= ${source:Version}),
           tomcat8-docs (>= ${source:Version}),
           tomcat8-examples (>= ${source:Version}),
