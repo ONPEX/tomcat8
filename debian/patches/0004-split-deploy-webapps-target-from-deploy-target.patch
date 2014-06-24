@@ -3,16 +3,16 @@ Date: Mon, 28 Jun 2010 21:32:35 +0200
 Subject: [PATCH] split deploy-webapps target from deploy target
 --- a/build.xml
 +++ b/build.xml
-@@ -984,7 +984,7 @@
+@@ -985,7 +985,7 @@
      </xslt>
    </target>
  
--  <target name="deploy" depends="package,build-docs,build-tomcat-jdbc"
-+  <target name="deploy" depends="package,build-docs,build-tomcat-jdbc,deploy-webapps"
+-  <target name="deploy" depends="package,build-docs,build-tomcat-jdbc,compile-webapp-examples"
++  <target name="deploy" depends="package,build-docs,build-tomcat-jdbc,compile-webapp-examples,deploy-webapps"
            description="Default. Builds a working Tomcat instance">
  
      <copy tofile="${tomcat.build}/bin/tomcat-native.tar.gz"
-@@ -1022,6 +1022,10 @@
+@@ -1023,6 +1023,10 @@
        </fileset>
      </copy>
  
