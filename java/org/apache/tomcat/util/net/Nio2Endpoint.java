@@ -30,8 +30,6 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.CompletionHandler;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
-import java.util.Iterator;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
@@ -113,23 +111,17 @@ public class Nio2Endpoint extends AbstractEndpoint<Nio2Channel> {
     /**
      * Cache for SocketProcessor objects
      */
-    private final SynchronizedStack<SocketProcessor> processorCache =
-            new SynchronizedStack<>(SynchronizedStack.DEFAULT_SIZE,
-                    socketProperties.getProcessorCache());
+    private SynchronizedStack<SocketProcessor> processorCache;
 
     /**
-     * Cache for key attachment objects
+     * Cache for socket wrapper objects
      */
-    private final SynchronizedStack<Nio2SocketWrapper> socketWrapperCache =
-            new SynchronizedStack<>(SynchronizedStack.DEFAULT_SIZE,
-                    socketProperties.getSocketWrapperCache());
+    private SynchronizedStack<Nio2SocketWrapper> socketWrapperCache;
 
     /**
      * Bytebuffer cache, each channel holds a set of buffers (two, except for SSL holds four)
      */
-    private final SynchronizedStack<Nio2Channel> nioChannels =
-            new SynchronizedStack<>(SynchronizedStack.DEFAULT_SIZE,
-                    socketProperties.getBufferPoolSize());
+    private SynchronizedStack<Nio2Channel> nioChannels;
 
 
     // ------------------------------------------------------------- Properties
@@ -353,20 +345,25 @@ public class Nio2Endpoint extends AbstractEndpoint<Nio2Channel> {
             running = true;
             paused = false;
 
-            // FIXME: remove when more stable
-            log.warn("The NIO2 connector is currently BETA and should not be used in production");
-
             // Create worker collection
             if ( getExecutor() == null ) {
                 createExecutor();
             }
 
+            if (useCaches) {
+                processorCache = new SynchronizedStack<>(SynchronizedStack.DEFAULT_SIZE,
+                        socketProperties.getProcessorCache());
+                socketWrapperCache = new SynchronizedStack<>(SynchronizedStack.DEFAULT_SIZE,
+                        socketProperties.getSocketWrapperCache());
+                nioChannels = new SynchronizedStack<>(SynchronizedStack.DEFAULT_SIZE,
+                        socketProperties.getBufferPool());
+            }
+
             initializeConnectionLatch();
             startAcceptorThreads();
 
-            // Start async timeout thread
-            Thread timeoutThread = new Thread(new AsyncTimeout(),
-                    getName() + "-AsyncTimeout");
+            setAsyncTimeout(new AsyncTimeout());
+            Thread timeoutThread = new Thread(getAsyncTimeout(), getName() + "-AsyncTimeout");
             timeoutThread.setPriority(threadPriority);
             timeoutThread.setDaemon(true);
             timeoutThread.start();
@@ -385,6 +382,7 @@ public class Nio2Endpoint extends AbstractEndpoint<Nio2Channel> {
         }
         if (running) {
             running = false;
+            getAsyncTimeout().stop();
             unlockAccept();
         }
         // Use the executor to avoid binding the main thread if something bad
@@ -393,7 +391,7 @@ public class Nio2Endpoint extends AbstractEndpoint<Nio2Channel> {
             @Override
             public void run() {
                 // Timeout any pending async request
-                for (SocketWrapper<Nio2Channel> socket : waitingRequests.keySet()) {
+                for (SocketWrapper<Nio2Channel> socket : waitingRequests) {
                     processSocket(socket, SocketStatus.TIMEOUT, false);
                 }
                 // Then close all active connections if any remains
@@ -740,49 +738,6 @@ public class Nio2Endpoint extends AbstractEndpoint<Nio2Channel> {
 
     }
 
-    /**
-     * Async timeout thread
-     */
-    protected class AsyncTimeout implements Runnable {
-        /**
-         * The background thread that checks async requests and fires the
-         * timeout if there has been no activity.
-         */
-        @Override
-        public void run() {
-
-            // Loop until we receive a shutdown command
-            while (running) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    // Ignore
-                }
-                long now = System.currentTimeMillis();
-                Iterator<SocketWrapper<Nio2Channel>> sockets =
-                    waitingRequests.keySet().iterator();
-                while (sockets.hasNext()) {
-                    SocketWrapper<Nio2Channel> socket = sockets.next();
-                    long access = socket.getLastAccess();
-                    if (socket.getTimeout() > 0 &&
-                            (now-access) > socket.getTimeout()) {
-                        processSocket(socket, SocketStatus.TIMEOUT, true);
-                    }
-                }
-
-                // Loop if endpoint is paused
-                while (paused && running) {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        // Ignore
-                    }
-                }
-
-            }
-        }
-    }
-
 
     private void closeSocket(AsynchronousSocketChannel socket) {
         try {
@@ -875,9 +830,6 @@ public class Nio2Endpoint extends AbstractEndpoint<Nio2Channel> {
         public void onCreateSSLEngine(SSLEngine engine);
     }
 
-    protected ConcurrentHashMap<SocketWrapper<Nio2Channel>, SocketWrapper<Nio2Channel>> waitingRequests =
-            new ConcurrentHashMap<>();
-
     /**
      * The completion handler used for asynchronous read operations
      */
@@ -900,11 +852,11 @@ public class Nio2Endpoint extends AbstractEndpoint<Nio2Channel> {
     };
 
     public void addTimeout(SocketWrapper<Nio2Channel> socket) {
-        waitingRequests.put(socket, socket);
+        waitingRequests.add(socket);
     }
 
     public boolean removeTimeout(SocketWrapper<Nio2Channel> socket) {
-        return waitingRequests.remove(socket) != null;
+        return waitingRequests.remove(socket);
     }
 
     public static void startInline() {

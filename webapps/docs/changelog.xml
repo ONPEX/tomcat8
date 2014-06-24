@@ -44,25 +44,305 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues to not "pop up" wrt. others).
 -->
-<section name="Tomcat 8.0.8 (markt)">
- <subsection name="Catalina">
-   <changelog>
-     <fix>
-       <bug>56536</bug>: Ensure that
-       <code>HttpSessionBindingListener.valueUnbound()</code> uses the correct
-       class loader when the <code>SingleSignOn</code> valve is used. (markt)
-     </fix>
-   </changelog>
- </subsection>
- <subsection name="Jasper">
-   <changelog>
+<section name="Tomcat 8.0.9 (markt)">
+  <subsection name="Catalina">
+    <changelog>
       <fix>
-        <bug>56529</bug>: Avoid <code>NoSuchElementException</code> while handling
-        attributes with empty string value in custom tags. Patch provided by
-        Hariprasad Manchi. (violetagg)
+        <bug>55282</bug>: Ensure that one and the same application listener is
+        added only once when starting the web application. (violetagg)
       </fix>
-   </changelog>
- </subsection>
+      <fix>
+        <bug>55975</bug>: Apply consistent escaping for double quote and
+        backslash characters when escaping cookie values. (markt)
+      </fix>
+      <scode>
+        <bug>56387</bug>: Improve the code that handles an attempt to load a
+        class after a web application has been stopped. Use common code to handle
+        this case regardless of the access path and don't throw an exception
+        purely to log a stack trace. (markt)
+      </scode>
+      <scode>
+        <bug>56399</bug>: Improve implementation of CoyoteAdapter.checkRecycled()
+        to do not use an exception for flow control. (kkolinko)
+      </scode>
+      <add>
+        <bug>56461</bug>: New <code>failCtxIfServletStartFails</code> attribute
+        on Context and Host configuration to force the context startup to fail
+        if a load-on-startup servlet fails its startup. (slaurent)
+      </add>
+      <add>
+        <bug>56526</bug>: Improved the <code>StuckThreadDetectionValve</code> to
+        optionally interrupt stuck threads to attempt to unblock them.
+        (slaurent)
+      </add>
+      <fix>
+        <bug>56545</bug>: Pre-load two additional classes, the loading of which
+        may otherwise be triggered by a web application which in turn would
+        trigger an exception when running under a security manager. (markt)
+      </fix>
+      <update>
+        <bug>56546</bug>: Reduce logging level for stack traces of stuck web
+        application threads printed by WebappClassLoader.clearReferencesThreads()
+        from error to info. (kkolinko)
+      </update>
+      <scode>
+        Refactor and simplify common code in object factories in
+        <code>org.apache.catalina.naming</code> package, found thanks to Simian
+        (Similarity Analyser) tool. Improve handling of Throwable.
+        (markt/kkolinko)
+      </scode>
+      <fix>
+        Relax cookie naming restrictions. Cookie attribute names used in the
+        <code>Set-Cookie</code> header may be used unambiguously as cookie
+        names. The restriction that prevented such usage has been removed.
+        (jboynes/markt)
+      </fix>
+      <fix>
+        Further relax cookie naming restrictions. Version 0 (a.k.a Netscape
+        format) cookies may now use names that start with the <code>$</code>
+        character. (jboynes/markt)
+      </fix>
+      <fix>
+        Restrict cookie naming so that the <code>=</code> character is no longer
+        permitted in a version 0 (a.k.a. Netscape format) cookie name. While
+        Tomcat allowed this, browsers always truncated the name at the
+        <code>=</code> character leading to a mis-match between the cookie the
+        server set and the cookie returned by the browser. (jboynes/markt)
+      </fix>
+      <add>
+        Add a simple <code>ServiceLoader</code> based discovery mechanism to the
+        JULI <code>LogFactory</code> to make it easier to use JULI and Tomcat
+        components that depend on JULI (such as Jasper) independently from
+        Tomcat. Patch provided by Greg Wilkins. (markt)
+      </add>
+      <fix>
+        <bug>56578</bug>: Correct regression in the fix for <bug>56339</bug>
+        that prevented sessions from expiring when using clustering. (markt)
+      </fix>
+      <fix>
+        <bug>56588</bug>: Remove code previously added to enforce the
+        requirements of section 4.4 of the Servlet 3.1 specification. The code
+        is no longer required now that Jasper initialization has been refactored
+        and TLD defined listeners are added via a different code path that
+        already enforces the specification requirements. (markt)
+      </fix>
+      <fix>
+        <bug>56600</bug>: In WebdavServlet: Do not waste time generating
+        response for broken PROPFIND request. (kkolinko)
+      </fix>
+      <fix>
+        Provide a better error message when asynchronous operations are not
+        supported by a filter or servlet. Patch provided by Romain Manni-Bucau.
+        (violetagg)
+      </fix>
+      <fix>
+        <bug>56606</bug>: User entries in <code>tomcat-users.xml</code> file
+        are recommended to use "username" attribute rather than legacy "name"
+        attribute. Fix inconsistencies in Windows installer, examples. Update
+        digester rules and documentation for <code>MemoryRealm</code>.
+        (markt/kkolinko)
+      </fix>
+      <scode>
+        <bug>56611</bug>: Refactor code to remove inefficient calls to
+        <code>Method.isAnnotationPresent()</code>. Based on a patch by Jian Mou.
+        (markt)
+      </scode>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        <bug>56518</bug>: When using NIO, do not attempt to write to the socket
+        if the thread is marked interrupted as this will lead to a connection
+        limit leak. This fix was based on analysis of the issue by hanyong.
+        (markt)
+      </fix>
+      <fix>
+        <bug>56521</bug>: Re-use the asynchronous write buffer between writes to
+        reduce allocation and GC overhead. Based on a patch by leonzhx. Also
+        make the buffer size configurable and remove copying of data within
+        buffer when the buffer is only partially written on a subsequent write.
+        (markt)
+      </fix>
+      <fix>
+        Ensure that a request without a body is correctly handled during Comet
+        processing. This fixes the Comet chat example. (markt)
+      </fix>
+      <fix>
+        Fix input concurrency issue in NIO2 upgrade. (remm)
+      </fix>
+      <fix>
+        Correct a copy/paste error and return a 500 response rather than a 400
+        response when an internal server error occurs on early stages of
+        request processing. (markt)
+      </fix>
+      <scode>
+        <bug>56582</bug>: Use switch(actionCode) in processors instead of a
+        chain of "elseif"s. (kkolinko)
+      </scode>
+      <fix>
+        <bug>56582#c1</bug>: Implement DISPATCH_EXECUTE action for AJP
+        connectors. (kkolinko)
+      </fix>
+      <fix>
+        If request contains an unrecognized Expect header, respond with error
+        417 (Expectation Failed), according to RFC2616 chapter 14.20. (markt)
+      </fix>
+      <fix>
+        When an error occurs after the response has been committed close the
+        connection immediately rather than attempting to finish the response to
+        make it easier for the client to differentiate between a complete
+        response and one that failed part way though. (markt)
+      </fix>
+      <scode>
+        Remove the beta tag from the NIO2 connectors. (remm)
+      </scode>
+      <fix>
+        <bug>56620</bug>: Avoid bogus access log entries when pausing the NIO
+        HTTP connector and ensure that access log entries generated by error
+        conditions use the correct request start time. (markt)
+      </fix>
+      <fix>
+        Improve configuration of cache sizes in the endpoint. (markt)
+      </fix>
+      <add>
+        Add a new limit, defaulting to 2MB, for the amount of data Tomcat will
+        swallow for an aborted upload. (markt)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        <bug>56334#c15</bug>: Fix a regression in EL parsing when quoted string
+        follows a whitespace. (kkolinko/markt)
+      </fix>
+      <update>
+        <bug>56543</bug>: Update to the Eclipse JDT Compiler 4.4RC4 to pick up
+        some fixes for Java 8 support. (markt/kkolinko)
+      </update>
+      <fix>
+        <bug>56561</bug>: Avoid <code>NoSuchElementException</code> while
+        handling attributes with empty string value. (violetagg)
+      </fix>
+      <scode>
+        Do not configure a <code>JspFactory</code> in the
+        <code>JasperInitializer</code> if one has already been set as might be
+        the case in some embedding scenarios. (markt)
+      </scode>
+      <add>
+        Add a simple implementation of <code>InstanceManager</code> and have
+        Jasper use it if no other <code>InstanceManager</code> is provided. This
+        makes it easier to use Jasper independently from Tomcat. Patch provided
+        by Greg Wilkins. (markt)
+      </add>
+      <fix>
+        <bug>56568</bug>: Allow any HTTP method when a JSP is being used as an
+        error page. (markt)
+      </fix>
+      <update>
+        <bug>56581</bug>: If an error on a JSP page occurs when response has
+        already been committed, do not clear the buffer of JspWriter, but flush
+        it. It will make more clear where the error occurred. (kkolinko)
+      </update>
+      <fix>
+        <bug>56612</bug>: Correctly parse two consecutive escaped single quotes
+        when used in UEL expression in a JSP. (markt)
+      </fix>
+      <update>
+        Move code that parses EL expressions within JSP template text from
+        <code>Parser</code> to <code>JspReader</code> class for better
+        performance. (kkolinko)
+      </update>
+      <fix>
+        <bug>56636</bug>: Correctly identify the required method when specified
+        via <code>ELProcessor.defineFunction(String,String,String,String)</code>
+        when using Expression Language. (markt)
+      </fix>
+      <fix>
+        <bug>56638</bug>: When using
+        <code>ELProcessor.defineFunction(String,String,String,String)</code> and
+        no function name is specified, use the method name as the function name
+        as required by the specification. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="WebSocket">
+    <changelog>
+      <scode>
+        <bug>56446</bug>: Clearer handling of exceptions when calling a method
+        on a POJO based WebSocket endpoint. Based on a suggestion by Eugene
+        Chung. (markt)
+      </scode>
+      <fix>
+        When a WebSocket client attempts to write to a closed connection, handle
+        the resulting <code>IllegalStateException</code> in a manner consistent
+        with the handling of an <code>IOException</code>. (markt)
+      </fix>
+      <fix>
+        Add more varied endpoints for echo testing. (remm)
+      </fix>
+      <fix>
+        <bug>56577</bug>: Improve the executor configuration used for the
+        callbacks associated with asynchronous writes. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <fix>
+        Set the path for cookies created by the examples web application so they
+        only returned to the examples application. This reduces the opportunity
+        for using such cookies for malicious purposes should the advice to
+        remove the examples web application from security sensitive systems be
+        ignored. (markt/kkolinko)
+      </fix>
+      <fix>
+        Attempt to obfuscate session cookie values associated with other web
+        applications when viewing HTTP request headers with the Request Header
+        example from the examples web application. This reduces the opportunity
+        to use this example for malicious purposes should the advice to remove
+        the examples web application from security sensitive systems be ignored.
+        (markt)
+      </fix>
+      <add>
+        Add options for all of the WebSocket echo endpoints to the WebSocket
+        echo example in the examples web application. (markt)
+      </add>
+      <fix>
+        Ensure that the asynchronous WebSocket echo endpoint in the examples
+        web application always waits for the previous message to complete before
+        it sends the next. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <update>
+        Update package renamed Apache Commons DBCP2 to r1596858. (markt)
+      </update>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.0.8 (markt)" rtext="beta, 2014-05-21">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        <bug>56536</bug>: Ensure that
+        <code>HttpSessionBindingListener.valueUnbound()</code> uses the correct
+        class loader when the <code>SingleSignOn</code> valve is used. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+       <fix>
+         <bug>56529</bug>: Avoid <code>NoSuchElementException</code> while handling
+         attributes with empty string value in custom tags. Patch provided by
+         Hariprasad Manchi. (violetagg)
+       </fix>
+    </changelog>
+  </subsection>
 </section>
 <section name="Tomcat 8.0.7 (markt)" rtext="not released">
   <subsection name="Catalina">
@@ -175,8 +455,12 @@
         the WAR was deleted. (markt)
       </fix>
       <fix>
+        Fix CVE-2014-0119:
         Only create XML parsing objects if required and fix associated potential
-        memory leak in the default Servlet. (markt)
+        memory leak in the default Servlet.
+        Extend XML factory, parser etc. memory leak protection to cover some
+        additional locations where, theoretically, a memory leak could occur.
+        (markt)
       </fix>
       <fix>
         Modify generic exception handling so that
@@ -192,11 +476,6 @@
         <bug>56430</bug>: Extend checks for suspicious URL patterns to include
         patterns of the form <code>*.a.b</code> which are not valid patterns for
         extension mappings. (markt)
-      </add>
-      <add>
-        Extend XML factory, parser etc. memory leak protection to cover some
-        additional locations where, theoretically, a memory leak could occur.
-        (markt)
       </add>
       <fix>
         <bug>56441</bug>: Raise the visibility of exceptions thrown when a
@@ -615,6 +894,7 @@
         unit tests identified. Based on a patch by Larry Isaacs. (markt)
       </fix>
       <fix>
+        Fix CVE-2014-0096:
         Redefine the <code>globalXsltFile</code> initialisation parameter of the
         DefaultServlet as relative to CATALINA_BASE/conf or CATALINA_HOME/conf.
         Prevent user supplied XSLTs used by the DefaultServlet from defining
@@ -638,16 +918,19 @@
         Nabil Benothman. (remm)
       </add>
       <fix>
+        Fix CVE-2014-0075:
         Improve processing of chuck size from chunked headers. Avoid overflow
         and use a bit shift instead of a multiplication as it is marginally
         faster. (markt/kkolinko)
       </fix>
       <fix>
+        Fix CVE-2014-0095:
         Correct regression introduced in 8.0.0-RC2 as part of the Servlet 3.1
         non-blocking IO support that broke handling of requests with an explicit
         content length of zero. (markt/kkolinko)
       </fix>
       <fix>
+        Fix CVE-2014-0099:
         Fix possible overflow when parsing long values from a byte array.
         (markt)
       </fix>

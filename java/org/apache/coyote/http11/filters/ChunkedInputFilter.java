@@ -14,7 +14,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package org.apache.coyote.http11.filters;
 
 import java.io.EOFException;
@@ -29,6 +28,7 @@ import org.apache.tomcat.util.buf.ByteChunk;
 import org.apache.tomcat.util.buf.HexUtils;
 import org.apache.tomcat.util.buf.MessageBytes;
 import org.apache.tomcat.util.http.MimeHeaders;
+import org.apache.tomcat.util.res.StringManager;
 
 /**
  * Chunked input filter. Parses chunked data according to
@@ -38,16 +38,17 @@ import org.apache.tomcat.util.http.MimeHeaders;
  */
 public class ChunkedInputFilter implements InputFilter {
 
+    private static final StringManager sm = StringManager.getManager(
+            ChunkedInputFilter.class.getPackage().getName());
+
 
     // -------------------------------------------------------------- Constants
-
 
     protected static final String ENCODING_NAME = "chunked";
     protected static final ByteChunk ENCODING = new ByteChunk();
 
 
     // ----------------------------------------------------- Static Initializer
-
 
     static {
         ENCODING.setBytes(ENCODING_NAME.getBytes(StandardCharsets.ISO_8859_1),
@@ -56,7 +57,6 @@ public class ChunkedInputFilter implements InputFilter {
 
 
     // ----------------------------------------------------- Instance Variables
-
 
     /**
      * Next buffer in the pipeline.
@@ -105,6 +105,7 @@ public class ChunkedInputFilter implements InputFilter {
      */
     protected final ByteChunk trailingHeaders = new ByteChunk();
 
+
     /**
      * Flag set to true if the next call to doRead() must parse a CRLF pair
      * before doing anything else.
@@ -129,21 +130,33 @@ public class ChunkedInputFilter implements InputFilter {
      */
     private final int maxTrailerSize;
 
+
     /**
      * Size of extensions processed for this request.
      */
     private long extensionSize;
 
 
+    private final int maxSwallowSize;
+
+
+    /**
+     * Flag that indicates if an error has occurred.
+     */
+    private boolean error;
+
+
     // ----------------------------------------------------------- Constructors
-    public ChunkedInputFilter(int maxTrailerSize, int maxExtensionSize) {
+
+    public ChunkedInputFilter(int maxTrailerSize, int maxExtensionSize, int maxSwallowSize) {
         this.trailingHeaders.setLimit(maxTrailerSize);
         this.maxExtensionSize = maxExtensionSize;
         this.maxTrailerSize = maxTrailerSize;
+        this.maxSwallowSize = maxSwallowSize;
     }
 
-    // ---------------------------------------------------- InputBuffer Methods
 
+    // ---------------------------------------------------- InputBuffer Methods
 
     /**
      * Read bytes.
@@ -155,11 +168,12 @@ public class ChunkedInputFilter implements InputFilter {
      * control, the returned value should be -1.
      */
     @Override
-    public int doRead(ByteChunk chunk, Request req)
-        throws IOException {
-
-        if (endChunk)
+    public int doRead(ByteChunk chunk, Request req) throws IOException {
+        if (endChunk) {
             return -1;
+        }
+
+        checkError();
 
         if(needCRLFParse) {
             needCRLFParse = false;
@@ -168,7 +182,7 @@ public class ChunkedInputFilter implements InputFilter {
 
         if (remaining <= 0) {
             if (!parseChunkHeader()) {
-                throw new IOException("Invalid chunk header");
+                throwIOException(sm.getString("chunkedInputFilter.invalidHeader"));
             }
             if (endChunk) {
                 parseEndChunk();
@@ -180,8 +194,7 @@ public class ChunkedInputFilter implements InputFilter {
 
         if (pos >= lastValid) {
             if (readBytes() < 0) {
-                throw new IOException(
-                        "Unexpected end of stream whilst reading request body");
+                throwIOException(sm.getString("chunkedInputFilter.eos"));
             }
         }
 
@@ -206,12 +219,10 @@ public class ChunkedInputFilter implements InputFilter {
         }
 
         return result;
-
     }
 
 
     // ---------------------------------------------------- InputFilter Methods
-
 
     /**
      * Read the content length from the request.
@@ -226,17 +237,19 @@ public class ChunkedInputFilter implements InputFilter {
      * End the current request.
      */
     @Override
-    public long end()
-        throws IOException {
-
+    public long end() throws IOException {
+        long swallowed = 0;
+        int read = 0;
         // Consume extra bytes : parse the stream until the end chunk is found
-        while (doRead(readChunk, null) >= 0) {
-            // NOOP: Just consume the input
+        while ((read = doRead(readChunk, null)) >= 0) {
+            swallowed += read;
+            if (maxSwallowSize > -1 && swallowed > maxSwallowSize) {
+                throwIOException(sm.getString("inputFilter.maxSwallow"));
+            }
         }
 
         // Return the number of extra bytes which were consumed
-        return (lastValid - pos);
-
+        return lastValid - pos;
     }
 
 
@@ -245,7 +258,7 @@ public class ChunkedInputFilter implements InputFilter {
      */
     @Override
     public int available() {
-        return (lastValid - pos);
+        return lastValid - pos;
     }
 
 
@@ -271,6 +284,7 @@ public class ChunkedInputFilter implements InputFilter {
         trailingHeaders.recycle();
         trailingHeaders.setLimit(maxTrailerSize);
         extensionSize = 0;
+        error = false;
     }
 
 
@@ -284,14 +298,18 @@ public class ChunkedInputFilter implements InputFilter {
     }
 
 
-    // ------------------------------------------------------ Protected Methods
+    @Override
+    public boolean isFinished() {
+        return endChunk;
+    }
 
+
+    // ------------------------------------------------------ Protected Methods
 
     /**
      * Read bytes from the previous buffer.
      */
-    protected int readBytes()
-        throws IOException {
+    protected int readBytes() throws IOException {
 
         int nRead = buffer.doRead(readChunk, null);
         pos = readChunk.getStart();
@@ -299,7 +317,6 @@ public class ChunkedInputFilter implements InputFilter {
         buf = readChunk.getBytes();
 
         return nRead;
-
     }
 
 
@@ -314,8 +331,7 @@ public class ChunkedInputFilter implements InputFilter {
      * digits. We should not parse F23IAMGONNAMESSTHISUP34CRLF as a valid
      * header according to the spec.
      */
-    protected boolean parseChunkHeader()
-        throws IOException {
+    protected boolean parseChunkHeader() throws IOException {
 
         int result = 0;
         boolean eol = false;
@@ -355,7 +371,7 @@ public class ChunkedInputFilter implements InputFilter {
                 // validated. Currently it is simply ignored.
                 extensionSize++;
                 if (maxExtensionSize > -1 && extensionSize > maxExtensionSize) {
-                    throw new IOException("maxExtensionSize exceeded");
+                    throwIOException(sm.getString("chunkedInputFilter.maxExtension"));
                 }
             }
 
@@ -363,21 +379,22 @@ public class ChunkedInputFilter implements InputFilter {
             if (!eol) {
                 pos++;
             }
-
         }
 
-        if (readDigit == 0 || result < 0)
+        if (readDigit == 0 || result < 0) {
             return false;
+        }
 
-        if (result == 0)
+        if (result == 0) {
             endChunk = true;
+        }
 
         remaining = result;
-        if (remaining < 0)
+        if (remaining < 0) {
             return false;
+        }
 
         return true;
-
     }
 
 
@@ -394,26 +411,27 @@ public class ChunkedInputFilter implements InputFilter {
         boolean crfound = false;
 
         while (!eol) {
-
             if (pos >= lastValid) {
-                if (readBytes() <= 0)
-                    throw new IOException("Invalid CRLF");
+                if (readBytes() <= 0) {
+                    throwIOException(sm.getString("chunkedInputFilter.invalidCrlfNoData"));
+                }
             }
 
             if (buf[pos] == Constants.CR) {
-                if (crfound) throw new IOException("Invalid CRLF, two CR characters encountered.");
+                if (crfound) {
+                    throwIOException(sm.getString("chunkedInputFilter.invalidCrlfCRCR"));
+                }
                 crfound = true;
             } else if (buf[pos] == Constants.LF) {
                 if (!tolerant && !crfound) {
-                    throw new IOException("Invalid CRLF, no CR character encountered.");
+                    throwIOException(sm.getString("chunkedInputFilter.invalidCrlfNoCR"));
                 }
                 eol = true;
             } else {
-                throw new IOException("Invalid CRLF");
+                throwIOException(sm.getString("chunkedInputFilter.invalidCrlf"));
             }
 
             pos++;
-
         }
     }
 
@@ -422,7 +440,6 @@ public class ChunkedInputFilter implements InputFilter {
      * Parse end chunk data.
      */
     protected void parseEndChunk() throws IOException {
-
         // Handle optional trailer headers
         while (parseHeader()) {
             // Loop until we run out of headers
@@ -438,8 +455,9 @@ public class ChunkedInputFilter implements InputFilter {
 
         // Read new bytes if needed
         if (pos >= lastValid) {
-            if (readBytes() <0)
-                throw new EOFException("Unexpected end of stream whilst reading trailer headers for chunked request");
+            if (readBytes() <0) {
+               throwEOFException(sm.getString("chunkedInputFilter.eosTrailer"));
+            }
         }
 
         chr = buf[pos];
@@ -463,8 +481,9 @@ public class ChunkedInputFilter implements InputFilter {
 
             // Read new bytes if needed
             if (pos >= lastValid) {
-                if (readBytes() <0)
-                    throw new EOFException("Unexpected end of stream whilst reading trailer headers for chunked request");
+                if (readBytes() <0) {
+                    throwEOFException(sm.getString("chunkedInputFilter.eosTrailer"));
+                }
             }
 
             chr = buf[pos];
@@ -504,8 +523,9 @@ public class ChunkedInputFilter implements InputFilter {
 
                 // Read new bytes if needed
                 if (pos >= lastValid) {
-                    if (readBytes() <0)
-                        throw new EOFException("Unexpected end of stream whilst reading trailer headers for chunked request");
+                    if (readBytes() <0) {
+                        throwEOFException(sm.getString("chunkedInputFilter.eosTrailer"));
+                    }
                 }
 
                 chr = buf[pos];
@@ -515,7 +535,7 @@ public class ChunkedInputFilter implements InputFilter {
                     // limit placed on trailing header size
                     int newlimit = trailingHeaders.getLimit() -1;
                     if (trailingHeaders.getEnd() > newlimit) {
-                        throw new IOException("Exceeded maxTrailerSize");
+                        throwIOException(sm.getString("chunkedInputFilter.maxTrailer"));
                     }
                     trailingHeaders.setLimit(newlimit);
                 } else {
@@ -529,8 +549,9 @@ public class ChunkedInputFilter implements InputFilter {
 
                 // Read new bytes if needed
                 if (pos >= lastValid) {
-                    if (readBytes() <0)
-                        throw new EOFException("Unexpected end of stream whilst reading trailer headers for chunked request");
+                    if (readBytes() <0) {
+                        throwEOFException(sm.getString("chunkedInputFilter.eosTrailer"));
+                    }
                 }
 
                 chr = buf[pos];
@@ -554,8 +575,9 @@ public class ChunkedInputFilter implements InputFilter {
 
             // Read new bytes if needed
             if (pos >= lastValid) {
-                if (readBytes() <0)
-                    throw new EOFException("Unexpected end of stream whilst reading trailer headers for chunked request");
+                if (readBytes() <0) {
+                    throwEOFException(sm.getString("chunkedInputFilter.eosTrailer"));
+                }
             }
 
             chr = buf[pos];
@@ -577,8 +599,22 @@ public class ChunkedInputFilter implements InputFilter {
         return true;
     }
 
-    @Override
-    public boolean isFinished() {
-        return endChunk;
+
+    private void throwIOException(String msg) throws IOException {
+        error = true;
+        throw new IOException(msg);
+    }
+
+
+    private void throwEOFException(String msg) throws IOException {
+        error = true;
+        throw new EOFException(msg);
+    }
+
+
+    private void checkError() throws IOException {
+        if (error) {
+            throw new IOException(sm.getString("chunkedInputFilter.error"));
+        }
     }
 }

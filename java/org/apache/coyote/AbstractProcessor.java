@@ -21,10 +21,12 @@ import java.util.concurrent.Executor;
 
 import javax.servlet.http.HttpUpgradeHandler;
 
+import org.apache.juli.logging.Log;
 import org.apache.tomcat.util.net.AbstractEndpoint;
 import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 import org.apache.tomcat.util.net.SocketStatus;
 import org.apache.tomcat.util.net.SocketWrapper;
+import org.apache.tomcat.util.res.StringManager;
 
 /**
  * Provides functionality and attributes common to all supported protocols
@@ -32,12 +34,19 @@ import org.apache.tomcat.util.net.SocketWrapper;
  */
 public abstract class AbstractProcessor<S> implements ActionHook, Processor<S> {
 
+    protected static final StringManager sm = StringManager.getManager(Constants.Package);
+
     protected Adapter adapter;
     protected final AsyncStateMachine<S> asyncStateMachine;
     protected final AbstractEndpoint<S> endpoint;
     protected final Request request;
     protected final Response response;
     protected SocketWrapper<S> socketWrapper = null;
+
+    /**
+     * Error state for the request/response currently being processed.
+     */
+    private ErrorState errorState = ErrorState.NONE;
 
 
     /**
@@ -54,14 +63,42 @@ public abstract class AbstractProcessor<S> implements ActionHook, Processor<S> {
     public AbstractProcessor(AbstractEndpoint<S> endpoint) {
         this.endpoint = endpoint;
         asyncStateMachine = new AsyncStateMachine<>(this);
-
         request = new Request();
-
         response = new Response();
         response.setHook(this);
         request.setResponse(response);
     }
 
+
+    /**
+     * Update the current error state to the new error state if the new error
+     * state is more severe than the current error state.
+     */
+    protected void setErrorState(ErrorState errorState, Throwable t) {
+        boolean blockIo = this.errorState.isIoAllowed() && !errorState.isIoAllowed();
+        this.errorState = this.errorState.getMostSevere(errorState);
+        if (blockIo && !ContainerThreadMarker.isContainerThread()) {
+            // The error occurred on a non-container thread which means not all
+            // of the necessary clean-up will have been completed. Dispatch to
+            // a container thread to do the clean-up. Need to do it this way to
+            // ensure that all the necessary clean-up is performed.
+            if (response.getStatus() < 400) {
+                response.setStatus(500);
+            }
+            getLog().info(sm.getString("abstractProcessor.nonContainerThreadError"), t);
+            getEndpoint().processSocket(socketWrapper, SocketStatus.CLOSE_NOW, true);
+        }
+    }
+
+
+    protected void resetErrorState() {
+        errorState = ErrorState.NONE;
+    }
+
+
+    protected ErrorState getErrorState() {
+        return errorState;
+    }
 
     /**
      * The endpoint receiving connections that are handled by this processor.
@@ -137,6 +174,11 @@ public abstract class AbstractProcessor<S> implements ActionHook, Processor<S> {
     }
 
     @Override
+    public void errorDispatch() {
+        getAdapter().errorDispatch(request, response);
+    }
+
+    @Override
     public abstract boolean isComet();
 
     @Override
@@ -147,8 +189,7 @@ public abstract class AbstractProcessor<S> implements ActionHook, Processor<S> {
      * with although they may change type during processing.
      */
     @Override
-    public abstract SocketState process(SocketWrapper<S> socket)
-            throws IOException;
+    public abstract SocketState process(SocketWrapper<S> socket) throws IOException;
 
     /**
      * Process in-progress Comet requests. These will start as HTTP requests.
@@ -168,8 +209,7 @@ public abstract class AbstractProcessor<S> implements ActionHook, Processor<S> {
      * upgrade.
      */
     @Override
-    public abstract SocketState upgradeDispatch(SocketStatus status)
-            throws IOException;
+    public abstract SocketState upgradeDispatch(SocketStatus status) throws IOException;
 
     @Override
     public abstract HttpUpgradeHandler getHttpUpgradeHandler();
@@ -182,4 +222,6 @@ public abstract class AbstractProcessor<S> implements ActionHook, Processor<S> {
      * @param write Register the socket for write events
      */
     protected abstract void registerForEvent(boolean read, boolean write);
+
+    protected abstract Log getLog();
 }

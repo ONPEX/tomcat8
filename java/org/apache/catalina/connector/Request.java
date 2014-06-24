@@ -1601,7 +1601,7 @@ public class Request
     public AsyncContext startAsync(ServletRequest request,
             ServletResponse response) {
         if (!isAsyncSupported()) {
-            throw new IllegalStateException("Not supported.");
+            throw new IllegalStateException(sm.getString("request.asyncNotSupported"));
         }
 
         if (asyncContext == null) {
