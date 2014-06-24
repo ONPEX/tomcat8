@@ -14,15 +14,12 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package org.apache.tomcat.util.net;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -94,9 +91,6 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
      */
     protected long sslContext = 0;
 
-
-    protected ConcurrentLinkedQueue<SocketWrapper<Long>> waitingRequests =
-            new ConcurrentLinkedQueue<>();
 
     private final Map<Long,AprSocketWrapper> connections = new ConcurrentHashMap<>();
 
@@ -192,15 +186,6 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
     protected Poller poller = null;
     public Poller getPoller() {
         return poller;
-    }
-
-
-    /**
-     * The socket poller.
-     */
-    protected AsyncTimeout asyncTimeout = null;
-    public AsyncTimeout getAsyncTimeout() {
-        return asyncTimeout;
     }
 
 
@@ -645,9 +630,8 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
             startAcceptorThreads();
 
             // Start async timeout thread
-            asyncTimeout = new AsyncTimeout();
-            Thread timeoutThread = new Thread(asyncTimeout,
-                    getName() + "-AsyncTimeout");
+            setAsyncTimeout(new AsyncTimeout());
+            Thread timeoutThread = new Thread(getAsyncTimeout(), getName() + "-AsyncTimeout");
             timeoutThread.setPriority(threadPriority);
             timeoutThread.setDaemon(true);
             timeoutThread.start();
@@ -667,7 +651,7 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
         if (running) {
             running = false;
             poller.stop();
-            asyncTimeout.stop();
+            getAsyncTimeout().stop();
             unlockAccept();
             for (AbstractEndpoint.Acceptor acceptor : acceptors) {
                 long waitLeft = 10000;
@@ -1049,60 +1033,6 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
                 // The processor will recycle itself when it finishes
             }
             state = AcceptorState.ENDED;
-        }
-    }
-
-
-    /**
-     * Async timeout thread
-     */
-    protected class AsyncTimeout implements Runnable {
-
-        private volatile boolean asyncTimeoutRunning = true;
-
-        /**
-         * The background thread that checks async requests and fires the
-         * timeout if there has been no activity.
-         */
-        @Override
-        public void run() {
-
-            // Loop until we receive a shutdown command
-            while (asyncTimeoutRunning) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    // Ignore
-                }
-                long now = System.currentTimeMillis();
-                Iterator<SocketWrapper<Long>> sockets =
-                    waitingRequests.iterator();
-                while (sockets.hasNext()) {
-                    SocketWrapper<Long> socket = sockets.next();
-                    if (socket.isAsync()) {
-                        long access = socket.getLastAccess();
-                        if (socket.getTimeout() > 0 &&
-                                (now-access)>socket.getTimeout()) {
-                            processSocket(socket, SocketStatus.TIMEOUT, true);
-                        }
-                    }
-                }
-
-                // Loop if endpoint is paused
-                while (paused && asyncTimeoutRunning) {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        // Ignore
-                    }
-                }
-
-            }
-        }
-
-
-        protected void stop() {
-            asyncTimeoutRunning = false;
         }
     }
 

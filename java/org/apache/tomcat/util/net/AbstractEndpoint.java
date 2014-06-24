@@ -21,9 +21,12 @@ import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
@@ -97,6 +100,55 @@ public abstract class AbstractEndpoint<S> {
 
     private static final int INITIAL_ERROR_DELAY = 50;
     private static final int MAX_ERROR_DELAY = 1600;
+
+
+    /**
+     * Async timeout thread
+     */
+    protected class AsyncTimeout implements Runnable {
+
+        private volatile boolean asyncTimeoutRunning = true;
+
+        /**
+         * The background thread that checks async requests and fires the
+         * timeout if there has been no activity.
+         */
+        @Override
+        public void run() {
+
+            // Loop until we receive a shutdown command
+            while (asyncTimeoutRunning) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    // Ignore
+                }
+                long now = System.currentTimeMillis();
+                for (SocketWrapper<S> socket : waitingRequests) {
+                    long access = socket.getLastAccess();
+                    if (socket.getTimeout() > 0 && (now - access) > socket.getTimeout()) {
+                        processSocket(socket, SocketStatus.TIMEOUT, true);
+                    }
+                }
+
+                // Loop if endpoint is paused
+                while (paused && asyncTimeoutRunning) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        // Ignore
+                    }
+                }
+
+            }
+        }
+
+
+        protected void stop() {
+            asyncTimeoutRunning = false;
+        }
+    }
+
 
     // ----------------------------------------------------------------- Fields
 
@@ -974,5 +1026,20 @@ public abstract class AbstractEndpoint<S> {
         }
     }
 
+
+    protected final Set<SocketWrapper<S>> waitingRequests = Collections
+            .newSetFromMap(new ConcurrentHashMap<SocketWrapper<S>, Boolean>());
+
+
+    /**
+     * The async timeout thread.
+     */
+    private AsyncTimeout asyncTimeout = null;
+    public AsyncTimeout getAsyncTimeout() {
+        return asyncTimeout;
+    }
+    public void setAsyncTimeout(AsyncTimeout asyncTimeout) {
+        this.asyncTimeout = asyncTimeout;
+    }
 }
 

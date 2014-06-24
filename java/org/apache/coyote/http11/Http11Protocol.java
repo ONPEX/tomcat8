@@ -186,7 +186,8 @@ public class Http11Protocol extends AbstractHttp11JsseProtocol<Socket> {
         protected Http11Processor createProcessor() {
             Http11Processor processor = new Http11Processor(
                     proto.getMaxHttpHeaderSize(), (JIoEndpoint)proto.endpoint,
-                    proto.getMaxTrailerSize(),proto.getMaxExtensionSize());
+                    proto.getMaxTrailerSize(),proto.getMaxExtensionSize(),
+                    proto.getMaxSwallowSize());
             processor.setAdapter(proto.getAdapter());
             processor.setMaxKeepAliveRequests(proto.getMaxKeepAliveRequests());
             processor.setKeepAliveTimeout(proto.getKeepAliveTimeout());
@@ -212,7 +213,8 @@ public class Http11Protocol extends AbstractHttp11JsseProtocol<Socket> {
                 SocketWrapper<Socket> socket,
                 HttpUpgradeHandler httpUpgradeProcessor)
                 throws IOException {
-            return new BioProcessor(socket, httpUpgradeProcessor);
+            return new BioProcessor(socket, httpUpgradeProcessor,
+                    proto.getUpgradeAsyncWriteBufferSize());
         }
 
         @Override

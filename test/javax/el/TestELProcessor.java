@@ -71,4 +71,62 @@ public class TestELProcessor {
         Assert.assertEquals(Boolean.valueOf(true),
                 elp.eval("fn:toBoolean(true)"));
     }
+
+
+    @Test
+    public void testDefineFunctionName02() throws Exception {
+        ELProcessor elp = new ELProcessor();
+        elp.defineFunction("fn", "test", "java.lang.Integer", "Integer valueOf(int)");
+        Assert.assertEquals(Integer.valueOf(1), elp.eval("fn:test(1)"));
+    }
+
+
+    @Test
+    public void testDefineFunctionName03() throws Exception {
+        TesterFunctions.resetCallList();
+        ELProcessor elp = new ELProcessor();
+        elp.defineFunction("fn", "test", "javax.el.TesterFunctions", "void doIt()");
+        elp.eval("fn:test()");
+        Assert.assertEquals("A", TesterFunctions.getCallList());
+    }
+
+
+    @Test
+    public void testDefineFunctionName04() throws Exception {
+        TesterFunctions.resetCallList();
+        ELProcessor elp = new ELProcessor();
+        elp.defineFunction("fn", "test", "javax.el.TesterFunctions", "void doIt(int)");
+        elp.eval("fn:test(5)");
+        Assert.assertEquals("B", TesterFunctions.getCallList());
+    }
+
+
+    @Test
+    public void testDefineFunctionName05() throws Exception {
+        TesterFunctions.resetCallList();
+        ELProcessor elp = new ELProcessor();
+        elp.defineFunction("fn", "test", "javax.el.TesterFunctions", "void doIt(Integer)");
+        elp.eval("fn:test(null)");
+        Assert.assertEquals("C", TesterFunctions.getCallList());
+    }
+
+
+    @Test
+    public void testDefineFunctionName06() throws Exception {
+        TesterFunctions.resetCallList();
+        ELProcessor elp = new ELProcessor();
+        elp.defineFunction("", "", "javax.el.TesterFunctions", "void doIt(int)");
+        elp.eval("doIt(5)");
+        Assert.assertEquals("B", TesterFunctions.getCallList());
+    }
+
+
+    @Test
+    public void testDefineFunctionName07() throws Exception {
+        TesterFunctions.resetCallList();
+        ELProcessor elp = new ELProcessor();
+        elp.defineFunction("fn", "", "javax.el.TesterFunctions", "void doIt(int)");
+        elp.eval("fn:doIt(5)");
+        Assert.assertEquals("B", TesterFunctions.getCallList());
+    }
 }

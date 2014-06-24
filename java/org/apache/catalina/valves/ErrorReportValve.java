@@ -16,7 +16,6 @@
  */
 package org.apache.catalina.valves;
 
-
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Scanner;
@@ -29,6 +28,7 @@ import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.util.RequestUtil;
 import org.apache.catalina.util.ServerInfo;
+import org.apache.coyote.ActionCode;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.res.StringManager;
 
@@ -62,7 +62,9 @@ public class ErrorReportValve extends ValveBase {
 
     /**
      * Invoke the next Valve in the sequence. When the invoke returns, check
-     * the response state, and output an error report is necessary.
+     * the response state. If the status code is greater than or equal to 400
+     * or an uncaught exception was thrown then the error handling will be
+     * triggered.
      *
      * @param request The servlet request to be processed
      * @param response The servlet response to be created
@@ -71,41 +73,47 @@ public class ErrorReportValve extends ValveBase {
      * @exception ServletException if a servlet error occurs
      */
     @Override
-    public void invoke(Request request, Response response)
-        throws IOException, ServletException {
+    public void invoke(Request request, Response response) throws IOException, ServletException {
 
         // Perform the request
         getNext().invoke(request, response);
 
         if (response.isCommitted()) {
+            if (response.isErrorAfterCommit()) {
+                // Attempt to flush any data that is still to be written to the
+                // client
+                try {
+                    response.flushBuffer();
+                } catch (Throwable t) {
+                    ExceptionUtils.handleThrowable(t);
+                }
+                // Close immediately to signal to the client that something went
+                // wrong
+                response.getCoyoteResponse().action(ActionCode.CLOSE_NOW, null);
+            }
             return;
         }
 
-        Throwable throwable =
-                (Throwable) request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
+        Throwable throwable = (Throwable) request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
 
         if (request.isAsyncStarted() && ((response.getStatus() < 400 &&
                 throwable == null) || request.isAsyncDispatching())) {
             return;
         }
 
-        if (throwable != null) {
-
-            // The response is an error
-            response.setError();
-
-            // Reset the response (if possible)
-            try {
-                response.reset();
-            } catch (IllegalStateException e) {
-                // Ignore
-            }
-
-            response.sendError
-                (HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-
+        if (throwable != null && !response.isError()) {
+            // Make sure that the necessary methods have been called on the
+            // response. (It is possible a component may just have set the
+            // Throwable. Tomcat won't do that but other components might.)
+            // These are safe to call at this point as we know that the response
+            // has not been committed.
+            response.reset();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
 
+        // One way or another, response.sendError() will have been called before
+        // execution reaches this point and suspended the response. Need to
+        // reverse that so this valve can write to the response.
         response.setSuspended(false);
 
         try {
@@ -131,26 +139,22 @@ public class ErrorReportValve extends ValveBase {
      * @param throwable The exception that occurred (which possibly wraps
      *  a root cause exception
      */
-    protected void report(Request request, Response response,
-                          Throwable throwable) {
+    protected void report(Request request, Response response, Throwable throwable) {
 
-        // Do nothing on non-HTTP responses
         int statusCode = response.getStatus();
 
         // Do nothing on a 1xx, 2xx and 3xx status
         // Do nothing if anything has been written already
-        if (statusCode < 400 || response.getContentWritten() > 0 ||
-                !response.isError()) {
+        // Do nothing if the response hasn't been explicitly marked as in error
+        if (statusCode < 400 || response.getContentWritten() > 0 || !response.isError()) {
             return;
         }
-
         String message = RequestUtil.filter(response.getMessage());
         if (message == null) {
             if (throwable != null) {
                 String exceptionMessage = throwable.getMessage();
                 if (exceptionMessage != null && exceptionMessage.length() > 0) {
-                    message = RequestUtil.filter(
-                            (new Scanner(exceptionMessage)).nextLine());
+                    message = RequestUtil.filter((new Scanner(exceptionMessage)).nextLine());
                 }
             }
             if (message == null) {
@@ -270,6 +274,7 @@ public class ErrorReportValve extends ValveBase {
                 // If writer is null, it's an indication that the response has
                 // been hard committed already, which should never happen
                 writer.write(sb.toString());
+                response.finishResponse();
             }
         } catch (IOException e) {
             // Ignore

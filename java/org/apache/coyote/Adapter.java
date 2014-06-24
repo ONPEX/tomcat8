@@ -14,11 +14,9 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package org.apache.coyote;
 
 import org.apache.tomcat.util.net.SocketStatus;
-
 
 /**
  * Adapter. This represents the entry point in a coyote-based servlet container.
@@ -53,6 +51,8 @@ public interface Adapter {
     public boolean asyncDispatch(Request req,Response res, SocketStatus status)
             throws Exception;
 
+    public void errorDispatch(Request request, Response response);
+
     public void log(Request req, Response res, long time);
 
     /**
@@ -69,7 +69,7 @@ public interface Adapter {
     public void checkRecycled(Request req, Response res);
 
     /**
-     * Provide the name of the domain to use to register MBeans for conponents
+     * Provide the name of the domain to use to register MBeans for components
      * associated with the connector.
      *
      * @return  The MBean domain name

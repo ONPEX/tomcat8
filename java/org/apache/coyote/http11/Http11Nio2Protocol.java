@@ -17,6 +17,7 @@
 package org.apache.coyote.http11;
 
 import java.io.IOException;
+import java.nio.channels.ReadPendingException;
 
 import javax.net.ssl.SSLEngine;
 import javax.servlet.http.HttpUpgradeHandler;
@@ -224,7 +225,13 @@ public class Http11Nio2Protocol extends AbstractHttp11JsseProtocol<Nio2Channel> 
                 ((Nio2Endpoint) proto.endpoint).addTimeout(socket);
             } else if (processor.isUpgrade()) {
                 if (((Nio2SocketWrapper) socket).isUpgradeInit()) {
-                    ((Nio2Endpoint) proto.endpoint).awaitBytes(socket);
+                    try {
+                        ((Nio2Endpoint) proto.endpoint).awaitBytes(socket);
+                    } catch (ReadPendingException e) {
+                        // Ignore, the initial state after upgrade is
+                        // impossible to predict, and a read must be pending
+                        // to get a first notification
+                    }
                 }
             } else {
                 // Either:
@@ -241,7 +248,8 @@ public class Http11Nio2Protocol extends AbstractHttp11JsseProtocol<Nio2Channel> 
         public Http11Nio2Processor createProcessor() {
             Http11Nio2Processor processor = new Http11Nio2Processor(
                     proto.getMaxHttpHeaderSize(), (Nio2Endpoint) proto.endpoint,
-                    proto.getMaxTrailerSize(), proto.getMaxExtensionSize());
+                    proto.getMaxTrailerSize(), proto.getMaxExtensionSize(),
+                    proto.getMaxSwallowSize());
             processor.setAdapter(proto.getAdapter());
             processor.setMaxKeepAliveRequests(proto.getMaxKeepAliveRequests());
             processor.setKeepAliveTimeout(proto.getKeepAliveTimeout());
@@ -265,7 +273,8 @@ public class Http11Nio2Protocol extends AbstractHttp11JsseProtocol<Nio2Channel> 
                 SocketWrapper<Nio2Channel> socket,
                 HttpUpgradeHandler httpUpgradeProcessor)
                 throws IOException {
-            return new Nio2Processor(proto.endpoint, socket, httpUpgradeProcessor);
+            return new Nio2Processor(proto.endpoint, socket, httpUpgradeProcessor,
+                    proto.getUpgradeAsyncWriteBufferSize());
         }
 
         @Override

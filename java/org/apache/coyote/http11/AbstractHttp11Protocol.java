@@ -155,6 +155,16 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
 
 
     /**
+     * Maximum amount of request body to swallow.
+     */
+    private int maxSwallowSize = 2 * 1024 * 1024;
+    public int getMaxSwallowSize() { return maxSwallowSize; }
+    public void setMaxSwallowSize(int maxSwallowSize) {
+        this.maxSwallowSize = maxSwallowSize;
+    }
+
+
+    /**
      * This field indicates if the protocol is treated as if it is secure. This
      * normally means https is being used but can be used to fake https e.g
      * behind a reverse proxy.
@@ -163,6 +173,17 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     public boolean getSecure() { return secure; }
     public void setSecure(boolean b) {
         secure = b;
+    }
+
+
+    /**
+     * The size of the buffer used by the ServletOutputStream when performing
+     * delayed asynchronous writes using HTTP upgraded connections.
+     */
+    private int upgradeAsyncWriteBufferSize = 8192;
+    public int getUpgradeAsyncWriteBufferSize() { return upgradeAsyncWriteBufferSize; }
+    public void setUpgradeAsyncWriteBufferSize(int upgradeAsyncWriteBufferSize) {
+        this.upgradeAsyncWriteBufferSize = upgradeAsyncWriteBufferSize;
     }
 
 

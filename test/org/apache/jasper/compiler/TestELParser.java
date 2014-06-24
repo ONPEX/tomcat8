@@ -92,6 +92,12 @@ public class TestELParser {
 
 
     @Test
+    public void testFunction05() throws JasperException {
+        doTestParser("${do:it(x, '\\\\y',z)}", null);
+    }
+
+
+    @Test
     public void testCompound01() throws JasperException {
         doTestParser("1${'foo'}1", "1foo1");
     }
@@ -263,6 +269,13 @@ public class TestELParser {
     @Test
     public void testEscape10() throws JasperException {
         doTestParser("\\#{", "#{");
+    }
+
+
+    @Test
+    public void testEscape11() throws JasperException {
+        // Bug 56612
+        doTestParser("${'\\'\\''}", "''");
     }
 
 

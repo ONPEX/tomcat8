@@ -14,30 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.tomcat.util.descriptor.web;
+package javax.servlet.http;
+
+import org.junit.Test;
 
 /**
- * Enables additional attributes other than just the name to be recorded for
- * an application listener.
+ * Basic tests for Cookie in default configuration.
  */
-public class ApplicationListener {
-
-    private final String className;
-    private final boolean pluggabilityBlocked;
-
-    public ApplicationListener(String className,
-            boolean pluggabilityBlocked) {
-        this.className = className;
-        this.pluggabilityBlocked = pluggabilityBlocked;
+public class TestCookieRFC6265Validator {
+    static {
+        System.setProperty("org.apache.tomcat.util.http.ServerCookie.FWD_SLASH_IS_SEPARATOR", "true");
     }
 
+    private RFC6265Validator validator = new RFC6265Validator();
 
-    public String getClassName() {
-        return className;
+    @Test
+    public void actualCharactersAllowedInName() {
+        TestCookie.checkCharInName(validator, TestCookie.TOKEN);
     }
 
-
-    public boolean isPluggabilityBlocked() {
-        return pluggabilityBlocked;
+    @Test()
+    public void leadingDollar() {
+        validator.validate("$Version");
     }
 }

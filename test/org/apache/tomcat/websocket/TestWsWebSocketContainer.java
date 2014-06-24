@@ -50,7 +50,6 @@ import org.apache.catalina.servlets.DefaultServlet;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
 import org.apache.coyote.http11.Http11Protocol;
-import org.apache.tomcat.util.descriptor.web.ApplicationListener;
 import org.apache.tomcat.util.net.TesterSupport;
 import org.apache.tomcat.websocket.TesterMessageCountClient.BasicBinary;
 import org.apache.tomcat.websocket.TesterMessageCountClient.BasicHandler;
@@ -84,8 +83,7 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
         // Must have a real docBase - just use temp
         Context ctx =
             tomcat.addContext("", System.getProperty("java.io.tmpdir"));
-        ctx.addApplicationListener(new ApplicationListener(
-                TesterEchoServer.Config.class.getName(), false));
+        ctx.addApplicationListener(TesterEchoServer.Config.class.getName());
         Tomcat.addServlet(ctx, "default", new DefaultServlet());
         ctx.addServletMapping("/", "default");
 
@@ -121,8 +119,7 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
         // Must have a real docBase - just use temp
         Context ctx =
             tomcat.addContext("", System.getProperty("java.io.tmpdir"));
-        ctx.addApplicationListener(new ApplicationListener(
-                TesterEchoServer.Config.class.getName(), false));
+        ctx.addApplicationListener(TesterEchoServer.Config.class.getName());
 
         tomcat.start();
 
@@ -141,8 +138,7 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
         // Must have a real docBase - just use temp
         Context ctx =
             tomcat.addContext("", System.getProperty("java.io.tmpdir"));
-        ctx.addApplicationListener(new ApplicationListener(
-                TesterEchoServer.Config.class.getName(), false));
+        ctx.addApplicationListener(TesterEchoServer.Config.class.getName());
 
         tomcat.start();
 
@@ -209,8 +205,7 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
         // Must have a real docBase - just use temp
         Context ctx =
             tomcat.addContext("", System.getProperty("java.io.tmpdir"));
-        ctx.addApplicationListener(new ApplicationListener(
-                TesterEchoServer.Config.class.getName(), false));
+        ctx.addApplicationListener(TesterEchoServer.Config.class.getName());
         Tomcat.addServlet(ctx, "default", new DefaultServlet());
         ctx.addServletMapping("/", "default");
 
@@ -319,8 +314,7 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
         // Must have a real docBase - just use temp
         Context ctx =
             tomcat.addContext("", System.getProperty("java.io.tmpdir"));
-        ctx.addApplicationListener(new ApplicationListener(
-                BlockingConfig.class.getName(), false));
+        ctx.addApplicationListener(BlockingConfig.class.getName());
         Tomcat.addServlet(ctx, "default", new DefaultServlet());
         ctx.addServletMapping("/", "default");
 
@@ -361,6 +355,9 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
 
         long timeout = System.currentTimeMillis() - lastSend;
 
+        // Clear the server side block and prevent and further blocks to allow
+        // the server to shutdown cleanly
+        BlockingPojo.clearBlock();
 
         String msg = "Time out was [" + timeout + "] ms";
 
@@ -408,8 +405,7 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
         // Must have a real docBase - just use temp
         Context ctx =
             tomcat.addContext("", System.getProperty("java.io.tmpdir"));
-        ctx.addApplicationListener(new ApplicationListener(
-                ConstantTxConfig.class.getName(), false));
+        ctx.addApplicationListener(ConstantTxConfig.class.getName());
         Tomcat.addServlet(ctx, "default", new DefaultServlet());
         ctx.addServletMapping("/", "default");
 
@@ -462,6 +458,8 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
                     (ServerContainer) sce.getServletContext().getAttribute(
                             Constants.SERVER_CONTAINER_SERVLET_CONTEXT_ATTRIBUTE);
             try {
+                // Reset blocking state
+                BlockingPojo.resetBlock();
                 sc.addEndpoint(BlockingPojo.class);
             } catch (DeploymentException e) {
                 throw new IllegalStateException(e);
@@ -472,11 +470,35 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
 
     @ServerEndpoint("/block")
     public static class BlockingPojo {
+
+        private static Object monitor = new Object();
+        // Enable blockign by default
+        private static boolean block = true;
+
+        /**
+         * Clear any current block.
+         */
+        public static void clearBlock() {
+            synchronized (monitor) {
+                BlockingPojo.block = false;
+                monitor.notifyAll();
+            }
+        }
+
+        public static void resetBlock() {
+            synchronized (monitor) {
+                block = true;
+            }
+        }
         @SuppressWarnings("unused")
         @OnMessage
         public void echoTextMessage(Session session, String msg, boolean last) {
             try {
-                Thread.sleep(60000);
+                synchronized (monitor) {
+                    while (block) {
+                        monitor.wait();
+                    }
+                }
             } catch (InterruptedException e) {
                 // Ignore
             }
@@ -488,7 +510,11 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
         public void echoBinaryMessage(Session session, ByteBuffer msg,
                 boolean last) {
             try {
-                Thread.sleep(TIMEOUT_MS * 10);
+                synchronized (monitor) {
+                    while (block) {
+                        monitor.wait();
+                    }
+                }
             } catch (InterruptedException e) {
                 // Ignore
             }
@@ -591,8 +617,7 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
         // Must have a real docBase - just use temp
         Context ctx =
             tomcat.addContext("", System.getProperty("java.io.tmpdir"));
-        ctx.addApplicationListener(new ApplicationListener(
-                TesterEchoServer.Config.class.getName(), false));
+        ctx.addApplicationListener(TesterEchoServer.Config.class.getName());
         Tomcat.addServlet(ctx, "default", new DefaultServlet());
         ctx.addServletMapping("/", "default");
 
@@ -641,8 +666,7 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
         // Must have a real docBase - just use temp
         Context ctx =
             tomcat.addContext("", System.getProperty("java.io.tmpdir"));
-        ctx.addApplicationListener(new ApplicationListener(
-                TesterEchoServer.Config.class.getName(), false));
+        ctx.addApplicationListener(TesterEchoServer.Config.class.getName());
         Tomcat.addServlet(ctx, "default", new DefaultServlet());
         ctx.addServletMapping("/", "default");
 
@@ -700,8 +724,7 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
         // Must have a real docBase - just use temp
         Context ctx =
             tomcat.addContext("", System.getProperty("java.io.tmpdir"));
-        ctx.addApplicationListener(new ApplicationListener(
-                TesterEchoServer.Config.class.getName(), false));
+        ctx.addApplicationListener(TesterEchoServer.Config.class.getName());
         Tomcat.addServlet(ctx, "default", new DefaultServlet());
         ctx.addServletMapping("/", "default");
 
@@ -787,8 +810,7 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
         // Must have a real docBase - just use temp
         Context ctx =
             tomcat.addContext("", System.getProperty("java.io.tmpdir"));
-        ctx.addApplicationListener(new ApplicationListener(
-                TesterEchoServer.Config.class.getName(), false));
+        ctx.addApplicationListener(TesterEchoServer.Config.class.getName());
         Tomcat.addServlet(ctx, "default", new DefaultServlet());
         ctx.addServletMapping("/", "default");
 
@@ -872,8 +894,7 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
         // Must have a real docBase - just use temp
         Context ctx =
             tomcat.addContext("", System.getProperty("java.io.tmpdir"));
-        ctx.addApplicationListener(new ApplicationListener(
-                TesterEchoServer.Config.class.getName(), false));
+        ctx.addApplicationListener(TesterEchoServer.Config.class.getName());
         Tomcat.addServlet(ctx, "default", new DefaultServlet());
         ctx.addServletMapping("/", "default");
 

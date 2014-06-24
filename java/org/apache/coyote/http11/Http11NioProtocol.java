@@ -280,7 +280,8 @@ public class Http11NioProtocol extends AbstractHttp11JsseProtocol<NioChannel> {
         public Http11NioProcessor createProcessor() {
             Http11NioProcessor processor = new Http11NioProcessor(
                     proto.getMaxHttpHeaderSize(), (NioEndpoint)proto.endpoint,
-                    proto.getMaxTrailerSize(), proto.getMaxExtensionSize());
+                    proto.getMaxTrailerSize(), proto.getMaxExtensionSize(),
+                    proto.getMaxSwallowSize());
             processor.setAdapter(proto.getAdapter());
             processor.setMaxKeepAliveRequests(proto.getMaxKeepAliveRequests());
             processor.setKeepAliveTimeout(proto.getKeepAliveTimeout());
@@ -305,7 +306,8 @@ public class Http11NioProtocol extends AbstractHttp11JsseProtocol<NioChannel> {
                 HttpUpgradeHandler httpUpgradeProcessor)
                 throws IOException {
             return new NioProcessor(socket, httpUpgradeProcessor,
-                    ((Http11NioProtocol) getProtocol()).getEndpoint().getSelectorPool());
+                    proto.getEndpoint().getSelectorPool(),
+                    proto.getUpgradeAsyncWriteBufferSize());
         }
 
         @Override
