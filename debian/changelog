@@ -1,4 +1,4 @@
-tomcat8 (8.0.9-1) UNRELEASED; urgency=medium
+tomcat8 (8.0.9-1) unstable; urgency=medium
 
   [ Emmanuel Bourg ]
   * New upstream release
@@ -11,7 +11,7 @@ tomcat8 (8.0.9-1) UNRELEASED; urgency=medium
   [ tony mancill ]
   * Update README.Debian with information about migration guides.
 
- -- Emmanuel Bourg <ebourg@apache.org>  Mon, 26 May 2014 12:13:02 +0200
+ -- Emmanuel Bourg <ebourg@apache.org>  Tue, 24 Jun 2014 21:28:37 +0200
 
 tomcat8 (8.0.8-1) unstable; urgency=medium
 
