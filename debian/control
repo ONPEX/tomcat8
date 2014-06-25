@@ -79,10 +79,8 @@ Description: Apache Tomcat 8 - Servlet and JSP engine -- tools to create user in
 
 Package: libtomcat8-java
 Architecture: all
-Depends: libcommons-dbcp-java,
-         libcommons-pool-java,
-         libecj-java,
-         ${misc:Depends}
+Depends: libecj-java, ${misc:Depends}
+Recommends: libcommons-dbcp-java, libcommons-pool-java
 Suggests: tomcat8 (>= ${source:Version})
 Description: Apache Tomcat 8 - Servlet and JSP engine -- core libraries
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)

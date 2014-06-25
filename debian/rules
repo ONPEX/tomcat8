@@ -44,8 +44,7 @@ ANT_ARGS := -Dcompile.debug=true \
 	-Dversion.build="$(T_VER_BUILD)" \
 	-Dversion.patch="0" \
         -Ddistribution.name=$(TOMCAT_DISTRIBUTION) \
-	-Dversion.suffix="" \
-	-Dno.build.dbcp=true
+	-Dversion.suffix=""
 
 ANT_INVOKE := $(JAVA_CMD) -classpath "$(DEB_CLASSPATH)" org.apache.tools.ant.Main $(ANT_ARGS)
 

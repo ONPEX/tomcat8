@@ -8,6 +8,7 @@
 /usr/share/java/tomcat8-catalina-ha.jar          /usr/share/tomcat8/lib/catalina-ha.jar
 /usr/share/java/tomcat8-catalina-storeconfig.jar /usr/share/tomcat8/lib/catalina-storeconfig.jar
 /usr/share/java/tomcat8-coyote.jar               /usr/share/tomcat8/lib/tomcat-coyote.jar
+/usr/share/java/tomcat8-dbcp.jar                 /usr/share/tomcat8/lib/tomcat-dbcp.jar
 /usr/share/java/tomcat8-el-api.jar               /usr/share/tomcat8/lib/el-api.jar
 /usr/share/java/tomcat8-i18n-es.jar              /usr/share/tomcat8/lib/tomcat-i18n-es.jar
 /usr/share/java/tomcat8-i18n-fr.jar              /usr/share/tomcat8/lib/tomcat-i18n-fr.jar

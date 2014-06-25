@@ -35,14 +35,3 @@ Getting started:
     and then configure your Tomcat to listen on any port number you
     wish.  See the "man authbind" for information on configuring
     authbind.
-
-Deviations from upstream's tomcat8:
-
-  * In order to prevent library duplication, this version of tomcat
-    does not provide tomcat-dbcp.jar.  Instead, it uses the lightweight,
-    scalable JDBC Pool implementation provided as part of tomcat8.
-    This also means that libtomcat8-java does not provide the
-    tomcat-dbcp.pom for the local maven-repo.  For more information
-    and rationale, see:  
-      https://bugs.launchpad.net/ubuntu/+source/tomcat6/+bug/283852
-

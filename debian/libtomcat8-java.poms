@@ -4,6 +4,7 @@ debian/poms/tomcat-catalina.pom        --java-lib --usj-name=tomcat8-catalina   
 debian/poms/tomcat-catalina-ant.pom    --java-lib --usj-name=tomcat8-catalina-ant    --artifact=output/build/lib/catalina-ant.jar
 debian/poms/tomcat-catalina-ha.pom     --java-lib --usj-name=tomcat8-catalina-ha     --artifact=output/build/lib/catalina-ha.jar
 debian/poms/tomcat-coyote.pom          --java-lib --usj-name=tomcat8-coyote          --artifact=output/build/lib/tomcat-coyote.jar
+debian/poms/tomcat-dbcp.pom            --java-lib --usj-name=tomcat8-dbcp            --artifact=output/build/lib/tomcat-dbcp.jar
 debian/poms/tomcat-el-api.pom          --java-lib --usj-name=tomcat8-el-api          --artifact=output/build/lib/el-api.jar
 debian/poms/tomcat-i18n-es.pom         --java-lib --usj-name=tomcat8-i18n-es         --artifact=output/build/lib/tomcat-i18n-es.jar
 debian/poms/tomcat-i18n-fr.pom         --java-lib --usj-name=tomcat8-i18n-fr         --artifact=output/build/lib/tomcat-i18n-fr.jar
