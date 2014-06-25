@@ -1,3 +1,9 @@
+tomcat8 (8.5.9-1~bpo7+1) wheezy-backports-sloppy; urgency=medium
+
+  * Rebuild for wheezy-backports-sloppy
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Thu, 26 Jan 2017 17:59:47 +0100
+
 tomcat8 (8.5.9-1) unstable; urgency=medium
 
   * Team upload.
