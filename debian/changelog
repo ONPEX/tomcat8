@@ -1,6 +1,7 @@
 tomcat8 (8.0.9-1~bpo70+1) wheezy-backports; urgency=low
 
   * Rebuild for wheezy-backports
+    - Depend on openjdk-7 instead of openjdk-6 which is the default in Wheezy
 
  -- Emmanuel Bourg <ebourg@apache.org>  Wed, 25 Jun 2014 08:55:40 +0200
 

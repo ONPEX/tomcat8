@@ -9,7 +9,7 @@ Uploaders: James Page <james.page@ubuntu.com>,
            Emmanuel Bourg <ebourg@apache.org>
 Build-Depends: ant-optional,
                debhelper (>= 9),
-               default-jdk,
+               openjdk-7-jdk,
                po-debconf
 Build-Depends-Indep: javahelper,
                      junit4,
@@ -29,7 +29,7 @@ Homepage: http://tomcat.apache.org
 
 Package: tomcat8-common
 Architecture: all
-Depends: default-jre-headless | java7-runtime-headless | java7-runtime,
+Depends: openjdk-7-jre-headless | java7-runtime-headless | java7-runtime,
          libtomcat8-java (>= ${source:Version}),
          ${misc:Depends}
 Description: Apache Tomcat 8 - Servlet and JSP engine -- common files
