@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-JAVA_HOME := /usr/lib/jvm/default-java
+export JAVA_HOME := /usr/lib/jvm/java-7-openjdk-$(shell dpkg-architecture -qDEB_BUILD_ARCH)
 
 VERSION   := $(shell dpkg-parsechangelog --show-field Version | sed 's/-[^-]*$$//' | sed 's/~/-/')
 DATE      := $(shell dpkg-parsechangelog --show-field Date)
