@@ -1,3 +1,9 @@
+tomcat8 (8.5.11-1~bpo7+1) wheezy-backports-sloppy; urgency=medium
+
+  * Rebuild for wheezy-backports-sloppy
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Tue, 31 Jan 2017 22:58:42 +0100
+
 tomcat8 (8.5.11-1~bpo8+2) jessie-backports; urgency=medium
 
   * Restored the detection of the Java 7 runtimes
