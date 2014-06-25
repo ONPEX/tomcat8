@@ -1,3 +1,9 @@
+tomcat8 (8.0.9-1~bpo70+1) wheezy-backports; urgency=low
+
+  * Rebuild for wheezy-backports
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Wed, 25 Jun 2014 08:55:40 +0200
+
 tomcat8 (8.0.9-1) unstable; urgency=medium
 
   [ Emmanuel Bourg ]
