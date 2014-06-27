@@ -4,6 +4,8 @@ tomcat8 (8.0.14-1~bpo70+1) wheezy-backports; urgency=low
     - Depend on openjdk-7 instead of openjdk-6 which is the default in Wheezy
     - Build the Javadoc with the JDK specified by the JAVA_HOME variable
       instead of the default JDK
+    - Modified the tests to compile and run with the versions of JUnit,
+      Hamcrest and EasyMock available in Wheezy
 
  -- Emmanuel Bourg <ebourg@apache.org>  Wed, 10 Dec 2014 15:41:03 +0100
 
