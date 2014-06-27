@@ -8,3 +8,4 @@
 0018-fix-manager-webapp.patch
 0019-add-distribution-to-error-page.patch
 0021-dont-test-unsupported-ciphers.patch
+0100-test-compat.patch

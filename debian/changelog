@@ -2,6 +2,8 @@ tomcat8 (8.5.11-1~bpo7+1) wheezy-backports-sloppy; urgency=medium
 
   * Rebuild for wheezy-backports-sloppy
     - Depend on openjdk-7 instead of openjdk-6 which is the default in Wheezy
+    - Modified the tests to compile and run with the versions of JUnit,
+      Hamcrest and EasyMock available in Wheezy
 
  -- Emmanuel Bourg <ebourg@apache.org>  Tue, 31 Jan 2017 22:58:42 +0100
 
