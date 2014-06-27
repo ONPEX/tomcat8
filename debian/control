@@ -15,7 +15,7 @@ Build-Depends-Indep: javahelper,
                      junit4 (>= 4.11),
                      libcglib-java,
                      libeasymock-java (>= 3.0),
-                     libecj-java,
+                     libecj-java (>= 3.10.0),
                      libhamcrest-java (>= 1.3),
                      libjakarta-taglibs-standard-java,
                      libjstl1.1-java,
@@ -79,7 +79,7 @@ Description: Apache Tomcat 8 - Servlet and JSP engine -- tools to create user in
 
 Package: libtomcat8-java
 Architecture: all
-Depends: libecj-java, ${misc:Depends}
+Depends: libecj-java (>= 3.10.0), ${misc:Depends}
 Recommends: libcommons-dbcp-java, libcommons-pool-java
 Suggests: tomcat8 (>= ${source:Version})
 Description: Apache Tomcat 8 - Servlet and JSP engine -- core libraries
