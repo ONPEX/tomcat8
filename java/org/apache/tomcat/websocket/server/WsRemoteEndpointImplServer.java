@@ -31,6 +31,7 @@ import javax.websocket.SendResult;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.res.StringManager;
+import org.apache.tomcat.websocket.Transformation;
 import org.apache.tomcat.websocket.WsRemoteEndpointImplBase;
 
 /**
@@ -58,8 +59,7 @@ public class WsRemoteEndpointImplServer extends WsRemoteEndpointImplBase {
     private volatile boolean close;
 
 
-    public WsRemoteEndpointImplServer(ServletOutputStream sos,
-            WsServerContainer serverContainer) {
+    public WsRemoteEndpointImplServer(ServletOutputStream sos, WsServerContainer serverContainer) {
         this.sos = sos;
         this.wsWriteTimeout = serverContainer.getTimeout();
         this.executorService = serverContainer.getExecutorService();
@@ -170,6 +170,13 @@ public class WsRemoteEndpointImplServer extends WsRemoteEndpointImplBase {
     }
 
 
+    @Override
+    protected void setTransformation(Transformation transformation) {
+        // Overridden purely so it is visible to other classes in this package
+        super.setTransformation(transformation);
+    }
+
+
     /**
      *
      * @param t             The throwable associated with any error that
@@ -187,6 +194,7 @@ public class WsRemoteEndpointImplServer extends WsRemoteEndpointImplBase {
         // message.
         SendHandler sh = handler;
         handler = null;
+        buffers = null;
         if (sh != null) {
             if (useDispatch) {
                 OnResultRunnable r = onResultRunnables.poll();

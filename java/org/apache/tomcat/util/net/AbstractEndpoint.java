@@ -49,6 +49,9 @@ import org.apache.tomcat.util.threads.ThreadPoolExecutor;
 public abstract class AbstractEndpoint<S> {
 
     // -------------------------------------------------------------- Constants
+
+    protected static final String DEFAULT_CIPHERS = "HIGH:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5";
+
     protected static final StringManager sm = StringManager.getManager("org.apache.tomcat.util.net.res");
 
     public static interface Handler {
@@ -919,7 +922,7 @@ public abstract class AbstractEndpoint<S> {
     public String getSslProtocol() { return sslProtocol;}
     public void setSslProtocol(String s) { sslProtocol = s;}
 
-    private String ciphers = null;
+    private String ciphers = DEFAULT_CIPHERS;
     public String getCiphers() { return ciphers;}
     public void setCiphers(String s) {
         ciphers = s;
@@ -1005,7 +1008,7 @@ public abstract class AbstractEndpoint<S> {
     }
 
 
-    private String[] sslEnabledProtocolsarr =  new String[0];
+    private String[] sslEnabledProtocolsarr = new String[0];
     public String[] getSslEnabledProtocolsArray() {
         return this.sslEnabledProtocolsarr;
     }

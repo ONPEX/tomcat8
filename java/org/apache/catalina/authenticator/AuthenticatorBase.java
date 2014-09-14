@@ -39,8 +39,10 @@ import org.apache.catalina.Valve;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
-import org.apache.catalina.util.SessionIdGenerator;
+import org.apache.catalina.util.SessionIdGeneratorBase;
+import org.apache.catalina.util.StandardSessionIdGenerator;
 import org.apache.catalina.valves.ValveBase;
+import org.apache.coyote.ActionCode;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.descriptor.web.LoginConfig;
@@ -165,7 +167,7 @@ public abstract class AuthenticatorBase extends ValveBase
      */
     protected String secureRandomProvider = null;
 
-    protected SessionIdGenerator sessionIdGenerator = null;
+    protected SessionIdGeneratorBase sessionIdGenerator = null;
 
     /**
      * The string manager for this package.
@@ -566,8 +568,7 @@ public abstract class AuthenticatorBase extends ValveBase
         }
 
         if (!authRequired && context.getPreemptiveAuthentication()) {
-            X509Certificate[] certs = (X509Certificate[]) request.getAttribute(
-                    Globals.CERTIFICATES_ATTR);
+            X509Certificate[] certs = getRequestCertificates(request, false);
             authRequired = certs != null && certs.length > 0;
         }
 
@@ -618,6 +619,37 @@ public abstract class AuthenticatorBase extends ValveBase
 
 
     // ------------------------------------------------------ Protected Methods
+
+    /**
+     * Look for the X509 certificate chain in the Request under the key
+     * <code>javax.servlet.request.X509Certificate</code>. If not found, trigger
+     * extracting the certificate chain from the Coyote request.
+     *
+     * @param request   Request to be processed
+     * @param force     Should a renegotiation be forced to request certificates
+     *                  from the user agent if none have been provided
+     *
+     * @return          The X509 certificate chain if found, <code>null</code>
+     *                  otherwise.
+     */
+    protected X509Certificate[] getRequestCertificates(final Request request, boolean force)
+            throws IllegalStateException {
+
+        X509Certificate certs[] =
+                (X509Certificate[]) request.getAttribute(Globals.CERTIFICATES_ATTR);
+
+        if ((certs == null) || (certs.length < 1)) {
+            try {
+                request.getCoyoteRequest().action(ActionCode.REQ_SSL_CERTIFICATE, Boolean.valueOf(force));
+                certs = (X509Certificate[]) request.getAttribute(Globals.CERTIFICATES_ATTR);
+            } catch (IllegalStateException ise) {
+                // Request body was too large for save buffer
+                // Return null which will trigger an auth failure
+            }
+        }
+
+        return certs;
+    }
 
 
     /**
@@ -887,7 +919,7 @@ public abstract class AuthenticatorBase extends ValveBase
             }
         }
 
-        sessionIdGenerator = new SessionIdGenerator();
+        sessionIdGenerator = new StandardSessionIdGenerator();
         sessionIdGenerator.setSecureRandomAlgorithm(getSecureRandomAlgorithm());
         sessionIdGenerator.setSecureRandomClass(getSecureRandomClass());
         sessionIdGenerator.setSecureRandomProvider(getSecureRandomProvider());

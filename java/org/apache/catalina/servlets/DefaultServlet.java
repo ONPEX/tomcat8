@@ -33,6 +33,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.security.AccessController;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Locale;
@@ -799,16 +800,26 @@ public class DefaultServlet extends HttpServlet {
 
         // Serve a gzipped version of the file if present
         boolean usingGzippedVersion = false;
-        if (gzip &&
-                resource.isFile() &&
-                !included &&
-                !path.endsWith(".gz") &&
-                checkIfGzip(request)) {
+        if (gzip && !included && resource.isFile() && !path.endsWith(".gz")) {
             WebResource gzipResource = resources.getResource(path + ".gz");
             if (gzipResource.exists() && gzipResource.isFile()) {
-                response.addHeader("Content-Encoding", "gzip");
-                resource = gzipResource;
-                usingGzippedVersion = true;
+                Collection<String> varyHeaders = response.getHeaders("Vary");
+                boolean addRequired = true;
+                for (String varyHeader : varyHeaders) {
+                    if ("*".equals(varyHeader) ||
+                            "accept-encoding".equalsIgnoreCase(varyHeader)) {
+                        addRequired = false;
+                        break;
+                    }
+                }
+                if (addRequired) {
+                    response.addHeader("Vary", "accept-encoding");
+                }
+                if (checkIfGzip(request)) {
+                    response.addHeader("Content-Encoding", "gzip");
+                    resource = gzipResource;
+                    usingGzippedVersion = true;
+                }
             }
         }
 

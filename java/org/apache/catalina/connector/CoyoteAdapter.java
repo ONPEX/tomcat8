@@ -400,6 +400,14 @@ public class CoyoteAdapter implements Adapter {
                 }
             }
 
+            // Has an error occurred during async processing that needs to be
+            // processed by the application's error page mechanism (or Tomcat's
+            // if the application doesn't define one)?
+            if (!request.isAsyncDispatching() && request.isAsync() &&
+                    response.isErrorReportRequired()) {
+                connector.getService().getContainer().getPipeline().getFirst().invoke(request, response);
+            }
+
             if (request.isAsyncDispatching()) {
                 success = true;
                 connector.getService().getContainer().getPipeline().getFirst().invoke(request, response);
@@ -850,24 +858,16 @@ public class CoyoteAdapter implements Adapter {
             request.getMappingData().recycle();
         }
 
-        boolean mapRequired = true;
+        // Version for the second mapping loop and
+        // Context that we expect to get for that version
         String version = null;
+        Context versionContext = null;
+        boolean mapRequired = true;
 
         while (mapRequired) {
-            if (version != null) {
-                // Once we have a version - that is it
-                mapRequired = false;
-            }
             // This will map the the latest version by default
             connector.getService().getMapper().map(serverName, decodedURI,
                     version, request.getMappingData());
-            request.setContext(request.getMappingData().context);
-            request.setWrapper(request.getMappingData().wrapper);
-
-            // Single contextVersion therefore no possibility of remap
-            if (request.getMappingData().contexts == null) {
-                mapRequired = false;
-            }
 
             // If there is no context at this point, it is likely no ROOT context
             // has been deployed
@@ -886,7 +886,7 @@ public class CoyoteAdapter implements Adapter {
             // Now we have the context, we can parse the session ID from the URL
             // (if any). Need to do this before we redirect in case we need to
             // include the session id in the redirect
-            String sessionID = null;
+            String sessionID;
             if (request.getServletContext().getEffectiveSessionTrackingModes()
                     .contains(SessionTrackingMode.URL)) {
 
@@ -906,35 +906,38 @@ public class CoyoteAdapter implements Adapter {
 
             sessionID = request.getRequestedSessionId();
 
-            if (mapRequired) {
-                if (sessionID == null) {
-                    // No session means no possibility of needing to remap
-                    mapRequired = false;
-                } else {
+            mapRequired = false;
+            if (version != null && request.getContext() == versionContext) {
+                // We got the version that we asked for. That is it.
+            } else {
+                version = null;
+                versionContext = null;
+
+                Context[] contexts = request.getMappingData().contexts;
+                // Single contextVersion means no need to remap
+                // No session ID means no possibility of remap
+                if (contexts != null && sessionID != null) {
                     // Find the context associated with the session
-                    Context[] contexts = request.getMappingData().contexts;
                     for (int i = (contexts.length); i > 0; i--) {
                         Context ctxt = contexts[i - 1];
                         if (ctxt.getManager().findSession(sessionID) != null) {
-                            // Was the correct context already mapped?
-                            if (ctxt.equals(request.getMappingData().context)) {
-                                mapRequired = false;
-                            } else {
-                                // Set version so second time through mapping the
-                                // correct context is found
+                            // We found a context. Is it the one that has
+                            // already been mapped?
+                            if (!ctxt.equals(request.getMappingData().context)) {
+                                // Set version so second time through mapping
+                                // the correct context is found
                                 version = ctxt.getWebappVersion();
+                                versionContext = ctxt;
                                 // Reset mapping
                                 request.getMappingData().recycle();
-                                break;
+                                mapRequired = true;
                             }
+                            break;
                         }
-                    }
-                    if (version == null) {
-                        // No matching context found. No need to re-map
-                        mapRequired = false;
                     }
                 }
             }
+
             if (!mapRequired && request.getContext().getPaused()) {
                 // Found a matching context but it is paused. Mapping data will
                 // be wrong since some Wrappers may not be registered at this

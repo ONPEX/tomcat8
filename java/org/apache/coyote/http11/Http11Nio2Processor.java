@@ -280,17 +280,21 @@ public class Http11Nio2Processor extends AbstractHttp11Processor<Nio2Channel> {
         if (sendfileData != null && !getErrorState().isError()) {
             ((Nio2Endpoint.Nio2SocketWrapper) socketWrapper).setSendfileData(sendfileData);
             sendfileData.keepAlive = keepAlive;
-            if (((Nio2Endpoint) endpoint).processSendfile(
-                    (Nio2Endpoint.Nio2SocketWrapper) socketWrapper)) {
-                sendfileInProgress = true;
-            } else {
+            switch (((Nio2Endpoint) endpoint)
+                    .processSendfile((Nio2Endpoint.Nio2SocketWrapper) socketWrapper)) {
+            case DONE:
+                return false;
+            case ERROR:
                 // Write failed
                 if (log.isDebugEnabled()) {
                     log.debug(sm.getString("http11processor.sendfile.error"));
                 }
                 setErrorState(ErrorState.CLOSE_NOW, null);
+                return true;
+            case PENDING:
+                sendfileInProgress = true;
+                return true;
             }
-            return true;
         }
         return false;
     }
@@ -461,18 +465,20 @@ public class Http11Nio2Processor extends AbstractHttp11Processor<Nio2Channel> {
         }
         case REQ_SSL_CERTIFICATE: {
             if (sslSupport != null && socketWrapper.getSocket() != null) {
-                /*
-                 * Consume and buffer the request body, so that it does not
-                 * interfere with the client's handshake messages
-                 */
-                InputFilter[] inputFilters = inputBuffer.getFilters();
-                ((BufferedInputFilter) inputFilters[Constants.BUFFERED_FILTER])
-                    .setLimit(maxSavePostSize);
-                inputBuffer.addActiveFilter
-                    (inputFilters[Constants.BUFFERED_FILTER]);
+                boolean force = ((Boolean) param).booleanValue();
+                if (force) {
+                    /* Forced triggers a handshake so consume and buffer the
+                     * request body, so that it does not interfere with the
+                     * client's handshake messages
+                     */
+                    InputFilter[] inputFilters = inputBuffer.getFilters();
+                    ((BufferedInputFilter) inputFilters[Constants.BUFFERED_FILTER])
+                            .setLimit(maxSavePostSize);
+                    inputBuffer.addActiveFilter(inputFilters[Constants.BUFFERED_FILTER]);
+                }
                 SecureNio2Channel sslChannel = (SecureNio2Channel) socketWrapper.getSocket();
                 SSLEngine engine = sslChannel.getSslEngine();
-                if (!engine.getNeedClientAuth()) {
+                if (!engine.getNeedClientAuth() && force) {
                     // Need to re-negotiate SSL connection
                     engine.setNeedClientAuth(true);
                     try {
@@ -489,9 +495,8 @@ public class Http11Nio2Processor extends AbstractHttp11Processor<Nio2Channel> {
                     // use force=false since re-negotiation is handled above
                     // (and it is a NO-OP for NIO anyway)
                     Object sslO = sslSupport.getPeerCertificateChain(false);
-                    if( sslO != null) {
-                        request.setAttribute
-                            (SSLSupport.CERTIFICATE_KEY, sslO);
+                    if (sslO != null) {
+                        request.setAttribute(SSLSupport.CERTIFICATE_KEY, sslO);
                     }
                 } catch (Exception e) {
                     log.warn(sm.getString("http11processor.socket.ssl"), e);
