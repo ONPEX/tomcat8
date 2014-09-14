@@ -179,6 +179,9 @@
   <available file="/dev/urandom" property="test.jvmarg.egd" value="-Djava.security.egd=file:/dev/./urandom"/>
   <property name="test.jvmarg.egd" value="" />
 
+  <!-- Location of OpenSSL binary -->
+  <property name="test.openssl.path" value="" />
+
   <!-- Include .gitignore in src distributions. -->
   <!-- .git and .gitignore are in defaultexcludes since Ant 1.8.2 -->
   <defaultexcludes add="**/.git" />
@@ -1044,10 +1047,19 @@
       <filterset refid="version.filters"/>
     </copy>
 
+    <!-- Delete all other versions of Eclipse JDT Compiler and copy the current one -->
+    <local name="jdt.jar.filename" />
+    <basename property="jdt.jar.filename" file="${jdt.jar}"/>
+    <delete verbose="true">
+      <fileset dir="${tomcat.build}/lib">
+        <include name="ecj-*.jar"/>
+        <exclude name="${jdt.jar.filename}"/>
+      </fileset>
+    </delete>
+    <copy file="${jdt.jar}" todir="${tomcat.build}/lib"/>
+
     <!-- Add sources for examples -->
     <antcall target="examples-sources" />
-
-    <copy file="${jdt.jar}" todir="${tomcat.build}/lib" />
   </target>
 
   <target name="compile-webapp-examples" >
@@ -1327,25 +1339,25 @@
   </target>
 
   <target name="test-bio" description="Runs the JUnit test cases for BIO. Does not stop on errors."
-          depends="test-compile,deploy,cobertura-instrument" if="${execute.test.bio}">
+          depends="test-compile,deploy,cobertura-instrument,test-openssl-exists" if="${execute.test.bio}">
     <runtests protocol="org.apache.coyote.http11.Http11Protocol"
               extension=".BIO" />
   </target>
 
   <target name="test-nio" description="Runs the JUnit test cases for NIO. Does not stop on errors."
-          depends="test-compile,deploy,cobertura-instrument" if="${execute.test.nio}">
+          depends="test-compile,deploy,cobertura-instrument,test-openssl-exists" if="${execute.test.nio}">
     <runtests protocol="org.apache.coyote.http11.Http11NioProtocol"
               extension=".NIO" />
   </target>
 
   <target name="test-nio2" description="Runs the JUnit test cases for NIO2. Does not stop on errors."
-          depends="test-compile,deploy,cobertura-instrument" if="${execute.test.nio2}">
+          depends="test-compile,deploy,cobertura-instrument,test-openssl-exists" if="${execute.test.nio2}">
     <runtests protocol="org.apache.coyote.http11.Http11Nio2Protocol"
               extension=".NIO2" />
   </target>
 
   <target name="test-apr" description="Runs the JUnit test cases for APR. Does not stop on errors."
-          depends="test-compile,deploy,test-apr-exists,cobertura-instrument"
+          depends="test-compile,deploy,test-apr-exists,cobertura-instrument,test-openssl-exists"
           if="${apr.exists}">
     <runtests protocol="org.apache.coyote.http11.Http11AprProtocol"
               extension=".APR" />
@@ -1354,6 +1366,22 @@
   <target name="test-apr-exists" description="Checks for APR lib"
           if="${execute.test.apr}">
     <available file="${test.apr.loc}" property="apr.exists" />
+  </target>
+
+  <target name="test-openssl-exists" description="Checks for the OpenSSL binary">
+    <property environment="env" />
+    <condition property="test.openssl.exists">
+      <or>
+        <and>
+          <length string="${test.openssl.path}" trim="true" length="0" when="gt"/>
+          <available file="${test.openssl.path}" property="test.openssl.exists"/>
+        </and>
+        <and>
+          <length string="${test.openssl.path}" trim="true" length="0" when="eq"/>
+          <available file="openssl" filepath="${env.PATH}" property="test.openssl.exists"/>
+        </and>
+      </or>
+    </condition>
   </target>
 
   <macrodef name="runtests"
@@ -1384,6 +1412,7 @@
         <sysproperty key="tomcat.test.protocol" value="@{protocol}" />
         <sysproperty key="tomcat.test.accesslog" value="${test.accesslog}" />
         <sysproperty key="tomcat.test.reports" value="${test.reports}" />
+        <sysproperty key="tomcat.test.openssl.path" value="${test.openssl.path}" />
         <!-- File for Cobertura to write coverage results to -->
         <sysproperty key="net.sourceforge.cobertura.datafile" file="${cobertura.datafile}" />
 
@@ -1406,6 +1435,8 @@
             <exclude name="**/Tester*.java" />
             <!-- Exclude the tests known to fail -->
             <exclude name="org/apache/catalina/tribes/test/**" />
+            <!-- Exclude the OpenSSL tests unless OpenSSL is available -->
+            <exclude name="org/apache/tomcat/util/net/jsse/openssl/**" unless="${test.openssl.exists}"/>
           </fileset>
         </batchtest>
       </junit>
@@ -1812,7 +1843,7 @@
         tofile="${tomcat.dist}/bin/i64/tomcat${version.major}.exe" />
     <!-- tc native -->
     <copy todir="${tomcat.dist}/bin">
-      <fileset dir="${tomcat-native.home}/bin">
+      <fileset dir="${tomcat-native.home}/${tomcat-native.win.path}/bin">
         <include name="*.dll"/>
         <include name="**/*.dll"/>
       </fileset>
@@ -2088,8 +2119,26 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
     </antcall>
   </target>
 
+  <target name="sign-windows-binaries" depends="installer" if="${do.codesigning}" >
+
+    <taskdef name="signcode"
+             classname="org.apache.tomcat.buildutil.SignCode"
+             classpath="${tomcat.classes}" />
+
+    <signcode userName="${codesigning.user}" password="${codesigning.pwd}"
+              partnerCode="${codesigning.partnercode}"
+              applicationName="Apache Tomcat ${version.major.minor}"
+              applicationversion="${version}"
+              signingService="Microsoft Signing">
+      <fileset dir="${tomcat.release}">
+        <filename name="v${version}/bin/${final.name}.exe"/>
+      </fileset>
+    </signcode>
+
+  </target>
+
   <target name="release"
-    depends="clean,release-init,dist-deployer,installer,package-zip,package-winzip,package-tgz,package-deployer-zip,package-deployer-tgz,javadoc,package-docs-tgz,package-src-zip,package-src-tgz,package-src-jar"
+    depends="clean,release-init,dist-deployer,sign-windows-binaries,package-zip,package-winzip,package-tgz,package-deployer-zip,package-deployer-tgz,javadoc,package-docs-tgz,package-src-zip,package-src-tgz,package-src-jar"
     description="Create a Tomcat packaged distribution">
 
     <copy file="KEYS"
@@ -2711,7 +2760,7 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
     <antcall target="downloadzip-2">
       <param name="sourcefile.1" value="${tomcat-native.win.1}"/>
       <param name="sourcefile.2" value="${tomcat-native.win.2}"/>
-      <param name="destfile" value="${tomcat-native.home}/LICENSE"/>
+      <param name="destfile" value="${tomcat-native.home}/${tomcat-native.win.path}/LICENSE"/>
       <param name="destdir" value="${tomcat-native.home}"/>
     </antcall>
 
@@ -2732,14 +2781,7 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
 
   <!-- =============== Utility Targets to support downloads ================ -->
 
-  <target name="proxyflags">
-    <!-- check proxy parameters. -->
-    <condition property="useproxy">
-      <equals arg1="${proxy.use}" arg2="on" />
-    </condition>
-  </target>
-
-  <target name="setproxy" depends="proxyflags" if="useproxy">
+  <target name="setproxy" if="${proxy.use}">
     <taskdef name="setproxy"
             classname="org.apache.tools.ant.taskdefs.optional.net.SetProxy" />
     <setproxy proxyhost="${proxy.host}" proxyport="${proxy.port}"
@@ -2752,7 +2794,7 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
     <available file="${destfile}" property="exist"/>
   </target>
 
-  <target name="downloadgz" unless="exist" depends="setproxy,testexist">
+  <target name="downloadgz" unless="exist" depends="testexist,setproxy">
     <!-- Download and extract the package -->
     <get src="${sourcefile}" httpusecaches="${trydownload.httpusecaches}" dest="${base.path}/file.tar.gz" />
     <gunzip src="${base.path}/file.tar.gz" dest="${base.path}/file.tar"/>
@@ -2779,7 +2821,7 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
     <delete file="${base.path}/file.tar.gz"/>
   </target>
 
-  <target name="downloadzip" unless="exist" depends="setproxy,testexist">
+  <target name="downloadzip" unless="exist" depends="testexist,setproxy">
     <!-- Download and extract the package -->
     <get src="${sourcefile}" httpusecaches="${trydownload.httpusecaches}" dest="${base.path}/file.zip" />
     <mkdir dir="${destdir}" />
@@ -2803,7 +2845,7 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
     <delete file="${base.path}/file.zip"/>
   </target>
 
-  <target name="downloadfile" unless="exist" depends="setproxy,testexist">
+  <target name="downloadfile" unless="exist" depends="testexist,setproxy">
     <!-- Download extract the file -->
     <mkdir dir="${destdir}" />
     <get src="${sourcefile}" httpusecaches="${trydownload.httpusecaches}" dest="${destfile}" />

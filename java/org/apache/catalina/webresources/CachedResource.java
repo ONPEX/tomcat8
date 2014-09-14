@@ -36,12 +36,14 @@ public class CachedResource implements WebResource {
     // based on profiler data.
     private static final long CACHE_ENTRY_SIZE = 500;
 
+    private final Cache cache;
     private final StandardRoot root;
     private final String webAppPath;
     private final long ttl;
     private final int objectMaxSizeBytes;
 
     private volatile WebResource webResource;
+    private volatile WebResource[] webResources;
     private volatile long nextCheck;
 
     private volatile Long cachedLastModified = null;
@@ -54,15 +56,16 @@ public class CachedResource implements WebResource {
     private volatile Long cachedContentLength = null;
 
 
-    public CachedResource(StandardRoot root, String path, long ttl,
+    public CachedResource(Cache cache, StandardRoot root, String path, long ttl,
             int objectMaxSizeBytes) {
+        this.cache = cache;
         this.root = root;
         this.webAppPath = path;
         this.ttl = ttl;
         this.objectMaxSizeBytes = objectMaxSizeBytes;
     }
 
-    protected boolean validate(boolean useClassLoaderResources) {
+    protected boolean validateResource(boolean useClassLoaderResources) {
         long now = System.currentTimeMillis();
 
         if (webResource == null) {
@@ -108,9 +111,31 @@ public class CachedResource implements WebResource {
             return false;
         }
 
-
         nextCheck = ttl + now;
         return true;
+    }
+
+    protected boolean validateResources(boolean useClassLoaderResources) {
+        long now = System.currentTimeMillis();
+
+        if (webResources == null) {
+            synchronized (this) {
+                if (webResources == null) {
+                    webResources = root.getResourcesInternal(
+                            webAppPath, useClassLoaderResources);
+                    nextCheck = ttl + now;
+                    return true;
+                }
+            }
+        }
+
+        if (now < nextCheck) {
+            return true;
+        }
+
+        // At this point, always expire the entry as re-populating it is likely
+        // to be as expensive as validating it.
+        return false;
     }
 
     protected long getNextCheck() {
@@ -180,7 +205,11 @@ public class CachedResource implements WebResource {
 
     @Override
     public boolean delete() {
-        return webResource.delete();
+        boolean deleteResult = webResource.delete();
+        if (deleteResult) {
+            cache.removeCacheEntry(webAppPath);
+        }
+        return deleteResult;
     }
 
     @Override
@@ -283,6 +312,10 @@ public class CachedResource implements WebResource {
 
     WebResource getWebResource() {
         return webResource;
+    }
+
+    WebResource[] getWebResources() {
+        return webResources;
     }
 
     // Assume that the cache entry will always include the content unless the

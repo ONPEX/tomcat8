@@ -61,6 +61,10 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
 
     private final StateMachine stateMachine = new StateMachine();
 
+    private final IntermediateMessageHandler intermediateMessageHandler =
+            new IntermediateMessageHandler(this);
+
+    private Transformation transformation = null;
     private boolean messagePartInProgress = false;
     private final Queue<MessagePart> messagePartQueue = new ArrayDeque<>();
     private final Object messagePartLock = new Object();
@@ -81,6 +85,12 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
     private volatile long sendTimeout = -1;
     private WsSession wsSession;
     private List<EncoderEntry> encoderEntries = new ArrayList<>();
+
+
+    protected void setTransformation(Transformation transformation) {
+        this.transformation = transformation;
+    }
+
 
     public long getSendTimeout() {
         return sendTimeout;
@@ -249,7 +259,22 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
 
         wsSession.updateLastActive();
 
-        MessagePart mp = new MessagePart(opCode, payload, last, handler, this);
+        List<MessagePart> messageParts = new ArrayList<>();
+        messageParts.add(new MessagePart(last, 0, opCode, payload,
+                intermediateMessageHandler,
+                new EndMessageHandler(this, handler)));
+
+        messageParts = transformation.sendMessagePart(messageParts);
+
+        // Some extensions/transformations may buffer messages so it is possible
+        // that no message parts will be returned. If this is the case the
+        // trigger the suppler SendHandler
+        if (messageParts.size() == 0) {
+            handler.onResult(new SendResult());
+            return;
+        }
+
+        MessagePart mp = messageParts.remove(0);
 
         boolean doWrite = false;
         synchronized (messagePartLock) {
@@ -276,6 +301,8 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
                 messagePartInProgress = true;
                 doWrite = true;
             }
+            // Add any remaining messages to the queue
+            messagePartQueue.addAll(messageParts);
         }
         if (doWrite) {
             // Actual write has to be outside sync block to avoid possible
@@ -314,12 +341,15 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
 
         wsSession.updateLastActive();
 
-        handler.onResult(result);
+        // Some handlers, such as the IntermediateMessageHandler, do not have a
+        // nested handler so handler may be null.
+        if (handler != null) {
+            handler.onResult(result);
+        }
     }
 
 
     void writeMessagePart(MessagePart mp) {
-
         if (closed) {
             throw new IllegalStateException(
                     sm.getString("wsRemoteEndpoint.closed"));
@@ -328,7 +358,7 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
         if (Constants.INTERNAL_OPCODE_FLUSH == mp.getOpCode()) {
             nextFragmented = fragmented;
             nextText = text;
-            doWrite(mp.getHandler(), outputBuffer);
+            doWrite(mp.getEndHandler(), outputBuffer);
             return;
         }
 
@@ -352,11 +382,11 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
                             sm.getString("wsRemoteEndpoint.changeType"));
                 }
                 nextText = text;
-                nextFragmented = !mp.isLast();
+                nextFragmented = !mp.isFin();
                 first = false;
             } else {
                 // Wasn't fragmented. Might be now
-                if (mp.isLast()) {
+                if (mp.isFin()) {
                     nextFragmented = false;
                 } else {
                     nextFragmented = true;
@@ -375,21 +405,20 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
         }
 
         headerBuffer.clear();
-        writeHeader(headerBuffer, mp.getOpCode(), mp.getPayload(), first,
-                mp.isLast(), isMasked(), mask);
+        writeHeader(headerBuffer, mp.isFin(), mp.getRsv(), mp.getOpCode(),
+                isMasked(), mp.getPayload(), mask, first);
         headerBuffer.flip();
 
         if (getBatchingAllowed() || isMasked()) {
             // Need to write via output buffer
             OutputBufferSendHandler obsh = new OutputBufferSendHandler(
-                    mp.getHandler(), headerBuffer, mp.getPayload(), mask,
+                    mp.getEndHandler(), headerBuffer, mp.getPayload(), mask,
                     outputBuffer, !getBatchingAllowed(), this);
             obsh.write();
         } else {
             // Can write directly
-            doWrite(mp.getHandler(), headerBuffer, mp.getPayload());
+            doWrite(mp.getEndHandler(), headerBuffer, mp.getPayload());
         }
-
     }
 
 
@@ -404,42 +433,6 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
             return DEFAULT_BLOCKING_SEND_TIMEOUT;
         } else {
             return userTimeout.longValue();
-        }
-    }
-
-
-    private static class MessagePart {
-        private final byte opCode;
-        private final ByteBuffer payload;
-        private final boolean last;
-        private final SendHandler handler;
-
-        public MessagePart(byte opCode, ByteBuffer payload, boolean last,
-                SendHandler handler, WsRemoteEndpointImplBase endpoint) {
-            this.opCode = opCode;
-            this.payload = payload;
-            this.last = last;
-            this.handler = new EndMessageHandler(endpoint, handler);
-        }
-
-
-        public byte getOpCode() {
-            return opCode;
-        }
-
-
-        public ByteBuffer getPayload() {
-            return payload;
-        }
-
-
-        public boolean isLast() {
-            return last;
-        }
-
-
-        public SendHandler getHandler() {
-            return handler;
         }
     }
 
@@ -463,6 +456,31 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
         @Override
         public void onResult(SendResult result) {
             endpoint.endMessage(handler, result);
+        }
+    }
+
+
+    /**
+     * If a transformation needs to split a {@link MessagePart} into multiple
+     * {@link MessagePart}s, it uses this handler as the end handler for each of
+     * the additional {@link MessagePart}s. This handler notifies this this
+     * class that the {@link MessagePart} has been processed and that the next
+     * {@link MessagePart} in the queue should be started. The final
+     * {@link MessagePart} will use the {@link EndMessageHandler} provided with
+     * the original {@link MessagePart}.
+     */
+    private static class IntermediateMessageHandler implements SendHandler {
+
+        private final WsRemoteEndpointImplBase endpoint;
+
+        public IntermediateMessageHandler(WsRemoteEndpointImplBase endpoint) {
+            this.endpoint = endpoint;
+        }
+
+
+        @Override
+        public void onResult(SendResult result) {
+            endpoint.endMessage(null, result);
         }
     }
 
@@ -570,20 +588,22 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
     protected abstract boolean isMasked();
     protected abstract void doClose();
 
-    private static void writeHeader(ByteBuffer headerBuffer, byte opCode,
-            ByteBuffer payload, boolean first, boolean last, boolean masked,
-            byte[] mask) {
+    private static void writeHeader(ByteBuffer headerBuffer, boolean fin,
+            int rsv, byte opCode, boolean masked, ByteBuffer payload,
+            byte[] mask, boolean first) {
 
         byte b = 0;
 
-        if (last) {
+        if (fin) {
             // Set the fin bit
-            b = -128;
+            b -= 128;
         }
+
+        b += (rsv << 4);
 
         if (first) {
             // This is the first fragment of this message
-            b = (byte) (b + opCode);
+            b += opCode;
         }
         // If not the first fragment, it is a continuation with opCode of zero
 

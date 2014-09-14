@@ -65,6 +65,7 @@ import org.apache.tomcat.util.net.AbstractEndpoint;
 import org.apache.tomcat.util.net.Constants;
 import org.apache.tomcat.util.net.SSLUtil;
 import org.apache.tomcat.util.net.ServerSocketFactory;
+import org.apache.tomcat.util.net.jsse.openssl.OpenSSLCipherConfigurationParser;
 import org.apache.tomcat.util.res.StringManager;
 
 /**
@@ -107,6 +108,7 @@ public class JSSESocketFactory implements ServerSocketFactory, SSLUtil {
         String[] ciphers = null;
         String[] protocols = null;
         try {
+            // BZ 56780 IBM JRE can throw IllegalArgumentException here
             context = SSLContext.getInstance("TLS");
             context.init(null, null, null);
             SSLServerSocketFactory ssf = context.getServerSocketFactory();
@@ -123,17 +125,16 @@ public class JSSESocketFactory implements ServerSocketFactory, SSLUtil {
             // can be achieved via the standard API but there is no guarantee
             // that every JVM implementation determines the defaults the same
             // way. Therefore the defaults are determined by creating a server
-            // socket and requested the configured values.
+            // socket and requesting the configured values.
 
             SSLServerSocket socket = (SSLServerSocket) ssf.createServerSocket();
             ciphers = socket.getEnabledCipherSuites();
             protocols = socket.getEnabledProtocols();
-        } catch (NoSuchAlgorithmException e) {
-            // Assume no RFC 5746 support
-        } catch (KeyManagementException e) {
-            // Assume no RFC 5746 support
-        } catch (IOException e) {
-            // Unable to determine default ciphers/protocols so use none
+        } catch (NoSuchAlgorithmException | KeyManagementException | IOException |
+                IllegalArgumentException e) {
+            // Assume no RFC 5746 support if an SSLContext could not be created
+            // If an IOException is thrown trying to determine default
+            //     ciphers/protocols use none as the default
         }
         RFC_5746_SUPPORTED = result;
         DEFAULT_SERVER_CIPHER_SUITES = ciphers;
@@ -234,10 +235,14 @@ public class JSSESocketFactory implements ServerSocketFactory, SSLUtil {
         }
 
         List<String> requestedCiphers = new ArrayList<>();
-        for (String rc : requestedCiphersStr.split(",")) {
-            final String cipher = rc.trim();
-            if (cipher.length() > 0) {
-                requestedCiphers.add(cipher);
+        if (requestedCiphersStr.indexOf(':') != -1) {
+            requestedCiphers = OpenSSLCipherConfigurationParser.parseExpression(requestedCiphersStr);
+        } else {
+            for (String rc : requestedCiphersStr.split(",")) {
+                final String cipher = rc.trim();
+                if (cipher.length() > 0) {
+                    requestedCiphers.add(cipher);
+                }
             }
         }
         if (requestedCiphers.isEmpty()) {

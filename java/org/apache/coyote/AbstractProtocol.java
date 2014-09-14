@@ -609,7 +609,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
             }
 
             wrapper.setAsync(false);
-            ContainerThreadMarker.markAsContainerThread();
+            ContainerThreadMarker.set();
 
             try {
                 if (processor == null) {
@@ -651,6 +651,9 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                         state = processor.event(status);
                     } else if (processor.isUpgrade()) {
                         state = processor.upgradeDispatch(status);
+                    } else if (status == SocketStatus.OPEN_WRITE) {
+                        // Extra write event likely after async, ignore
+                        state = SocketState.LONG;
                     } else {
                         state = processor.process(wrapper);
                     }
@@ -750,7 +753,10 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                 // less-than-verbose logs.
                 getLog().error(
                         sm.getString("abstractConnectionHandler.error"), e);
+            } finally {
+                ContainerThreadMarker.clear();
             }
+
             // Make sure socket/processor is removed from the list of current
             // connections
             connections.remove(socket);

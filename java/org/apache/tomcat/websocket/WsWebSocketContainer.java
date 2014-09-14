@@ -317,21 +317,23 @@ public class WsWebSocketContainer
         }
 
         // Switch to WebSocket
-        WsRemoteEndpointImplClient wsRemoteEndpointClient =
-                new WsRemoteEndpointImplClient(channel);
-
+        WsRemoteEndpointImplClient wsRemoteEndpointClient = new WsRemoteEndpointImplClient(channel);
 
         WsSession wsSession = new WsSession(endpoint, wsRemoteEndpointClient,
                 this, null, null, null, null, null, subProtocol,
                 Collections.<String, String> emptyMap(), secure,
                 clientEndpointConfiguration);
+
+        WsFrameClient wsFrameClient = new WsFrameClient(response, channel,
+                wsSession);
+        // WsFrame adds the necessary final transformations. Copy the
+        // completed transformation chain to the remote end point.
+        wsRemoteEndpointClient.setTransformation(wsFrameClient.getTransformation());
+
         endpoint.onOpen(wsSession, clientEndpointConfiguration);
         registerSession(endpoint, wsSession);
 
-        // Object creation will trigger input processing
-        @SuppressWarnings("unused")
-        WsFrameClient wsFrameClient = new WsFrameClient(response, channel,
-                wsSession);
+        wsFrameClient.startInputProcessing();
 
         return wsSession;
     }
