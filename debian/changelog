@@ -2,6 +2,7 @@ tomcat8 (8.0.12-1) UNRELEASED; urgency=medium
 
   * New upstream release
     - Refreshed the patches
+  * Fixed the tomcat8-examples configuration (Closes: #753372)
   * No longer create the common/server/shared directories under
     /var/lib/tomcat8, and use a unique lib directory as documented
     upstream since Tomcat 6. The old directories are still supported
