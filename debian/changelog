@@ -1,4 +1,4 @@
-tomcat8 (8.0.12-1) UNRELEASED; urgency=medium
+tomcat8 (8.0.12-1) unstable; urgency=medium
 
   * New upstream release
     - Refreshed the patches
@@ -18,7 +18,7 @@ tomcat8 (8.0.12-1) UNRELEASED; urgency=medium
   * Removed the note about the authbind IPv6 incompatibility
     in /etc/defaults/tomcat8
 
- -- Emmanuel Bourg <ebourg@apache.org>  Wed, 25 Jun 2014 11:40:20 +0200
+ -- Emmanuel Bourg <ebourg@apache.org>  Wed, 17 Sep 2014 16:23:52 +0200
 
 tomcat8 (8.0.9-1) unstable; urgency=medium
 
