@@ -38,6 +38,11 @@ case "$1" in
                 /var/lib/tomcat8/shared/classes \
                 /var/lib/tomcat8/shared || true
         fi
+        if [ -d /var/lib/tomcat8/lib ] && [ -z "`(find var/lib/tomcat8/lib/classes -type f)`" ] ; then
+            rmdir --ignore-fail-on-non-empty \
+                /var/lib/tomcat8/lib/classes \
+                /var/lib/tomcat8/lib || true
+        fi
         if [ -d "/var/cache/tomcat8" ] ; then
             rm -rf /var/cache/tomcat8
         fi

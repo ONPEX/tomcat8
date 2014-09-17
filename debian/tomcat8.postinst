@@ -50,7 +50,7 @@ case "$1" in
 	# but those files should be readable by tomcat8, so we set the group to tomcat8
 	chown -Rh root:$TOMCAT8_GROUP /etc/tomcat8/*
 	chmod 640 /etc/tomcat8/tomcat-users.xml
-	chown -Rh $TOMCAT8_USER:$TOMCAT8_GROUP /var/lib/tomcat8/webapps /var/lib/tomcat8/common /var/lib/tomcat8/server /var/lib/tomcat8/shared
+	chown -Rh $TOMCAT8_USER:$TOMCAT8_GROUP /var/lib/tomcat8/webapps /var/lib/tomcat8/lib
 	chmod 775 /var/lib/tomcat8/webapps
 	chmod 775 /etc/tomcat8/Catalina /etc/tomcat8/Catalina/localhost
 

@@ -1,8 +1,6 @@
 var/log/tomcat8
+var/lib/tomcat8/lib
 var/lib/tomcat8/webapps
-var/lib/tomcat8/common/classes
-var/lib/tomcat8/server/classes
-var/lib/tomcat8/shared/classes
 var/cache/tomcat8
 etc/tomcat8/Catalina/localhost
 etc/logrotate.d
