@@ -306,7 +306,6 @@ public class CoyoteAdapter implements Adapter {
             }
 
             if (status==SocketStatus.TIMEOUT) {
-                success = true;
                 if (!asyncConImpl.timeout()) {
                     asyncConImpl.setErrorState(null, false);
                 }
@@ -373,7 +372,6 @@ public class CoyoteAdapter implements Adapter {
                     } finally {
                         request.getContext().unbind(false, oldCL);
                     }
-                    success = true;
                 } else if (readListener != null && status == SocketStatus.OPEN_READ) {
                     ClassLoader oldCL = null;
                     try {
@@ -396,7 +394,6 @@ public class CoyoteAdapter implements Adapter {
                     } finally {
                         request.getContext().unbind(false, oldCL);
                     }
-                    success = true;
                 }
             }
 
@@ -409,7 +406,6 @@ public class CoyoteAdapter implements Adapter {
             }
 
             if (request.isAsyncDispatching()) {
-                success = true;
                 connector.getService().getContainer().getPipeline().getFirst().invoke(request, response);
                 Throwable t = (Throwable) request.getAttribute(
                         RequestDispatcher.ERROR_EXCEPTION);
@@ -450,6 +446,13 @@ public class CoyoteAdapter implements Adapter {
                 }
             }
 
+            // Check to see if the processor is in an error state. If it is,
+            // bail out now.
+            AtomicBoolean error = new AtomicBoolean(false);
+            res.action(ActionCode.IS_ERROR, error);
+            if (error.get()) {
+                success = false;
+            }
         } catch (IOException e) {
             success = false;
             // Ignore
@@ -900,6 +903,13 @@ public class CoyoteAdapter implements Adapter {
                 }
             }
 
+            if (request.getContext().getUseRfc6265()) {
+                req.getCookies().setUseRfc6265(true);
+            } else {
+                req.getCookies().setUseRfc6265(false);
+            }
+
+
             // Look for session ID in cookies and SSL session
             parseSessionCookiesId(req, request);
             parseSessionSslId(request);
@@ -931,6 +941,9 @@ public class CoyoteAdapter implements Adapter {
                                 // Reset mapping
                                 request.getMappingData().recycle();
                                 mapRequired = true;
+                                // Recycle cookies in case correct context is
+                                // configured with different settings
+                                req.getCookies().recycle();
                             }
                             break;
                         }

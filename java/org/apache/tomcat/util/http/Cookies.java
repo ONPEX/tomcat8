@@ -23,12 +23,13 @@ import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.buf.ByteChunk;
 import org.apache.tomcat.util.buf.MessageBytes;
+import org.apache.tomcat.util.http.parser.Cookie;
 import org.apache.tomcat.util.log.UserDataHelper;
 import org.apache.tomcat.util.res.StringManager;
 
 /**
  * A collection of cookies - reusable and tuned for server side performance.
- * Based on RFC2965 (and 2109).
+ * Based on RFC6265 and RFC2109.
  *
  * This class is not thread-safe.
  *
@@ -46,9 +47,9 @@ public final class Cookies {
 
     // expected average number of cookies per request
     public static final int INITIAL_SIZE = 4;
-    private ServerCookie scookies[] = new ServerCookie[INITIAL_SIZE];
-    private int cookieCount = 0;
+    private ServerCookies scookies = new ServerCookies(INITIAL_SIZE);
     private boolean unprocessed = true;
+    private boolean useRfc6265 = false;
 
     private final MimeHeaders headers;
 
@@ -66,13 +67,9 @@ public final class Cookies {
 
 
     public void recycle() {
-        for (int i = 0; i < cookieCount; i++) {
-            if (scookies[i] != null) {
-                scookies[i].recycle();
-            }
-        }
-        cookieCount = 0;
+        scookies.recycle();
         unprocessed = true;
+        useRfc6265 = false;
     }
 
 
@@ -100,7 +97,7 @@ public final class Cookies {
             // This will trigger cookie processing
             getCookieCount();
         }
-        return scookies[idx];
+        return scookies.getCookie(idx);
     }
 
 
@@ -109,29 +106,7 @@ public final class Cookies {
             unprocessed = false;
             processCookies(headers);
         }
-        return cookieCount;
-    }
-
-
-    /**
-     * Register a new, initialized cookie. Cookies are recycled, and most of the
-     * time an existing ServerCookie object is returned. The caller can set the
-     * name/value and attributes for the cookie.
-     */
-    private ServerCookie addCookie() {
-        if (cookieCount >= scookies.length) {
-            ServerCookie scookiesTmp[] = new ServerCookie[2*cookieCount];
-            System.arraycopy(scookies, 0, scookiesTmp, 0, cookieCount);
-            scookies = scookiesTmp;
-        }
-
-        ServerCookie c = scookies[cookieCount];
-        if (c == null) {
-            c = new ServerCookie();
-            scookies[cookieCount] = c;
-        }
-        cookieCount++;
-        return c;
+        return scookies.getCookieCount();
     }
 
 
@@ -170,6 +145,11 @@ public final class Cookies {
             // search from the next position
             pos = headers.findHeader("Cookie", ++pos);
         }
+    }
+
+
+    public void setUseRfc6265(boolean useRfc6265) {
+        this.useRfc6265 = useRfc6265;
     }
 
 
@@ -246,13 +226,22 @@ public final class Cookies {
     }
 
 
+    final void processCookieHeader(byte bytes[], int off, int len) {
+        if (useRfc6265) {
+            Cookie.parseCookie(bytes, off, len, scookies);
+        } else {
+            doProcessCookieHeaderOriginal(bytes, off, len);
+        }
+    }
+
+
     /**
      * Parses a cookie header after the initial "Cookie:"
      * [WS][$]token[WS]=[WS](token|QV)[;|,]
-     * RFC 2965
+     * RFC 2965 / RFC 2109
      * JVK
      */
-    final void processCookieHeader(byte bytes[], int off, int len){
+    private void doProcessCookieHeaderOriginal(byte bytes[], int off, int len){
         if (len <= 0 || bytes == null) {
             return;
         }
@@ -471,7 +460,7 @@ public final class Cookies {
                     continue;
                 }
 
-                sc = addCookie();
+                sc = scookies.addCookie();
                 sc.setVersion( version );
                 sc.getName().setBytes( bytes, nameStart,
                                        nameEnd-nameStart);

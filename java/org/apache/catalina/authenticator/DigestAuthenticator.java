@@ -19,8 +19,6 @@ package org.apache.catalina.authenticator;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -31,11 +29,11 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.Realm;
 import org.apache.catalina.connector.Request;
-import org.apache.catalina.util.ConcurrentMessageDigest;
-import org.apache.catalina.util.MD5Encoder;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.http.parser.Authorization;
+import org.apache.tomcat.util.security.ConcurrentMessageDigest;
+import org.apache.tomcat.util.security.MD5Encoder;
 
 
 /**
@@ -57,32 +55,16 @@ public class DigestAuthenticator extends AuthenticatorBase {
      */
     protected static final String QOP = "auth";
 
-    // ----------------------------------------------------------- Constructors
 
+    // ----------------------------------------------------------- Constructors
 
     public DigestAuthenticator() {
         super();
         setCache(false);
-        try {
-            if (md5Helper == null) {
-                md5Helper = MessageDigest.getInstance("MD5");
-            }
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
     }
 
 
     // ----------------------------------------------------- Instance Variables
-
-
-    /**
-     * MD5 message digest provider.
-     * @deprecated  Unused - will be removed in Tomcat 8.0.x onwards
-     */
-    @Deprecated
-    protected static volatile MessageDigest md5Helper;
-
 
     /**
      * List of server nonce values currently being tracked

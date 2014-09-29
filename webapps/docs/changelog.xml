@@ -44,7 +44,241 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues to not "pop up" wrt. others).
 -->
-<section name="Tomcat 8.0.12 (markt)">
+<section name="Tomcat 8.0.14 (markt)">
+  <subsection name="Other">
+    <changelog>
+      <fix>
+        <bug>56079</bug>: The Apache Tomcat Windows installer, the Apache Tomcat
+        Windows service and the Apache Tomcat Windows service monitor
+        application are now digitally signed. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.0.13 (markt)" rtext="not released">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        <bug>55917</bug>: Allow bytes in the range 0x80 to 0xFF to appear in
+        cookie values if the cookie is a V1 (RFC2109) cookie and the value is
+        correctly quoted. The new RFC6265 based cookie parser must be enabled to
+        correctly handle these cookies. (markt)
+      </fix>
+      <fix>
+        <bug>55918</bug>: Do not permit control characters to appear in quoted
+        V1 (RFC2109) cookie values. The new RFC6265 based cookie parser must be
+        enabled to correctly handle these cookies. (markt)
+      </fix>
+      <fix>
+        <bug>55921</bug>: Correctly handle (ignore the cookie) unescaped JSON in
+        a cookie value. The new RFC6265 based cookie parser must be enabled to
+        correctly handle these cookies. (markt)
+      </fix>
+      <add>
+        <bug>56401</bug>: Log version information when Tomcat starts.
+        (markt/kkolinko)
+      </add>
+      <add>
+        <bug>56530</bug>: Add a web application class loader implementation that
+        supports the parallel loading of web application classes. (markt)
+      </add>
+      <fix>
+        <bug>56900</bug>: Fix some potential resource leaks when reading
+        property files reported by Coverity Scan. Based on patches provided by
+        Felix Schumacher. (markt)
+      </fix>
+      <fix>
+        <bug>56902</bug>: Fix a potential resource leak in the Default Servlet
+        reported by Coverity Scan. Based on a patch provided by Felix
+        Schumacher. (markt)
+      </fix>
+      <fix>
+        <bug>56903</bug>: Correct the return value for
+        <code>StandardContext.getResourceOnlyServlets()</code> so that multiple
+        names are separated by commas. Identified by Coverity Scan and fixed
+        based on a patch by Felix Schumacher. (markt)
+      </fix>
+      <add>
+        Add an additional implementation of a RFC6265 based cookie parser along
+        with new Context options to select and configure it. This parser is
+        currently considered experiemental and is not used by default. (markt)
+      </add>
+      <fix>
+        Fixed the multipart elements merge operation performed during web
+        application deployment. Identified by Coverity Scan. (violetagg)
+      </fix>
+      <fix>
+        Correct the information written by
+        <code>ExtendedAccessLogValve</code> when a format token x-O(XXX) is
+        used so that multiple values for a header XXX are separated by commas.
+        Identified by Coverity Scan. (violetagg)
+      </fix>
+      <fix>
+        Fix a potential resource leak when reading MANIFEST.MF file for
+        extension dependencies reported by Coverity Scan. (violetagg)
+      </fix>
+      <fix>
+        Fix some potential resource leaks when reading properties, files and
+        other resources. Reported by Coverity Scan. (violetagg)
+      </fix>
+      <fix>
+        Correct the previous fix for <bug>56825</bug> that enabled pre-emptive
+        authentication to work with the SSL authenticator. (markt)
+      </fix>
+      <scode>
+        Refactor to reduce code duplication identified by Simian. (markt)
+      </scode>
+      <fix>
+        When using parallel deployment and <code>undeployOldVersions</code>
+        feature is enabled on a Host, correctly undeploy context of old
+        version. Make sure that Tomcat does not undeploy older Context if
+        current context is not running. (kfujino)
+      </fix>
+      <fix>
+        Fix a rare threading issue when locking resources via WebDAV.
+        (markt)
+      </fix>
+      <fix>
+        Fix a rare threading issue when using HTTP digest authentication.
+        (markt)
+      </fix>
+      <fix>
+        When deploying war, add XML file in the config base to the redeploy
+        resources if war does not have META-INF/context.xml or
+        <code>deployXML</code> is false. If  XML file is created in the config
+        base, redeploy will occur. (kfujino)
+      </fix>
+      <scode>
+        Various changes to reduce unnecessary code in Tomcat&apos;s copy of
+        Apache Commons BCEL to reduce the time taken for annotation scanning
+        when web applications start. Includes contributions from kkolinko and
+        hzhang9. (markt)
+      </scode>
+      <fix>
+        <bug>56938</bug>: Ensure web applications that have mixed case context
+        paths and are deployed as directories are correctly removed on undeploy
+        when running on a case sensitive file system. (markt)
+      </fix>
+      <add>
+          <bug>57004</bug>: Add <code>stuckThreadCount</code> property to
+          <code>StuckThreadDetectionValve</code>'s JMX bean. Patch provided by
+          Ji&#x159;&#xED; Pejchal. (schultz)
+      </add>
+      <fix>
+        <bug>57011</bug>: Ensure that the request and response are correctly
+        recycled when processing errors during async processing. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        <bug>56910</bug>: Prevent the invalid value of <code>-1</code> being
+        used for <code>maxConnections</code> with APR connectors. (markt)
+      </fix>
+      <fix>
+        Ensure that AJP connectors enable the <code>KeepAliveTimeout</code>.
+        (kfujino)
+      </fix>
+      <fix>
+        Reduce duplicated code. All AJP connectors use common method to
+        configuration of processor. (kfujino)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        <bug>43001</bug>: Enable the JspC Ant task to set the JspC option
+        <code>mappedFile</code>. (markt)
+      </fix>
+      <fix>
+        Ensure that the implementation of
+        <code>javax.servlet.jsp.PageContext.include(String)</code>
+        and
+        <code>javax.servlet.jsp.PageContext.include(String, boolean)</code>
+        will throw <code>IOException</code> when an I/O error occur during
+        the operation. (violetagg)
+      </fix>
+      <fix>
+        <bug>56908</bug>: Fix some potential resource leaks when reading
+        jar files. Reported by Coverity Scan. Patch provided by Felix
+        Schumacher. (violetagg)
+      </fix>
+      <fix>
+        Fix a potential resource leak in JDTCompiler when checking wether
+        a resource is a package. Reported by Coverity Scan. (fschumacher)
+      </fix>
+      <fix>
+        <bug>56991</bug>: Deprecate the use of a request attribute to pass a
+        &lt;jsp-file&gt; declaration to Jasper and prevent an infinite loop
+        if this technique is used in conjunction with an include. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="WebSocket">
+    <changelog>
+      <fix>
+        <bug>56905</bug>: Make destruction on web application stop of thread
+        group used for WebSocket connections more robust. (kkolinko/markt)
+      </fix>
+      <fix>
+        <bug>56907</bug>: Ensure that client IO threads are stopped if a secure
+        WebSocket client connection fails. (markt)
+      </fix>
+      <fix>
+        <bug>56982</bug>: Return the actual negotiated extensions rather than an
+        empty list for <code>Session.getNegotiatedExtensions()</code>. (markt)
+      </fix>
+      <update>
+        Update the WebSocket implementation to support the Java WebSocket
+        specification version 1.1. (markt)
+      </update>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <add>
+        Add <code>JarScanner</code> to the nested components listed for a
+        Context. (markt)
+      </add>
+      <update>
+        Update the Windows authentication documentation after some additional
+        testing to answer the remaining questions. (markt)
+      </update>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <fix>
+        <bug>56895</bug>: Correctly compose <code>JAVA_OPTS</code> in
+        <code>catalina.bat</code> so that escape sequences are preserved. Patch
+        by Lucas Theisen. (markt)
+      </fix>
+      <update>
+        <bug>56988</bug>: Allow to use relative path in <code>base.path</code>
+        setting when building Tomcat. (kkolinko)
+      </update>
+      <fix>
+        <bug>56990</bug>: Ensure that the <code>ide-eclipse</code> build target
+        downloads all the libraries required by the default Eclipse
+        configuration files. (markt)
+      </fix>
+      <fix>
+        Update the package renamed copy of Apache Commons DBCP 2 to revision
+        1626988 to pick up the fixes since the 2.0.1 release including support
+        for custom eviction policies. (markt)
+      </fix>
+      <fix>
+        Update the package renamed copy of Apache Commons Pool 2 to revision
+        1627271 to pick up the fixes since the 2.2 release including some memory
+        leak fixes and support for application provided eviction policies.
+        (markt)
+      </fix>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.0.12 (markt)" rtext="2014-09-03">
   <subsection name="Catalina">
     <changelog>
       <add>
@@ -686,7 +920,8 @@
       </fix>
       <add>
         Add a new limit, defaulting to 2MB, for the amount of data Tomcat will
-        swallow for an aborted upload. (markt)
+        swallow for an aborted upload. The limit is configurable by
+        <code>maxSwallowSize</code> attribute of an HTTP connector. (markt)
       </add>
     </changelog>
   </subsection>
