@@ -273,6 +273,7 @@ public class WsWebSocketContainer
 
         ByteBuffer response;
         String subProtocol;
+        boolean success = false;
         try {
             fConnect.get(timeout, TimeUnit.MILLISECONDS);
 
@@ -310,18 +311,23 @@ public class WsWebSocketContainer
                 throw new DeploymentException(
                         sm.getString("Sec-WebSocket-Protocol"));
             }
+            success = true;
         } catch (ExecutionException | InterruptedException | SSLException |
                 EOFException | TimeoutException e) {
             throw new DeploymentException(
                     sm.getString("wsWebSocketContainer.httpRequestFailed"), e);
+        } finally {
+            if (!success) {
+                channel.close();
+            }
         }
 
         // Switch to WebSocket
         WsRemoteEndpointImplClient wsRemoteEndpointClient = new WsRemoteEndpointImplClient(channel);
 
         WsSession wsSession = new WsSession(endpoint, wsRemoteEndpointClient,
-                this, null, null, null, null, null, subProtocol,
-                Collections.<String, String> emptyMap(), secure,
+                this, null, null, null, null, null, Collections.<Extension>emptyList(),
+                subProtocol, Collections.<String,String>emptyMap(), secure,
                 clientEndpointConfiguration);
 
         WsFrameClient wsFrameClient = new WsFrameClient(response, channel,

@@ -23,12 +23,10 @@ package org.apache.tomcat.util.buf;
  *
  * @author Craig R. McClanahan
  */
-
 public final class HexUtils {
 
 
     // -------------------------------------------------------------- Constants
-
 
     /**
      *  Table for HEX to DEC byte translation.
@@ -55,10 +53,10 @@ public final class HexUtils {
      */
     private static final char[] hex = "0123456789abcdef".toCharArray();
 
+
     // --------------------------------------------------------- Static Methods
 
-
-    public static int getDec(int index){
+    public static int getDec(int index) {
         // Fast for correct values, slower for incorrect ones
         try {
             return DEC[index - '0'];
@@ -67,24 +65,39 @@ public final class HexUtils {
         }
     }
 
-    public static byte getHex(int index){
+
+    public static byte getHex(int index) {
         return HEX[index];
     }
 
-    public static String toHexString(byte[] bytes)
-    {
-        if(null == bytes) {
+
+    public static String toHexString(byte[] bytes) {
+        if (null == bytes) {
             return null;
         }
 
         StringBuilder sb = new StringBuilder(bytes.length << 1);
 
-        for(int i=0; i<bytes.length; ++i) {
+        for(int i = 0; i < bytes.length; ++i) {
             sb.append(hex[(bytes[i] & 0xf0) >> 4])
                 .append(hex[(bytes[i] & 0x0f)])
                 ;
         }
 
         return sb.toString();
+    }
+
+
+    public static byte[] fromHexString(String input) {
+        if (input == null) {
+            return null;
+        }
+
+        char[] inputChars = input.toCharArray();
+        byte[] result = new byte[input.length() >> 1];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = (byte) ((getDec(inputChars[2*i]) << 4) + getDec(inputChars[2*i + 1]));
+        }
+        return result;
     }
 }

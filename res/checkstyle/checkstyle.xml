@@ -43,9 +43,9 @@
               value="${tomcat.output}/res/checkstyle/cachefile-checkstyle.xml"/>
 
     <!-- Block Checks -->
-    <!--  ~60 errors
-    <module name="AvoidNestedBlocks"/>
-    -->
+    <module name="AvoidNestedBlocks">
+      <property name="allowInSwitchCase" value="true"/>
+    </module>
 
     <!-- Coding -->
     <module name="IllegalInstantiation"/>
@@ -61,7 +61,7 @@
         <property name="illegalPkgs" value="sun,junit.framework"/>
     </module>
     <module name="ImportOrder">
-        <property name="groups" value="java,javax,async,jsp2,junit,org.junit,org,util"/>
+        <property name="groups" value="java,javax,org.hamcrest,org.junit,org,async,jsp2,util"/>
         <property name="ordered" value="true"/>
         <property name="separated" value="true"/>
         <property name="option" value="above"/>
@@ -82,9 +82,9 @@
     -->
     <module name="EmptyForInitializerPad"/>
     <module name="EmptyForIteratorPad"/>
-    <!--  ~ 1000 errors
+    <!--  ~ 1200 errors
     <module name="OperatorWrap">
-      <property name="option" value="oel"/>
+      <property name="option" value="eol"/>
     </module>
     -->
   </module>

@@ -18,16 +18,13 @@ package org.apache.tomcat.websocket.server;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -40,6 +37,7 @@ import javax.websocket.HandshakeResponse;
 import javax.websocket.server.ServerEndpointConfig;
 
 import org.apache.tomcat.util.codec.binary.Base64;
+import org.apache.tomcat.util.security.ConcurrentMessageDigest;
 import org.apache.tomcat.websocket.Constants;
 import org.apache.tomcat.websocket.Transformation;
 import org.apache.tomcat.websocket.TransformationFactory;
@@ -52,8 +50,6 @@ public class UpgradeUtil {
     private static final byte[] WS_ACCEPT =
             "258EAFA5-E914-47DA-95CA-C5AB0DC85B11".getBytes(
                     StandardCharsets.ISO_8859_1);
-    private static final Queue<MessageDigest> sha1Helpers =
-            new ConcurrentLinkedQueue<>();
 
     private UpgradeUtil() {
         // Utility class. Hide default constructor.
@@ -127,11 +123,27 @@ public class UpgradeUtil {
         while (extHeaders.hasMoreElements()) {
             Util.parseExtensionHeader(extensionsRequested, extHeaders.nextElement());
         }
-        List<Extension> negotiatedExtensions = sec.getConfigurator().getNegotiatedExtensions(
+        // Negotiation phase 1. By default this simply filters out the
+        // extensions that the server does not support but applications could
+        // use a custom configurator to do more than this.
+        List<Extension> negotiatedExtensionsPhase1 = sec.getConfigurator().getNegotiatedExtensions(
                 Constants.INSTALLED_EXTENSIONS, extensionsRequested);
 
-        // Create the Transformations that will be applied to this connection
-        List<Transformation> transformations = createTransformations(negotiatedExtensions);
+        // Negotiation phase 2. Create the Transformations that will be applied
+        // to this connection. Note than an extension may be dropped at this
+        // point if the client has requested a configuration that the server is
+        // unable to support.
+        List<Transformation> transformations = createTransformations(negotiatedExtensionsPhase1);
+
+        List<Extension> negotiatedExtensionsPhase2;
+        if (transformations.isEmpty()) {
+            negotiatedExtensionsPhase2 = Collections.emptyList();
+        } else {
+            negotiatedExtensionsPhase2 = new ArrayList<>(transformations.size());
+            for (Transformation t : transformations) {
+                negotiatedExtensionsPhase2.add(t.getExtensionResponse());
+            }
+        }
 
         // Build the transformation pipeline
         Transformation transformation = null;
@@ -204,7 +216,8 @@ public class UpgradeUtil {
         WsHttpUpgradeHandler wsHandler =
                 req.upgrade(WsHttpUpgradeHandler.class);
         wsHandler.preInit(ep, perSessionServerEndpointConfig, sc, wsRequest,
-                subProtocol, transformation, pathParams, req.isSecure());
+                negotiatedExtensionsPhase2, subProtocol, transformation, pathParams,
+                req.isSecure());
 
     }
 
@@ -300,19 +313,9 @@ public class UpgradeUtil {
     }
 
 
-    private static String getWebSocketAccept(String key) throws ServletException {
-        MessageDigest sha1Helper = sha1Helpers.poll();
-        if (sha1Helper == null) {
-            try {
-                sha1Helper = MessageDigest.getInstance("SHA1");
-            } catch (NoSuchAlgorithmException e) {
-                throw new ServletException(e);
-            }
-        }
-        sha1Helper.reset();
-        sha1Helper.update(key.getBytes(StandardCharsets.ISO_8859_1));
-        String result = Base64.encodeBase64String(sha1Helper.digest(WS_ACCEPT));
-        sha1Helpers.add(sha1Helper);
-        return result;
+    private static String getWebSocketAccept(String key) {
+        byte[] digest = ConcurrentMessageDigest.digestSHA1(
+                key.getBytes(StandardCharsets.ISO_8859_1), WS_ACCEPT);
+        return Base64.encodeBase64String(digest);
     }
 }

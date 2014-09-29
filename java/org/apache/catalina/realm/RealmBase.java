@@ -46,7 +46,6 @@ import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.util.LifecycleMBeanBase;
-import org.apache.catalina.util.MD5Encoder;
 import org.apache.catalina.util.SessionConfig;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
@@ -56,6 +55,8 @@ import org.apache.tomcat.util.codec.binary.Base64;
 import org.apache.tomcat.util.descriptor.web.SecurityCollection;
 import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
 import org.apache.tomcat.util.res.StringManager;
+import org.apache.tomcat.util.security.ConcurrentMessageDigest;
+import org.apache.tomcat.util.security.MD5Encoder;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
@@ -103,13 +104,19 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
 
     /**
      * The MessageDigest object for digesting user credentials (passwords).
+     *
+     * @deprecated Unused. Will be removed in Tomcat 9.0.x onwards.
      */
+    @Deprecated
     protected volatile MessageDigest md = null;
 
 
     /**
      * MD5 message digest provider.
+     *
+     * @deprecated Unused. Will be removed in Tomcat 9.0.x onwards.
      */
+    @Deprecated
     protected static volatile MessageDigest md5Helper;
 
 
@@ -390,11 +397,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
             throw new IllegalArgumentException(uee.getMessage());
         }
 
-        String serverDigest = null;
-        // Bugzilla 32137
-        synchronized(md5Helper) {
-            serverDigest = MD5Encoder.encode(md5Helper.digest(valueBytes));
-        }
+        String serverDigest = MD5Encoder.encode(ConcurrentMessageDigest.digestMD5(valueBytes));
 
         if (log.isDebugEnabled()) {
             log.debug("Digest : " + clientDigest + " Username:" + username
@@ -509,12 +512,8 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
                 // Server is storing digested passwords with a prefix indicating
                 // the digest type
                 String serverDigest = serverCredentials.substring(5);
-                String userDigest;
-                synchronized (this) {
-                    md.reset();
-                    md.update(userCredentials.getBytes(StandardCharsets.ISO_8859_1));
-                    userDigest = Base64.encodeBase64String(md.digest());
-                }
+                String userDigest = Base64.encodeBase64String(ConcurrentMessageDigest.digest(
+                        getDigest(), userCredentials.getBytes(StandardCharsets.ISO_8859_1)));
                 return userDigest.equals(serverDigest);
 
             } else if (serverCredentials.startsWith("{SSHA}")) {
@@ -531,19 +530,16 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
                 byte[] serverDigestBytes = new byte[saltPos];
                 System.arraycopy(serverDigestPlusSaltBytes, 0,
                         serverDigestBytes, 0, saltPos);
+                final int saltLength = serverDigestPlusSaltBytes.length - saltPos;
+                byte[] serverSaltBytes = new byte[saltLength];
+                System.arraycopy(serverDigestPlusSaltBytes, saltPos,
+                        serverSaltBytes, 0, saltLength);
 
                 // Generate the digested form of the user provided password
                 // using the salt
-                byte[] userDigestBytes;
-                synchronized (this) {
-                    md.reset();
-                    // User provided password
-                    md.update(userCredentials.getBytes(StandardCharsets.ISO_8859_1));
-                    // Add the salt
-                    md.update(serverDigestPlusSaltBytes, saltPos,
-                            serverDigestPlusSaltBytes.length - saltPos);
-                    userDigestBytes = md.digest();
-                }
+                byte[] userDigestBytes = ConcurrentMessageDigest.digest(getDigest(),
+                        userCredentials.getBytes(StandardCharsets.ISO_8859_1),
+                        serverSaltBytes);
 
                 return Arrays.equals(userDigestBytes, serverDigestBytes);
 
@@ -1120,13 +1116,16 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
     protected void startInternal() throws LifecycleException {
 
         // Create a MessageDigest instance for credentials, if desired
-        if (digest != null) {
+
+        if (getDigest() != null) {
             try {
-                md = MessageDigest.getInstance(digest);
+                md = MessageDigest.getInstance(getDigest());
+                ConcurrentMessageDigest.init(getDigest());
             } catch (NoSuchAlgorithmException e) {
                 throw new LifecycleException
-                    (sm.getString("realmBase.algorithm", digest), e);
+                    (sm.getString("realmBase.algorithm", getDigest()), e);
             }
+
         }
 
         setState(LifecycleState.STARTING);
@@ -1183,8 +1182,6 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
         // Digest the user credentials and return as hexadecimal
         synchronized (this) {
             try {
-                md.reset();
-
                 byte[] bytes = null;
                 try {
                     bytes = credentials.getBytes(getDigestCharset());
@@ -1192,9 +1189,8 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
                     log.error("Illegal digestEncoding: " + getDigestEncoding(), uee);
                     throw new IllegalArgumentException(uee.getMessage());
                 }
-                md.update(bytes);
 
-                return (HexUtils.toHexString(md.digest()));
+                return (HexUtils.toHexString(ConcurrentMessageDigest.digest(getDigest(), bytes)));
             } catch (Exception e) {
                 log.error(sm.getString("realmBase.digest"), e);
                 return (credentials);
@@ -1204,22 +1200,13 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
     }
 
     protected boolean hasMessageDigest() {
-        return !(md == null);
+        return getDigest() != null;
     }
 
     /**
      * Return the digest associated with given principal's user name.
      */
     protected String getDigest(String username, String realmName) {
-        if (md5Helper == null) {
-            try {
-                md5Helper = MessageDigest.getInstance("MD5");
-            } catch (NoSuchAlgorithmException e) {
-                log.error("Couldn't get MD5 digest: ", e);
-                throw new IllegalStateException(e.getMessage());
-            }
-        }
-
         if (hasMessageDigest()) {
             // Use pre-generated digest
             return getPassword(username);
@@ -1236,13 +1223,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
             throw new IllegalArgumentException(uee.getMessage());
         }
 
-        byte[] digest;
-        // Bugzilla 32137
-        synchronized(md5Helper) {
-            digest = md5Helper.digest(valueBytes);
-        }
-
-        return MD5Encoder.encode(digest);
+        return MD5Encoder.encode(ConcurrentMessageDigest.digestMD5(valueBytes));
     }
 
 
