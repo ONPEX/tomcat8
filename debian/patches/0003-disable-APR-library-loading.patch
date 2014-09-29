@@ -2,7 +2,7 @@ Description: Disables APR library loading until we properly provide it.
 Author: Thierry Carrez <thierry.carrez@ubuntu.com>
 --- a/conf/server.xml
 +++ b/conf/server.xml
-@@ -24,7 +24,9 @@
+@@ -25,7 +25,9 @@
    <Listener className="org.apache.catalina.security.SecurityListener" />
    -->
    <!--APR library loader. Documentation at /docs/apr.html -->
