@@ -1,11 +1,11 @@
-tomcat8 (8.0.14-1) UNRELEASED; urgency=medium
+tomcat8 (8.0.14-1) unstable; urgency=medium
 
   * New upstream release
     - Refreshed the patches
   * Build depend on libcglib3-java instead of libcglib-java
   * Standards-Version updated to 3.9.6 (no changes)
 
- -- Emmanuel Bourg <ebourg@apache.org>  Mon, 29 Sep 2014 12:41:52 +0200
+ -- Emmanuel Bourg <ebourg@apache.org>  Mon, 29 Sep 2014 13:23:43 +0200
 
 tomcat8 (8.0.12-1) unstable; urgency=medium
 
