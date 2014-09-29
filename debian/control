@@ -22,7 +22,7 @@ Build-Depends-Indep: javahelper,
                      libobjenesis-java,
                      lsb-release,
                      maven-repo-helper
-Standards-Version: 3.9.5
+Standards-Version: 3.9.6
 Vcs-Git: git://anonscm.debian.org/pkg-java/tomcat8.git
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-java/tomcat8.git
 Homepage: http://tomcat.apache.org
