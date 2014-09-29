@@ -34,7 +34,7 @@ TOMCAT_DISTRIBUTION := "$(shell lsb_release -si)"
 ANT_ARGS := -Dcompile.debug=true \
 	-Djdt.jar=/usr/share/java/ecj.jar \
 	-Djunit.jar=/usr/share/java/junit4.jar \
-	-Dcglib.jar=/usr/share/java/cglib-nodep.jar \
+	-Dcglib.jar=/usr/share/java/cglib3-nodep.jar \
 	-Deasymock.jar=/usr/share/java/easymock.jar \
 	-Dhamcrest.jar=/usr/share/java/hamcrest-core.jar \
 	-Dobjenesis.jar=/usr/share/java/objenesis.jar \
