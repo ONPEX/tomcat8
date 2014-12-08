@@ -60,6 +60,11 @@ public class ConcurrentMessageDigest {
     }
 
     public static byte[] digest(String algorithm, byte[]... input) {
+        return digest(algorithm, 1, input);
+    }
+
+
+    public static byte[] digest(String algorithm, int rounds, byte[]... input) {
 
         Queue<MessageDigest> queue = queues.get(algorithm);
         if (queue == null) {
@@ -77,10 +82,19 @@ public class ConcurrentMessageDigest {
             }
         }
 
+        // Round 1
         for (byte[] bytes : input) {
             md.update(bytes);
         }
         byte[] result = md.digest();
+
+        // Subsequent rounds
+        if (rounds > 1) {
+            for (int i = 1; i < rounds; i++) {
+                md.update(result);
+                result = md.digest();
+            }
+        }
 
         queue.add(md);
 
@@ -89,9 +103,9 @@ public class ConcurrentMessageDigest {
 
 
     /**
-     * Ensures that {@link #digest(String, byte[])} will support the specified
+     * Ensures that {@link #digest(String, byte[][])} will support the specified
      * algorithm. This method <b>must</b> be called and return successfully
-     * before using {@link #digest(String, byte[])}.
+     * before using {@link #digest(String, byte[][])}.
      *
      * @param algorithm The message digest algorithm to be supported
      *
