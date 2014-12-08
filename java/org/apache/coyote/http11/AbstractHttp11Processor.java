@@ -822,6 +822,10 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             ((AtomicBoolean) param).set(asyncStateMachine.isAsyncStarted());
             break;
         }
+        case ASYNC_IS_COMPLETING: {
+            ((AtomicBoolean) param).set(asyncStateMachine.isCompleting());
+            break;
+        }
         case ASYNC_IS_DISPATCHING: {
             ((AtomicBoolean) param).set(asyncStateMachine.isAsyncDispatching());
             break;
@@ -1271,7 +1275,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         }
 
         // Check user-agent header
-        if ((restrictedUserAgents != null) && ((http11) || (keepAlive))) {
+        if (restrictedUserAgents != null && (http11 || keepAlive)) {
             MessageBytes userAgentValueMB = headers.getValue("user-agent");
             // Check in the restricted list, and adjust the http11
             // and keepAlive flags accordingly
@@ -1309,7 +1313,6 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
                 hostMB.setBytes(uriB, uriBCStart + pos + 3,
                                 slashPos - pos - 3);
             }
-
         }
 
         // Input filter setup
@@ -1639,24 +1642,23 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         if (status == SocketStatus.OPEN_WRITE) {
             try {
                 asyncStateMachine.asyncOperation();
-                try {
-                    if (outputBuffer.hasDataToWrite()) {
-                        if (outputBuffer.flushBuffer(false)) {
-                            // There is data to write but go via Response to
-                            // maintain a consistent view of non-blocking state
-                            response.checkRegisterForWrite(true);
-                            return SocketState.LONG;
-                        }
+
+                if (outputBuffer.hasDataToWrite()) {
+                    if (outputBuffer.flushBuffer(false)) {
+                        // There is data to write but go via Response to
+                        // maintain a consistent view of non-blocking state
+                        response.checkRegisterForWrite(true);
+                        return SocketState.LONG;
                     }
-                } catch (IOException x) {
-                    if (getLog().isDebugEnabled()) {
-                        getLog().debug("Unable to write async data.",x);
-                    }
-                    status = SocketStatus.ASYNC_WRITE_ERROR;
-                    request.setAttribute(RequestDispatcher.ERROR_EXCEPTION, x);
                 }
-            } catch (IllegalStateException x) {
-                registerForEvent(false, true);
+            } catch (IOException | IllegalStateException x) {
+                // IOE - Problem writing to socket
+                // ISE - Request/Response not in correct state for async write
+                if (getLog().isDebugEnabled()) {
+                    getLog().debug("Unable to write async data.",x);
+                }
+                status = SocketStatus.ASYNC_WRITE_ERROR;
+                request.setAttribute(RequestDispatcher.ERROR_EXCEPTION, x);
             }
         } else if (status == SocketStatus.OPEN_READ &&
                 request.getReadListener() != null) {
@@ -1665,7 +1667,12 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
                     asyncStateMachine.asyncOperation();
                 }
             } catch (IllegalStateException x) {
-                registerForEvent(true, false);
+                // ISE - Request/Response not in correct state for async read
+                if (getLog().isDebugEnabled()) {
+                    getLog().debug("Unable to read async data.",x);
+                }
+                status = SocketStatus.ASYNC_READ_ERROR;
+                request.setAttribute(RequestDispatcher.ERROR_EXCEPTION, x);
             }
         }
 

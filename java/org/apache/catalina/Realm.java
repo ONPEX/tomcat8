@@ -54,6 +54,17 @@ public interface Realm {
     public void setContainer(Container container);
 
 
+    /**
+     * Return the CredentialHandler configured for this Realm.
+     */
+    public CredentialHandler getCredentialHandler();
+
+    /**
+     * Set the CredentialHandler to be used by this Realm.
+     */
+    public void setCredentialHandler(CredentialHandler credentialHandler);
+
+
     // --------------------------------------------------------- Public Methods
 
     /**

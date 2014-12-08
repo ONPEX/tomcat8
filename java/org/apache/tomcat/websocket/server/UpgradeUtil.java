@@ -37,6 +37,7 @@ import javax.websocket.HandshakeResponse;
 import javax.websocket.server.ServerEndpointConfig;
 
 import org.apache.tomcat.util.codec.binary.Base64;
+import org.apache.tomcat.util.res.StringManager;
 import org.apache.tomcat.util.security.ConcurrentMessageDigest;
 import org.apache.tomcat.websocket.Constants;
 import org.apache.tomcat.websocket.Transformation;
@@ -47,6 +48,8 @@ import org.apache.tomcat.websocket.pojo.PojoEndpointServer;
 
 public class UpgradeUtil {
 
+    private static final StringManager sm =
+            StringManager.getManager(UpgradeUtil.class.getPackage().getName());
     private static final byte[] WS_ACCEPT =
             "258EAFA5-E914-47DA-95CA-C5AB0DC85B11".getBytes(
                     StandardCharsets.ISO_8859_1);
@@ -62,6 +65,11 @@ public class UpgradeUtil {
      * Note: RFC 2616 does not limit HTTP upgrade to GET requests but the Java
      *       WebSocket spec 1.0, section 8.2 implies such a limitation and RFC
      *       6455 section 4.1 requires that a WebSocket Upgrade uses GET.
+     * @param request  The request to check if it is an HTTP upgrade request for
+     *                 a WebSocket connection
+     * @param response The response associated with the request
+     * @return <code>true</code> if the request includes a HTTP Upgrade request
+     *         for the WebSocket protocol, otherwise <code>false</code>
      */
     public static boolean isWebSocketUpgradeRequest(ServletRequest request,
             ServletResponse response) {
@@ -111,7 +119,7 @@ public class UpgradeUtil {
         }
         // Sub-protocols
         List<String> subProtocols = getTokensFromHeader(req,
-                "Sec-WebSocket-Protocol");
+                Constants.WS_PROTOCOL_HEADER_NAME);
         subProtocol = sec.getConfigurator().getNegotiatedSubprotocol(
                 sec.getSubprotocols(), subProtocols);
 
@@ -119,7 +127,7 @@ public class UpgradeUtil {
         // Should normally only be one header but handle the case of multiple
         // headers
         List<Extension> extensionsRequested = new ArrayList<>();
-        Enumeration<String> extHeaders = req.getHeaders("Sec-WebSocket-Extensions");
+        Enumeration<String> extHeaders = req.getHeaders(Constants.WS_EXTENSIONS_HEADER_NAME);
         while (extHeaders.hasMoreElements()) {
             Util.parseExtensionHeader(extensionsRequested, extHeaders.nextElement());
         }
@@ -165,8 +173,7 @@ public class UpgradeUtil {
 
         // Now we have the full pipeline, validate the use of the RSV bits.
         if (transformation != null && !transformation.validateRsvBits(0)) {
-            // TODO i18n
-            throw new ServletException("Incompatible RSV bit usage");
+            throw new ServletException(sm.getString("upgradeUtil.incompatibleRsv"));
         }
 
         // If we got this far, all is good. Accept the connection.
@@ -178,10 +185,10 @@ public class UpgradeUtil {
                 getWebSocketAccept(key));
         if (subProtocol != null && subProtocol.length() > 0) {
             // RFC6455 4.2.2 explicitly states "" is not valid here
-            resp.setHeader("Sec-WebSocket-Protocol", subProtocol);
+            resp.setHeader(Constants.WS_PROTOCOL_HEADER_NAME, subProtocol);
         }
         if (!transformations.isEmpty()) {
-            resp.setHeader("Sec-WebSocket-Extensions", responseHeaderExtensions.toString());
+            resp.setHeader(Constants.WS_EXTENSIONS_HEADER_NAME, responseHeaderExtensions.toString());
         }
 
         WsHandshakeRequest wsRequest = new WsHandshakeRequest(req);
@@ -247,7 +254,7 @@ public class UpgradeUtil {
 
         for (Map.Entry<String,List<List<Extension.Parameter>>> entry :
             extensionPreferences.entrySet()) {
-            Transformation transformation = factory.create(entry.getKey(), entry.getValue());
+            Transformation transformation = factory.create(entry.getKey(), entry.getValue(), true);
             if (transformation != null) {
                 result.add(transformation);
             }
