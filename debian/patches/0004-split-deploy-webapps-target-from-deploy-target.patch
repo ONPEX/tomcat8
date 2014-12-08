@@ -3,7 +3,7 @@ Date: Mon, 28 Jun 2010 21:32:35 +0200
 Subject: [PATCH] split deploy-webapps target from deploy target
 --- a/build.xml
 +++ b/build.xml
-@@ -989,7 +989,7 @@
+@@ -988,7 +988,7 @@
      </xslt>
    </target>
  
