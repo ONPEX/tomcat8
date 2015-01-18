@@ -44,7 +44,372 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues to not "pop up" wrt. others).
 -->
-<section name="Tomcat 8.0.15 (markt)">
+<section name="Tomcat 8.0.17 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        Correct a regression in the previous fix for <bug>57252</bug> that broke
+        request listeners for non-async requests that triggered an error that
+        was handled by the ErrorReportingValve. (markt/violetagg)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        Add flushing to send ack in the NIO2 connector. (remm)
+      </fix>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.0.16 (markt)" rtext="not released">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        <bug>57172</bug>: Provide a better error message if something attempts to
+        access a resource through a web application class loader that has been
+        stopped. (markt/kkolinko)
+      </fix>
+      <fix>
+        <bug>57173</bug>: Revert the fix for <bug>56953</bug> that broke
+        annotation scanning in some cases. (markt)
+      </fix>
+      <fix>
+        <bug>57180</bug>: Do not limit the CORS filter to only accepting
+        requests that use an HTTP method defined in RFC 7231. (markt)
+      </fix>
+      <fix>
+        <bug>57190</bug>: Fix <code>ServletContext.getContext(String)</code>
+        when parallel deployment is used so that the correct ServletContext is
+        returned. (markt)
+      </fix>
+      <fix>
+        <bug>57208</bug>: Prevent NPE in JNDI Realm when no results are found
+        in a directory context for a user with specified user name. Based on
+        a patch provided by Jason McIntosh. (violetagg)
+      </fix>
+      <add>
+        <bug>57209</bug>: Add a new attribute, userSearchAsUser to the JNDI
+        Realm. (markt)
+      </add>
+      <fix>
+        <bug>57215</bug>: Ensure that the result of calling
+        <code>HttpServletRequest.getContextPath()</code> is neither decoded nor
+        normalized as required by the Servlet specification. (markt)
+      </fix>
+      <fix>
+        <bug>57216</bug>: Improve handling of invalid context paths. A context
+        path should either be an empty string or start with a
+        <code>&apos;/&apos;</code> and do not end with a
+        <code>&apos;/&apos;</code>. Invalid context path are automatically
+        corrected and a warning is logged. The <code>null</code> and
+        <code>&quot;/&quot;</code> values are now correctly changed to
+        <code>&quot;&quot;</code>. (markt/kkolinko)
+      </fix>
+      <fix>
+        Update storeconfig with the CredentialHandler element. (remm)
+      </fix>
+      <fix>
+        Correct message that is logged when load-on-startup servlet fails
+        to load. It was logging a wrong name. (kkolinko)
+      </fix>
+      <fix>
+        <bug>57239</bug>: Correct several message typos. Includes patch by
+        vladk. (kkolinko)
+      </fix>
+      <fix>
+        Fix closing of Jars during annotation scanning. (schultz/kkolinko)
+      </fix>
+      <fix>
+        Fix a concurrency issue in async processing. Ensure that a non-container
+        thread can not change the async state until the container thread has
+        completed. (markt)
+      </fix>
+      <fix>
+        <bug>57252</bug>: Provide application configured error pages with a
+        chance to handle an async error before the built-in error reporting.
+        (markt)
+      </fix>
+      <fix>
+        <bug>57281</bug>: Enable non-public Filter and Servlet classes to be
+        configured programmatically via the Servlet 3.0 API and then used
+        without error when running under a SecurityManager. (markt)
+      </fix>
+      <fix>
+        <bug>57308</bug>: Remove unnecessary calls to
+        <code>System.getProperty()</code> where more suitable API calls are
+        available. (markt)
+      </fix>
+      <add>
+        Add unit tests for RemoteAddrValve and RemoteHostValve. (rjung)
+      </add>
+      <add>
+        Allow to configure RemoteAddrValve and RemoteHostValve to
+        adopt behavior depending on the connector port. Implemented
+        by optionally adding the connector port to the string compared
+        with the patterns <code>allow</code> and <code>deny</code>. Configured
+        using <code>addConnectorPort</code> attribute on valve. (rjung)
+      </add>
+      <add>
+        Optionally trigger authentication instead of denial in
+        RemoteAddrValve and RemoteHostValve. This only works in
+        combination with <code>preemptiveAuthentication</code>
+        on the application context. Configured using
+        <code>invalidAuthenticationWhenDeny</code> attribute on valve. (rjung)
+      </add>
+      <fix>
+        Remove the obsolete <code>jndi</code> protocol usage from the scanning
+        process performed by StandardJarScanner. (violetagg)
+      </fix>
+      <fix>
+        Prevent file descriptors leak and ensure that files are closed after
+        retrieving the last modification time. (violetagg)
+      </fix>
+      <update>
+        Make <code>o.a.catalina.webresources.StandardRoot</code> easier for
+        extending. (violetagg)
+      </update>
+      <fix>
+        <bug>57326</bug>: Enable <code>AsyncListener</code> implementations to
+        re-register themselves during <code>AsyncListener.onStartAsync</code>.
+        (markt)
+      </fix>
+      <fix>
+        <bug>57331</bug>: Allow ExpiresFilter to use "year" as synonym for
+        "years" in its configuration. (kkolinko)
+      </fix>
+      <fix>
+        Ensure that if the RewriteValve rewrites a request that subsequent calls
+        to <code>HttpServletRequest.getRequestURI()</code> return the undecoded
+        URI. (markt)
+      </fix>
+      <fix>
+        Ensure that if the RewriteValve rewrites a request to a non-normalized
+        URI that the URI is normalized before the URI is mapped to ensure that
+        the correct mapping is applied. (markt)
+      </fix>
+      <fix>
+        Prevent NPEs being logged during post-processing for requests that have
+        been re-written by the RewriteValve. (markt)
+      </fix>
+      <fix>
+        Various StoreConfig improvements including removing a dependency on the
+        <code>StandardServer</code> implementation, improve consistency of
+        behaviour when MBean is not registered and improve error messages when
+        accessed via the Manager application. (markt)
+      </fix>
+      <update>
+          Improve SnoopServlet in unit tests. (rjung)
+      </update>
+      <add>
+          Add RequestDescriptor class to unit tests.
+          Adjust TestRewriteValve to use RequestDescriptor. (rjung)
+      </add>
+      <update>
+          Add more AJP unit tests. (rjung)
+      </update>
+      <fix>
+        <bug>57363</bug>: Log to stderr if LogManager is unable to read
+        configuration files rather than swallowing the exception silently.
+        (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        Allow HTTP upgrade process to complete without data corruption when
+        additional content is sent along with the upgrade header. (remm)
+      </fix>
+      <fix>
+        <bug>57187</bug>: Regression handling the special * URL. (remm)
+      </fix>
+      <fix>
+        <bug>57234</bug>: Make SSL protocol filtering to remove insecure
+        protocols case insensitive. (markt)
+      </fix>
+      <fix>
+        <bug>57265</bug>: Fix some potential concurrency issues with sendFile
+        and the NIO connector. (markt)
+      </fix>
+      <fix>
+        <bug>57324</bug>: If the client uses <code>Expect: 100-continue</code>
+        and Tomcat responds with a non-2xx response code, Tomcat also closes the
+        connection. If Tomcat knows the connection is going to be closed when
+        committing the response, Tomcat will now also send the
+        <code>Connection: close</code> response header. (markt)
+      </fix>
+      <fix>
+        <bug>57340</bug>: When using Comet, ensure that Socket and SocketWrapper
+        are only returned to their respective caches once on socket close (it is
+        possible for multiple threads to call close concurrently). (markt)
+      </fix>
+      <fix>
+        <bug>57347</bug>: AJP response contains wrong status reason phrase
+        (rjung)
+      </fix>
+      <add>
+        <bug>57391</bug>: Allow TLS Session Tickets to be disabled when using
+        the APR/native HTTP connector. Patch provided by Josiah Purtlebaugh.
+        (markt)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        <bug>57142</bug>: As per the clarification from the JSP specification
+        maintenance lead, classes and packages imported via the page directive
+        must be made available to the EL environment via the ImportHandler.
+        (markt)
+      </fix>
+      <fix>
+        <bug>57247</bug>: Correct the default Java source and target versions in
+        the JspC usage message to <code>1.7</code> for Java 7. (markt)
+      </fix>
+      <fix>
+        <bug>57309</bug>: Ensure that the current EL Resolver is given an
+        opportunity to perform type coercion before applying the default EL
+        coercion rules. (markt)
+      </fix>
+      <fix>
+        Improve the calculation of the resource's last-modified, performed by
+        JspCompilationContext, in a way to support URLs with protocol different
+        than <code>jar:file</code>. (violetagg)
+      </fix>
+      <fix>
+        Fix potential issue with BeanELResolver when running under a security
+        manager. Some classes may not be accessible but may have accessible
+        interfaces. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Cluster">
+    <changelog>
+      <fix>
+        In order to enable define in <code>Cluster</code> element,
+        <code>ClusterSingleSignOn</code> implements <code>ClusterValve</code>.
+        (kfujino)
+      </fix>
+      <fix>
+        <bug>57338</bug>: Improve the ability of the
+        <code>ClusterSingleSignOn</code> valve to handle nodes being added and
+        removed from the Cluser at run time. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="WebSocket">
+    <changelog>
+      <fix>
+        Correct multiple issues with the flushing of batched messages that could
+        lead to duplicate and/or corrupt messages. (markt)
+      </fix>
+      <fix>
+        Correctly implement headers case insensitivity. (markt/remm)
+      </fix>
+      <fix>
+        Allow optional use of user extensions. (remm)
+      </fix>
+      <fix>
+        Allow using partial binary message handlers. (remm)
+      </fix>
+      <fix>
+        Limit ping/pong message size. (remm)
+      </fix>
+      <fix>
+        Allow configuration of the time interval for the periodic event. (remm)
+      </fix>
+      <fix>
+        More accurate annotations processing. (remm)
+      </fix>
+      <fix>
+        Allow optional default for origin header in the client. (remm)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <fix>
+        Update documentation for CGI servlet. Recommend to copy the servlet
+        declaration into web application instead of enabling it globally.
+        Correct documentation for cgiPathPrefix. (kkolinko)
+      </fix>
+      <update>
+        Improve HTML version of build instructions and align with
+        BUILDING.txt. (kkolinko)
+      </update>
+      <update>
+        Improve Tomcat Manager documentation. Rearrange, add section on
+        HTML GUI, document /expire command and Server Status page. (kkolinko)
+      </update>
+      <update>
+        <bug>57238</bug>: Update information on SSL/TLS on Security and SSL
+        documentation pages. Patch by Glen Peterson. (kkolinko)
+      </update>
+      <fix>
+        <bug>57245</bug>: Correct the reference to <code>allowLinking</code> in
+        the security configuration guide since that attribute has moved from the
+        Context element to the nested Resources element. (markt)
+      </fix>
+      <fix>
+        Fix ambiguity of section links on Valves configuration reference page.
+        (kkolinko)
+      </fix>
+      <fix>
+        <bug>57261</bug>: Fix vminfo and threaddump Manager commands to start
+        their output with an "OK" line. Document them. Based on a patch by
+        Oleg Trokhov. (kkolinko)
+      </fix>
+      <fix>
+        <bug>57267</bug>: Document the <code>StoreConfigLifecycleListener</code>
+        and the <code>/save</code> command for the Manager application. (markt)
+      </fix>
+      <fix>
+        <bug>57323</bug>: Correct display of outdated sessions in sessions
+        count listing in Manager application. (kkolinko)
+      </fix>
+      <add>
+        Add document of <code>ClusterSingleSignOn</code>. (kfujino)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <update>
+        When downloading required libraries at build time, use random name
+        for temporary file and automatically create destination directory
+        (<code>base.path</code>). (kkolinko)
+      </update>
+      <update>
+        Update optional Checkstyle library to 6.2. (kkolinko)
+      </update>
+      <update>
+        Simplify <code>setproxy</code> task in <code>build.xml</code>.
+        Taskdef there is not needed since Ant 1.8.2. (kkolinko)
+      </update>
+      <fix>
+        Update "ide-eclipse" target in <code>build.xml</code> to create Eclipse
+        project that uses Java 7 compliance settings instead of workspace-wide
+        defaults. (kkolinko)
+      </fix>
+     <fix>
+        Update the package renamed copy of Apache Commons Pool 2 to the 2.3
+        release to pick up various fixes since the 2.2 release including one for
+        a possible infinite loop. (markt)
+      </fix>
+      <fix>
+        <bug>57285</bug>: Restore the manifest entry that marks the Windows
+        uninstaller application as requiring elevated privileges. (markt)
+      </fix>
+      <add>
+        <bug>57344</bug>: Provide sha1 checksum files for Tomcat downloads.
+        Correct filename patterns for apache-tomcat-*-embed.tar.gz archive
+        to exclude an *.asc file. (kkolinko)
+      </add>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.0.15 (markt)" rtext="2014-11-07">
   <subsection name="Catalina">
     <changelog>
       <add>
@@ -278,7 +643,7 @@
         expression language. (markt)
       </fix>
       <fix>
-        When coercing an object to an array type in Expression Langauage, handle
+        When coercing an object to an array type in Expression Language, handle
         the case where the source object is an array of primitives.
         (markt/kkolinko)
       </fix>
@@ -541,9 +906,9 @@
         when running on a case sensitive file system. (markt)
       </fix>
       <add>
-          <bug>57004</bug>: Add <code>stuckThreadCount</code> property to
-          <code>StuckThreadDetectionValve</code>'s JMX bean. Patch provided by
-          Ji&#x159;&#xED; Pejchal. (schultz)
+        <bug>57004</bug>: Add <code>stuckThreadCount</code> property to
+        <code>StuckThreadDetectionValve</code>'s JMX bean. Patch provided by
+        Ji&#x159;&#xED; Pejchal. (schultz)
       </add>
       <fix>
         <bug>57011</bug>: Ensure that the request and response are correctly

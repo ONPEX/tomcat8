@@ -1084,6 +1084,12 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
     }
 
 
+    @Override
+    public ByteBuffer getLeftoverInput() {
+        return null;
+    }
+
+
     /**
      * Get more request body data from the web server and store it in the
      * internal buffer.
@@ -1452,6 +1458,7 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
 
         response.setCommitted(true);
 
+        tmpMB.recycle();
         responseMsgPos = -1;
         responseMessage.reset();
         responseMessage.appendByte(Constants.JK_AJP13_SEND_HEADERS);

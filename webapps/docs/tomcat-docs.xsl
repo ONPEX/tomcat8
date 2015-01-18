@@ -292,9 +292,9 @@
         </xsl:when>
         <xsl:otherwise>
           <xsl:if test="
-              count(//*[(local-name()='section' or local-name()='subsection') and @name=current()/@name]) &gt; 1
+              count(//*[self::section or self::subsection][@name=current()/@name]) &gt; 1
               ">
-            <xsl:value-of select="concat(ancestor::section/@name, '/')"/>
+            <xsl:value-of select="concat(parent::*[self::section or self::subsection]/@name, '/')"/>
           </xsl:if>
           <xsl:value-of select="@name"/>
         </xsl:otherwise>
@@ -333,9 +333,9 @@
         </xsl:when>
         <xsl:otherwise>
           <xsl:if test="local-name()='subsection' and
-              count(//*[(local-name()='section' or local-name()='subsection') and @name=current()/@name]) &gt; 1
+              count(//*[self::section or self::subsection][@name=current()/@name]) &gt; 1
               ">
-            <xsl:value-of select="concat(ancestor::section/@name, '/')"/>
+            <xsl:value-of select="concat(parent::*[self::section or self::subsection]/@name, '/')"/>
           </xsl:if>
           <xsl:value-of select="@name"/>
         </xsl:otherwise>
@@ -363,19 +363,6 @@
     </pre>
   </div>
   </xsl:template>
-
-
-  <!-- Process a wrapped source code example - indent -->
-  <xsl:template match="source//indent">
-    <div><xsl:apply-templates /></div>
-  </xsl:template>
-
-
-  <!-- Process a wrapped source code example - outdent -->
-  <xsl:template match="source//outdent">
-    <p><xsl:apply-templates /></p>
-  </xsl:template>
-
 
   <!-- Process an attributes list with nested attribute elements -->
   <xsl:template match="attributes">

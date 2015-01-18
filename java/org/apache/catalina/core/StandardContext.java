@@ -168,31 +168,7 @@ public class StandardContext extends ContainerBase
     }
 
 
-    // ----------------------------------------------------- Class Variables
-
-
-    /**
-     * Array containing the safe characters set.
-     */
-    protected static URLEncoder urlEncoder;
-
-
-    /**
-     * GMT timezone - all HTTP dates are on GMT
-     */
-    static {
-        urlEncoder = new URLEncoder();
-        urlEncoder.addSafeCharacter('~');
-        urlEncoder.addSafeCharacter('-');
-        urlEncoder.addSafeCharacter('_');
-        urlEncoder.addSafeCharacter('.');
-        urlEncoder.addSafeCharacter('*');
-        urlEncoder.addSafeCharacter('/');
-    }
-
-
     // ----------------------------------------------------- Instance Variables
-
 
     /**
      * Allow multipart/form-data requests to be parsed even when the
@@ -1162,27 +1138,12 @@ public class StandardContext extends ContainerBase
     }
 
 
-    /**
-     * Return the set of initialized application event listener objects,
-     * in the order they were specified in the web application deployment
-     * descriptor, for this application.
-     *
-     * @exception IllegalStateException if this method is called before
-     *  this application has started, or after it has been stopped
-     */
     @Override
     public Object[] getApplicationEventListeners() {
         return (applicationEventListenersObjects);
     }
 
 
-    /**
-     * Store the set of initialized application event listener objects,
-     * in the order they were specified in the web application deployment
-     * descriptor, for this application.
-     *
-     * @param listeners The set of instantiated listener objects.
-     */
     @Override
     public void setApplicationEventListeners(Object listeners[]) {
         applicationEventListenersObjects = listeners;
@@ -1202,14 +1163,6 @@ public class StandardContext extends ContainerBase
     }
 
 
-    /**
-     * Return the set of initialized application lifecycle listener objects,
-     * in the order they were specified in the web application deployment
-     * descriptor, for this application.
-     *
-     * @exception IllegalStateException if this method is called before
-     *  this application has started, or after it has been stopped
-     */
     @Override
     public Object[] getApplicationLifecycleListeners() {
         return (applicationLifecycleListenersObjects);
@@ -1312,37 +1265,21 @@ public class StandardContext extends ContainerBase
     }
 
 
-    /**
-     * Return the URL of the XML descriptor for this context.
-     */
     @Override
     public URL getConfigFile() {
-
-        return (this.configFile);
-
+        return this.configFile;
     }
 
 
-    /**
-     * Set the URL of the XML descriptor for this context.
-     *
-     * @param configFile The URL of the XML descriptor for this context.
-     */
     @Override
     public void setConfigFile(URL configFile) {
-
         this.configFile = configFile;
     }
 
 
-    /**
-     * Return the "correctly configured" flag for this Context.
-     */
     @Override
     public boolean getConfigured() {
-
-        return (this.configured);
-
+        return this.configured;
     }
 
 
@@ -1365,14 +1302,9 @@ public class StandardContext extends ContainerBase
     }
 
 
-    /**
-     * Return the "use cookies for session ids" flag.
-     */
     @Override
     public boolean getCookies() {
-
-        return (this.cookies);
-
+        return this.cookies;
     }
 
 
@@ -1519,14 +1451,9 @@ public class StandardContext extends ContainerBase
     }
 
 
-    /**
-     * Return the "allow crossing servlet contexts" flag.
-     */
     @Override
     public boolean getCrossContext() {
-
-        return (this.crossContext);
-
+        return this.crossContext;
     }
 
 
@@ -2008,14 +1935,25 @@ public class StandardContext extends ContainerBase
      */
     @Override
     public void setPath(String path) {
-        if (path == null || (!path.equals("") && !path.startsWith("/"))) {
+        boolean invalid = false;
+        if (path == null || path.equals("/")) {
+            invalid = true;
+            this.path = "";
+        } else if ("".equals(path) || path.startsWith("/")) {
+            this.path = path;
+        } else {
+            invalid = true;
             this.path = "/" + path;
+        }
+        if (this.path.endsWith("/")) {
+            invalid = true;
+            this.path = this.path.substring(0, this.path.length() - 1);
+        }
+        if (invalid) {
             log.warn(sm.getString(
                     "standardContext.pathInvalid", path, this.path));
-        } else {
-            this.path = path;
         }
-        encodedPath = urlEncoder.encode(this.path);
+        encodedPath = URLEncoder.DEFAULT.encode(this.path);
         if (getName() == null) {
             setName(this.path);
         }
@@ -4943,11 +4881,12 @@ public class StandardContext extends ContainerBase
                 try {
                     wrapper.load();
                 } catch (ServletException e) {
-                    getLogger().error(sm.getString("standardWrapper.loadException",
-                                      getName()), StandardWrapper.getRootCause(e));
+                    getLogger().error(sm.getString("standardContext.loadOnStartup.loadException",
+                          getName(), wrapper.getName()), StandardWrapper.getRootCause(e));
                     // NOTE: load errors (including a servlet that throws
-                    // UnavailableException from tht init() method) are NOT
-                    // fatal to application startup, excepted if failDeploymentIfServletLoadedOnStartupFails is specified
+                    // UnavailableException from the init() method) are NOT
+                    // fatal to application startup
+                    // unless failCtxIfServletStartFails="true" is specified
                     if(getComputedFailCtxIfServletStartFails()) {
                         return false;
                     }
