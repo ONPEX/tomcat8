@@ -3,28 +3,28 @@ Date: Mon, 28 Jun 2010 21:32:57 +0200
 Subject: [PATCH] add JARs below /var to class loader
 --- a/conf/catalina.properties
 +++ b/conf/catalina.properties
-@@ -48,7 +48,7 @@
- #
- # Note: Values are enclosed in double quotes ("...") in case either the
+@@ -50,7 +50,7 @@
  #       ${catalina.base} path or the ${catalina.home} path contains a comma.
+ #       Because double quotes are used for quoting, the double quote character
+ #       may not appear in a path.
 -common.loader="${catalina.base}/lib","${catalina.base}/lib/*.jar","${catalina.home}/lib","${catalina.home}/lib/*.jar"
 +common.loader="${catalina.base}/lib","${catalina.base}/lib/*.jar","${catalina.home}/lib","${catalina.home}/lib/*.jar","${catalina.home}/common/classes","${catalina.home}/common/*.jar"
  
  #
  # List of comma-separated paths defining the contents of the "server"
-@@ -61,7 +61,7 @@
- #     "foo/*.jar": Add all the JARs of the specified folder as class
- #                  repositories
- #     "foo/bar.jar": Add bar.jar as a class repository
+@@ -68,7 +68,7 @@
+ #       ${catalina.base} path or the ${catalina.home} path contains a comma.
+ #       Because double quotes are used for quoting, the double quote character
+ #       may not appear in a path.
 -server.loader=
 +server.loader=${catalina.home}/server/classes,${catalina.home}/server/*.jar
  
  #
  # List of comma-separated paths defining the contents of the "shared"
-@@ -75,7 +75,7 @@
- #     "foo/bar.jar": Add bar.jar as a class repository
- # Please note that for single jars, e.g. bar.jar, you need the URL form
- # starting with file:.
+@@ -87,7 +87,7 @@
+ #       ${catalina.base} path or the ${catalina.home} path contains a comma.
+ #       Because double quotes are used for quoting, the double quote character
+ #       may not appear in a path.
 -shared.loader=
 +shared.loader=${catalina.home}/shared/classes,${catalina.home}/shared/*.jar
  
