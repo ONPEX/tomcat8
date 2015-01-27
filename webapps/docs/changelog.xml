@@ -44,7 +44,116 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues to not "pop up" wrt. others).
 -->
-<section name="Tomcat 8.0.17 (markt)">
+<section name="Tomcat 8.0.18 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        <bug>57178</bug>: The CORS filter now treats <code>null</code> as a
+        valid origin that matches <code>*</code>. Patch provided by Gregor
+        Zurowski. (markt)
+      </fix>
+      <fix>
+        <bug>57425</bug>: Don't add attributes with null value or name to the
+        replicated context. (fschumacher)
+      </fix>
+      <add>
+        <bug>57431</bug>: Enable usage of custom class for context creation when
+        using embedded tomcat. (fschumacher)
+      </add>
+      <fix>
+        <bug>57446</bug>: Ensure that <code>ServletContextListener</code>s that
+        have limited access to <code>ServletContext</code> methods are called
+        with the same <code>ServletContext</code> instance for both
+        <code>contextInitialized()</code> and <code>contextDestroyed()</code>.
+        (markt)
+      </fix>
+      <fix>
+        <bug>57455</bug>: Explicitly block the use of the double-quote character
+        when configuring the common, server and shared class loaders since
+        double-quote is used to quote values that contain commas. (markt)
+      </fix>
+      <fix>
+        <bug>57461</bug>: When an instance of
+        <code>org.apache.catalina.startup.VersionLoggerListener</code> logs the
+        result of <code>System.getProperty("java.home")</code> don't report it
+        in a manner that makes it look like the <code>JAVA_HOME</code>
+        environment variable. (markt)
+      </fix>
+      <fix>
+        <bug>57476</bug>: Ensure the responses written as part of a forward are
+        fully written. This fixes a regression in 8.0.15 caused by the fix for
+        <bug>57252</bug>. (markt)
+      </fix>
+      <fix>
+        While closing streams for given resources ensure that if an exception
+        happens it will be handled properly. Issue is reported by Coverity Scan.
+        (violetagg)
+      </fix>
+      <fix>
+        <bug>57481</bug>: Fix <code>IllegalStateException</code> at the end of
+        the request when using non-blocking reads with the HTTP BIO connector.
+        (markt)
+      </fix>
+      <fix>
+        Change Response to use UEncoder instances with shared safeChars.
+        (fschumacher)
+      </fix>
+      <fix>
+        Ensure that when static resources are served from JARs, only static
+        resources are served. (markt)
+      </fix>
+      <add>
+        Allow <code>VersionLoggerListener</code> to log all system properties.
+        This feature is off by default. (kkolinko)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        Ensure that classes imported via the page directive are made available
+        to the EL environment via the ImportHandler. Issue is reported by
+        Coverity Scan. (violetagg)
+      </fix>
+      <fix>
+        <bug>57441</bug>: Do not trigger an error when using functions defined
+        by lambdas or imported via an ImportHandler in an EL expression in a
+        JSP. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Cluster">
+    <changelog>
+      <fix>
+        Fix mbean descriptor of <code>ClusterSingleSignOn</code>. (kfujino)
+      </fix>
+      <fix>
+        <bug>57473</bug>: Add sanity check to FarmWebDeployer's WarWatcher to
+        detect suspected incorrect permissions on the watch directory. (schultz)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Tribes">
+    <changelog>
+      <fix>
+        Clarify the handling of Copy message and Copy nodes. (kfujino)
+      </fix>
+      <fix>
+        Copy node does not need to send the entry data. It is enough to send
+        only the node information of the entry. (kfujino)
+      </fix>
+      <fix>
+        ReplicatedMap should send the Copy message when replicating. (kfujino)
+      </fix>
+      <fix>
+        Fix behavior of ReplicatedMap when member has disappeared. If map entry
+        is primary, rebuild the backup members. If primary node of map entry has
+        disappeared, backup node is promoted to primary. (kfujino)
+      </fix>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.0.17 (markt)" rtext="2015-01-16">
   <subsection name="Catalina">
     <changelog>
       <fix>
