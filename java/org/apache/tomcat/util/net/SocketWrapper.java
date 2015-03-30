@@ -27,8 +27,11 @@ public class SocketWrapper<E> {
 
     private volatile E socket;
 
+    // Volatile because I/O and setting the timeout values occurs on a different
+    // thread to the thread checking the timeout.
     private volatile long lastAccess = System.currentTimeMillis();
-    private long timeout = -1;
+    private volatile long timeout = -1;
+
     private boolean error = false;
     private volatile int keepAliveLeft = 100;
     private volatile boolean comet = false;
@@ -152,25 +155,6 @@ public class SocketWrapper<E> {
         }
     }
 
-    public void reset(E socket, long timeout) {
-        async = false;
-        blockingStatus = true;
-        comet = false;
-        dispatches.clear();
-        error = false;
-        keepAliveLeft = 100;
-        lastAccess = System.currentTimeMillis();
-        localAddr = null;
-        localName = null;
-        localPort = -1;
-        remoteAddr = null;
-        remoteHost = null;
-        remotePort = -1;
-        this.socket = socket;
-        this.timeout = timeout;
-        upgraded = false;
-    }
-
     /**
      * Overridden for debug purposes. No guarantees are made about the format of
      * this message which may vary significantly between point releases.
@@ -180,5 +164,18 @@ public class SocketWrapper<E> {
     @Override
     public String toString() {
         return super.toString() + ":" + String.valueOf(socket);
+    }
+
+
+    /**
+     * Register the associated socket for the requested events.
+     *
+     * @param timeout The time to wait for the event(s) to occur
+     * @param read    Should the socket be register for read?
+     * @param write   Should the socket be register for write?
+     */
+    public void registerforEvent(int timeout, boolean read, boolean write) {
+        // NO-OP by default.
+        // Currently only implemented by APR.
     }
 }

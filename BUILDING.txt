@@ -245,7 +245,7 @@ You can build them by using the following commands:
 
     A full release includes the Windows installer which requires a Windows
     environment to be available to create it. If not building in a Windows
-    environment, the build scripts assume that WINE is available. If this is not
+    environment, the build scripts assume that Wine is available. If this is not
     the case, the skip.installer property may be set to skip the creation of the
     Windows installer.
 
@@ -400,6 +400,20 @@ For example:
 * NOTE: Cobertura is licensed under GPL v2 with parts of it being under
   Apache License v1.1. See http://cobertura.sf.net for details. Using it
   during Tomcat build is optional and is off by default.
+
+ 6. The performance tests are written to run reasonably powerful machines (such
+    as a developer may use day to day) assuming no other resource hungry
+    processes are running. These assumptions are not always true (e.g. on CI
+    systems running ina virtual machine) so the performance tests may be
+    disabled by using the following property:
+
+        test.excludePerformance=true
+
+ 7. Some tests include checks that the access log valve entries are as expected.
+    These checks include timings. On slower / loaded systems these checks will
+    often fail. The checks may be relaxed by using the following property:
+
+        test.relaxTiming=true
 
 
 (8) Source code checks

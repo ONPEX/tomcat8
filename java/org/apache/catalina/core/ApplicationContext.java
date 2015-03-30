@@ -248,8 +248,9 @@ public class ApplicationContext
     public ServletContext getContext(String uri) {
 
         // Validate the format of the specified argument
-        if ((uri == null) || (!uri.startsWith("/")))
-            return (null);
+        if (uri == null || !uri.startsWith("/")) {
+            return null;
+        }
 
         Context child = null;
         try {
@@ -280,12 +281,7 @@ public class ApplicationContext
 
                 MappingData mappingData = new MappingData();
                 ((Engine) host.getParent()).getService().getMapper().map(hostMB, pathMB, null, mappingData);
-
-                // Must be an exact match. It is no good returning the ROOT
-                // context if the caller is looking for "/something-else"
-                if (mappingData.context.getPath().equals(uri)) {
-                    child = mappingData.context;
-                }
+                child = mappingData.context;
             }
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
@@ -1252,16 +1248,18 @@ public class ApplicationContext
     public void addListener(String className) {
 
         try {
-            Object obj = context.getInstanceManager().newInstance(className);
+            if (context.getInstanceManager() != null) {
+                Object obj = context.getInstanceManager().newInstance(className);
 
-            if (!(obj instanceof EventListener)) {
-                throw new IllegalArgumentException(sm.getString(
-                        "applicationContext.addListener.iae.wrongType",
-                        className));
+                if (!(obj instanceof EventListener)) {
+                    throw new IllegalArgumentException(sm.getString(
+                            "applicationContext.addListener.iae.wrongType",
+                            className));
+                }
+
+                EventListener listener = (EventListener) obj;
+                addListener(listener);
             }
-
-            EventListener listener = (EventListener) obj;
-            addListener(listener);
         } catch (IllegalAccessException e) {
             throw new IllegalArgumentException(sm.getString(
                     "applicationContext.addListener.iae.cnfe", className),

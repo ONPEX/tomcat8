@@ -588,9 +588,14 @@ public final class Response {
         // written.
         if (isReady()) {
             action(ActionCode.DISPATCH_WRITE, null);
-            // Need to set the fireListener flag otherwise when the container
-            // tries to trigger onWritePossible, nothing will happen
             synchronized (nonBlockingStateLock) {
+                // Ensure we don't get multiple write registrations if
+                // ServletOutoutStream.isReady() returns false during a call to
+                // onDataAvailable()
+                registeredForWrite = true;
+                // Need to set the fireListener flag otherwise when the
+                // container tries to trigger onWritePossible, nothing will
+                // happen
                 fireListener = true;
             }
         }
@@ -608,16 +613,16 @@ public final class Response {
                 fireListener = true;
                 return false;
             }
-            ready = checkRegisterForWrite(false);
+            ready = checkRegisterForWrite();
             fireListener = !ready;
         }
         return ready;
     }
 
-    public boolean checkRegisterForWrite(boolean internal) {
+    public boolean checkRegisterForWrite() {
         AtomicBoolean ready = new AtomicBoolean(false);
         synchronized (nonBlockingStateLock) {
-            if (!registeredForWrite || internal) {
+            if (!registeredForWrite) {
                 action(ActionCode.NB_WRITE_INTEREST, ready);
                 registeredForWrite = !ready.get();
             }
