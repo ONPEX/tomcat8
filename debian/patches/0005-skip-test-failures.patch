@@ -3,18 +3,18 @@ Author: Emmanuel Bourg <ebourg@apache.org>
 Forwarded: not-needed
 --- a/build.xml
 +++ b/build.xml
-@@ -1344,8 +1344,10 @@
+@@ -1379,8 +1379,10 @@
+       </filterchain>
+     </concat>
  
-   <target name="test" description="Runs the JUnit test cases"
-           depends="test-bio,test-nio,test-nio2,test-apr,cobertura-report" >
 +    <!--
-     <fail if="test.result.error" message='Some tests completed with an Error. See ${tomcat.build}/logs for details, search for "FAILED".' />
+     <fail if="test.result.error" message='Some tests completed with an Error. See ${tomcat.build}/logs for details, search for "ERROR".' />
      <fail if="test.result.failure" message='Some tests completed with a Failure. See ${tomcat.build}/logs for details, search for "FAILED".' />
 +    -->
    </target>
  
    <target name="test-bio" description="Runs the JUnit test cases for BIO. Does not stop on errors."
-@@ -1404,7 +1406,7 @@
+@@ -1439,7 +1441,7 @@
  
      <sequential>
        <mkdir dir="${test.reports}" />
