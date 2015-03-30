@@ -6,7 +6,7 @@ DIR=tomcat8-$VERSION
 TAG=$(echo TOMCAT_$VERSION | sed -e 's/[\.~]/_/g')
 
 svn export http://svn.apache.org/repos/asf/tomcat/tc8.0.x/tags/$TAG $DIR
-tar -c -J -f $TAR --exclude 'standard.jar' --exclude 'jstl.jar' $DIR
+tar -c -J -f $TAR --exclude 'taglibs-standard-*.jar' $DIR
 rm -rf $DIR ../$TAG $3
 
 # move to directory 'tarballs'
