@@ -62,7 +62,8 @@ find_jdks()
     do
         for jvmdir in /usr/lib/jvm/java-${java_version}-openjdk-* \
                       /usr/lib/jvm/jdk-${java_version}-oracle-* \
-                      /usr/lib/jvm/jre-${java_version}-oracle-*
+                      /usr/lib/jvm/jre-${java_version}-oracle-* \
+                      /usr/lib/jvm/java-${java_version}-oracle
         do
             if [ -d "${jvmdir}" ]
             then
@@ -71,8 +72,8 @@ find_jdks()
         done
     done
 
-    # Add older non multi arch installations
-    JDK_DIRS="${JDK_DIRS} /usr/lib/jvm/java-7-oracle"
+    # Add the paths for the JVMs packaged by the older versions of java-package (<< 0.52 as in Wheezy and Trusty)
+    JDK_DIRS="${JDK_DIRS} /usr/lib/jvm/j2re1.7-oracle /usr/lib/jvm/j2sdk1.7-oracle"
 }
 
 # The first existing directory is used for JAVA_HOME (if JAVA_HOME is not
