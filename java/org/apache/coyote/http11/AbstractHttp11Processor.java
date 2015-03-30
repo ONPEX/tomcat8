@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.nio.ByteBuffer;
 import java.util.Locale;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
@@ -648,18 +649,18 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
     /**
      * Initialize standard input and output filters.
      */
-    protected void initializeFilters(int maxTrailerSize, int maxExtensionSize,
-            int maxSwallowSize) {
+    protected void initializeFilters(int maxTrailerSize, Set<String> allowedTrailerHeaders,
+            int maxExtensionSize, int maxSwallowSize) {
         // Create and add the identity filters.
         getInputBuffer().addFilter(new IdentityInputFilter(maxSwallowSize));
         getOutputBuffer().addFilter(new IdentityOutputFilter());
 
         // Create and add the chunked filters.
-        getInputBuffer().addFilter(
-                new ChunkedInputFilter(maxTrailerSize, maxExtensionSize, maxSwallowSize));
+        getInputBuffer().addFilter( new ChunkedInputFilter(maxTrailerSize,allowedTrailerHeaders,
+                maxExtensionSize, maxSwallowSize));
         getOutputBuffer().addFilter(new ChunkedOutputFilter());
 
-        // Create and add the void filters.
+        // Create and add the void filters
         getInputBuffer().addFilter(new VoidInputFilter());
         getOutputBuffer().addFilter(new VoidOutputFilter());
 
@@ -913,6 +914,10 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             // Block further output
             getOutputBuffer().finished = true;
             setErrorState(ErrorState.CLOSE_NOW, null);
+            break;
+        }
+        case END_REQUEST: {
+            endRequest();
             break;
         }
         default: {
@@ -1653,15 +1658,20 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
     @Override
     public SocketState asyncDispatch(SocketStatus status) {
 
-        if (status == SocketStatus.OPEN_WRITE) {
+        if (status == SocketStatus.OPEN_WRITE && response.getWriteListener() != null) {
             try {
                 asyncStateMachine.asyncOperation();
 
                 if (outputBuffer.hasDataToWrite()) {
                     if (outputBuffer.flushBuffer(false)) {
-                        // There is data to write but go via Response to
-                        // maintain a consistent view of non-blocking state
-                        response.checkRegisterForWrite(true);
+                        // The buffer wasn't fully flushed so re-register the
+                        // socket for write. Note this does not go via the
+                        // Response since the write registration state at
+                        // that level should remain unchanged. Once the buffer
+                        // has been emptied then the code below will call
+                        // Adaptor.asyncDispatch() which will enable the
+                        // Response to respond to this event.
+                        outputBuffer.registerWriteInterest();
                         return SocketState.LONG;
                     }
                 }
@@ -1674,8 +1684,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
                 status = SocketStatus.ASYNC_WRITE_ERROR;
                 request.setAttribute(RequestDispatcher.ERROR_EXCEPTION, x);
             }
-        } else if (status == SocketStatus.OPEN_READ &&
-                request.getReadListener() != null) {
+        } else if (status == SocketStatus.OPEN_READ && request.getReadListener() != null) {
             try {
                 // Check of asyncStateMachine.isAsyncStarted() is to avoid issue
                 // with BIO. Because it can't do a non-blocking read, BIO always

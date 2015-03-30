@@ -111,6 +111,7 @@ public abstract class AbstractResourceSet extends LifecycleBase
         this.staticOnly = staticOnly;
     }
 
+
     //-------------------------------------------------------- Lifecycle methods
     @Override
     protected final void startInternal() throws LifecycleException {
@@ -124,6 +125,6 @@ public abstract class AbstractResourceSet extends LifecycleBase
 
     @Override
     protected final void destroyInternal() throws LifecycleException {
-        // NO-OP
+        gc();
     }
 }

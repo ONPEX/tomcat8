@@ -124,7 +124,8 @@ public class AjpNioProcessor extends AbstractAjpProcessor<NioChannel> {
         ByteBuffer writeBuffer =
                 socketWrapper.getSocket().getBufHandler().getWriteBuffer();
 
-        writeBuffer.put(src, offset, length);
+        int toWrite = Math.min(length, writeBuffer.remaining());
+        writeBuffer.put(src, offset, toWrite);
 
         writeBuffer.flip();
 
@@ -176,7 +177,9 @@ public class AjpNioProcessor extends AbstractAjpProcessor<NioChannel> {
         ByteBuffer readBuffer =
                 socketWrapper.getSocket().getBufHandler().getReadBuffer();
         readBuffer.clear();
-        readBuffer.limit(n);
+        if (n < readBuffer.capacity()) {
+            readBuffer.limit(n);
+        }
         if ( block ) {
             Selector selector = null;
             try {

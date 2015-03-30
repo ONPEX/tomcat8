@@ -289,16 +289,12 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
         request.recycle();
 
         // Copy leftover bytes to the beginning of the buffer
-        if (lastValid - pos > 0) {
-            int npos = 0;
-            int opos = pos;
-            while (lastValid - opos > opos - npos) {
-                System.arraycopy(buf, opos, buf, npos, opos - npos);
-                npos += pos;
-                opos += pos;
-            }
-            System.arraycopy(buf, opos, buf, npos, lastValid - opos);
+        if (lastValid - pos > 0 && pos > 0) {
+            System.arraycopy(buf, pos, buf, 0, lastValid - pos);
         }
+        // Always reset pos to zero
+        lastValid = lastValid - pos;
+        pos = 0;
 
         // Recycle filters
         for (int i = 0; i <= lastActiveFilter; i++) {
@@ -306,12 +302,9 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
         }
 
         // Reset pointers
-        lastValid = lastValid - pos;
-        pos = 0;
         lastActiveFilter = -1;
         parsingHeader = true;
         swallowInput = true;
-
     }
 
 

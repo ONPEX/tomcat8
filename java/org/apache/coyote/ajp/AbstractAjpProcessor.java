@@ -318,6 +318,16 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
 
 
     /**
+     * Use Tomcat authorization ?
+     */
+    private boolean tomcatAuthorization = false;
+    public boolean getTomcatAuthorization() { return tomcatAuthorization; }
+    public void setTomcatAuthorization(boolean tomcatAuthorization) {
+        this.tomcatAuthorization = tomcatAuthorization;
+    }
+
+
+    /**
      * Required secret.
      */
     protected String requiredSecret = null;
@@ -653,14 +663,18 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
             setErrorState(ErrorState.CLOSE_NOW, null);
             break;
         }
+        case END_REQUEST: {
+            // NO-OP for AJP
+            break;
         }
+       }
     }
 
 
     @Override
     public SocketState asyncDispatch(SocketStatus status) {
 
-        if (status == SocketStatus.OPEN_WRITE) {
+        if (status == SocketStatus.OPEN_WRITE && response.getWriteListener() != null) {
             try {
                 asyncStateMachine.asyncOperation();
                 try {
@@ -669,7 +683,7 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
                         if (hasDataToWrite()) {
                             // There is data to write but go via Response to
                             // maintain a consistent view of non-blocking state
-                            response.checkRegisterForWrite(true);
+                            response.checkRegisterForWrite();
                             return SocketState.LONG;
                         }
                     }
@@ -683,8 +697,7 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
             } catch (IllegalStateException x) {
                 registerForEvent(false, true);
             }
-        } else if (status == SocketStatus.OPEN_READ &&
-                request.getReadListener() != null) {
+        } else if (status == SocketStatus.OPEN_READ && request.getReadListener() != null) {
             try {
                 if (available()) {
                     asyncStateMachine.asyncOperation();
@@ -1249,6 +1262,8 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
                     } catch (NumberFormatException nfe) {
                         // Ignore invalid value
                     }
+                } else if(n.equals(Constants.SC_A_SSL_PROTOCOL)) {
+                    request.setAttribute(SSLSupport.PROTOCOL_VERSION_KEY, v);
                 } else {
                     request.setAttribute(n, v );
                 }
@@ -1265,11 +1280,13 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
                 break;
 
             case Constants.SC_A_REMOTE_USER :
-                if (tomcatAuthentication) {
-                    // ignore server
-                    requestHeaderMessage.getBytes(tmpMB);
-                } else {
+                if (tomcatAuthorization || !tomcatAuthentication) {
+                    // Implies tomcatAuthentication == false
                     requestHeaderMessage.getBytes(request.getRemoteUser());
+                    request.setRemoteUserNeedsAuthorization(tomcatAuthorization);
+                } else {
+                    // Ignore user information from reverse proxy
+                    requestHeaderMessage.getBytes(tmpMB);
                 }
                 break;
 

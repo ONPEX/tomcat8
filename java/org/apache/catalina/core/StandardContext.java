@@ -4410,7 +4410,15 @@ public class StandardContext extends ContainerBase
         }
         if (resources != null) {
             try {
-                return resources.getResource(path).getCanonicalPath();
+                WebResource resource = resources.getResource(path);
+                String canonicalPath = resource.getCanonicalPath();
+                if (canonicalPath == null) {
+                    return null;
+                } else if (resource.isDirectory() && !canonicalPath.endsWith(File.separator)) {
+                    return canonicalPath + File.separatorChar;
+                } else {
+                    return canonicalPath;
+                }
             } catch (IllegalArgumentException iae) {
                 // ServletContext.getRealPath() does not allow this to be thrown
             }
@@ -4639,7 +4647,7 @@ public class StandardContext extends ContainerBase
                     listeners[i] + "'");
             try {
                 String listener = listeners[i];
-                results[i] = instanceManager.newInstance(listener);
+                results[i] = getInstanceManager().newInstance(listener);
             } catch (Throwable t) {
                 t = ExceptionUtils.unwrapInvocationTargetException(t);
                 ExceptionUtils.handleThrowable(t);
@@ -4777,7 +4785,9 @@ public class StandardContext extends ContainerBase
                     }
                 }
                 try {
-                    getInstanceManager().destroyInstance(listeners[j]);
+                    if (getInstanceManager() != null) {
+                        getInstanceManager().destroyInstance(listeners[j]);
+                    }
                 } catch (Throwable t) {
                     t = ExceptionUtils.unwrapInvocationTargetException(t);
                     ExceptionUtils.handleThrowable(t);
@@ -4797,7 +4807,9 @@ public class StandardContext extends ContainerBase
                 if (listeners[j] == null)
                     continue;
                 try {
-                    getInstanceManager().destroyInstance(listeners[j]);
+                    if (getInstanceManager() != null) {
+                        getInstanceManager().destroyInstance(listeners[j]);
+                    }
                 } catch (Throwable t) {
                     t = ExceptionUtils.unwrapInvocationTargetException(t);
                     ExceptionUtils.handleThrowable(t);
@@ -5216,6 +5228,12 @@ public class StandardContext extends ContainerBase
             broadcaster.sendNotification(notification);
         }
 
+        // The WebResources implementation caches references to JAR files. On
+        // some platforms these references may lock the JAR files. Since web
+        // application start is likely to have read from lots of JARs, trigger
+        // a clean-up now.
+        getResources().gc();
+
         // Reinitializing if something went wrong
         if (!ok) {
             setState(LifecycleState.FAILED);
@@ -5439,7 +5457,7 @@ public class StandardContext extends ContainerBase
         }
 
         //reset the instance manager
-        instanceManager = null;
+        setInstanceManager(null);
 
         if (log.isDebugEnabled())
             log.debug("Stopping complete");

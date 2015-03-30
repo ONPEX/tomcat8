@@ -145,4 +145,10 @@ public interface WebResourceSet extends Lifecycle {
      *         read-only, otherwise <code>false</code>
      */
     boolean isReadOnly();
+
+    /**
+     * Implementations may cache some information to improve performance. This
+     * method triggers the clean-up of those resources.
+     */
+    void gc();
 }

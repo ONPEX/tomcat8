@@ -232,7 +232,7 @@ com.sun.security.jgss.krb5.accept {
       Oracle Java GSS-API tutorial (Java 7)</a></li>
   <li><a href="http://docs.oracle.com/javase/7/docs/technotes/guides/security/jgss/tutorials/Troubleshooting.html">
       Oracle Java GSS-API tutorial - Troubleshooting (Java 7)</a></li>
-  <li><a href="https://cwiki.apache.org/GMOxDOC21/using-spengo-in-geronimo.html#UsingSpengoingeronimo-SettinguptheActiveDirectoryDomainController">
+  <li><a href="https://cwiki.apache.org/confluence/display/GMOxDOC21/Using+SPNEGO+in+Geronimo#UsingSPNEGOinGeronimo-SettinguptheDomainControllerMachine">
       Geronimo configuration for Windows authentication</a></li>
   <li><a href="http://blogs.msdn.com/b/openspecification/archive/2010/11/17/encryption-type-selection-in-kerberos-exchanges.aspx">
       Encryption Selection in Kerberos Exchanges</a></li>
@@ -301,7 +301,9 @@ com.sun.security.jgss.krb5.accept {
   <li>Configure IIS to use Windows authentication</li>
   <li>Configure Tomcat to use the authentication user information from IIS by
   setting the tomcatAuthentication attribute on the <a href="config/ajp.html">
-  AJP connector</a> to <code>false</code>.</li>
+  AJP connector</a> to <code>false</code>. Alternatively, set the
+  tomcatAuthorization attribute to <code>true</code> to allow IIS to
+  authenticate, while Tomcat performs the authorization.</li>
   </ol>
   </subsection>
 

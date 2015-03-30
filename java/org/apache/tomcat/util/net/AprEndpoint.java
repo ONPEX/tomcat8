@@ -702,7 +702,6 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
             running = false;
             poller.stop();
             getAsyncTimeout().stop();
-            unlockAccept();
             for (AbstractEndpoint.Acceptor acceptor : acceptors) {
                 long waitLeft = 10000;
                 while (waitLeft > 0 &&
@@ -859,8 +858,7 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
                     log.debug(sm.getString("endpoint.debug.socket",
                             Long.valueOf(socket)));
                 }
-                AprSocketWrapper wrapper =
-                        new AprSocketWrapper(Long.valueOf(socket));
+                AprSocketWrapper wrapper = new AprSocketWrapper(Long.valueOf(socket), this);
                 wrapper.setKeepAliveLeft(getMaxKeepAliveRequests());
                 wrapper.setSecure(isSSLEnabled());
                 connections.put(Long.valueOf(socket), wrapper);
@@ -941,21 +939,11 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
     }
 
     private void closeSocket(long socket) {
-        // If not running the socket will be destroyed by
-        // parent pool or acceptor socket.
-        // In any case disable double free which would cause JVM core.
-
-        connections.remove(Long.valueOf(socket));
-
-        // While the connector is running, destroySocket() will call
-        // countDownConnection(). Once the connector is stopped, the latch is
-        // removed so it does not matter that destroySocket() does not call
-        // countDownConnection() in that case
-        Poller poller = this.poller;
-        if (poller != null) {
-            if (!poller.close(socket)) {
-                destroySocket(socket);
-            }
+        // Once this is called, the mapping from socket to wrapper will no
+        // longer be required.
+        SocketWrapper<Long> wrapper = connections.remove(Long.valueOf(socket));
+        if (wrapper != null) {
+            ((AprSocketWrapper) wrapper).close();
         }
     }
 
@@ -1260,7 +1248,7 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
 
     // ------------------------------------------------------ Poller Inner Class
 
-   public class Poller implements Runnable {
+    public class Poller implements Runnable {
 
         /**
          * Pointers to the pollers.
@@ -1307,13 +1295,13 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
         /**
          * List of sockets to be added to the poller.
          */
-        private SocketList addList = null;
+        private SocketList addList = null;  // Modifications guarded by this
 
 
         /**
          * List of sockets to be closed.
          */
-        private SocketList closeList = null;
+        private SocketList closeList = null; // Modifications guarded by this
 
 
         /**
@@ -1348,7 +1336,7 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
          * Create the poller. With some versions of APR, the maximum poller size
          * will be 62 (recompiling APR is necessary to remove this limitation).
          */
-        protected void init() {
+        protected synchronized void init() {
 
             pool = Pool.create(serverSockPool);
 
@@ -1395,7 +1383,16 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
                 pollerSpace[i] = actualPollerSize;
             }
 
-            desc = new long[actualPollerSize * 2];
+            /*
+             * x2 - One descriptor for the socket, one for the event(s).
+             * x2 - Some APR implementations return multiple events for the
+             *      same socket as different entries. Each socket is registered
+             *      for a maximum of two events (read and write) at any one
+             *      time.
+             *
+             * Therefore size is actual poller size *4.
+             */
+            desc = new long[actualPollerSize * 4];
             connectionCount.set(0);
             addList = new SocketList(defaultPollerSize);
             closeList = new SocketList(defaultPollerSize);
@@ -1414,25 +1411,36 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
         /**
          * Destroy the poller.
          */
-        protected void destroy() {
+        protected synchronized void destroy() {
             // Wait for pollerTime before doing anything, so that the poller
             // threads exit, otherwise parallel destruction of sockets which are
             // still in the poller can cause problems
             try {
-                synchronized (this) {
-                    this.notify();
-                    this.wait(pollTime / 1000);
-                }
+                this.notify();
+                this.wait(pollerCount * pollTime / 1000);
             } catch (InterruptedException e) {
                 // Ignore
             }
-            // Close all sockets in the add queue
-            SocketInfo info = addList.get();
+            // Close all sockets in the close queue
+            SocketInfo info = closeList.get();
             while (info != null) {
-                boolean comet =
-                        connections.get(Long.valueOf(info.socket)).isComet();
-                if (!comet || (comet && !processSocket(
-                        info.socket, SocketStatus.STOP))) {
+                // Make sure we aren't trying add the socket as well as close it
+                addList.remove(info.socket);
+                // Make sure the  socket isn't in the poller before we close it
+                removeFromPoller(info.socket);
+                // Poller isn't running at this point so use destroySocket()
+                // directly
+                destroySocket(info.socket);
+                info = closeList.get();
+            }
+            closeList.clear();
+            // Close all sockets in the add queue
+            info = addList.get();
+            while (info != null) {
+                boolean comet = connections.get(Long.valueOf(info.socket)).isComet();
+                if (!comet || (comet && !processSocket(info.socket, SocketStatus.STOP))) {
+                    // Make sure the  socket isn't in the poller before we close it
+                    removeFromPoller(info.socket);
                     // Poller isn't running at this point so use destroySocket()
                     // directly
                     destroySocket(info.socket);
@@ -1470,15 +1478,9 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
          *
          * @param socket to add to the poller
          * @param timeout to use for this connection
-         * @param read to do read polling
-         * @param write to do write polling
+         * @param flags Events to poll for (Poll.APR_POLLIN and/or
+         *              Poll.APR_POLLOUT)
          */
-        public void add(long socket, int timeout, boolean read, boolean write) {
-            add(socket, timeout,
-                    (read ? Poll.APR_POLLIN : 0) |
-                    (write ? Poll.APR_POLLOUT : 0));
-        }
-
         private void add(long socket, int timeout, int flags) {
             if (log.isDebugEnabled()) {
                 String msg = sm.getString("endpoint.debug.pollerAdd",
@@ -1494,24 +1496,11 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
                 // Always put a timeout in
                 timeout = Integer.MAX_VALUE;
             }
-            boolean ok = false;
             synchronized (this) {
                 // Add socket to the list. Newly added sockets will wait
-                // at most for pollTime before being polled. Don't add the
-                // socket once the poller has stopped but destroy it straight
-                // away
-                if (pollerRunning && addList.add(socket, timeout, flags)) {
-                    ok = true;
+                // at most for pollTime before being polled.
+                if (addList.add(socket, timeout, flags)) {
                     this.notify();
-                }
-            }
-            if (!ok) {
-                // Can't do anything: close the socket right away
-                boolean comet = connections.get(
-                        Long.valueOf(socket)).isComet();
-                if (!comet || (comet && !processSocket(
-                        socket, SocketStatus.ERROR))) {
-                    closeSocket(socket);
                 }
             }
         }
@@ -1537,18 +1526,14 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
         }
 
 
-        protected boolean close(long socket) {
-            if (!pollerRunning) {
-                return false;
-            }
-            synchronized (this) {
-                if (!pollerRunning) {
-                    return false;
-                }
-                closeList.add(socket, 0, 0);
-                this.notify();
-                return true;
-            }
+        /*
+         * This is only called from the SocketWrapper to ensure that it is only
+         * called once per socket. Calling it more than once typically results
+         * in the JVM crash.
+         */
+        private synchronized void close(long socket) {
+            closeList.add(socket, 0, 0);
+            this.notify();
         }
 
 
@@ -1556,7 +1541,7 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
          * Remove specified socket from the pollers. Must only be called from
          * {@link Poller#run()}.
          */
-        private boolean removeFromPoller(long socket) {
+        private void removeFromPoller(long socket) {
             if (log.isDebugEnabled()) {
                 log.debug(sm.getString("endpoint.debug.pollerRemove",
                         Long.valueOf(socket)));
@@ -1577,14 +1562,12 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
                 }
             }
             timeouts.remove(socket);
-            return (rv == Status.APR_SUCCESS);
         }
 
         /**
          * Timeout checks. Must only be called from {@link Poller#run()}.
          */
-        private void maintain() {
-
+        private synchronized void maintain() {
             long date = System.currentTimeMillis();
             // Maintain runs at most once every 1s, although it will likely get
             // called more
@@ -1605,6 +1588,8 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
                 if (!comet || (comet && !processSocket(
                         socket, SocketStatus.TIMEOUT))) {
                     destroySocket(socket);
+                    addList.remove(socket);
+                    closeList.remove(socket);
                 }
                 socket = timeouts.check(date);
             }
@@ -1652,7 +1637,7 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
                         // Ignore
                     }
                 }
-                // Check timeouts if the poller is empty
+                // Check timeouts if the poller is empty.
                 while (pollerRunning && connectionCount.get() < 1 &&
                         addList.size() < 1 && closeList.size() < 1) {
                     // Reset maintain time.
@@ -1661,7 +1646,15 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
                             maintain();
                         }
                         synchronized (this) {
-                            this.wait(10000);
+                            // Make sure that no sockets have been placed in the
+                            // addList or closeList since the check above.
+                            // Without this check there could be a 10s pause
+                            // with no processing since the notify() call in
+                            // add()/close() would have no effect since it
+                            // happened before this sync block was entered
+                            if (addList.size() < 1 && closeList.size() < 1) {
+                                this.wait(10000);
+                            }
                         }
                     } catch (InterruptedException e) {
                         // Ignore
@@ -1679,25 +1672,25 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
                 try {
                     // Duplicate the add and remove lists so that the syncs are
                     // minimised
-                    if (closeList.size() > 0) {
-                        synchronized (this) {
+                    synchronized (this) {
+                        if (closeList.size() > 0) {
                             // Duplicate to another list, so that the syncing is
                             // minimal
                             closeList.duplicate(localCloseList);
                             closeList.clear();
+                        } else {
+                            localCloseList.clear();
                         }
-                    } else {
-                        localCloseList.clear();
                     }
-                    if (addList.size() > 0) {
-                        synchronized (this) {
+                    synchronized (this) {
+                        if (addList.size() > 0) {
                             // Duplicate to another list, so that the syncing is
                             // minimal
                             addList.duplicate(localAddList);
                             addList.clear();
+                        } else {
+                            localAddList.clear();
                         }
-                    } else {
-                        localAddList.clear();
                     }
 
                     // Remove sockets
@@ -1734,6 +1727,12 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
                                 wrapper.pollerFlags = wrapper.pollerFlags |
                                         (info.read() ? Poll.APR_POLLIN : 0) |
                                         (info.write() ? Poll.APR_POLLOUT : 0);
+                                // A socket can only be added to the poller
+                                // once. Adding it twice will return an error
+                                // which will close the socket. Therefore make
+                                // sure the socket we are about to add isn't in
+                                // the poller.
+                                removeFromPoller(info.socket);
                                 if (!addToPoller(info.socket, wrapper.pollerFlags)) {
                                     // Can't do anything: close the socket right
                                     // away
@@ -1759,9 +1758,8 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
                     // Poll for the specified interval
                     for (int i = 0; i < pollers.length; i++) {
 
-                        // Flags to ask to reallocate the pool
+                        // Flag to ask to reallocate the pool
                         boolean reset = false;
-                        //ArrayList<Long> skip = null;
 
                         int rv = 0;
                         // Iterate on each pollers, but no need to poll empty pollers
@@ -1780,6 +1778,7 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
                             nextPollerTime += pollerTime;
                         }
                         if (rv > 0) {
+                            rv = mergeDescriptors(desc, rv);
                             pollerSpace[i] += rv;
                             connectionCount.addAndGet(-rv);
                             for (int n = 0; n < rv; n++) {
@@ -1978,6 +1977,39 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
             synchronized (this) {
                 this.notifyAll();
             }
+        }
+
+
+        private int mergeDescriptors(long[] desc, int startCount) {
+            /*
+             * https://bz.apache.org/bugzilla/show_bug.cgi?id=57653#c6 suggests
+             * this merging is only necessary on OSX and BSD.
+             *
+             * https://bz.apache.org/bugzilla/show_bug.cgi?id=56313 suggests the
+             * same, or a similar, issue is happening on Windows.
+             * Notes: Only the first startCount * 2 elements of the array
+             *        are populated.
+             *        The array is event, socket, event, socket etc.
+             */
+            HashMap<Long,Long> merged = new HashMap<>(startCount);
+            for (int n = 0; n < startCount; n++) {
+                Long old = merged.put(Long.valueOf(desc[2*n+1]), Long.valueOf(desc[2*n]));
+                if (old != null) {
+                    // This was a replacement. Merge the old and new value
+                    merged.put(Long.valueOf(desc[2*n+1]),
+                            Long.valueOf(desc[2*n] | old.longValue()));
+                    if (log.isDebugEnabled()) {
+                        log.debug(sm.getString("endpoint.apr.pollMergeEvents",
+                                Long.valueOf(desc[2*n+1]), Long.valueOf(desc[2*n]), old));
+                    }
+                }
+            }
+            int i = 0;
+            for (Map.Entry<Long,Long> entry : merged.entrySet()) {
+                desc[i++] = entry.getValue().longValue();
+                desc[i++] = entry.getKey().longValue();
+            }
+            return merged.size();
         }
     }
 
@@ -2253,7 +2285,7 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
                                     // poller for processing of further requests
                                     getPoller().add(
                                             state.socket, getKeepAliveTimeout(),
-                                            true, false);
+                                            Poll.APR_POLLIN);
                                 } else {
                                     // Close the socket since this is
                                     // the end of not keep-alive request.
@@ -2350,7 +2382,7 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
                 if (!deferAccept) {
                     if (setSocketOptions(socket.getSocket().longValue())) {
                         getPoller().add(socket.getSocket().longValue(),
-                                getSoTimeout(), true, false);
+                                getSoTimeout(), Poll.APR_POLLIN);
                     } else {
                         // Close socket and pool
                         closeSocket(socket.getSocket().longValue());
@@ -2432,7 +2464,6 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
             if (state == Handler.SocketState.CLOSED) {
                 // Close socket and pool
                 closeSocket(socket.getSocket().longValue());
-                socket.reset(null, 1);
             } else if (state == Handler.SocketState.LONG) {
                 socket.access();
                 if (socket.isAsync()) {
@@ -2450,11 +2481,41 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
 
     private static class AprSocketWrapper extends SocketWrapper<Long> {
 
+        private final Object closedLock = new Object();
+        private boolean closed = false;
+
         // This field should only be used by Poller#run()
         private int pollerFlags = 0;
 
-        public AprSocketWrapper(Long socket) {
+        private final AprEndpoint endpoint;
+
+        public AprSocketWrapper(Long socket, AprEndpoint endpoint) {
             super(socket);
+            this.endpoint = endpoint;
+        }
+
+        public void close() {
+            synchronized (closedLock) {
+                // APR typically crashes if the same socket is closed twice so
+                // make sure that doesn't happen.
+                if (closed) {
+                    return;
+                }
+                closed = true;
+                endpoint.getPoller().close(getSocket().longValue());
+            }
+        }
+
+        @Override
+        public void registerforEvent(int timeout, boolean read, boolean write) {
+            // Make sure an already closed socket is not added to the poller
+            synchronized (closedLock) {
+                if (closed) {
+                    return;
+                }
+                endpoint.getPoller().add(getSocket().longValue(), timeout,
+                        (read ? Poll.APR_POLLIN : 0) | (write ? Poll.APR_POLLOUT : 0));
+            }
         }
     }
 }
