@@ -1,4 +1,4 @@
-tomcat8 (8.0.21-1) UNRELEASED; urgency=medium
+tomcat8 (8.0.21-1) experimental; urgency=medium
 
   * New upstream release
     - Refreshed the patches
@@ -7,7 +7,7 @@ tomcat8 (8.0.21-1) UNRELEASED; urgency=medium
   * Support the JVMs installed by the older versions of java-package (<< 0.52)
     and the oracle-java<n>-installer packages from webupd8 (Closes: #769166)
 
- -- Emmanuel Bourg <ebourg@apache.org>  Mon, 30 Mar 2015 17:16:18 +0200
+ -- Emmanuel Bourg <ebourg@apache.org>  Mon, 30 Mar 2015 19:40:22 +0200
 
 tomcat8 (8.0.18-1) experimental; urgency=medium
 
