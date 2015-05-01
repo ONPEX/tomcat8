@@ -1,3 +1,9 @@
+tomcat8 (8.0.21-2) unstable; urgency=medium
+
+  * Upload to unstable.
+
+ -- Miguel Landaeta <nomadium@debian.org>  Fri, 01 May 2015 12:41:13 -0300
+
 tomcat8 (8.0.21-1) experimental; urgency=medium
 
   * New upstream release
