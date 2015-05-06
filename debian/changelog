@@ -1,4 +1,4 @@
-tomcat8 (8.0.22-1) UNRELEASED; urgency=medium
+tomcat8 (8.0.22-1) unstable; urgency=medium
 
   * New upstream release
     - Refreshed the patches
