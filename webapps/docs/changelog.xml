@@ -44,7 +44,222 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues do not "pop up" wrt. others).
 -->
-<section name="Tomcat 8.0.21 (markt)">
+<section name="Tomcat 8.0.22 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        <bug>57736</bug>: Change the format of the Tomcat specific URLs for
+        resources inside JARs that are in turn packed in a WAR. The
+        <code>^/</code> sequence has been replaced by <code>*/</code> so that
+        the resulting URLs are compliant with RFC 2396 and do not trigger
+        exceptions when converted to URIs. The old format will continue to be
+        accepted. (markt)
+      </fix>
+      <fix>
+        <bug>57752</bug>: Exclude non-cached resources from the Cache statistics
+        for resource lookups. Patch provided by Adam Mlodzinski. (markt)
+      </fix>
+      <add>
+        Allow logging of the remote port in the access log using the format
+        pattern <code>%{remote}p</code>. (rjung)
+      </add>
+      <fix>
+        <bug>57556</bug>: Refine the previous fix fo rthis issue so that the
+        real path returned only has a trialing separator if the requested path
+        ended with <code>/</code>. (markt)
+      </fix>
+      <fix>
+        <bug>57765</bug>: When checking last modified times as part of the
+        automatic deployment process, account for the fact that
+        <code>File.lastModified()</code> has a resolution of one second to
+        ensure that if a file has been modified within the last second, the
+        latest version of the file is always used. Note that a side-effect of
+        this change is that files with modification times in the future are
+        treated as if they are unmodified. (markt)
+      </fix>
+      <fix>
+        Align redeploy resource modification checking with reload modification
+        checking so that now, in both cases, a change in modification time
+        rather than an increase in modification time is used to determine if the
+        resource has changed. (markt)
+      </fix>
+      <fix>
+        Cleanup <code>o.a.tomcat.util.digester.Digester</code> from debug
+        messages that do not give any valuable information. Patch provided
+        by Polina Genova. (violetagg)
+      </fix>
+      <fix>
+        <bug>57772</bug>: When reloading a web application and a directory
+        representing an expanded WAR needs to be deleted, delete the directory
+        after the web application has been stopped rather than before to avoid
+        potential ClassNotFoundExceptions. (markt)
+      </fix>
+      <fix>
+        Fix wrong logger name of
+        <code>org.apache.catalina.webresources.StandardRoot</code>. (kfujino)
+      </fix>
+      <fix>
+        <bug>57801</bug>: Improve the error message in the start script in case
+        the PID read from the PID file is already owned by a process. (rjung)
+      </fix>
+      <fix>
+        <bug>57841</bug>: Improve error logging during web application start.
+        (markt)
+      </fix>
+      <fix>
+        <bug>57856</bug>: Ensure that any scheme/port changes implemented by the
+        <code>RemoteIpFilter</code> also affect
+        <code>HttpServletResponse.sendRedirect()</code>. (markt)
+      </fix>
+      <fix>
+        <bug>57863</bug>: Fix the RewriteMap support in RewriteValve that did
+        not use the correct key value to look up entries. Based on a patch
+        provided by Tatsuya Bessho. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        <bug>57779</bug>: When an I/O error occurs on a non-container thread
+        only dispatch to a container thread to handle the error if using Servlet
+        3+ asynchronous processing. This avoids potential deadlocks if an
+        application is performing I/O on a non-container thread without using
+        the Servlet 3+ asynchronous API. (markt)
+      </fix>
+      <scode>
+        Remove the experimental support for SPDY. No current user agent supports
+        the version of SPDY that the experiment targetted. Note: HTTP/2 support
+        is under development for Tomcat 9 and may be back-ported to Tomcat 8
+        once complete. (markt)
+      </scode>
+      <fix>
+        Possible incomplete writes with SSL NIO2. (remm)
+      </fix>
+      <fix>
+        Incorrect reads with SSL NIO2 caused by a bad strategy for handling IO
+        differences between NIO and NIO2 that don't seem to be justified.
+        (remm)
+      </fix>
+      <fix>
+        After some errors, the pending flags could remain set when using SSL
+        NIO2. (remm)
+      </fix>
+      <fix>
+        <bug>57833</bug>: When using JKS based keystores for NIO or NIO2, ensure
+        that the key alias is always converted to lower caes since that is what
+        JKS key stores expect. Based on a patch by  Santosh Giri Govind M.
+        (markt)
+      </fix>
+      <fix>
+        <bug>57837</bug>: Add <code>text/css</code> to the default list of
+        compressable MIME types. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        <bug>57845</bug>: Ensure that, if the same JSP is accessed directly and
+        via a <code>&lt;jsp-file&gt;</code> declaration in web.xml, updates to
+        the JSP are visible (subject to the normal rules on re-compilation)
+        regardless of how the JSP is accessed. (markt)
+      </fix>
+      <fix>
+        <bug>57855</bug>: Explicitly handle the case where a
+        <code>MethodExpression</code> is invoked with null or the wrong number
+        of parameters. Rather than failing with an
+        <code>ArrayIndexOutOfBoundsException</code> or a
+        <code>NullPointerException</code> throw an
+        <code>IllegalArgumentException</code> with a useful error message.
+        (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Cluster">
+    <changelog>
+      <fix>
+        Avoid unnecessary call of <code>DeltaRequest.addSessionListener()</code>
+        in non-primary nodes. (kfujino)
+      </fix>
+      <add>
+        Add new attribute that send all actions for session across Tomcat
+        cluster nodes. (kfujino)
+      </add>
+      <fix>
+        Remove unused <code>pathname</code> attribute in mbean definition of
+        <code>BackupManager</code>. (kfujino)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="WebSocket">
+    <changelog>
+      <fix>
+        <bug>57761</bug>: Ensure that the opening HTTP request is correctly
+        formatted when the WebSocket client connects to a server root. (remm)
+      </fix>
+      <fix>
+        <bug>57762</bug>: Ensure that the WebSocket client correctly detects
+        when the connection to the server is dropped. (markt)
+      </fix>
+      <fix>
+        <bug>57776</bug>: Revert the 8.0.21 fix for the
+        <code>permessage-deflate</code> implementation and incorrect op-codes
+        since the fix was unnecessary (the bug only affected trunk) and the fix
+        broke rather than fixed <code>permessage-deflate</code> if an
+        uncompressed message was converted into more than one compressed
+        message. (markt)
+      </fix>
+      <fix>
+        Fix log name typo in <code>WsRemoteEndpointImplServer</code> class,
+        caused by a copy-paste. (markt/kkolinko)
+      </fix>
+      <fix>
+        <bug>57788</bug>: Avoid NPE when looking up a class hierarchy without
+        finding anything. (remm)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <add>
+        <bug>57759</bug>: Add information to the keyAlias documentation to make
+        it clear that the order keys are read from the keystore is
+        implementation dependent. (markt)
+      </add>
+      <fix>
+        <bug>57864</bug>: Update the documentation web application to make it
+        clearer that hex values are not valid for cluster send options. Based on
+        a patch by Kyohei Nakamura. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Tribes">
+    <changelog>
+      <fix>
+        Fix a concurrency issue when a backup message that has all session data
+        and a backup message that has diff data are processing at the same time.
+        This fix ensures that <code>MapOwner</code> is set to
+        <code>ReplicatedMapEntry</code>. (kfujino)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <fix>
+        Add missing pom for tomcat-storeconfig. (remm)
+      </fix>
+      <update>
+        Update optional Checkstyle library to 6.5. (kkolinko)
+      </update>
+      <fix>
+        <bug>57707</bug>: Improve error message when trying to run a release
+        build on a non-Windows platform and Wine is not available. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.0.21 (markt)" rtext="2015-03-26">
   <subsection name="Catalina">
     <changelog>
       <add>
@@ -207,7 +422,7 @@
         Stop caching and re-using SocketWrapper instances. With the introduction
         of upgrade and non-blocking I/O, I/O can occur on non-container threads.
         This makes it nearly impossible to track whether a SocketWrapper is
-        still being references or not. making re-use a risky proposition.
+        still being referenced or not, making re-use a risky proposition.
         (markt)
       </fix>
       <scode>
@@ -307,6 +522,10 @@
         documentation web application that stated WAR files located outside the
         appBase were never unpacked. (markt)
       </fix>
+      <update>
+        <bug>57644</bug>: Update examples to use Apache Standard Taglib 1.2.5.
+        (jboynes)
+      </update>
       <fix>
         <bug>57683</bug>: Ensure that if a client aborts their connection to the
         stock ticker example (the only way a client can disconnect), the example
@@ -317,9 +536,6 @@
         authentication that no salt and only a single iteration must be used
         when generating the digest. (markt)
       </fix>
-      <update>
-        Update examples to use Apache Standard Taglib 1.2.5. (jboynes)
-      </update>
     </changelog>
   </subsection>
   <subsection name="Extras">

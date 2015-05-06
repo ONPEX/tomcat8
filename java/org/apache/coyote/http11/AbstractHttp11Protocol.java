@@ -100,7 +100,7 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     }
 
 
-    private String compressableMimeTypes = "text/html,text/xml,text/plain";
+    private String compressableMimeTypes = "text/html,text/xml,text/plain,text/css";
     public String getCompressableMimeType() { return compressableMimeTypes; }
     public void setCompressableMimeType(String valueS) {
         compressableMimeTypes = valueS;
@@ -268,17 +268,6 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     }
     public void setMaxKeepAliveRequests(int mkar) {
         endpoint.setMaxKeepAliveRequests(mkar);
-    }
-
-    protected NpnHandler<S> npnHandler;
-    @SuppressWarnings("unchecked")
-    public void setNpnHandler(String impl) {
-        try {
-            Class<?> c = Class.forName(impl);
-            npnHandler = (NpnHandler<S>) c.newInstance();
-        } catch (Exception ex) {
-            getLog().warn("Failed to init light protocol " + impl, ex);
-        }
     }
 
 

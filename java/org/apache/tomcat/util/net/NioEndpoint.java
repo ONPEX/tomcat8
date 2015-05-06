@@ -33,6 +33,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
@@ -376,7 +377,12 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
         KeyManager[] result = new KeyManager[managers.length];
         for (int i=0; i<result.length; i++) {
             if (managers[i] instanceof X509KeyManager && getKeyAlias()!=null) {
-                result[i] = new NioX509KeyManager((X509KeyManager)managers[i],getKeyAlias());
+                String keyAlias = getKeyAlias();
+                // JKS keystores always convert the alias name to lower case
+                if ("jks".equalsIgnoreCase(getKeystoreType())) {
+                    keyAlias = keyAlias.toLowerCase(Locale.ENGLISH);
+                }
+                result[i] = new NioX509KeyManager((X509KeyManager) managers[i], keyAlias);
             } else {
                 result[i] = managers[i];
             }
@@ -580,7 +586,6 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
         engine.setEnabledProtocols(enabledProtocols);
 
         configureUseServerCipherSuitesOrder(engine);
-        handler.onCreateSSLEngine(engine);
 
         return engine;
     }
@@ -1433,7 +1438,6 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
         public void release(SocketWrapper<NioChannel> socket);
         public void release(SocketChannel socket);
         public SSLImplementation getSslImplementation();
-        public void onCreateSSLEngine(SSLEngine engine);
     }
 
 

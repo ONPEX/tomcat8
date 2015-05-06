@@ -18,9 +18,9 @@
 <project>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.tomcat</groupId>
-  <artifactId>tomcat-spdy</artifactId>
+  <artifactId>tomcat-storeconfig</artifactId>
   <version>@MAVEN.DEPLOY.VERSION@</version>
-  <description>SPDY implementation</description>
+  <description>Tomcat storeconfig component</description>
   <url>http://tomcat.apache.org/</url>
   <licenses>
     <license>
@@ -30,12 +30,6 @@
     </license>
   </licenses>
   <dependencies>
-    <dependency>
-      <groupId>org.apache.tomcat</groupId>
-      <artifactId>tomcat-jni</artifactId>
-      <version>@MAVEN.DEPLOY.VERSION@</version>
-      <scope>compile</scope>
-    </dependency>
     <dependency>
       <groupId>org.apache.tomcat</groupId>
       <artifactId>tomcat-juli</artifactId>
@@ -50,13 +44,25 @@
     </dependency>
     <dependency>
       <groupId>org.apache.tomcat</groupId>
-      <artifactId>tomcat-util</artifactId>
+      <artifactId>tomcat-tribes</artifactId>
       <version>@MAVEN.DEPLOY.VERSION@</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.tomcat</groupId>
-      <artifactId>tomcat-servlet-api</artifactId>
+      <artifactId>tomcat-catalina</artifactId>
+      <version>@MAVEN.DEPLOY.VERSION@</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.tomcat</groupId>
+      <artifactId>tomcat-catalina-ha</artifactId>
+      <version>@MAVEN.DEPLOY.VERSION@</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.tomcat</groupId>
+      <artifactId>tomcat-util</artifactId>
       <version>@MAVEN.DEPLOY.VERSION@</version>
       <scope>compile</scope>
     </dependency>
