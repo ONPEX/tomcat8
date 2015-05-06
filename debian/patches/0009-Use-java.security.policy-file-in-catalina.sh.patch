@@ -27,7 +27,7 @@ Forwarded: not-needed
        -Dcatalina.base="\"$CATALINA_BASE\"" \
        -Dcatalina.home="\"$CATALINA_HOME\"" \
        -Djava.io.tmpdir="\"$CATALINA_TMPDIR\"" \
-@@ -388,7 +388,7 @@
+@@ -390,7 +390,7 @@
      eval "\"$_RUNJAVA\"" "\"$LOGGING_CONFIG\"" $LOGGING_MANAGER $JAVA_OPTS $CATALINA_OPTS \
        -Djava.endorsed.dirs="\"$JAVA_ENDORSED_DIRS\"" -classpath "\"$CLASSPATH\"" \
        -Djava.security.manager \
