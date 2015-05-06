@@ -62,7 +62,7 @@ else
 	$(ANT_INVOKE) deploy
 endif
 	$(JAVA_HOME)/bin/javadoc -subpackages "javax.servlet:javax.el:javax.websocket" -d "output/api" \
-		-sourcepath "java" -author -version -breakiterator \
+		-sourcepath "java" -author -version -breakiterator -notimestamp \
 		-windowtitle "Tomcat API Documentation" -doctitle "Tomcat API" \
 		-bottom "Copyright &#169; 2000-2014 The Apache Software Foundation. All Rights Reserved."
 	touch build-stamp
