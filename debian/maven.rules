@@ -26,7 +26,6 @@ org.apache.tomcat tomcat-jni * s/.*/8.x/
 org.apache.tomcat tomcat-jsp-api * s/.*/8.x/
 org.apache.tomcat tomcat-juli * s/.*/8.x/
 org.apache.tomcat tomcat-servlet-api * s/.*/8.x/
-org.apache.tomcat tomcat-spdy * s/.*/8.x/
 org.apache.tomcat tomcat-tribes * s/.*/8.x/
 org.apache.tomcat tomcat-util * s/.*/8.x/
 org.apache.tomcat tomcat-websocket * s/.*/8.x/

@@ -19,7 +19,6 @@
 /usr/share/java/tomcat8-jni.jar                  /usr/share/tomcat8/lib/tomcat-jni.jar
 /usr/share/java/tomcat8-jsp-api.jar              /usr/share/tomcat8/lib/jsp-api.jar
 /usr/share/java/tomcat8-servlet-api.jar          /usr/share/tomcat8/lib/servlet-api.jar
-/usr/share/java/tomcat8-spdy.jar                 /usr/share/tomcat8/lib/tomcat-spdy.jar
 /usr/share/java/tomcat8-tribes.jar               /usr/share/tomcat8/lib/catalina-tribes.jar
 /usr/share/java/tomcat8-util.jar                 /usr/share/tomcat8/lib/tomcat-util.jar
 /usr/share/java/tomcat8-util-scan.jar            /usr/share/tomcat8/lib/tomcat-util-scan.jar

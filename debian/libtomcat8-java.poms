@@ -16,7 +16,6 @@ debian/poms/tomcat-jni.pom             --java-lib --usj-name=tomcat8-jni        
 debian/poms/tomcat-jsp-api.pom         --java-lib --usj-name=tomcat8-jsp-api         --artifact=output/build/lib/jsp-api.jar
 debian/poms/tomcat-juli.pom            --java-lib --usj-name=tomcat8-juli            --artifact=output/build/bin/tomcat-juli.jar
 debian/poms/tomcat-servlet-api.pom     --java-lib --usj-name=tomcat8-servlet-api     --artifact=output/build/lib/servlet-api.jar
-debian/poms/tomcat-spdy.pom            --java-lib --usj-name=tomcat8-spdy            --artifact=output/build/lib/tomcat-spdy.jar
 debian/poms/tomcat-tribes.pom          --java-lib --usj-name=tomcat8-tribes          --artifact=output/build/lib/catalina-tribes.jar
 debian/poms/tomcat-util.pom            --java-lib --usj-name=tomcat8-util            --artifact=output/build/lib/tomcat-util.jar
 debian/poms/tomcat-util-scan.pom       --java-lib --usj-name=tomcat8-util-scan       --artifact=output/build/lib/tomcat-util-scan.jar
