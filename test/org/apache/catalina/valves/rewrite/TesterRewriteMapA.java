@@ -14,37 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.catalina.webresources;
+package org.apache.catalina.valves.rewrite;
 
-import java.io.File;
-import java.net.URL;
-import java.net.URLConnection;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+public class TesterRewriteMapA implements RewriteMap {
 
-public class TestWarURLConnection {
+    private static final Map<String,String> map = new HashMap<>();
 
-    @Before
-    public void register() {
-        TomcatURLStreamHandlerFactory.register();
+    static {
+        map.put("a", "aa");
+        map.put("b", "bb");
     }
 
+    @Override
+    public String setParameters(String params) {
+        // NO-OP
+        return null;
+    }
 
-    @Test
-    public void testContentLength() throws Exception {
-        File f = new File("test/webresources/war-url-connection.war");
-        String fileUrl = f.toURI().toURL().toString();
-
-        URL indexHtmlUrl = new URL("jar:war:" + fileUrl +
-                "*/WEB-INF/lib/test.jar!/META-INF/resources/index.html");
-
-        URLConnection urlConn = indexHtmlUrl.openConnection();
-        urlConn.connect();
-
-        int size = urlConn.getContentLength();
-
-        Assert.assertEquals(137, size);
+    @Override
+    public String lookup(String key) {
+        return map.get(key);
     }
 }
