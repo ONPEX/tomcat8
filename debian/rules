@@ -53,9 +53,6 @@ override_dh_install-indep:
 	dh_install -plibtomcat8-java $(BLDLIB)/tomcat8-catalina-storeconfig-$(VERSION).jar      usr/share/java
 	dh_link -plibtomcat8-java    usr/share/java/tomcat8-catalina-storeconfig-$(VERSION).jar usr/share/java/tomcat8-catalina-storeconfig.jar
 	
-	rm -rf \
-           debian/tomcat8/usr/share/tomcat8/webapps/default_root/.svn \
-	   debian/tomcat8/usr/share/tomcat8/webapps/default_root/META-INF/.svn
 	chmod a+x debian/tomcat8-common/usr/share/tomcat8/bin/*.sh
 	chmod a+x debian/tomcat8-user/usr/bin/tomcat8-instance-create
 	chmod a+x debian/tomcat8-user/usr/share/tomcat8/skel/bin/*.sh

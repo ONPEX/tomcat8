@@ -7,6 +7,8 @@ tomcat8 (8.0.22-2) UNRELEASED; urgency=medium
     - Do not set the version.* properties already defined
       in build.properties.default
     - Renamed T_VER to VERSION
+    - No longer remove the long gone .svn directories under
+      /usr/share/tomcat8/webapps/default_root
 
  -- Emmanuel Bourg <ebourg@apache.org>  Thu, 07 May 2015 08:34:56 +0200
 
