@@ -32,18 +32,21 @@ ANT_INVOKE := ant $(ANT_ARGS) -propertyfile debian/ant.properties
 	dh $@
 
 override_dh_auto_build:
-ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))
-	mkdir -p webapps/examples/WEB-INF/lib
-	cp /usr/share/java/jstl1.1.jar webapps/examples/WEB-INF/lib/jstl.jar
-	cp /usr/share/java/standard.jar webapps/examples/WEB-INF/lib/standard.jar
-	$(ANT_INVOKE) deploy test
-else
 	$(ANT_INVOKE) deploy
-endif
+
+	# Build the Javadoc for the Servlet, JSP, EL and WebSocket APIs
 	$(JAVA_HOME)/bin/javadoc -subpackages "javax.servlet:javax.el:javax.websocket" -d "output/api" \
 		-sourcepath "java" -author -version -breakiterator -notimestamp \
 		-windowtitle "Tomcat API Documentation" -doctitle "Tomcat API" \
 		-bottom "Copyright &#169; 2000-2014 The Apache Software Foundation. All Rights Reserved."
+
+override_dh_auto_test:
+ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))
+	mkdir -p webapps/examples/WEB-INF/lib
+	cp /usr/share/java/jstl1.1.jar webapps/examples/WEB-INF/lib/jstl.jar
+	cp /usr/share/java/standard.jar webapps/examples/WEB-INF/lib/standard.jar
+	$(ANT_INVOKE) test
+endif
 
 override_dh_auto_clean:
 	dh_auto_clean
