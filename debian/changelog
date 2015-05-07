@@ -3,7 +3,7 @@ tomcat8 (8.0.22-1) unstable; urgency=medium
   * New upstream release
     - Refreshed the patches
     - No longer install tomcat-spdy.jar (removed upstream)
-  * Removed the timstamp from the Javadoc of the Servlet API
+  * Removed the timestamp from the Javadoc of the Servlet API
     to make the build reproducible
 
  -- Emmanuel Bourg <ebourg@apache.org>  Wed, 06 May 2015 09:30:38 +0200
