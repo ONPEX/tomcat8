@@ -4,8 +4,7 @@ JAVA_HOME := /usr/lib/jvm/default-java
 BLDLIB := output/build/lib
 
 # Upstream version
-T_VER := $(shell dpkg-parsechangelog | egrep '^Version:' \
-	| cut -f 2 -d ' ' | cut -f 2 -d ' ' | sed 's/-[^-]*$$//' | sed 's/~/-/')
+VERSION := $(shell dpkg-parsechangelog --show-field Version | sed 's/-[^-]*$$//' | sed 's/~/-/')
 
 # root webapp file locations (during the build)
 RWLOC := debian/default_root
@@ -53,15 +52,15 @@ override_dh_install-indep:
 	
 	mkdir -p debian/poms
 	cp res/maven/*.pom debian/poms
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/$(T_VER)/' debian/poms/*.pom
+	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/$(VERSION)/' debian/poms/*.pom
 	
 	mh_install -plibservlet3.1-java
 	mh_install -plibtomcat8-java
 	
 	# Install catalina-storeconfig.jar (no pom available)
-	mv $(BLDLIB)/catalina-storeconfig.jar $(BLDLIB)/tomcat8-catalina-storeconfig-$(T_VER).jar
-	dh_install -plibtomcat8-java $(BLDLIB)/tomcat8-catalina-storeconfig-$(T_VER).jar      usr/share/java
-	dh_link -plibtomcat8-java    usr/share/java/tomcat8-catalina-storeconfig-$(T_VER).jar usr/share/java/tomcat8-catalina-storeconfig.jar
+	mv $(BLDLIB)/catalina-storeconfig.jar $(BLDLIB)/tomcat8-catalina-storeconfig-$(VERSION).jar
+	dh_install -plibtomcat8-java $(BLDLIB)/tomcat8-catalina-storeconfig-$(VERSION).jar      usr/share/java
+	dh_link -plibtomcat8-java    usr/share/java/tomcat8-catalina-storeconfig-$(VERSION).jar usr/share/java/tomcat8-catalina-storeconfig.jar
 	
 	rm -r debian/poms
 	rm -rf \
