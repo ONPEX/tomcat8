@@ -7,10 +7,6 @@ BLDLIB := output/build/lib
 T_VER := $(shell dpkg-parsechangelog | egrep '^Version:' \
 	| cut -f 2 -d ' ' | cut -f 2 -d ' ' | sed 's/-[^-]*$$//' | sed 's/~/-/')
 
-T_VER_MAJOR := $(shell echo $(T_VER) | cut -d'.' -f1)
-T_VER_MINOR := $(shell echo $(T_VER) | cut -d'.' -f2)
-T_VER_BUILD := $(shell echo $(T_VER) | cut -d'.' -f3)
-
 # root webapp file locations (during the build)
 RWLOC := debian/default_root
 RWFILES := $(RWLOC)/index.html $(RWLOC)/META-INF/context.xml
@@ -18,13 +14,7 @@ RWFILES := $(RWLOC)/index.html $(RWLOC)/META-INF/context.xml
 # Add distribution.name as system property to grab it when showing version
 TOMCAT_DISTRIBUTION := "$(shell lsb_release -si)"
 
-ANT_ARGS := -Dversion=$(T_VER) \
-	-Dversion.major="$(T_VER_MAJOR)" \
-	-Dversion.minor="$(T_VER_MINOR)" \
-	-Dversion.build="$(T_VER_BUILD)" \
-	-Dversion.patch="0" \
-        -Ddistribution.name=$(TOMCAT_DISTRIBUTION) \
-	-Dversion.suffix=""
+ANT_ARGS := -Ddistribution.name=$(TOMCAT_DISTRIBUTION)
 
 ANT_INVOKE := ant $(ANT_ARGS) -propertyfile debian/ant.properties
 
