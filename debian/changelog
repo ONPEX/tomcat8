@@ -1,3 +1,10 @@
+tomcat8 (8.0.22-2) UNRELEASED; urgency=medium
+
+  * debian/rules:
+    - Modified to use the dh sequencer
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Thu, 07 May 2015 08:34:56 +0200
+
 tomcat8 (8.0.22-1) unstable; urgency=medium
 
   * New upstream release

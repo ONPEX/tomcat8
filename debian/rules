@@ -48,11 +48,11 @@ ANT_ARGS := -Dcompile.debug=true \
 
 ANT_INVOKE := $(JAVA_CMD) -classpath "$(DEB_CLASSPATH)" org.apache.tools.ant.Main $(ANT_ARGS)
 
-build: build-arch build-indep
-build-arch: build-stamp
-build-indep: build-stamp
-build-stamp:
-	dh_testdir
+
+%:
+	dh $@
+
+override_dh_auto_build:
 ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))
 	mkdir -p webapps/examples/WEB-INF/lib
 	cp /usr/share/java/jstl1.1.jar webapps/examples/WEB-INF/lib/jstl.jar
@@ -65,35 +65,19 @@ endif
 		-sourcepath "java" -author -version -breakiterator -notimestamp \
 		-windowtitle "Tomcat API Documentation" -doctitle "Tomcat API" \
 		-bottom "Copyright &#169; 2000-2014 The Apache Software Foundation. All Rights Reserved."
-	touch build-stamp
 
-clean:
-	dh_testdir
-	dh_testroot
+override_dh_auto_clean:
+	dh_auto_clean
 	-$(ANT_INVOKE) clean
 	rm -rf "output/"
 	rm -rf webapps/examples/WEB-INF/lib/*.jar
-	rm -f build-stamp modules/jdbc-pool/output/resources/MANIFEST.MF
+	rm -f modules/jdbc-pool/output/resources/MANIFEST.MF
 	rm -f debian/tomcat8.postrm
-	dh_clean
 	mh_clean
 
-install: build
-	dh_testdir
-	dh_testroot
-	dh_prep 
-	dh_installdirs
-
-binary-indep: build install
-	dh_testdir
-	dh_testroot
-	dh_installchangelogs
-	dh_installdocs
+override_dh_install-indep:
+	dh_install -i --exclude=.bat --exclude=Thumbs.db
 	dh_installman -ptomcat8-user debian/tomcat8-instance-create.1
-	dh_installexamples
-	dh_installinit --error-handler=true -- defaults 92 08
-	dh_installdebconf
-	dh_installcron
 	
 	mkdir -p debian/poms
 	cp res/maven/*.pom debian/poms
@@ -106,9 +90,6 @@ binary-indep: build install
 	mv $(BLDLIB)/catalina-storeconfig.jar $(BLDLIB)/tomcat8-catalina-storeconfig-$(T_VER).jar
 	dh_install -plibtomcat8-java $(BLDLIB)/tomcat8-catalina-storeconfig-$(T_VER).jar      usr/share/java
 	dh_link -plibtomcat8-java    usr/share/java/tomcat8-catalina-storeconfig-$(T_VER).jar usr/share/java/tomcat8-catalina-storeconfig.jar
-	
-	dh_install --exclude=.bat --exclude=Thumbs.db
-	dh_link
 	
 	rm -r debian/poms
 	rm -rf \
@@ -124,19 +105,6 @@ binary-indep: build install
 		&& sed "s/\@ROOT_WEBAPP_MD5SUM\@/$$rwmd5sum/" debian/tomcat8.postrm.in > debian/tomcat8.postrm
 	
 	jh_manifest
-	dh_compress
-	dh_fixperms
-	dh_lintian
-	dh_installdeb
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
-
-binary-arch: build install
-
-binary: binary-indep binary-arch
 
 get-orig-source:
 	-uscan --force-download --rename
-
-.PHONY: build clean binary-indep binary-arch binary install get-orig-source
