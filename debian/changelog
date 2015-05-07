@@ -10,6 +10,7 @@ tomcat8 (8.0.22-2) UNRELEASED; urgency=medium
     - No longer remove the long gone .svn directories under
       /usr/share/tomcat8/webapps/default_root
     - Let dh_fixperms set the permissions instead of calling chmod +x
+    - Use debian/tomcat8-user.manpages instead of calling dh_installman
 
  -- Emmanuel Bourg <ebourg@apache.org>  Thu, 07 May 2015 08:34:56 +0200
 

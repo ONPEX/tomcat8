@@ -39,7 +39,6 @@ endif
 
 override_dh_install-indep:
 	dh_install -i --exclude=.bat --exclude=Thumbs.db
-	dh_installman -ptomcat8-user debian/tomcat8-instance-create.1
 	
 	mkdir -p debian/poms
 	cp res/maven/*.pom debian/poms
