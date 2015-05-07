@@ -1,5 +1,7 @@
 tomcat8 (8.0.22-2) UNRELEASED; urgency=medium
 
+  * Replaced the date in ServerInfo.properties with the latest date
+    in debian/changelog to make the build reproducible
   * debian/rules:
     - Modified to use the dh sequencer
     - Simplified the ant invocation and moved some properties

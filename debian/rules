@@ -4,7 +4,10 @@ JAVA_HOME := /usr/lib/jvm/default-java
 
 BLDLIB    := output/build/lib
 VERSION   := $(shell dpkg-parsechangelog --show-field Version | sed 's/-[^-]*$$//' | sed 's/~/-/')
+DATE      := $(shell dpkg-parsechangelog --show-field Date)
 ANT       := ant -propertyfile debian/ant.properties \
+             -Dtoday='$(shell date --date='$(DATE)' --utc +'%b %-d %Y')' \
+             -Dtstamp=$(shell date --date='$(DATE)' --utc +%H:%M:%S) \
              -Ddistribution.name=$(shell lsb_release -si)
 
 %:
