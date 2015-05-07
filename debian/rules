@@ -37,15 +37,6 @@ ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))
 	$(ANT_INVOKE) test
 endif
 
-override_dh_auto_clean:
-	dh_auto_clean
-	-$(ANT_INVOKE) clean
-	rm -rf "output/"
-	rm -rf webapps/examples/WEB-INF/lib/*.jar
-	rm -f modules/jdbc-pool/output/resources/MANIFEST.MF
-	rm -f debian/tomcat8.postrm
-	mh_clean
-
 override_dh_install-indep:
 	dh_install -i --exclude=.bat --exclude=Thumbs.db
 	dh_installman -ptomcat8-user debian/tomcat8-instance-create.1
@@ -62,7 +53,6 @@ override_dh_install-indep:
 	dh_install -plibtomcat8-java $(BLDLIB)/tomcat8-catalina-storeconfig-$(VERSION).jar      usr/share/java
 	dh_link -plibtomcat8-java    usr/share/java/tomcat8-catalina-storeconfig-$(VERSION).jar usr/share/java/tomcat8-catalina-storeconfig.jar
 	
-	rm -r debian/poms
 	rm -rf \
            debian/tomcat8/usr/share/tomcat8/webapps/default_root/.svn \
 	   debian/tomcat8/usr/share/tomcat8/webapps/default_root/META-INF/.svn
@@ -76,6 +66,15 @@ override_dh_install-indep:
 		&& sed "s/\@ROOT_WEBAPP_MD5SUM\@/$$rwmd5sum/" debian/tomcat8.postrm.in > debian/tomcat8.postrm
 	
 	jh_manifest
+
+override_dh_auto_clean:
+	dh_auto_clean
+	-$(ANT_INVOKE) clean
+	rm -rf "output/"
+	rm -rf webapps/examples/WEB-INF/lib/*.jar
+	rm -f modules/jdbc-pool/output/resources/MANIFEST.MF
+	rm -rf debian/tomcat8.postrm debian/poms
+	mh_clean
 
 get-orig-source:
 	-uscan --force-download --rename
