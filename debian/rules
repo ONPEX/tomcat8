@@ -23,7 +23,7 @@ override_dh_auto_build:
 	$(JAVA_HOME)/bin/javadoc -subpackages "javax.servlet:javax.el:javax.websocket" -d "output/api" \
 		-sourcepath "java" -author -version -breakiterator -notimestamp \
 		-windowtitle "Tomcat API Documentation" -doctitle "Tomcat API" \
-		-bottom "Copyright &#169; 2000-2014 The Apache Software Foundation. All Rights Reserved."
+		-bottom "Copyright &#169; 2000-2015 The Apache Software Foundation. All Rights Reserved."
 
 override_dh_auto_test:
 ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))
