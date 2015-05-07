@@ -1,4 +1,4 @@
-tomcat8 (8.0.22-2) UNRELEASED; urgency=medium
+tomcat8 (8.0.22-2) unstable; urgency=medium
 
   * Replaced the date in ServerInfo.properties with the latest date
     in debian/changelog to make the build reproducible
@@ -18,7 +18,7 @@ tomcat8 (8.0.22-2) UNRELEASED; urgency=medium
     - Updated the copyright year in the Javadoc
     - Simplified the call to mh_install
 
- -- Emmanuel Bourg <ebourg@apache.org>  Thu, 07 May 2015 08:34:56 +0200
+ -- Emmanuel Bourg <ebourg@apache.org>  Thu, 07 May 2015 14:13:30 +0200
 
 tomcat8 (8.0.22-1) unstable; urgency=medium
 
