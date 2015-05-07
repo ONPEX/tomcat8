@@ -36,12 +36,11 @@ endif
 override_dh_install-indep:
 	dh_install -i --exclude=.bat --exclude=Thumbs.db
 	
+	# Prepare and install the Maven artifacts
 	mkdir -p debian/poms
 	cp res/maven/*.pom debian/poms
 	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/$(VERSION)/' debian/poms/*.pom
-	
-	mh_install -plibservlet3.1-java
-	mh_install -plibtomcat8-java
+	mh_install
 	
 	# Install catalina-storeconfig.jar (no pom available)
 	mv $(BLDLIB)/catalina-storeconfig.jar $(BLDLIB)/tomcat8-catalina-storeconfig-$(VERSION).jar
