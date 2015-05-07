@@ -1,20 +1,7 @@
 #!/usr/bin/make -f
 
 JAVA_HOME := /usr/lib/jvm/default-java
-JAVA_CMD := $(JAVA_HOME)/bin/java
 BLDLIB := output/build/lib
-DEB_JARS_BASE := /usr/share/java
-DEB_JARS := ant ant-launcher ant-trax ant-nodeps ant-junit4 ant-junit junit4 hamcrest-1.3
-DEB_CLASSPATH = $(shell for jar in $(DEB_JARS); do \
-	if [ -f "$$jar" ]; then echo -n "$${jar}:"; fi; \
-	if [ -f "$$jar".jar ]; then echo -n "$${jar}.jar:"; fi; \
-	if [ -f $(DEB_JARS_BASE)/"$$jar" ]; then \
-		echo -n "$(DEB_JARS_BASE)/$${jar}:"; fi; \
-	if [ -f $(DEB_JARS_BASE)/"$$jar".jar ]; then \
-		echo -n "$(DEB_JARS_BASE)/$${jar}.jar:"; fi; \
-	done; \
-	if [ -f "$(JAVA_HOME)/lib/tools.jar" ]; then \
-		echo -n "$(JAVA_HOME)/lib/tools.jar"; fi)
 
 # Upstream version
 T_VER := $(shell dpkg-parsechangelog | egrep '^Version:' \
@@ -31,14 +18,7 @@ RWFILES := $(RWLOC)/index.html $(RWLOC)/META-INF/context.xml
 # Add distribution.name as system property to grab it when showing version
 TOMCAT_DISTRIBUTION := "$(shell lsb_release -si)"
 
-ANT_ARGS := -Dcompile.debug=true \
-	-Djdt.jar=/usr/share/java/ecj.jar \
-	-Djunit.jar=/usr/share/java/junit4.jar \
-	-Dcglib.jar=/usr/share/java/cglib3-nodep.jar \
-	-Deasymock.jar=/usr/share/java/easymock.jar \
-	-Dhamcrest.jar=/usr/share/java/hamcrest-core.jar \
-	-Dobjenesis.jar=/usr/share/java/objenesis.jar \
-	-Dversion=$(T_VER) \
+ANT_ARGS := -Dversion=$(T_VER) \
 	-Dversion.major="$(T_VER_MAJOR)" \
 	-Dversion.minor="$(T_VER_MINOR)" \
 	-Dversion.build="$(T_VER_BUILD)" \
@@ -46,8 +26,7 @@ ANT_ARGS := -Dcompile.debug=true \
         -Ddistribution.name=$(TOMCAT_DISTRIBUTION) \
 	-Dversion.suffix=""
 
-ANT_INVOKE := $(JAVA_CMD) -classpath "$(DEB_CLASSPATH)" org.apache.tools.ant.Main $(ANT_ARGS)
-
+ANT_INVOKE := ant $(ANT_ARGS) -propertyfile debian/ant.properties
 
 %:
 	dh $@
