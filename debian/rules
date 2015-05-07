@@ -1,23 +1,17 @@
 #!/usr/bin/make -f
 
 JAVA_HOME := /usr/lib/jvm/default-java
-BLDLIB := output/build/lib
 
-# Upstream version
-VERSION := $(shell dpkg-parsechangelog --show-field Version | sed 's/-[^-]*$$//' | sed 's/~/-/')
-
-# Add distribution.name as system property to grab it when showing version
-TOMCAT_DISTRIBUTION := "$(shell lsb_release -si)"
-
-ANT_ARGS := -Ddistribution.name=$(TOMCAT_DISTRIBUTION)
-
-ANT_INVOKE := ant $(ANT_ARGS) -propertyfile debian/ant.properties
+BLDLIB    := output/build/lib
+VERSION   := $(shell dpkg-parsechangelog --show-field Version | sed 's/-[^-]*$$//' | sed 's/~/-/')
+ANT       := ant -propertyfile debian/ant.properties \
+             -Ddistribution.name=$(shell lsb_release -si)
 
 %:
 	dh $@
 
 override_dh_auto_build:
-	$(ANT_INVOKE) deploy
+	$(ANT) deploy
 
 	# Build the Javadoc for the Servlet, JSP, EL and WebSocket APIs
 	$(JAVA_HOME)/bin/javadoc -subpackages "javax.servlet:javax.el:javax.websocket" -d "output/api" \
@@ -30,7 +24,7 @@ ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))
 	mkdir -p webapps/examples/WEB-INF/lib
 	cp /usr/share/java/jstl1.1.jar webapps/examples/WEB-INF/lib/jstl.jar
 	cp /usr/share/java/standard.jar webapps/examples/WEB-INF/lib/standard.jar
-	$(ANT_INVOKE) test
+	$(ANT) test
 endif
 
 override_dh_install-indep:
@@ -56,7 +50,7 @@ override_dh_install-indep:
 
 override_dh_auto_clean:
 	dh_auto_clean
-	-$(ANT_INVOKE) clean
+	-$(ANT) clean
 	rm -rf "output/"
 	rm -rf webapps/examples/WEB-INF/lib/*.jar
 	rm -f modules/jdbc-pool/output/resources/MANIFEST.MF
