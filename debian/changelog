@@ -1,3 +1,10 @@
+tomcat8 (8.0.22-3) UNRELEASED; urgency=medium
+
+  * debian/rules: Set the 'year' and 'today-iso-8601' build variables
+    to improve the reproducibility
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Tue, 26 May 2015 15:51:49 +0200
+
 tomcat8 (8.0.22-2) unstable; urgency=medium
 
   * Replaced the date in ServerInfo.properties with the latest date
