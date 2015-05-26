@@ -1,9 +1,10 @@
-tomcat8 (8.0.22-3) UNRELEASED; urgency=medium
+tomcat8 (8.0.23-1) unstable; urgency=medium
 
+  * New upstream release
   * debian/rules: Set the 'year' and 'today-iso-8601' build variables
     to improve the reproducibility
 
- -- Emmanuel Bourg <ebourg@apache.org>  Tue, 26 May 2015 15:51:49 +0200
+ -- Emmanuel Bourg <ebourg@apache.org>  Tue, 26 May 2015 16:04:01 +0200
 
 tomcat8 (8.0.22-2) unstable; urgency=medium
 
