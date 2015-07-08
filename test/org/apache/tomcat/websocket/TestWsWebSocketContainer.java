@@ -625,16 +625,18 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
         WebSocketContainer wsContainer =
                 ContainerProvider.getWebSocketContainer();
 
-        Session s1a = connectToEchoServer(wsContainer, EndpointA.class,
+        EndpointA endpointA = new EndpointA();
+        Session s1a = connectToEchoServer(wsContainer, endpointA,
                 TesterEchoServer.Config.PATH_BASIC);
-        Session s2a = connectToEchoServer(wsContainer, EndpointA.class,
+        Session s2a = connectToEchoServer(wsContainer, endpointA,
                 TesterEchoServer.Config.PATH_BASIC);
-        Session s3a = connectToEchoServer(wsContainer, EndpointA.class,
+        Session s3a = connectToEchoServer(wsContainer, endpointA,
                 TesterEchoServer.Config.PATH_BASIC);
 
-        Session s1b = connectToEchoServer(wsContainer, EndpointB.class,
+        EndpointB endpointB = new EndpointB();
+        Session s1b = connectToEchoServer(wsContainer, endpointB,
                 TesterEchoServer.Config.PATH_BASIC);
-        Session s2b = connectToEchoServer(wsContainer, EndpointB.class,
+        Session s2b = connectToEchoServer(wsContainer, endpointB,
                 TesterEchoServer.Config.PATH_BASIC);
 
         Set<Session> setA = s3a.getOpenSessions();
@@ -678,11 +680,12 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
         wsContainer.setDefaultMaxSessionIdleTimeout(5000);
         wsContainer.setProcessPeriod(1);
 
-        connectToEchoServer(wsContainer, EndpointA.class,
+        EndpointA endpointA = new EndpointA();
+        connectToEchoServer(wsContainer, endpointA,
                 TesterEchoServer.Config.PATH_BASIC);
-        connectToEchoServer(wsContainer, EndpointA.class,
+        connectToEchoServer(wsContainer, endpointA,
                 TesterEchoServer.Config.PATH_BASIC);
-        Session s3a = connectToEchoServer(wsContainer, EndpointA.class,
+        Session s3a = connectToEchoServer(wsContainer, endpointA,
                 TesterEchoServer.Config.PATH_BASIC);
 
         // Check all three sessions are open
@@ -735,13 +738,14 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
         wsContainer.setDefaultMaxSessionIdleTimeout(5000);
         wsContainer.setProcessPeriod(1);
 
-        Session s1a = connectToEchoServer(wsContainer, EndpointA.class,
+        EndpointA endpointA = new EndpointA();
+        Session s1a = connectToEchoServer(wsContainer, endpointA,
                 TesterEchoServer.Config.PATH_BASIC);
         s1a.setMaxIdleTimeout(3000);
-        Session s2a = connectToEchoServer(wsContainer, EndpointA.class,
+        Session s2a = connectToEchoServer(wsContainer, endpointA,
                 TesterEchoServer.Config.PATH_BASIC);
         s2a.setMaxIdleTimeout(6000);
-        Session s3a = connectToEchoServer(wsContainer, EndpointA.class,
+        Session s3a = connectToEchoServer(wsContainer, endpointA,
                 TesterEchoServer.Config.PATH_BASIC);
         s3a.setMaxIdleTimeout(9000);
 
@@ -776,8 +780,8 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
     }
 
     private Session connectToEchoServer(WebSocketContainer wsContainer,
-            Class<? extends Endpoint> clazz, String path) throws Exception {
-        return wsContainer.connectToServer(clazz,
+            Endpoint endpoint, String path) throws Exception {
+        return wsContainer.connectToServer(endpoint,
                 ClientEndpointConfig.Builder.create().build(),
                 new URI("ws://localhost:" + getPort() + path));
     }
@@ -898,7 +902,7 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
         WebSocketContainer wsContainer =
                 ContainerProvider.getWebSocketContainer();
 
-        Session s = connectToEchoServer(wsContainer, EndpointA.class, path);
+        Session s = connectToEchoServer(wsContainer, new EndpointA(), path);
 
         StringBuilder msg = new StringBuilder();
         for (long i = 0; i < size; i++) {

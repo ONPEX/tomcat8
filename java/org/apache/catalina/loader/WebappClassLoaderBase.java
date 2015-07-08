@@ -152,15 +152,17 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
         protected final String name;
         protected final String path;
+        protected final boolean manifestRequired;
 
-        PrivilegedFindResourceByName(String name, String path) {
+        PrivilegedFindResourceByName(String name, String path, boolean manifestRequired) {
             this.name = name;
             this.path = path;
+            this.manifestRequired = manifestRequired;
         }
 
         @Override
         public ResourceEntry run() {
-            return findResourceInternal(name, path);
+            return findResourceInternal(name, path, manifestRequired);
         }
 
     }
@@ -189,9 +191,10 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
      * from a webapp class loader without delegating first.
      */
     protected final Matcher packageTriggersDeny = Pattern.compile(
-            "^javax\\.el\\.|" +
-            "^javax\\.servlet\\.|" +
-            "^org\\.apache\\.(catalina|coyote|el|jasper|juli|naming|tomcat)\\."
+            "^javax(\\.|/)el(\\.|/)|" +
+            "^javax(\\.|/)servlet(\\.|/)|" +
+            "^javax(\\.|/)websocket(\\.|/)|" +
+            "^org(\\.|/)apache(\\.|/)(catalina|coyote|el|jasper|juli|naming|tomcat)(\\.|/)"
             ).matcher("");
 
 
@@ -201,8 +204,8 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
      * {@link #packageTriggersDeny}.
      */
     protected final Matcher packageTriggersPermit =
-            Pattern.compile("^javax\\.servlet\\.jsp\\.jstl\\.|" +
-                    "^org\\.apache\\.tomcat\\.jdbc\\.").matcher("");
+            Pattern.compile("^javax(\\.|/)servlet(\\.|/)jsp(\\.|/)jstl(\\.|/)|" +
+                    "^org(\\.|/)apache(\\.|/)tomcat(\\.|/)jdbc(\\.|/)").matcher("");
 
 
     /**
@@ -927,10 +930,10 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
         if (entry == null) {
             if (securityManager != null) {
                 PrivilegedAction<ResourceEntry> dp =
-                    new PrivilegedFindResourceByName(name, path);
+                    new PrivilegedFindResourceByName(name, path, false);
                 entry = AccessController.doPrivileged(dp);
             } else {
-                entry = findResourceInternal(name, path);
+                entry = findResourceInternal(name, path, false);
             }
         }
         if (entry != null) {
@@ -1024,8 +1027,10 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
         URL url = null;
 
+        boolean delegateFirst = delegate || filter(name);
+
         // (1) Delegate to parent if requested
-        if (delegate) {
+        if (delegateFirst) {
             if (log.isDebugEnabled())
                 log.debug("  Delegating to parent classloader " + parent);
             url = parent.getResource(name);
@@ -1045,7 +1050,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
         }
 
         // (3) Delegate to parent unconditionally if not already attempted
-        if( !delegate ) {
+        if (!delegateFirst) {
             url = parent.getResource(name);
             if (url != null) {
                 if (log.isDebugEnabled())
@@ -1089,8 +1094,10 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             return (stream);
         }
 
+        boolean delegateFirst = delegate || filter(name);
+
         // (1) Delegate to parent if requested
-        if (delegate) {
+        if (delegateFirst) {
             if (log.isDebugEnabled())
                 log.debug("  Delegating to parent classloader " + parent);
             stream = parent.getResourceAsStream(name);
@@ -1122,7 +1129,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
         }
 
         // (3) Delegate to parent unconditionally
-        if (!delegate) {
+        if (!delegateFirst) {
             if (log.isDebugEnabled())
                 log.debug("  Delegating to parent classloader unconditionally " + parent);
             stream = parent.getResourceAsStream(name);
@@ -1216,7 +1223,8 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             }
 
             // (0.2) Try loading the class with the system class loader, to prevent
-            //       the webapp from overriding J2SE classes
+            //       the webapp from overriding Java SE classes. This implements
+            //       SRV.10.7.2
             String resourceName = binaryNameToPath(name, false);
             ClassLoader javaseLoader = getJavaseClassLoader();
             if (javaseLoader.getResource(resourceName) != null) {
@@ -2389,20 +2397,16 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
      */
     protected Class<?> findClassInternal(String name) {
 
-        if (!validate(name)) {
-            return null;
-        }
-
         String path = binaryNameToPath(name, true);
 
         ResourceEntry entry = null;
 
         if (securityManager != null) {
             PrivilegedAction<ResourceEntry> dp =
-                new PrivilegedFindResourceByName(name, path);
+                new PrivilegedFindResourceByName(name, path, true);
             entry = AccessController.doPrivileged(dp);
         } else {
-            entry = findResourceInternal(name, path);
+            entry = findResourceInternal(name, path, true);
         }
 
         if (entry == null) {
@@ -2522,7 +2526,8 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
      *
      * @return the loaded resource, or null if the resource isn't found
      */
-    protected ResourceEntry findResourceInternal(final String name, final String path) {
+    protected ResourceEntry findResourceInternal(final String name, final String path,
+            boolean manifestRequired) {
 
         checkStateForResourceLoading(name);
 
@@ -2596,7 +2601,10 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                 entry.certificates = resource.getCertificates();
             }
         }
-        entry.manifest = resource.getManifest();
+
+        if (manifestRequired) {
+            entry.manifest = resource.getManifest();
+        }
 
         if (isClassResource && entry.binaryContent != null &&
                 this.transformers.size() > 0) {
@@ -2741,7 +2749,8 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
         String packageName = null;
         int pos = name.lastIndexOf('.');
         if (pos != -1)
-            packageName = name.substring(0, pos);
+            // Package names in the filters include the last '.'
+            packageName = name.substring(0, pos + 1);
         else
             return false;
 
@@ -2760,46 +2769,16 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
 
     /**
-     * Validate a classname. As per SRV.9.7.2, we must restrict loading of
-     * classes from J2SE (java.*) and most classes of the servlet API
-     * (javax.servlet.*). That should enhance robustness and prevent a number
-     * of user error (where an older version of servlet.jar would be present
-     * in /WEB-INF/lib).
+     * Unused.
      *
-     * @param name class name
-     * @return true if the name is valid
+     * @param name usused
+     * @return Always <code>true</code>
+     *
+     * @deprecated Unused. Will be removed in Tomcat 9 onwards.
      */
+    @Deprecated
     protected boolean validate(String name) {
-
-        // Need to be careful with order here
-        if (name == null) {
-            // Can't load a class without a name
-            return false;
-        }
-        if (name.startsWith("java.")) {
-            // Must never load java.* classes
-            return false;
-        }
-        if (name.startsWith("javax.servlet.jsp.jstl")) {
-            // OK for web apps to package JSTL
-            return true;
-        }
-        if (name.startsWith("javax.servlet.")) {
-            // Web apps should never package any other Servlet or JSP classes
-            return false;
-        }
-        if (name.startsWith("javax.el")) {
-            // Must never load javax.el.* classes
-            return false;
-        }
-        if (name.startsWith("javax.websocket")) {
-            // Must never load javax.websocket.* classes
-            return false;
-        }
-
-        // Assume everything else is OK
         return true;
-
     }
 
 
