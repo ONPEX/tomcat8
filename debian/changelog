@@ -1,4 +1,4 @@
-tomcat8 (8.0.24-1) UNRELEASED; urgency=medium
+tomcat8 (8.0.24-1) unstable; urgency=medium
 
   * Team upload.
   * New upstream release
@@ -6,7 +6,7 @@ tomcat8 (8.0.24-1) UNRELEASED; urgency=medium
   * debian/rules: Use an english locale when generating the documentation
     to improve the reproducibility
 
- -- Emmanuel Bourg <ebourg@apache.org>  Wed, 24 Jun 2015 19:20:31 +0200
+ -- Emmanuel Bourg <ebourg@apache.org>  Wed, 08 Jul 2015 17:42:14 +0200
 
 tomcat8 (8.0.23-1) unstable; urgency=medium
 
