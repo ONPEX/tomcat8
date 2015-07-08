@@ -83,9 +83,8 @@ public class TestRequest extends TomcatBaseTest {
         assertTrue(client.isResponse200());
         assertTrue(client.isResponseBodyOK());
         client.reset();
-        client.doRequest(0, false); // Unlimited
-        assertTrue(client.isResponse200());
-        assertTrue(client.isResponseBodyOK());
+        client.doRequest(0, false); // 0 bytes - too small should fail
+        assertTrue(client.isResponse400());
         client.reset();
         client.doRequest(1, false); // 1 byte - too small should fail
         assertTrue(client.isResponse400());

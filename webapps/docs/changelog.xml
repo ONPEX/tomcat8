@@ -44,7 +44,215 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues do not "pop up" wrt. others).
 -->
-<section name="Tomcat 8.0.23 (markt)">
+<section name="Tomcat 8.0.24 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        <bug>57938</bug>: Correctly handle empty form fields when a form is
+        submitted as <code>multipart/form-data</code>, the
+        <code>maxPostSize</code> attribute of the Connector has been set to a
+        negative value and the Context has been configured with a value of
+        <code>true</code> for <code>allowCasualMultipartParsing</code>. The
+        meaning of the value zero for the <code>maxPostSize</code> has also been
+        changed to mean a limit of zero rather than no limit to align it with
+        <code>maxSavePostSize</code> and to be more intuitive. (markt)
+      </fix>
+      <add>
+        <bug>57939</bug>: Catch and log exceptions thrown by
+        <code>LifecycleListener</code> implementations to prevent them from
+        stopping the execution of subsequent <code>LifecycleListener</code>s.
+        (markt)
+      </add>
+      <fix>
+        <bug>57977</bug>: Correctly bind and unbind the web application class
+        loader during execution of the PersistentValve. (markt)
+      </fix>
+      <fix>
+        Remove some unnecessary code from the web application class loader and
+        deprecate the now unused <code>validate()</code> method since the
+        requirements of SRV.10.7.2 are met using cleaner code in
+        <code>loadClass(String, boolean)</code> and <code>filter()</code>.
+        (markt)
+      </fix>
+      <fix>
+        Correct a bug that prevented the web application class loader&apos;s
+        <code>filter()</code> from working correctly. It only returned
+        <code>true</code> for classes in sub-packages of the listed packages,
+        but not classes located in the packages themselves. (markt)
+      </fix>
+      <fix>
+        Add the WebSocket API classes to the list of classes that the web
+        application class loader will always delegate to its parent for loading
+        first. (markt)
+      </fix>
+      <fix>
+        <bug>58015</bug>: Ensure that whenever the web application class loader
+        checks to see if it should delegate first, it also checks the result
+        of the <code>filter()</code> method which may indicate that it should
+        always delegate first for the current class/resource regardless of the
+        value of the delegate configuration option. (markt)
+      </fix>
+      <fix>
+        <bug>58023</bug>: Fix potentially excessive memory usage due to
+        unnecessary caching of JAR manifests in the web application class
+        loader. (markt)
+      </fix>
+      <fix>
+        <bug>57700</bug>: Ensure that Container event
+        <code>ADD_CHILD_EVENT</code> will be sent in all cases. (violetagg)
+      </fix>
+      <fix>
+        <bug>58086</bug>: Ensure that WAR URLs are handled properly when using
+        ANT for web application deployment. Based on a patch provided by Lukasz
+        Jader. (violetagg)
+      </fix>
+      <fix>
+        Fix CredentialHandler element handling in storeconfig. (remm)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        <bug>57265</bug>: Further fix to address a potential threading issue
+        when sendfile is used in conjunction with TLS. (markt)
+      </fix>
+      <fix>
+        <bug>57936</bug>: Improve robustness of the acceptor thread count
+        parameter for NIO2, since it must be set to 1. Submitted by
+        Oliver Kant. (remm)
+      </fix>
+      <add>
+        <bug>57943</bug>: Added a work-around to catch
+        <code>ConcurrentModificationException</code>s during Poller timeout
+        processing that were causing the Poller thread to stop. The root cause
+        of these exceptions is currently unknown. (markt)
+      </add>
+      <fix>
+        <bug>57944</bug>: Ensure that if non-blocking I/O listeners are set on
+        a non-container thread that the expected listener events are still
+        triggered. (markt)
+      </fix>
+      <fix>
+        Fix possible very long (1000 seconds) timeout with APR/native connector.
+        (markt)
+      </fix>
+      <add>
+        Support "-" separator in the SSLProtocol configuration of the
+        APR/native connector for protocol exclusion. (rjung)
+      </add>
+      <fix>
+        <bug>58004</bug>: Fix AJP buffering output data even in blocking mode.
+        (remm)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="WebSocket">
+    <changelog>
+      <fix>
+        <bug>57969</bug>: Provide path parameters to POJO via per session
+        <code>javax.websocket.server.ServerEndpointConfig</code> as they vary
+        between different requests. (violetagg)
+      </fix>
+      <fix>
+        <bug>57974</bug>: Session.getOpenSessions should return all sessions
+        associated with a given endpoint instance, rather than all sessions
+        from the endpoint class. (remm)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <fix>
+        <bug>57282</bug>: Update request processing sequence diagrams. Updated
+        diagrams provided by Stephen Chen. (markt)
+      </fix>
+      <fix>
+        <bug>57971</bug>: Correct the documentation for the cluster
+        configuration setting <code>recoverySleepTime</code>. (markt)
+      </fix>
+      <add>
+        <bug>57758</bug>: Add document of <code>testOnConnect</code> attribute
+        in jdbc-pool doc. (kfujino)
+      </add>
+      <add>
+        Add description of <code>validatorClassName</code> attribute to testXXXX
+        attributes in jdbc-pool docs. (kfujino)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Tribes">
+    <changelog>
+      <scode>
+        Use <code>StringManager</code> to provide i18n support in the
+        <code>org.apache.catalina.tribes</code> packages. (kfujino)
+      </scode>
+      <fix>
+        Do not set the nodes that failed to replication to the backup nodes.
+        Ensure that the nodes that the data has been successfully replicated are
+        set to the backup node. (kfujino)
+      </fix>
+      <fix>
+        When failed to replication, rather than all member is handled as a
+        failed member, exclude the failure members from backup members.
+        (kfujino)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="jdbc-pool">
+    <changelog>
+      <fix>
+        Refactoring of the <code>removeOldest</code> method in
+        <code>SlowQueryReport</code> to behave as expected. (kfujino)
+      </fix>
+      <fix>
+        <bug>57783</bug>: Fix <code>NullPointerException</code> in
+        <code>SlowQueryReport</code>. To avoid this NPE, Refactor
+        <code>SlowQueryReport#removeOldest</code> and handle the abandoned
+        connection properly. (kfujino)
+      </fix>
+      <fix>
+        <bug>58042</bug>: In <code>SlowQueryReportJmx</code>, the
+        <code>LogSlow</code> and <code>logFailed</code> attributes that
+        inherited from <code>SlowQueryReport</code> are used as a condition of
+        whether JMX notifications are sent. (kfujino)
+      </fix>
+      <fix>
+        Ensure that specified <code>Boolean</code> attribute values of
+        <code>SlowQueryReport</code> reflect correctly. The <code>LogSlow</code>
+        and the <code>logFailed</code> are not system property, these are
+        attributes of <code>SlowQueryReport</code>. (kfujino)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <update>
+        Update package renamed Apache Commons BCEL to r1682271 to pick up some
+        some code clean up. (markt)
+      </update>
+      <update>
+        Update package renamed Apache Commons DBCP to r1682314 to pick up the
+        DBCP 2.1 release and additional fixes since then. (markt)
+      </update>
+      <update>
+        Update package renamed Apache Commons Pool to the 2.4 release. (markt)
+      </update>
+      <update>
+        Update package renamed Apache Commons File upload to r1682322 to pick up
+        the post 1.3.1 fixes. (markt)
+      </update>
+      <update>
+        Update package renamed Apache Commons Codes to r1682326. No functional
+        changes. Javadoc only. (markt)
+      </update>
+      <update>
+        Update optional Checkstyle library to 6.7. (kkolinko)
+      </update>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.0.23 (markt)" rtext="2015-05-22">
   <subsection name="Catalina">
     <changelog>
       <add>
@@ -85,7 +293,7 @@
       </fix>
       <fix>
         <bug>57931</bug>: Ensure that TLS connections with the NIO or NIO2 HTTP
-        connectors that experience issues during the handhshake (e.g. missing or
+        connectors that experience issues during the handshake (e.g. missing or
         invalid client certificate) are closed cleanly and that the client
         receives the correct error code rather than simply closing the
         connection. (markt)
@@ -178,7 +386,7 @@
       </add>
       <fix>
         <bug>57556</bug>: Refine the previous fix for this issue so that the
-        real path returned only has a trialing separator if the requested path
+        real path returned only has a trailing separator if the requested path
         ended with <code>/</code>. (markt)
       </fix>
       <fix>
@@ -390,7 +598,9 @@
       </fix>
       <fix>
         <bug>55988</bug>: Add support for Java 8 JSSE server-preferred TLS
-        cipher suite ordering. This feature requires Java 8.
+        cipher suite ordering. This feature requires Java 8
+        and is controlled by <code>useServerCipherSuitesOrder</code>
+        attribute on an HTTP connector.
         Based upon a patch provided by Ognjen Blagojevic. (schultz)
       </fix>
       <fix>
