@@ -65,6 +65,7 @@ case "$1" in
 			chmod 755 /etc/authbind/byuid
 		fi
 		echo '0.0.0.0/0:1,1023' >/etc/authbind/byuid/$TOMCAT_UID
+		echo '::/0,1-1023' >>/etc/authbind/byuid/$TOMCAT_UID
 		chown $TOMCAT8_USER:$TOMCAT8_GROUP /etc/authbind/byuid/$TOMCAT_UID
 		chmod 700 /etc/authbind/byuid/$TOMCAT_UID
 	fi

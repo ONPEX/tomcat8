@@ -1,6 +1,7 @@
 tomcat8 (8.0.24-2) UNRELEASED; urgency=medium
 
   * Team upload.
+  * Changed the authbind configuration to allow IPv6 connections (LP: #1443041)
   * Fixed an upgrade error when /etc/tomcat8/tomcat-users.xml is removed
     (LP: #1010791)
 
