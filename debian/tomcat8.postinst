@@ -49,7 +49,9 @@ case "$1" in
 	# (an attacker may insert code in a webapp and have access to all tomcat configuration)
 	# but those files should be readable by tomcat8, so we set the group to tomcat8
 	chown -Rh root:$TOMCAT8_GROUP /etc/tomcat8/*
-	chmod 640 /etc/tomcat8/tomcat-users.xml
+	if [ -f /etc/tomcat8/tomcat-users.xml ] ; then
+		chmod 640 /etc/tomcat8/tomcat-users.xml
+	fi
 	chown -Rh $TOMCAT8_USER:$TOMCAT8_GROUP /var/lib/tomcat8/webapps /var/lib/tomcat8/lib
 	chmod 775 /var/lib/tomcat8/webapps
 	chmod 775 /etc/tomcat8/Catalina /etc/tomcat8/Catalina/localhost
