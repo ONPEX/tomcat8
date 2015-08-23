@@ -141,6 +141,8 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
     private static final String CLASS_FILE_SUFFIX = ".class";
     private static final String SERVICES_PREFIX = "/META-INF/services/";
 
+    private static final Manifest MANIFEST_UNKNOWN = new Manifest();
+
     static {
         ClassLoader.registerAsParallelCapable();
         JVM_THREAD_GROUP_NAMES.add(JVM_THREAD_GROUP_SYSTEM);
@@ -1226,8 +1228,25 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             //       the webapp from overriding Java SE classes. This implements
             //       SRV.10.7.2
             String resourceName = binaryNameToPath(name, false);
+
             ClassLoader javaseLoader = getJavaseClassLoader();
-            if (javaseLoader.getResource(resourceName) != null) {
+            boolean tryLoadingFromJavaseLoader;
+            try {
+                // Use getResource as it won't trigger an expensive
+                // ClassNotFoundException if the resource is not available from
+                // the Java SE class loader. However (see
+                // https://bz.apache.org/bugzilla/show_bug.cgi?id=58125 for
+                // details) when running under a security manager in rare cases
+                // this call may trigger a ClassCircularityError.
+                tryLoadingFromJavaseLoader = (javaseLoader.getResource(resourceName) != null);
+            } catch (ClassCircularityError cce) {
+                // The getResource() trick won't work for this class. We have to
+                // try loading it directly and accept that we might get a
+                // ClassNotFoundException.
+                tryLoadingFromJavaseLoader = true;
+            }
+
+            if (tryLoadingFromJavaseLoader) {
                 try {
                     clazz = javaseLoader.loadClass(name);
                     if (clazz != null) {
@@ -2535,8 +2554,17 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             return null;
         }
 
+        WebResource resource = null;
+
         ResourceEntry entry = resourceEntries.get(path);
         if (entry != null) {
+            if (manifestRequired && entry.manifest == MANIFEST_UNKNOWN) {
+                // This resource was added to the cache when a request was made
+                // for the resource that did not need the manifest. Now the
+                // manifest is required, the cache entry needs to be updated.
+                resource = resources.getClassLoaderResource(path);
+                entry.manifest = resource.getManifest();
+            }
             return entry;
         }
 
@@ -2546,7 +2574,6 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
              isCacheable = path.startsWith(SERVICES_PREFIX);
         }
 
-        WebResource resource = null;
 
         boolean fileNeedConvert = false;
 
@@ -2604,6 +2631,8 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
         if (manifestRequired) {
             entry.manifest = resource.getManifest();
+        } else {
+            entry.manifest = MANIFEST_UNKNOWN;
         }
 
         if (isClassResource && entry.binaryContent != null &&

@@ -25,7 +25,7 @@
 # ----- Version Control Flags -----
 version.major=8
 version.minor=0
-version.build=24
+version.build=26
 version.patch=0
 version.suffix=
 
@@ -41,6 +41,12 @@ execute.test.apr=true
 test.haltonfailure=false
 # Activate AccessLog during testing
 test.accesslog=false
+
+# Number of parallel threads to use for testing. The recommended value is one
+# thread per core.
+# Note: Cobertura code coverage currently requires this to be set to 1. Setting
+#       a value above one will disable code coverage if enabled.
+test.threads=1
 
 # Note the Cobertura code coverage tool is GPLv2 licensed
 test.cobertura=false
@@ -208,7 +214,7 @@ objenesis.loc=https://objenesis.googlecode.com/files/objenesis-${objenesis.versi
 objenesis.jar=${objenesis.home}/objenesis-${objenesis.version}.jar
 
 # ----- Checkstyle, version 6.0 or later -----
-checkstyle.version=6.7
+checkstyle.version=6.8.1
 checkstyle.home=${base.path}/checkstyle-${checkstyle.version}
 checkstyle.loc=${base-sf.loc}/checkstyle/checkstyle/${checkstyle.version}/checkstyle-${checkstyle.version}-all.jar
 checkstyle.jar=${checkstyle.home}/checkstyle-${checkstyle.version}-all.jar

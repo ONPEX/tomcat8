@@ -140,7 +140,7 @@ public class WsWebSocketContainer
                             pojo.getClass().getName()));
         }
 
-        Endpoint ep = new PojoEndpointClient(pojo, annotation.decoders());
+        Endpoint ep = new PojoEndpointClient(pojo, Arrays.asList(annotation.decoders()));
 
         Class<? extends ClientEndpointConfig.Configurator> configuratorClazz =
                 annotation.configurator();
@@ -205,6 +205,7 @@ public class WsWebSocketContainer
     }
 
 
+    @SuppressWarnings("resource") // socketChannel is closed with channel
     @Override
     public Session connectToServer(Endpoint endpoint,
             ClientEndpointConfig clientEndpointConfiguration, URI path)
@@ -587,7 +588,6 @@ public class WsWebSocketContainer
      * @throws DeploymentException
      * @throws TimeoutException
      */
-    @SuppressWarnings("null")
     private HandshakeResponse processResponse(ByteBuffer response,
             AsyncChannelWrapper channel, long timeout) throws InterruptedException,
             ExecutionException, DeploymentException, EOFException,

@@ -1469,25 +1469,24 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
         @Override
         public void run() {
             NioChannel socket = ka.getSocket();
-            SelectionKey key = socket.getIOChannel().keyFor(
-                    socket.getPoller().getSelector());
 
             // Upgraded connections need to allow multiple threads to access the
             // connection at the same time to enable blocking IO to be used when
             // NIO has been configured
             if (ka.isUpgraded() && SocketStatus.OPEN_WRITE == status) {
                 synchronized (ka.getWriteThreadLock()) {
-                    doRun(key, ka);
+                    doRun();
                 }
             } else {
                 synchronized (socket) {
-                    doRun(key, ka);
+                    doRun();
                 }
             }
         }
 
-        private void doRun(SelectionKey key, KeyAttachment ka) {
+        private void doRun() {
             NioChannel socket = ka.getSocket();
+            SelectionKey key = socket.getIOChannel().keyFor(socket.getPoller().getSelector());
 
             try {
                 int handshake = -1;
@@ -1527,49 +1526,20 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                         state = handler.process(ka, status);
                     }
                     if (state == SocketState.CLOSED) {
-                        // Close socket and pool
-                        try {
-                            ka.setComet(false);
-                            if (socket.getPoller().cancelledKey(key, SocketStatus.ERROR) != null) {
-                                // SocketWrapper (attachment) was removed from the
-                                // key - recycle both. This can only happen once
-                                // per attempted closure so it is used to determine
-                                // whether or not to return socket and ka to
-                                // their respective caches. We do NOT want to do
-                                // this more than once - see BZ 57340.
-                                if (running && !paused) {
-                                    nioChannels.push(socket);
-                                }
-                                socket = null;
-                            }
-                            ka = null;
-                        } catch (Exception x) {
-                            log.error("",x);
-                        }
+                        close(socket, key, SocketStatus.ERROR);
                     }
                 } else if (handshake == -1 ) {
-                    if (key != null) {
-                        socket.getPoller().cancelledKey(key, SocketStatus.DISCONNECT);
-                    }
-                    if (running && !paused) {
-                        nioChannels.push(socket);
-                    }
-                    socket = null;
-                    ka = null;
+                    close(socket, key, SocketStatus.DISCONNECT);
                 } else {
                     ka.getPoller().add(socket,handshake);
                 }
             } catch (CancelledKeyException cx) {
-                if (socket != null) {
-                    socket.getPoller().cancelledKey(key, null);
-                }
+                socket.getPoller().cancelledKey(key, null);
             } catch (OutOfMemoryError oom) {
                 try {
                     oomParachuteData = null;
                     log.error("", oom);
-                    if (socket != null) {
-                        socket.getPoller().cancelledKey(key,SocketStatus.ERROR);
-                    }
+                    socket.getPoller().cancelledKey(key,SocketStatus.ERROR);
                     releaseCaches();
                 } catch (Throwable oomt) {
                     try {
@@ -1583,16 +1553,34 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                 ExceptionUtils.handleThrowable(vme);
             } catch (Throwable t) {
                 log.error("", t);
-                if (socket != null) {
-                    socket.getPoller().cancelledKey(key,SocketStatus.ERROR);
-                }
+                socket.getPoller().cancelledKey(key,SocketStatus.ERROR);
             } finally {
-                socket = null;
+                ka = null;
                 status = null;
                 //return to cache
                 if (running && !paused) {
                     processorCache.push(this);
                 }
+            }
+        }
+
+        private void close(NioChannel socket, SelectionKey key, SocketStatus socketStatus) {
+            // Close socket and pool
+            try {
+                ka.setComet(false);
+                if (socket.getPoller().cancelledKey(key, socketStatus) != null) {
+                    // SocketWrapper (attachment) was removed from the
+                    // key - recycle the key. This can only happen once
+                    // per attempted closure so it is used to determine
+                    // whether or not to return the key to the cache.
+                    // We do NOT want to do this more than once - see BZ
+                    // 57340 / 57943.
+                    if (running && !paused) {
+                        nioChannels.push(socket);
+                    }
+                }
+            } catch (Exception x) {
+                log.error("",x);
             }
         }
     }
