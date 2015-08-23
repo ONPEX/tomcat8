@@ -179,11 +179,8 @@
   <property name="test.jvmarg.egd" value="" />
 
   <!-- Location of OpenSSL binary (file name, not directory) -->
+  <!-- The OpenSSL tests cases be disabled by specifing an invalid path here -->
   <property name="test.openssl.path" value="" />
-
-  <!-- Accepted version of OpenSSL. The output of "openssl version"
-       must start with "OpenSSL " plus value of this property. -->
-  <property name="test.openssl.version" value="1.0.2" />
 
   <!-- Include .gitignore in src distributions. -->
   <!-- .git and .gitignore are in defaultexcludes since Ant 1.8.2 -->
@@ -1422,7 +1419,8 @@
       <junit printsummary="yes" fork="yes" dir="." showoutput="yes"
         errorproperty="test.result.error"
         failureproperty="test.result.failure"
-        haltonfailure="${test.haltonfailure}" >
+        haltonfailure="${test.haltonfailure}"
+        threads="${test.threads}" >
 
         <jvmarg value="${test.jvmarg.egd}"/>
         <jvmarg value="-Djava.library.path=${test.apr.loc}"/>
@@ -1438,7 +1436,6 @@
         <sysproperty key="tomcat.test.accesslog" value="${test.accesslog}" />
         <sysproperty key="tomcat.test.reports" value="${test.reports}" />
         <sysproperty key="tomcat.test.openssl.path" value="${test.openssl.path}" />
-        <sysproperty key="tomcat.test.openssl.version" value="${test.openssl.version}" />
         <sysproperty key="tomcat.test.relaxTiming" value="${test.relaxTiming}" />
         <!-- File for Cobertura to write coverage results to -->
         <sysproperty key="net.sourceforge.cobertura.datafile" file="${cobertura.datafile}" />
@@ -1472,15 +1469,39 @@
     </sequential>
   </macrodef>
 
-  <target name="cobertura-disabled" unless="${test.cobertura}">
+  <target name="cobertura-init">
+    <condition property="cobertura.enabled" value="true">
+      <and>
+        <istrue value="${test.cobertura}"/>
+        <equals arg1="1" arg2="${test.threads}"/>
+      </and>
+    </condition>
+    <condition property="cobertura.disabled" value="true">
+        <and>
+          <istrue value="${test.cobertura}"/>
+          <not>
+            <equals arg1="1" arg2="${test.threads}"/>
+          </not>
+        </and>
+    </condition>
+  </target>
+
+  <target name="cobertura-disabled" unless="${cobertura.enabled}"
+          depends="cobertura-init">
     <!-- Define classpath used to run tests when Cobertura is turned off. -->
     <path id="tomcat.test.run.classpath">
       <path refid="tomcat.test.classpath" />
     </path>
   </target>
 
-  <target name="cobertura-instrument" depends="compile,download-cobertura,cobertura-disabled"
-          if="${test.cobertura}"
+  <target name="cobertura-disabled-log" if="${cobertura.disabled}"
+          depends="cobertura-init">
+    <echo message="Code coverage disabled because test.threads is greater than 1"/>
+  </target>
+
+  <target name="cobertura-instrument"
+          depends="compile,download-cobertura,cobertura-disabled,cobertura-disabled-log"
+          if="${cobertura.enabled}"
           description="Adds Cobertura instrumentation to the compiled bytecode">
 
     <path id="cobertura.classpath">
@@ -1522,7 +1543,7 @@
     </path>
   </target>
 
-  <target name="cobertura-report" if="${test.cobertura}"
+  <target name="cobertura-report" if="${cobertura.enabled}"
           depends="test-bio,test-nio,test-nio2,test-apr"
           description="Creates report from gathered Cobertura results">
 
