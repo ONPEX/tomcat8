@@ -1,4 +1,4 @@
-tomcat8 (8.0.26-1) UNRELEASED; urgency=medium
+tomcat8 (8.0.26-1) unstable; urgency=medium
 
   * Team upload.
   * New upstream release
@@ -8,7 +8,7 @@ tomcat8 (8.0.26-1) UNRELEASED; urgency=medium
     (LP: #1010791)
   * Fixed a minor HTML error in the default index.html file (LP: #1236132)
 
- -- Emmanuel Bourg <ebourg@apache.org>  Tue, 04 Aug 2015 13:35:03 +0200
+ -- Emmanuel Bourg <ebourg@apache.org>  Mon, 24 Aug 2015 00:30:40 +0200
 
 tomcat8 (8.0.24-1) unstable; urgency=medium
 
