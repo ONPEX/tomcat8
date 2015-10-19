@@ -21,7 +21,7 @@ import java.io.Writer;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletResponse;
@@ -90,7 +90,7 @@ public class OutputBuffer extends Writer
     /**
      * Flag which indicates if the output buffer is closed.
      */
-    private boolean closed = false;
+    private volatile boolean closed = false;
 
 
     /**
@@ -126,7 +126,7 @@ public class OutputBuffer extends Writer
     /**
      * List of encoders.
      */
-    protected final HashMap<String, C2BConverter> encoders = new HashMap<>();
+    protected final ConcurrentHashMap<String, C2BConverter> encoders = new ConcurrentHashMap<>();
 
 
     /**
@@ -144,7 +144,7 @@ public class OutputBuffer extends Writer
     /**
      * Suspended flag. All output bytes will be swallowed if this is true.
      */
-    private boolean suspended = false;
+    private volatile boolean suspended = false;
 
 
     // ----------------------------------------------------------- Constructors

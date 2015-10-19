@@ -88,13 +88,13 @@ public final class Response {
     /**
      * Committed flag.
      */
-    protected boolean commited = false;
+    protected volatile boolean commited = false;
 
 
     /**
      * Action hook.
      */
-    public ActionHook hook;
+    public volatile ActionHook hook;
 
 
     /**
@@ -159,7 +159,6 @@ public final class Response {
 
     // -------------------- Per-Response "notes" --------------------
 
-
     public final void setNote(int pos, Object value) {
         notes[pos] = value;
     }
@@ -172,19 +171,18 @@ public final class Response {
 
     // -------------------- Actions --------------------
 
-
     public void action(ActionCode actionCode, Object param) {
         if (hook != null) {
-            if( param==null )
+            if (param == null) {
                 hook.action(actionCode, this);
-            else
+            } else {
                 hook.action(actionCode, param);
+            }
         }
     }
 
 
     // -------------------- State --------------------
-
 
     public int getStatus() {
         return status;

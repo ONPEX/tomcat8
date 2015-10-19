@@ -55,12 +55,16 @@ public class TestUpgrade extends TomcatBaseTest {
 
     @Test
     public void testSimpleUpgradeBlocking() throws Exception {
-        doUpgrade(EchoBlocking.class);
+        UpgradeConnection uc = doUpgrade(EchoBlocking.class);
+        uc.shutdownInput();
+        uc.shutdownOutput();
     }
 
     @Test
     public void testSimpleUpgradeNonBlocking() throws Exception {
-        doUpgrade(EchoNonBlocking.class);
+        UpgradeConnection uc = doUpgrade(EchoNonBlocking.class);
+        uc.shutdownInput();
+        uc.shutdownOutput();
     }
 
     @Test
@@ -123,9 +127,9 @@ public class TestUpgrade extends TomcatBaseTest {
     private void doTestMessages (
             Class<? extends HttpUpgradeHandler> upgradeHandlerClass)
             throws Exception {
-        UpgradeConnection conn = doUpgrade(upgradeHandlerClass);
-        PrintWriter pw = new PrintWriter(conn.getWriter());
-        BufferedReader reader = conn.getReader();
+        UpgradeConnection uc = doUpgrade(upgradeHandlerClass);
+        PrintWriter pw = new PrintWriter(uc.getWriter());
+        BufferedReader reader = uc.getReader();
 
         pw.println(MESSAGE);
         pw.flush();
@@ -141,6 +145,9 @@ public class TestUpgrade extends TomcatBaseTest {
         Assert.assertEquals(MESSAGE, response);
         response = reader.readLine();
         Assert.assertEquals(MESSAGE, response);
+
+        uc.shutdownOutput();
+        uc.shutdownInput();
     }
 
 
@@ -165,30 +172,26 @@ public class TestUpgrade extends TomcatBaseTest {
 
         socket.setSoTimeout(5000);
 
-        InputStream is = socket.getInputStream();
-        OutputStream os = socket.getOutputStream();
+        UpgradeConnection uc = new UpgradeConnection(socket);
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-        Writer writer = new OutputStreamWriter(os);
+        uc.getWriter().write("GET / HTTP/1.1" + CRLF);
+        uc.getWriter().write("Host: whatever" + CRLF);
+        uc.getWriter().write(CRLF);
+        uc.getWriter().flush();
 
-        writer.write("GET / HTTP/1.1" + CRLF);
-        writer.write("Host: whatever" + CRLF);
-        writer.write(CRLF);
-        writer.flush();
-
-        String status = reader.readLine();
+        String status = uc.getReader().readLine();
 
         Assert.assertNotNull(status);
         Assert.assertEquals("101", getStatusCode(status));
 
         // Skip the remaining response headers
-        String line = reader.readLine();
+        String line = uc.getReader().readLine();
         while (line != null && line.length() > 0) {
             // Skip
-            line = reader.readLine();
+            line = uc.getReader().readLine();
         }
 
-        return new UpgradeConnection(writer, reader);
+        return uc;
     }
 
     private static class UpgradeServlet extends HttpServlet {
@@ -210,10 +213,24 @@ public class TestUpgrade extends TomcatBaseTest {
     }
 
     private static class UpgradeConnection {
+        private final Socket socket;
         private final Writer writer;
         private final BufferedReader reader;
 
-        public UpgradeConnection(Writer writer, BufferedReader reader) {
+        public UpgradeConnection(Socket socket) {
+            this.socket = socket;
+            InputStream is;
+            OutputStream os;
+            try {
+                is = socket.getInputStream();
+                os = socket.getOutputStream();
+            } catch (IOException ioe) {
+                throw new IllegalArgumentException(ioe);
+            }
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            Writer writer = new OutputStreamWriter(os);
+
             this.writer = writer;
             this.reader = reader;
         }
@@ -224,6 +241,15 @@ public class TestUpgrade extends TomcatBaseTest {
 
         public BufferedReader getReader() {
             return reader;
+        }
+
+        public void shutdownOutput() throws IOException {
+            writer.flush();
+            socket.shutdownOutput();
+        }
+
+        public void shutdownInput() throws IOException {
+            socket.shutdownInput();
         }
     }
 
@@ -286,7 +312,7 @@ public class TestUpgrade extends TomcatBaseTest {
                                 sos.write(buffer, 0, read);
                             } else {
                                 throw new IOException("Unable to echo data. " +
-                                        "canWrite() returned false");
+                                        "isReady() returned false");
                             }
                         }
                     }

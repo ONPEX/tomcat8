@@ -36,60 +36,61 @@ public class HttpMessages {
     private static final Map<Locale,HttpMessages> instances =
             new ConcurrentHashMap<>();
 
+    // Keep this in separate package from standard i18n messages
     private static final HttpMessages DEFAULT = new HttpMessages(
             StringManager.getManager("org.apache.tomcat.util.http.res",
                     Locale.getDefault()));
 
 
-    // XXX move message resources in this package
     private final StringManager sm;
 
-    private String st_200 = null;
-    private String st_302 = null;
-    private String st_400 = null;
-    private String st_404 = null;
+    private final String st_200;
+    private final String st_302;
+    private final String st_400;
+    private final String st_404;
 
     private HttpMessages(StringManager sm) {
+        // There is a performance tradeoff here. This implementation incurs
+        // ~160ns (40ns per StringManager) lookup delay on first access but all
+        // subsequent lookups take ~0.25ns.
+        // The alternative approach (lazy init of each cached String) delays the
+        // StringManager lookup until required but increases the time for
+        // subsequent lookups to ~0.5ns.
+        // These times will be in the noise for most requests. This
+        // implementation was chosen because:
+        // - Over anything more than a few hundred requests it is faster.
+        // - The code is a lot simpler. Thread safe lazy init needs care to get
+        //   right. See http://markmail.org/thread/wjp3oejdyxcrz7do
         this.sm = sm;
+        st_200 = sm.getString("sc.200");
+        st_302 = sm.getString("sc.302");
+        st_400 = sm.getString("sc.400");
+        st_404 = sm.getString("sc.404");
     }
 
 
-    /** Get the status string associated with a status code.
-     *  No I18N - return the messages defined in the HTTP spec.
-     *  ( the user isn't supposed to see them, this is the last
-     *  thing to translate)
+    /**
+     * Get the status string associated with a status code. Common messages are
+     * cached.
      *
-     *  Common messages are cached.
+     * @param status The HTTP status code to retrieve the message for
      *
+     * @return The HTTP status string that conforms to the requirements of the
+     *         HTTP specification
      */
     public String getMessage(int status) {
-        // method from Response.
-
-        // Does HTTP requires/allow international messages or
-        // are pre-defined? The user doesn't see them most of the time
-        switch( status ) {
+        switch (status) {
         case 200:
-            if(st_200 == null ) {
-                st_200 = sm.getString("sc.200");
-            }
             return st_200;
         case 302:
-            if(st_302 == null ) {
-                st_302 = sm.getString("sc.302");
-            }
             return st_302;
         case 400:
-            if(st_400 == null ) {
-                st_400 = sm.getString("sc.400");
-            }
             return st_400;
         case 404:
-            if(st_404 == null ) {
-                st_404 = sm.getString("sc.404");
-            }
             return st_404;
+        default:
+            return sm.getString("sc."+ status);
         }
-        return sm.getString("sc."+ status);
     }
 
 
