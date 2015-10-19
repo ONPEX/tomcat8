@@ -7,7 +7,7 @@ VERSION   := $(shell dpkg-parsechangelog --show-field Version | sed 's/-[^-]*$$/
 DATE      := $(shell dpkg-parsechangelog --show-field Date)
 ANT       := ant -propertyfile debian/ant.properties \
              -Dyear=$(shell date --date='$(DATE)' --utc +'%Y') \
-             -Dtoday='$(shell LANG=en date --date='$(DATE)' --utc +'%b %-d %Y')' \
+             -Dtoday='$(shell LANG=fr_FR date --date='$(DATE)' --utc +'%b %-d %Y')' \
              -Dtoday-iso-8601=$(shell date --date='$(DATE)' --utc +'%F') \
              -Dtstamp=$(shell date --date='$(DATE)' --utc +%H:%M:%S) \
              -Ddistribution.name=$(shell lsb_release -si)
