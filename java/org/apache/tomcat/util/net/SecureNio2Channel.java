@@ -52,16 +52,16 @@ public class SecureNio2Channel extends Nio2Channel  {
     protected SSLEngine sslEngine;
     protected final Nio2Endpoint endpoint;
 
-    protected boolean handshakeComplete;
-    protected HandshakeStatus handshakeStatus; //gets set by handshake
+    private volatile boolean handshakeComplete;
+    private volatile HandshakeStatus handshakeStatus; //gets set by handshake
 
     protected boolean closed;
     protected boolean closing;
     protected volatile boolean readPending;
     protected volatile boolean writePending;
 
-    private CompletionHandler<Integer, SocketWrapper<Nio2Channel>> handshakeReadCompletionHandler;
-    private CompletionHandler<Integer, SocketWrapper<Nio2Channel>> handshakeWriteCompletionHandler;
+    private final CompletionHandler<Integer, SocketWrapper<Nio2Channel>> handshakeReadCompletionHandler;
+    private final CompletionHandler<Integer, SocketWrapper<Nio2Channel>> handshakeWriteCompletionHandler;
 
     public SecureNio2Channel(SSLEngine engine, ApplicationBufferHandler bufHandler,
             Nio2Endpoint endpoint0) {
@@ -193,13 +193,18 @@ public class SecureNio2Channel extends Nio2Channel  {
     }
 
     /**
-     * Performs SSL handshake, non blocking, but performs NEED_TASK on the same thread.<br>
-     * Hence, you should never call this method using your Acceptor thread, as you would slow down
-     * your system significantly.<br>
-     * The return for this operation is 0 if the handshake is complete and a positive value if it is not complete.
-     * In the event of a positive value coming back, reregister the selection key for the return values interestOps.
+     * Performs SSL handshake, non blocking, but performs NEED_TASK on the same
+     * thread. Hence, you should never call this method using your Acceptor
+     * thread, as you would slow down your system significantly.
+     * <p>
+     * The return for this operation is 0 if the handshake is complete and a
+     * positive value if it is not complete. In the event of a positive value
+     * coming back, the appropriate read/write will already have been called
+     * with an appropriate CompletionHandler.
      *
-     * @return int - 0 if hand shake is complete, otherwise it returns a SelectionKey interestOps value
+     * @return 0 if hand shake is complete, negative if the socket needs to
+     *         close and positive if the handshake is incomplete
+     *
      * @throws IOException
      */
     @Override

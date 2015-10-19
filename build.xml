@@ -69,9 +69,11 @@
   <property name="tomcat.release"        value="${tomcat.output}/release"/>
   <property name="tomcat.src.jars"       value="${tomcat.output}/src-jars"/>
   <property name="test.classes"          value="${tomcat.output}/testclasses"/>
+  <property name="test.run.classes"      value="${tomcat.output}/classes"/>
   <property name="test.temp"             value="${tomcat.output}/test-tmp"/>
-  <property name="test.reports"          value="${tomcat.build}/logs"/>
-  <property name="test.apr.loc"          value="${tomcat.build}/bin/native"/>
+  <property name="test.basedir"          value="${tomcat.build}"/>
+  <property name="test.reports"          value="${test.basedir}/logs"/>
+  <property name="test.apr.loc"          value="${test.basedir}/bin/native"/>
   <!-- base directory for jdbc-pool -->
   <property name="tomcat.jdbc.dir"       value="${basedir}/modules/jdbc-pool"/>
   <!-- build output directory for jdbc-pool -->
@@ -195,11 +197,11 @@
   </path>
 
   <path id="tomcat.classpath">
-    <pathelement location="${tomcat.classes}"/>
+    <pathelement path="${test.run.classes}"/>
   </path>
 
   <path id="tomcat.test.classpath">
-    <pathelement location="${tomcat.build}/webapps/examples/WEB-INF/classes"/>
+    <pathelement location="${test.basedir}/webapps/examples/WEB-INF/classes"/>
     <pathelement location="${test.classes}"/>
     <pathelement location="${junit.jar}"/>
     <pathelement location="${hamcrest.jar}"/>
@@ -346,6 +348,7 @@
   <patternset id="files.tomcat-util">
     <include name="org/apache/tomcat/util/buf/**" />
     <include name="org/apache/tomcat/util/codec/**" />
+    <include name="org/apache/tomcat/util/compat/**" />
     <include name="org/apache/tomcat/util/file/**" />
     <include name="org/apache/tomcat/util/res/**" />
     <include name="org/apache/tomcat/util/security/**" />
@@ -481,7 +484,7 @@
   <patternset id="files.tomcat-extras-juli-adapters">
     <include name="org/apache/juli/logging/impl/**" />
     <exclude name="org/apache/juli/logging/impl/WeakHashtable*" />
-    <exclude name="org/apache/juli/logging/impl/LogFactoryImpl" />
+    <exclude name="org/apache/juli/logging/impl/LogFactoryImpl*" />
     <!-- Javadoc and i18n exclusions -->
     <exclude name="**/package.html" />
     <exclude name="**/LocalStrings_*" />
@@ -1431,6 +1434,7 @@
         <classpath refid="tomcat.test.run.classpath" />
 
         <sysproperty key="tomcat.test.temp" value="${test.temp}" />
+        <sysproperty key="tomcat.test.basedir" value="${test.basedir}" />
         <sysproperty key="tomcat.test.tomcatbuild" value="${tomcat.build}" />
         <sysproperty key="tomcat.test.protocol" value="@{protocol}" />
         <sysproperty key="tomcat.test.accesslog" value="${test.accesslog}" />
@@ -2047,6 +2051,7 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
           <exclude name="org/apache/tomcat/util/buf" />
           <exclude name="org/apache/tomcat/util/codec" />
           <exclude name="org/apache/tomcat/util/collections" />
+          <exclude name="org/apache/tomcat/util/compat" />
           <exclude name="org/apache/tomcat/util/descriptor" />
           <exclude name="org/apache/tomcat/util/file" />
           <exclude name="org/apache/tomcat/util/http" />

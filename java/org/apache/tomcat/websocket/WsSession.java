@@ -85,10 +85,10 @@ public class WsSession implements Session {
     private final String id;
 
     // Expected to handle message types of <String> only
-    private MessageHandler textMessageHandler = null;
+    private volatile MessageHandler textMessageHandler = null;
     // Expected to handle message types of <ByteBuffer> only
-    private MessageHandler binaryMessageHandler = null;
-    private MessageHandler.Whole<PongMessage> pongMessageHandler = null;
+    private volatile MessageHandler binaryMessageHandler = null;
+    private volatile MessageHandler.Whole<PongMessage> pongMessageHandler = null;
     private volatile State state = State.OPEN;
     private final Object stateLock = new Object();
     private final Map<String,Object> userProperties = new ConcurrentHashMap<>();
@@ -316,13 +316,13 @@ public class WsSession implements Session {
             removed = true;
         }
 
-        if (listener.equals(binaryMessageHandler) ||
+        if (wrapped.equals(binaryMessageHandler) ||
                 listener.equals(binaryMessageHandler)) {
             binaryMessageHandler = null;
             removed = true;
         }
 
-        if (listener.equals(pongMessageHandler) ||
+        if (wrapped.equals(pongMessageHandler) ||
                 listener.equals(pongMessageHandler)) {
             pongMessageHandler = null;
             removed = true;

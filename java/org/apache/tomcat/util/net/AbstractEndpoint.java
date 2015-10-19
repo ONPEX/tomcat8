@@ -16,7 +16,6 @@
  */
 package org.apache.tomcat.util.net;
 
-import java.io.File;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -283,7 +282,7 @@ public abstract class AbstractEndpoint<S> {
     private Executor executor = null;
     public void setExecutor(Executor executor) {
         this.executor = executor;
-        this.internalExecutor = (executor==null);
+        this.internalExecutor = (executor == null);
     }
     public Executor getExecutor() { return executor; }
 
@@ -377,11 +376,12 @@ public abstract class AbstractEndpoint<S> {
     }
     public void setMinSpareThreads(int minSpareThreads) {
         this.minSpareThreads = minSpareThreads;
-        if (running && executor!=null) {
+        Executor executor = this.executor;
+        if (running && executor != null) {
             if (executor instanceof java.util.concurrent.ThreadPoolExecutor) {
-                ((java.util.concurrent.ThreadPoolExecutor)executor).setCorePoolSize(minSpareThreads);
+                ((java.util.concurrent.ThreadPoolExecutor) executor).setCorePoolSize(minSpareThreads);
             } else if (executor instanceof ResizableExecutor) {
-                ((ResizableExecutor)executor).resizePool(minSpareThreads, maxThreads);
+                ((ResizableExecutor) executor).resizePool(minSpareThreads, maxThreads);
             }
         }
     }
@@ -392,11 +392,12 @@ public abstract class AbstractEndpoint<S> {
     private int maxThreads = 200;
     public void setMaxThreads(int maxThreads) {
         this.maxThreads = maxThreads;
-        if (running && executor!=null) {
+        Executor executor = this.executor;
+        if (running && executor != null) {
             if (executor instanceof java.util.concurrent.ThreadPoolExecutor) {
-                ((java.util.concurrent.ThreadPoolExecutor)executor).setMaximumPoolSize(maxThreads);
+                ((java.util.concurrent.ThreadPoolExecutor) executor).setMaximumPoolSize(maxThreads);
             } else if (executor instanceof ResizableExecutor) {
-                ((ResizableExecutor)executor).resizePool(minSpareThreads, maxThreads);
+                ((ResizableExecutor) executor).resizePool(minSpareThreads, maxThreads);
             }
         }
     }
@@ -404,6 +405,7 @@ public abstract class AbstractEndpoint<S> {
         return getMaxThreadsExecutor(running);
     }
     protected int getMaxThreadsExecutor(boolean useExecutor) {
+        Executor executor = this.executor;
         if (useExecutor && executor != null) {
             if (executor instanceof java.util.concurrent.ThreadPoolExecutor) {
                 return ((java.util.concurrent.ThreadPoolExecutor)executor).getMaximumPoolSize();
@@ -526,11 +528,12 @@ public abstract class AbstractEndpoint<S> {
      * @return the amount of threads that are managed by the pool
      */
     public int getCurrentThreadCount() {
-        if (executor!=null) {
+        Executor executor = this.executor;
+        if (executor != null) {
             if (executor instanceof ThreadPoolExecutor) {
-                return ((ThreadPoolExecutor)executor).getPoolSize();
+                return ((ThreadPoolExecutor) executor).getPoolSize();
             } else if (executor instanceof ResizableExecutor) {
-                return ((ResizableExecutor)executor).getPoolSize();
+                return ((ResizableExecutor) executor).getPoolSize();
             } else {
                 return -1;
             }
@@ -545,11 +548,12 @@ public abstract class AbstractEndpoint<S> {
      * @return the amount of threads that are in use
      */
     public int getCurrentThreadsBusy() {
-        if (executor!=null) {
+        Executor executor = this.executor;
+        if (executor != null) {
             if (executor instanceof ThreadPoolExecutor) {
-                return ((ThreadPoolExecutor)executor).getActiveCount();
+                return ((ThreadPoolExecutor) executor).getActiveCount();
             } else if (executor instanceof ResizableExecutor) {
-                return ((ResizableExecutor)executor).getActiveCount();
+                return ((ResizableExecutor) executor).getActiveCount();
             } else {
                 return -1;
             }
@@ -576,8 +580,10 @@ public abstract class AbstractEndpoint<S> {
     }
 
     public void shutdownExecutor() {
-        if ( executor!=null && internalExecutor ) {
-            if ( executor instanceof ThreadPoolExecutor ) {
+        Executor executor = this.executor;
+        if (executor != null && internalExecutor) {
+            this.executor = null;
+            if (executor instanceof ThreadPoolExecutor) {
                 //this is our internal one, so we need to shut it down
                 ThreadPoolExecutor tpe = (ThreadPoolExecutor) executor;
                 tpe.shutdownNow();
@@ -595,7 +601,6 @@ public abstract class AbstractEndpoint<S> {
                 TaskQueue queue = (TaskQueue) tpe.getQueue();
                 queue.setParent(null);
             }
-            executor = null;
         }
     }
 
@@ -820,25 +825,6 @@ public abstract class AbstractEndpoint<S> {
         }
     }
 
-
-    private String adjustRelativePath(String path, String relativeTo) {
-        // Empty or null path can't point to anything useful. The assumption is
-        // that the value is deliberately empty / null so leave it that way.
-        if (path == null || path.length() == 0) {
-            return path;
-        }
-        String newPath = path;
-        File f = new File(newPath);
-        if ( !f.isAbsolute()) {
-            newPath = relativeTo + File.separator + newPath;
-            f = new File(newPath);
-        }
-        if (!f.exists()) {
-            getLog().warn("configured file:["+newPath+"] does not exist.");
-        }
-        return newPath;
-    }
-
     protected abstract Log getLog();
     // Flags to indicate optional feature support
     // Some of these are always hard-coded, some are hard-coded to false (i.e.
@@ -924,10 +910,7 @@ public abstract class AbstractEndpoint<S> {
 
     private String keystoreFile = System.getProperty("user.home")+"/.keystore";
     public String getKeystoreFile() { return keystoreFile;}
-    public void setKeystoreFile(String s ) {
-        keystoreFile = adjustRelativePath(s,
-                System.getProperty(Constants.CATALINA_BASE_PROP));
-    }
+    public void setKeystoreFile(String s ) { keystoreFile = s; }
 
     private String keystorePass = null;
     public String getKeystorePass() { return keystorePass;}
@@ -969,10 +952,7 @@ public abstract class AbstractEndpoint<S> {
 
     private String truststoreFile = System.getProperty("javax.net.ssl.trustStore");
     public String getTruststoreFile() {return truststoreFile;}
-    public void setTruststoreFile(String s) {
-        truststoreFile = adjustRelativePath(s,
-                System.getProperty(Constants.CATALINA_BASE_PROP));
-    }
+    public void setTruststoreFile(String s) { truststoreFile = s; }
 
     private String truststorePass =
         System.getProperty("javax.net.ssl.trustStorePassword");

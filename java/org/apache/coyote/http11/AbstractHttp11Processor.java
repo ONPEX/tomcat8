@@ -92,7 +92,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
     /**
      * Keep-alive.
      */
-    protected boolean keepAlive = true;
+    protected volatile boolean keepAlive = true;
 
 
     /**
@@ -1150,9 +1150,9 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             if (getErrorState().isError()) {
                 response.setStatus(500);
             }
-            request.updateCounters();
 
             if (!isAsync() && !comet || getErrorState().isError()) {
+                request.updateCounters();
                 if (getErrorState().isIoAllowed()) {
                     getInputBuffer().nextRequest();
                     getOutputBuffer().nextRequest();
@@ -1544,7 +1544,9 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
 
         // If we know that the request is bad this early, add the
         // Connection: close header.
-        keepAlive = keepAlive && !statusDropsConnection(statusCode);
+        if (keepAlive && statusDropsConnection(statusCode)) {
+            keepAlive = false;
+        }
         if (!keepAlive) {
             // Avoid adding the close header twice
             if (!connectionClosePresent) {
@@ -1721,10 +1723,12 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         rp.setStage(org.apache.coyote.Constants.STAGE_ENDED);
 
         if (getErrorState().isError()) {
+            request.updateCounters();
             return SocketState.CLOSED;
         } else if (isAsync()) {
             return SocketState.LONG;
         } else {
+            request.updateCounters();
             if (!keepAlive) {
                 return SocketState.CLOSED;
             } else {

@@ -61,7 +61,7 @@ public class McastService implements MembershipService,MembershipListener,Messag
     /**
      * A membership listener delegate (should be the cluster :)
      */
-    protected MembershipListener listener;
+    protected volatile MembershipListener listener;
     /**
      * A message listener delegate for broadcasts
      */
@@ -458,7 +458,10 @@ public class McastService implements MembershipService,MembershipListener,Messag
 
     @Override
     public void memberAdded(Member member) {
-        if ( listener!=null ) listener.memberAdded(member);
+        MembershipListener listener = this.listener;
+        if (listener != null) {
+            listener.memberAdded(member);
+        }
     }
 
     /**
@@ -466,9 +469,11 @@ public class McastService implements MembershipService,MembershipListener,Messag
      * @param member The member
      */
     @Override
-    public void memberDisappeared(Member member)
-    {
-        if ( listener!=null ) listener.memberDisappeared(member);
+    public void memberDisappeared(Member member) {
+        MembershipListener listener = this.listener;
+        if (listener != null) {
+            listener.memberDisappeared(member);
+        }
     }
 
     @Override
@@ -530,7 +535,6 @@ public class McastService implements MembershipService,MembershipListener,Messag
         this.payload = payload;
         if ( localMember != null ) {
             localMember.setPayload(payload);
-            localMember.getData(true,true);
             try {
                 if (impl != null) impl.send(false);
             }catch ( Exception x ) {
@@ -544,7 +548,6 @@ public class McastService implements MembershipService,MembershipListener,Messag
         this.domain = domain;
         if ( localMember != null ) {
             localMember.setDomain(domain);
-            localMember.getData(true,true);
             try {
                 if (impl != null) impl.send(false);
             }catch ( Exception x ) {

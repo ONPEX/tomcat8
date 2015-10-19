@@ -31,7 +31,7 @@ public class RequestUtil {
      *
      * @param path Relative path to be normalized
      *
-     * @return The normalized path or <code>null</code> of the path cannot be
+     * @return The normalized path or <code>null</code> if the path cannot be
      *         normalized
      */
     public static String normalize(String path) {
@@ -48,7 +48,7 @@ public class RequestUtil {
      * @param path Relative path to be normalized
      * @param replaceBackSlash Should '\\' be replaced with '/'
      *
-     * @return The normalized path or <code>null</code> of the path cannot be
+     * @return The normalized path or <code>null</code> if the path cannot be
      *         normalized
      */
     public static String normalize(String path, boolean replaceBackSlash) {
@@ -66,14 +66,6 @@ public class RequestUtil {
         // Add a leading "/" if necessary
         if (!normalized.startsWith("/"))
             normalized = "/" + normalized;
-
-        if (normalized.equals("/.")) {
-            return "/";
-        }
-
-        if (normalized.equals("/..")) {
-            return null;  // Trying to go outside our context
-        }
 
         // Resolve occurrences of "//" in the normalized path
         while (true) {
@@ -104,6 +96,14 @@ public class RequestUtil {
             }
             int index2 = normalized.lastIndexOf('/', index - 1);
             normalized = normalized.substring(0, index2) + normalized.substring(index + 3);
+        }
+
+        if (normalized.equals("/.")) {
+            return "/";
+        }
+
+        if (normalized.equals("/..")) {
+            return null;  // Trying to go outside our context
         }
 
         // Return the normalized path that we have completed

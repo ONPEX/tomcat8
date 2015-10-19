@@ -41,7 +41,7 @@ public abstract class AbstractProcessor<S> implements ActionHook, Processor<S> {
     protected final AbstractEndpoint<S> endpoint;
     protected final Request request;
     protected final Response response;
-    protected SocketWrapper<S> socketWrapper = null;
+    protected volatile SocketWrapper<S> socketWrapper = null;
 
     /**
      * Error state for the request/response currently being processed.
@@ -67,6 +67,7 @@ public abstract class AbstractProcessor<S> implements ActionHook, Processor<S> {
         response = new Response();
         response.setHook(this);
         request.setResponse(response);
+        request.setHook(this);
     }
 
 

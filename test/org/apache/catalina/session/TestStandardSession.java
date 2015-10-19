@@ -16,88 +16,139 @@
  */
 package org.apache.catalina.session;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.apache.catalina.Context;
-import org.apache.catalina.ha.tcp.SimpleTcpCluster;
-import org.apache.catalina.startup.Tomcat;
-import org.apache.catalina.startup.TomcatBaseTest;
-import org.apache.tomcat.util.buf.ByteChunk;
+import org.apache.catalina.Manager;
+import org.apache.catalina.core.StandardContext;
 
-public class TestStandardSession extends TomcatBaseTest {
+public class TestStandardSession {
+
+    private static final Manager TEST_MANAGER;
+
+    static {
+        TEST_MANAGER = new StandardManager();
+        TEST_MANAGER.setContext(new StandardContext());
+    }
+
+
+    @Test
+    public void testSerializationEmpty() throws Exception {
+
+        StandardSession s1 = new StandardSession(TEST_MANAGER);
+        s1.setValid(true);
+        StandardSession s2 = serializeThenDeserialize(s1);
+
+        validateSame(s1, s2, 0);
+    }
+
+
+    @Test
+    public void testSerializationSimple01() throws Exception {
+
+        StandardSession s1 = new StandardSession(TEST_MANAGER);
+        s1.setValid(true);
+        s1.setAttribute("attr01", "value01");
+
+        StandardSession s2 = serializeThenDeserialize(s1);
+
+        validateSame(s1, s2, 1);
+    }
+
+
+    @Test
+    public void testSerializationSimple02() throws Exception {
+
+        StandardSession s1 = new StandardSession(TEST_MANAGER);
+        s1.setValid(true);
+        s1.setAttribute("attr01", new NonSerializable());
+
+        StandardSession s2 = serializeThenDeserialize(s1);
+
+        validateSame(s1, s2, 0);
+    }
+
+
+    @Test
+    public void testSerializationSimple03() throws Exception {
+
+        StandardSession s1 = new StandardSession(TEST_MANAGER);
+        s1.setValid(true);
+        s1.setAttribute("attr01", "value01");
+        s1.setAttribute("attr02", new NonSerializable());
+
+        StandardSession s2 = serializeThenDeserialize(s1);
+
+        validateSame(s1, s2, 1);
+    }
+
 
     /*
-     * Test session.invalidate() in a clustered environment.
+     * See Bug 58284
      */
     @Test
-    public void testBug56578a() throws Exception {
-        doTestInvalidate(true);
+    public void serializeSkipsNonSerializableAttributes() throws Exception {
+        final String nonSerializableKey = "nonSerializable";
+        final String nestedNonSerializableKey = "nestedNonSerializable";
+        final String serializableKey = "serializable";
+        final Object serializableValue = "foo";
+
+        StandardSession s1 = new StandardSession(TEST_MANAGER);
+        s1.setValid(true);
+        Map<String, NonSerializable> value = new HashMap<>();
+        value.put("key", new NonSerializable());
+        s1.setAttribute(nestedNonSerializableKey, value);
+        s1.setAttribute(serializableKey, serializableValue);
+        s1.setAttribute(nonSerializableKey, new NonSerializable());
+
+        StandardSession s2 = serializeThenDeserialize(s1);
+
+        Assert.assertNull(s2.getAttribute(nestedNonSerializableKey));
+        Assert.assertNull(s2.getAttribute(nonSerializableKey));
+        Assert.assertEquals(serializableValue, s2.getAttribute(serializableKey));
     }
 
-    @Test
-    public void testBug56578b() throws Exception {
-        doTestInvalidate(false);
+
+    private StandardSession serializeThenDeserialize(StandardSession source)
+            throws IOException, ClassNotFoundException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        source.writeObjectData(oos);
+
+        StandardSession dest = new StandardSession(TEST_MANAGER);
+        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+        ObjectInputStream ois = new ObjectInputStream(bais);
+        dest.readObjectData(ois);
+
+        return dest;
     }
 
-    private void doTestInvalidate(boolean useClustering) throws Exception {
-        // Setup Tomcat instance
-        Tomcat tomcat = getTomcatInstance();
 
-        // No file system docBase required
-        Context ctx = tomcat.addContext("", null);
+    private void validateSame(StandardSession s1, StandardSession s2, int expectedCount) {
+        int count = 0;
+        Enumeration<String> names = s1.getAttributeNames();
+        while (names.hasMoreElements()) {
+            count ++;
+            String name = names.nextElement();
+            Object v1 = s1.getAttribute(name);
+            Object v2 = s2.getAttribute(name);
 
-        Tomcat.addServlet(ctx, "bug56578", new Bug56578Servlet());
-        ctx.addServletMapping("/bug56578", "bug56578");
-
-        if (useClustering) {
-            tomcat.getEngine().setCluster(new SimpleTcpCluster());
-            ctx.setDistributable(true);
-            ctx.setManager(ctx.getCluster().createManager(""));
+            Assert.assertEquals(v1,  v2);
         }
-        tomcat.start();
 
-        ByteChunk res = getUrl("http://localhost:" + getPort() + "/bug56578");
-        Assert.assertEquals("PASS", res.toString());
+        Assert.assertEquals(expectedCount, count);
     }
 
-    private static class Bug56578Servlet extends HttpServlet {
 
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws ServletException, IOException {
-            resp.setContentType("text/plain");
-            resp.setCharacterEncoding("UTF-8");
-            PrintWriter pw = resp.getWriter();
-
-            HttpSession session = req.getSession(true);
-            session.invalidate();
-
-            // Ugly but the easiest way to test of the session is valid or not
-            boolean result;
-            try {
-                session.getCreationTime();
-                result = false;
-            } catch (IllegalStateException ise) {
-                result = true;
-            }
-
-            if (result) {
-                pw.print("PASS");
-            } else {
-                pw.print("FAIL");
-            }
-        }
+    private static class NonSerializable {
     }
 }

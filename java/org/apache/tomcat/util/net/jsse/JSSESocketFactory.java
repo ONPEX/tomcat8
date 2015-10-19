@@ -17,8 +17,6 @@
 
 package org.apache.tomcat.util.net.jsse;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -64,6 +62,8 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509KeyManager;
 
+import org.apache.tomcat.util.compat.JreVendor;
+import org.apache.tomcat.util.file.ConfigFileLoader;
 import org.apache.tomcat.util.net.AbstractEndpoint;
 import org.apache.tomcat.util.net.Constants;
 import org.apache.tomcat.util.net.SSLUtil;
@@ -289,8 +289,24 @@ public class JSSESocketFactory implements ServerSocketFactory, SSLUtil {
             return defaultServerCipherSuites;
         }
         List<String> ciphers = new ArrayList<>(requestedCiphers);
-        ciphers.retainAll(Arrays.asList(context.getSupportedSSLParameters()
-                .getCipherSuites()));
+        String[] supportedCipherSuiteArray = context.getSupportedSSLParameters().getCipherSuites();
+        // The IBM JRE will accept cipher suites names SSL_xxx or TLS_xxx but
+        // only returns the SSL_xxx form for supported cipher suites. Therefore
+        // need to filter the requested cipher suites using both forms with an
+        // IBM JRE.
+        List<String> supportedCipherSuiteList;
+        if (JreVendor.IS_IBM_JVM) {
+            supportedCipherSuiteList = new ArrayList<>(supportedCipherSuiteArray.length * 2);
+            for (String name : supportedCipherSuiteArray) {
+                supportedCipherSuiteList.add(name);
+                if (name.startsWith("SSL")) {
+                    supportedCipherSuiteList.add("TLS" + name.substring(3));
+                }
+            }
+        } else {
+            supportedCipherSuiteList = Arrays.asList(supportedCipherSuiteArray);
+        }
+        ciphers.retainAll(supportedCipherSuiteList);
 
         if (ciphers.isEmpty()) {
             log.warn(sm.getString("jsse.requested_ciphers_not_supported",
@@ -425,12 +441,7 @@ public class JSSESocketFactory implements ServerSocketFactory, SSLUtil {
             }
             if(!("PKCS11".equalsIgnoreCase(type) ||
                     "".equalsIgnoreCase(path))) {
-                File keyStoreFile = new File(path);
-                if (!keyStoreFile.isAbsolute()) {
-                    keyStoreFile = new File(System.getProperty(
-                            Constants.CATALINA_BASE_PROP), path);
-                }
-                istream = new FileInputStream(keyStoreFile);
+                istream = ConfigFileLoader.getInputStream(path);
             }
 
             char[] storePass = null;
@@ -712,15 +723,10 @@ public class JSSESocketFactory implements ServerSocketFactory, SSLUtil {
     protected Collection<? extends CRL> getCRLs(String crlf)
         throws IOException, CRLException, CertificateException {
 
-        File crlFile = new File(crlf);
-        if( !crlFile.isAbsolute() ) {
-            crlFile = new File(
-                    System.getProperty(Constants.CATALINA_BASE_PROP), crlf);
-        }
         Collection<? extends CRL> crls = null;
         try {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            try (InputStream is = new FileInputStream(crlFile)) {
+            try (InputStream is = ConfigFileLoader.getInputStream(crlf)) {
                 crls = cf.generateCRLs(is);
             }
         } catch(IOException iex) {

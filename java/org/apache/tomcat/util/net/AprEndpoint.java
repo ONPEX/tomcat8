@@ -1211,7 +1211,7 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
     // -------------------------------------------------- SocketList Inner Class
 
     public class SocketList {
-        protected int size;
+        protected volatile int size;
         protected int pos;
 
         protected long[] sockets;
@@ -2010,7 +2010,7 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
                     }
                 } catch (Throwable t) {
                     ExceptionUtils.handleThrowable(t);
-                    getLog().warn(sm.getString("endpoint.timeout.error"), t);
+                    getLog().warn(sm.getString("endpoint.timeout.err"), t);
                 }
             }
 
@@ -2341,7 +2341,7 @@ public class AprEndpoint extends AbstractEndpoint<Long> {
                                 errn -=  Status.APR_OS_START_USERERR;
                             }
                             getLog().error(sm.getString(
-                                    "Unexpected poller error",
+                                    "endpoint.apr.pollError",
                                     Integer.valueOf(errn),
                                     Error.strerror(errn)));
                             // Handle poll critical failure
