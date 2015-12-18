@@ -263,7 +263,7 @@ public class RewriteValve extends ValveBase {
             return;
         }
 
-        if (invoked.get() == Boolean.TRUE) {
+        if (Boolean.TRUE.equals(invoked.get())) {
             try {
                 getNext().invoke(request, response);
             } finally {
@@ -470,6 +470,7 @@ public class RewriteValve extends ValveBase {
                                 request.getCoyoteRequest(), response.getCoyoteResponse())) {
                             return;
                         }
+                        @SuppressWarnings("deprecation")
                         Pipeline pipeline = connector.getService().getContainer().getPipeline();
                         request.setAsyncSupported(pipeline.isAsyncSupported());
                         pipeline.getFirst().invoke(request, response);

@@ -14,34 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.catalina.webresources;
 
-package org.apache.catalina.manager.util;
+import java.net.URLStreamHandler;
+import java.net.URLStreamHandlerFactory;
 
-import java.util.Comparator;
+import org.junit.Before;
+import org.junit.Test;
 
-import org.apache.catalina.Session;
+public class TestTomcatURLStreamHandlerFactory {
 
-/**
- * Comparator which reverse the sort order
- * @author C&eacute;drik LIME
- */
-public class ReverseComparator implements Comparator<Session> {
-    protected final Comparator<Session> comparator;
-
-    /**
-     *
-     */
-    public ReverseComparator(Comparator<Session> comparator) {
-        super();
-        this.comparator = comparator;
+    @Before
+    public void register() {
+        TomcatURLStreamHandlerFactory.register();
     }
 
-    /* (non-Javadoc)
-     * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
-     */
-    @Override
-    public int compare(Session o1, Session o2) {
-        int returnValue = comparator.compare(o1, o2);
-        return (- returnValue);
+    @Test
+    public void testUserFactory() throws Exception {
+        URLStreamHandlerFactory factory = new URLStreamHandlerFactory() {
+            @Override
+            public URLStreamHandler createURLStreamHandler(String protocol) {
+                return null;
+            }
+        };
+        TomcatURLStreamHandlerFactory.getInstance().addUserFactory(factory);
+        TomcatURLStreamHandlerFactory.release(factory.getClass().getClassLoader());
     }
 }

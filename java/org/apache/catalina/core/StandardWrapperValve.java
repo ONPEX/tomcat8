@@ -165,8 +165,8 @@ final class StandardWrapperValve
 
         // Identify if the request is Comet related now that the servlet has been allocated
         boolean comet = false;
-        if (servlet instanceof CometProcessor && request.getAttribute(
-                Globals.COMET_SUPPORTED_ATTR) == Boolean.TRUE) {
+        if (servlet instanceof CometProcessor && Boolean.TRUE.equals(request.getAttribute(
+                Globals.COMET_SUPPORTED_ATTR))) {
             comet = true;
             request.setComet(true);
         }
@@ -181,9 +181,6 @@ final class StandardWrapperValve
         ApplicationFilterChain filterChain =
                 ApplicationFilterFactory.createFilterChain(request, wrapper, servlet);
 
-        // Reset comet flag value after creating the filter chain
-        request.setComet(false);
-
         // Call the filter chain for this request
         // NOTE: This also calls the servlet's service() method
         try {
@@ -196,7 +193,6 @@ final class StandardWrapperValve
                             ((AsyncContextImpl)request.getAsyncContext()).doInternalDispatch();
                         } else if (comet) {
                             filterChain.doFilterEvent(request.getEvent());
-                            request.setComet(true);
                         } else {
                             filterChain.doFilter(request.getRequest(),
                                     response.getResponse());
@@ -211,7 +207,6 @@ final class StandardWrapperValve
                     if (request.isAsyncDispatching()) {
                         ((AsyncContextImpl)request.getAsyncContext()).doInternalDispatch();
                     } else if (comet) {
-                        request.setComet(true);
                         filterChain.doFilterEvent(request.getEvent());
                     } else {
                         filterChain.doFilter

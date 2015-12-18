@@ -813,8 +813,84 @@ public class StandardContext extends ContainerBase
 
     private CookieProcessor cookieProcessor;
 
+    private boolean validateClientProvidedNewSessionId = true;
+
+    private boolean mapperContextRootRedirectEnabled = false;
+
+    private boolean mapperDirectoryRedirectEnabled = false;
+
+    private boolean useRelativeRedirects = !Globals.STRICT_SERVLET_COMPLIANCE;
+
 
     // ----------------------------------------------------- Context Properties
+
+    @Override
+    public void setUseRelativeRedirects(boolean useRelativeRedirects) {
+        this.useRelativeRedirects = useRelativeRedirects;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The default value for this implementation is {@code true}.
+     */
+    @Override
+    public boolean getUseRelativeRedirects() {
+        return useRelativeRedirects;
+    }
+
+
+    @Override
+    public void setMapperContextRootRedirectEnabled(boolean mapperContextRootRedirectEnabled) {
+        this.mapperContextRootRedirectEnabled = mapperContextRootRedirectEnabled;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The default value for this implementation is {@code false}.
+     */
+    @Override
+    public boolean getMapperContextRootRedirectEnabled() {
+        return mapperContextRootRedirectEnabled;
+    }
+
+
+    @Override
+    public void setMapperDirectoryRedirectEnabled(boolean mapperDirectoryRedirectEnabled) {
+        this.mapperDirectoryRedirectEnabled = mapperDirectoryRedirectEnabled;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The default value for this implementation is {@code false}.
+     */
+    @Override
+    public boolean getMapperDirectoryRedirectEnabled() {
+        return mapperDirectoryRedirectEnabled;
+    }
+
+
+    @Override
+    public void setValidateClientProvidedNewSessionId(boolean validateClientProvidedNewSessionId) {
+        this.validateClientProvidedNewSessionId = validateClientProvidedNewSessionId;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The default value for this implementation is {@code true}.
+     */
+    @Override
+    public boolean getValidateClientProvidedNewSessionId() {
+        return validateClientProvidedNewSessionId;
+    }
+
 
     @Override
     public void setCookieProcessor(CookieProcessor cookieProcessor) {
@@ -4609,12 +4685,10 @@ public class StandardContext extends ContainerBase
 
         // Release all Filter and FilterConfig instances
         synchronized (filterConfigs) {
-            Iterator<String> names = filterConfigs.keySet().iterator();
-            while (names.hasNext()) {
-                String name = names.next();
+            for (Entry<String, ApplicationFilterConfig> entry : filterConfigs.entrySet()) {
                 if (getLogger().isDebugEnabled())
-                    getLogger().debug(" Stopping filter '" + name + "'");
-                ApplicationFilterConfig filterConfig = filterConfigs.get(name);
+                    getLogger().debug(" Stopping filter '" + entry.getKey() + "'");
+                ApplicationFilterConfig filterConfig = entry.getValue();
                 filterConfig.release();
             }
             filterConfigs.clear();
