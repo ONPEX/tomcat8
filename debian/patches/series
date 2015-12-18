@@ -12,3 +12,4 @@
 0018-fix-manager-webapp.patch
 0019-add-distribution-to-error-page.patch
 #0020-disable-java8-support-with-jdtcompiler.patch
+CVE-2014-7810.patch
