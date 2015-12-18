@@ -13,3 +13,4 @@
 0019-add-distribution-to-error-page.patch
 #0020-disable-java8-support-with-jdtcompiler.patch
 0100-test-compat.patch
+CVE-2014-7810.patch

@@ -1,3 +1,11 @@
+tomcat8 (8.0.14-1~bpo70+2) wheezy-backports; urgency=medium
+
+  * Fixed CVE-2014-7810: Malicious web applications could use expression
+    language to bypass the protections of a Security Manager as expressions
+    were evaluated within a privileged code section.
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Fri, 18 Dec 2015 10:20:56 +0100
+
 tomcat8 (8.0.14-1~bpo70+1) wheezy-backports; urgency=low
 
   * Rebuild for wheezy-backports
