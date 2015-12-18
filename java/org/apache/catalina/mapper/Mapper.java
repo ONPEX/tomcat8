@@ -836,20 +836,13 @@ public final class Mapper {
 
         int pathOffset = path.getOffset();
         int pathEnd = path.getEnd();
-        int servletPath = pathOffset;
         boolean noServletPath = false;
 
         int length = contextVersion.path.length();
-        if (length != (pathEnd - pathOffset)) {
-            servletPath = pathOffset + length;
-        } else {
+        if (length == (pathEnd - pathOffset)) {
             noServletPath = true;
-            path.append('/');
-            pathOffset = path.getOffset();
-            pathEnd = path.getEnd();
-            servletPath = pathOffset+length;
         }
-
+        int servletPath = pathOffset + length;
         path.setOffset(servletPath);
 
         // Rule 1 -- Exact Match
@@ -884,10 +877,13 @@ public final class Mapper {
             }
         }
 
-        if(mappingData.wrapper == null && noServletPath) {
+        if(mappingData.wrapper == null && noServletPath &&
+                mappingData.context.getMapperContextRootRedirectEnabled()) {
             // The path is empty, redirect to "/"
+            path.append('/');
+            pathEnd = path.getEnd();
             mappingData.redirectPath.setChars
-                (path.getBuffer(), pathOffset, pathEnd-pathOffset);
+                (path.getBuffer(), pathOffset, pathEnd - pathOffset);
             path.setEnd(pathEnd - 1);
             return;
         }
@@ -1002,9 +998,15 @@ public final class Mapper {
             char[] buf = path.getBuffer();
             if (contextVersion.resources != null && buf[pathEnd -1 ] != '/') {
                 String pathStr = path.toString();
-                WebResource file =
-                        contextVersion.resources.getResource(pathStr);
-                if (file != null && file.isDirectory()) {
+                WebResource file;
+                // Handle context root
+                if (pathStr.length() == 0) {
+                    file = contextVersion.resources.getResource("/");
+                } else {
+                    file = contextVersion.resources.getResource(pathStr);
+                }
+                if (file != null && file.isDirectory() &&
+                        mappingData.context.getMapperDirectoryRedirectEnabled()) {
                     // Note: this mutates the path: do not do any processing
                     // after this (since we set the redirectPath, there
                     // shouldn't be any)
@@ -1021,7 +1023,6 @@ public final class Mapper {
 
         path.setOffset(pathOffset);
         path.setEnd(pathEnd);
-
     }
 
 

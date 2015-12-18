@@ -65,6 +65,7 @@ import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpUpgradeHandler;
 import javax.servlet.http.Part;
 
+import org.apache.catalina.Container;
 import org.apache.catalina.Context;
 import org.apache.catalina.Globals;
 import org.apache.catalina.Host;
@@ -79,8 +80,10 @@ import org.apache.catalina.core.AsyncContextImpl;
 import org.apache.catalina.mapper.MappingData;
 import org.apache.catalina.util.ParameterMap;
 import org.apache.coyote.ActionCode;
+import org.apache.coyote.UpgradeToken;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
+import org.apache.tomcat.InstanceManager;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.buf.B2CConverter;
 import org.apache.tomcat.util.buf.ByteChunk;
@@ -491,18 +494,7 @@ public class Request
         notes.clear();
         cookies = null;
 
-        if (session != null) {
-            try {
-                session.endAccess();
-            } catch (Throwable t) {
-                ExceptionUtils.handleThrowable(t);
-                log.warn(sm.getString("coyoteRequest.sessionEndAccessFail"), t);
-            }
-        }
-        session = null;
-        requestedSessionCookie = false;
-        requestedSessionId = null;
-        requestedSessionURL = false;
+        recycleSessionInfo();
 
         if (Globals.IS_SECURITY_ENABLED || Connector.RECYCLE_FACADES) {
             parameterMap = new ParameterMap<>();
@@ -545,11 +537,24 @@ public class Request
     }
 
 
-    /**
-     * Clear cached encoders (to save memory for Comet requests).
-     */
-    public boolean read()
-        throws IOException {
+    protected void recycleSessionInfo() {
+        if (session != null) {
+            try {
+                session.endAccess();
+            } catch (Throwable t) {
+                ExceptionUtils.handleThrowable(t);
+                log.warn(sm.getString("coyoteRequest.sessionEndAccessFail"), t);
+            }
+        }
+        session = null;
+        requestedSessionCookie = false;
+        requestedSessionId = null;
+        requestedSessionURL = false;
+        requestedSessionSSL = false;
+    }
+
+
+    public boolean read() throws IOException {
         return (inputBuffer.realReadBytes(null, 0, 0) > 0);
     }
 
@@ -1583,10 +1588,6 @@ public class Request
             return;
         }
 
-        // Ensure that the specified encoding is valid
-        byte buffer[] = new byte[1];
-        buffer[0] = (byte) 'a';
-
         // Confirm that the encoding name is valid
         B2CConverter.getCharset(enc);
 
@@ -1882,15 +1883,18 @@ public class Request
     @Override
     public <T extends HttpUpgradeHandler> T upgrade(
             Class<T> httpUpgradeHandlerClass) throws java.io.IOException, ServletException {
-
         T handler;
+        InstanceManager instanceManager = null;
         try {
-            handler = (T) getContext().getInstanceManager().newInstance(httpUpgradeHandlerClass);
+            instanceManager = getContext().getInstanceManager();
+            handler = (T) instanceManager.newInstance(httpUpgradeHandlerClass);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NamingException e) {
             throw new ServletException(e);
         }
+        UpgradeToken upgradeToken = new UpgradeToken(handler,
+                getContext(), instanceManager);
 
-        coyoteRequest.action(ActionCode.UPGRADE, handler);
+        coyoteRequest.action(ActionCode.UPGRADE, upgradeToken);
 
         // Output required by RFC2616. Protocol specific headers should have
         // already been set.
@@ -2887,16 +2891,49 @@ public class Request
                     sm.getString("coyoteRequest.sessionCreateCommitted"));
         }
 
-        // Attempt to reuse session id if one was submitted in a cookie
-        // Do not reuse the session id if it is from a URL, to prevent possible
-        // phishing attacks
-        // Use the SSL session ID if one is present.
-        if (("/".equals(context.getSessionCookiePath())
-                && isRequestedSessionIdFromCookie()) || requestedSessionSSL ) {
-            session = manager.createSession(getRequestedSessionId());
+        // Re-use session IDs provided by the client in very limited
+        // circumstances.
+        String sessionId = getRequestedSessionId();
+        if (requestedSessionSSL) {
+            // If the session ID has been obtained from the SSL handshake then
+            // use it.
+        } else if (("/".equals(context.getSessionCookiePath())
+                && isRequestedSessionIdFromCookie())) {
+            /* This is the common(ish) use case: using the same session ID with
+             * multiple web applications on the same host. Typically this is
+             * used by Portlet implementations. It only works if sessions are
+             * tracked via cookies. The cookie must have a path of "/" else it
+             * won't be provided to for requests to all web applications.
+             *
+             * Any session ID provided by the client should be for a session
+             * that already exists somewhere on the host. Check if the context
+             * is configured for this to be confirmed.
+             */
+            if (context.getValidateClientProvidedNewSessionId()) {
+                boolean found = false;
+                for (Container container : getHost().findChildren()) {
+                    Manager m = ((Context) container).getManager();
+                    if (m != null) {
+                        try {
+                            if (m.findSession(sessionId) != null) {
+                                found = true;
+                                break;
+                            }
+                        } catch (IOException e) {
+                            // Ignore. Problems with this manager will be
+                            // handled elsewhere.
+                        }
+                    }
+                }
+                if (!found) {
+                    sessionId = null;
+                }
+                sessionId = getRequestedSessionId();
+            }
         } else {
-            session = manager.createSession(null);
+            sessionId = null;
         }
+        session = manager.createSession(sessionId);
 
         // Creating a new session cookie based on that session
         if (session != null
@@ -2968,6 +3005,10 @@ public class Request
         }
 
         cookiesConverted = true;
+
+        if (getContext() == null) {
+            return;
+        }
 
         parseCookies();
 
@@ -3261,7 +3302,7 @@ public class Request
 
         for (AcceptLanguage acceptLanguage : acceptLanguages) {
             // Add a new Locale to the list of Locales for this quality level
-            Double key = new Double(-acceptLanguage.getQuality());  // Reverse the order
+            Double key = Double.valueOf(-acceptLanguage.getQuality());  // Reverse the order
             ArrayList<Locale> values = locales.get(key);
             if (values == null) {
                 values = new ArrayList<>();

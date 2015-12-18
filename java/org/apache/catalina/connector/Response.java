@@ -19,6 +19,7 @@ package org.apache.catalina.connector;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -84,9 +85,9 @@ public class Response
         // Ensure that URL is loaded for SM
         URL.isSchemeChar('c');
 
-        ENFORCE_ENCODING_IN_GET_WRITER = Boolean.valueOf(
+        ENFORCE_ENCODING_IN_GET_WRITER = Boolean.parseBoolean(
                 System.getProperty("org.apache.catalina.connector.Response.ENFORCE_ENCODING_IN_GET_WRITER",
-                        "true")).booleanValue();
+                        "true"));
     }
 
     public Response() {
@@ -708,10 +709,6 @@ public class Response
     }
 
 
-
-    /**
-     * TODO SERVLET 3.1
-     */
     @Override
     public void setContentLengthLong(long length) {
         if (isCommitted()) {
@@ -724,7 +721,6 @@ public class Response
         }
 
         getCoyoteResponse().setContentLength(length);
-
     }
 
 
@@ -1270,6 +1266,7 @@ public class Response
         sendRedirect(location, SC_FOUND);
     }
 
+
     /**
      * Internal method that allows a redirect to be sent with a status other
      * than {@link HttpServletResponse#SC_FOUND} (302). No attempt is made to
@@ -1277,8 +1274,7 @@ public class Response
      */
     public void sendRedirect(String location, int status) throws IOException {
         if (isCommitted()) {
-            throw new IllegalStateException
-                (sm.getString("coyoteResponse.sendRedirect.ise"));
+            throw new IllegalStateException(sm.getString("coyoteResponse.sendRedirect.ise"));
         }
 
         // Ignore any call from an included servlet
@@ -1291,13 +1287,20 @@ public class Response
 
         // Generate a temporary redirect to the specified location
         try {
-            String absolute = toAbsolute(location);
+            String locationUri;
+            // Relative redirects require HTTP/1.1
+            if (getRequest().getCoyoteRequest().getSupportsRelativeRedirects() &&
+                    getContext().getUseRelativeRedirects()) {
+                locationUri = URI.create(location).toASCIIString();
+            } else {
+                locationUri = toAbsolute(location);
+            }
             setStatus(status);
-            setHeader("Location", absolute);
+            setHeader("Location", locationUri);
             if (getContext().getSendRedirectBody()) {
                 PrintWriter writer = getWriter();
                 writer.print(sm.getString("coyoteResponse.sendRedirect.note",
-                        RequestUtil.filter(absolute)));
+                        RequestUtil.filter(locationUri)));
                 flushBuffer();
             }
         } catch (IllegalArgumentException e) {

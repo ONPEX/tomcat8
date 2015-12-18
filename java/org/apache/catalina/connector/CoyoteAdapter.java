@@ -81,7 +81,7 @@ public class CoyoteAdapter implements Adapter {
 
 
     protected static final boolean ALLOW_BACKSLASH =
-        Boolean.valueOf(System.getProperty("org.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH", "false")).booleanValue();
+        Boolean.parseBoolean(System.getProperty("org.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH", "false"));
 
 
     private static final ThreadLocal<String> THREAD_NAME =
@@ -134,6 +134,7 @@ public class CoyoteAdapter implements Adapter {
      *
      * @return false to indicate an error, expected or not
      */
+    @SuppressWarnings("deprecation")
     @Override
     public boolean event(org.apache.coyote.Request req,
             org.apache.coyote.Response res, SocketStatus status) {
@@ -257,6 +258,7 @@ public class CoyoteAdapter implements Adapter {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public boolean asyncDispatch(org.apache.coyote.Request req,
             org.apache.coyote.Response res, SocketStatus status) throws Exception {
@@ -349,7 +351,7 @@ public class CoyoteAdapter implements Adapter {
                     } catch (Throwable t) {
                         ExceptionUtils.handleThrowable(t);
                         writeListener.onError(t);
-                        throw t;
+                        success = false;
                     } finally {
                         request.getContext().unbind(false, oldCL);
                     }
@@ -371,7 +373,7 @@ public class CoyoteAdapter implements Adapter {
                     } catch (Throwable t) {
                         ExceptionUtils.handleThrowable(t);
                         readListener.onError(t);
-                        throw t;
+                        success = false;
                     } finally {
                         request.getContext().unbind(false, oldCL);
                     }
@@ -468,6 +470,7 @@ public class CoyoteAdapter implements Adapter {
     /**
      * Service method.
      */
+    @SuppressWarnings("deprecation")
     @Override
     public void service(org.apache.coyote.Request req,
                         org.apache.coyote.Response res)
@@ -519,15 +522,11 @@ public class CoyoteAdapter implements Adapter {
 
                 if (request.isComet()) {
                     if (!response.isClosed() && !response.isError()) {
+                        comet = true;
+                        res.action(ActionCode.COMET_BEGIN, null);
                         if (request.getAvailable() || (request.getContentLength() > 0 && (!request.isParametersParsed()))) {
                             // Invoke a read event right away if there are available bytes
-                            if (event(req, res, SocketStatus.OPEN_READ)) {
-                                comet = true;
-                                res.action(ActionCode.COMET_BEGIN, null);
-                            }
-                        } else {
-                            comet = true;
-                            res.action(ActionCode.COMET_BEGIN, null);
+                            event(req, res, SocketStatus.OPEN_READ);
                         }
                     } else {
                         // Clear the filter chain, as otherwise it will not be reset elsewhere
@@ -535,8 +534,8 @@ public class CoyoteAdapter implements Adapter {
                         request.setFilterChain(null);
                     }
                 }
-
             }
+
             AsyncContextImpl asyncConImpl = (AsyncContextImpl)request.getAsyncContext();
             if (asyncConImpl != null) {
                 async = true;
@@ -629,6 +628,7 @@ public class CoyoteAdapter implements Adapter {
     }
 
 
+    @SuppressWarnings("deprecation")
     @Override
     public void log(org.apache.coyote.Request req,
             org.apache.coyote.Response res, long time) {
@@ -749,6 +749,7 @@ public class CoyoteAdapter implements Adapter {
      * @throws ServletException If the supported methods of the target servlet
      *                          can not be determined
      */
+    @SuppressWarnings("deprecation")
     protected boolean postParseRequest(org.apache.coyote.Request req, Request request,
             org.apache.coyote.Response res, Response response) throws IOException, ServletException {
 
@@ -943,9 +944,11 @@ public class CoyoteAdapter implements Adapter {
                                 // Reset mapping
                                 request.getMappingData().recycle();
                                 mapRequired = true;
-                                // Recycle cookies in case correct context is
-                                // configured with different settings
+                                // Recycle cookies and session info in case the
+                                // correct context is configured with different
+                                // settings
                                 req.getCookies().recycle();
+                                request.recycleSessionInfo();
                             }
                             break;
                         }
@@ -1320,7 +1323,7 @@ public class CoyoteAdapter implements Adapter {
      *
      * @param uriMB URI to be normalized
      *
-     * @return <code>false</false> if normalizing this URI would require going
+     * @return <code>false</code> if normalizing this URI would require going
      *         above the root, or if the URI contains a null byte, otherwise
      *         <code>true</code>
      */

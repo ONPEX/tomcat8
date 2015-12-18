@@ -1340,9 +1340,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
         try {
             checkStateForResourceLoading(className);
         } catch (IllegalStateException ise) {
-            ClassNotFoundException cnfe = new ClassNotFoundException();
-            cnfe.initCause(ise);
-            throw cnfe;
+            throw new ClassNotFoundException(ise.getMessage(), ise);
         }
     }
 
@@ -1701,7 +1699,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                         Field field = fields[i];
                         int mods = field.getModifiers();
                         if (field.getType().isPrimitive()
-                                || (field.getName().indexOf("$") != -1)) {
+                                || (field.getName().indexOf('$') != -1)) {
                             continue;
                         }
                         if (Modifier.isStatic(mods)) {
@@ -1749,7 +1747,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             Field field = fields[i];
             int mods = field.getModifiers();
             if (field.getType().isPrimitive()
-                    || (field.getName().indexOf("$") != -1)) {
+                    || (field.getName().indexOf('$') != -1)) {
                 continue;
             }
             try {

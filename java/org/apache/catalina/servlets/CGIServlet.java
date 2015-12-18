@@ -305,7 +305,7 @@ public final class CGIServlet extends HttpServlet {
             debug = Integer.parseInt(getServletConfig().getInitParameter("debug"));
         cgiPathPrefix = getServletConfig().getInitParameter("cgiPathPrefix");
         boolean passShellEnvironment =
-            Boolean.valueOf(getServletConfig().getInitParameter("passShellEnvironment")).booleanValue();
+            Boolean.parseBoolean(getServletConfig().getInitParameter("passShellEnvironment"));
 
         if (passShellEnvironment) {
             shellEnv.putAll(System.getenv());
@@ -371,7 +371,7 @@ public final class CGIServlet extends HttpServlet {
         out.println("<li><b>characterEncoding</b> = " +
                        req.getCharacterEncoding());
         out.println("<li><b>contentLength</b> = " +
-                       req.getContentLength());
+                       req.getContentLengthLong());
         out.println("<li><b>contentType</b> = " +
                        req.getContentType());
         Enumeration<Locale> locales = req.getLocales();
@@ -789,7 +789,7 @@ public final class CGIServlet extends HttpServlet {
                 } else {
                     qs = req.getQueryString();
                 }
-                if (qs != null && qs.indexOf("=") == -1) {
+                if (qs != null && qs.indexOf('=') == -1) {
                     StringTokenizer qsTokens = new StringTokenizer(qs, "+");
                     while ( qsTokens.hasMoreTokens() ) {
                         cmdLineParameters.add(URLDecoder.decode(qsTokens.nextToken(),
@@ -1079,9 +1079,9 @@ public final class CGIServlet extends HttpServlet {
              * if there is no content, so we cannot put 0 or -1 in as per the
              * Servlet API spec.
              */
-            int contentLength = req.getContentLength();
+            long contentLength = req.getContentLengthLong();
             String sContentLength = (contentLength <= 0 ? "" :
-                (Integer.valueOf(contentLength)).toString());
+                Long.toString(contentLength));
             envp.put("CONTENT_LENGTH", sContentLength);
 
 
@@ -1167,7 +1167,7 @@ public final class CGIServlet extends HttpServlet {
 
             // create directories
             String dirPath = destPath.toString().substring(
-                    0,destPath.toString().lastIndexOf("/"));
+                    0,destPath.toString().lastIndexOf('/'));
             File dir = new File(dirPath);
             if (!dir.mkdirs() && !dir.isDirectory()) {
                 if (debug >= 2) {
@@ -1685,11 +1685,11 @@ public final class CGIServlet extends HttpServlet {
                             }
                             if (line.startsWith("HTTP")) {
                                 skipBody = setStatus(response, getSCFromHttpStatusLine(line));
-                            } else if (line.indexOf(":") >= 0) {
+                            } else if (line.indexOf(':') >= 0) {
                                 String header =
-                                    line.substring(0, line.indexOf(":")).trim();
+                                    line.substring(0, line.indexOf(':')).trim();
                                 String value =
-                                    line.substring(line.indexOf(":") + 1).trim();
+                                    line.substring(line.indexOf(':') + 1).trim();
                                 if (header.equalsIgnoreCase("status")) {
                                     skipBody = setStatus(response, getSCFromCGIStatusHeader(value));
                                 } else {

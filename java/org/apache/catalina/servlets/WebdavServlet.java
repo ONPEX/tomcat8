@@ -375,23 +375,29 @@ public class WebdavServlet
      */
     @Override
     protected String getRelativePath(HttpServletRequest request) {
-        // Are we being processed by a RequestDispatcher.include()?
-        if (request.getAttribute(
-                RequestDispatcher.INCLUDE_REQUEST_URI) != null) {
-            String result = (String) request.getAttribute(
-                    RequestDispatcher.INCLUDE_PATH_INFO);
-            if ((result == null) || (result.equals("")))
-                result = "/";
-            return (result);
+        return getRelativePath(request, false);
+    }
+
+    @Override
+    protected String getRelativePath(HttpServletRequest request, boolean allowEmptyPath) {
+        String pathInfo;
+
+        if (request.getAttribute(RequestDispatcher.INCLUDE_REQUEST_URI) != null) {
+            // For includes, get the info from the attributes
+            pathInfo = (String) request.getAttribute(RequestDispatcher.INCLUDE_PATH_INFO);
+        } else {
+            pathInfo = request.getPathInfo();
         }
 
-        // No, extract the desired path directly from the request
-        String result = request.getPathInfo();
-        if ((result == null) || (result.equals(""))) {
-            result = "/";
+        StringBuilder result = new StringBuilder();
+        if (pathInfo != null) {
+            result.append(pathInfo);
         }
-        return (result);
+        if (result.length() == 0) {
+            result.append('/');
+        }
 
+        return result.toString();
     }
 
 
@@ -472,7 +478,7 @@ public class WebdavServlet
 
         Node propNode = null;
 
-        if (req.getContentLength() > 0) {
+        if (req.getContentLengthLong() > 0) {
             DocumentBuilder documentBuilder = getDocumentBuilder();
 
             try {
@@ -716,7 +722,7 @@ public class WebdavServlet
             return;
         }
 
-        if (req.getContentLength() > 0) {
+        if (req.getContentLengthLong() > 0) {
             DocumentBuilder documentBuilder = getDocumentBuilder();
             try {
                 // Document document =
@@ -875,21 +881,19 @@ public class WebdavServlet
         if (lockDurationStr == null) {
             lockDuration = DEFAULT_TIMEOUT;
         } else {
-            int commaPos = lockDurationStr.indexOf(",");
+            int commaPos = lockDurationStr.indexOf(',');
             // If multiple timeouts, just use the first
             if (commaPos != -1) {
                 lockDurationStr = lockDurationStr.substring(0,commaPos);
             }
             if (lockDurationStr.startsWith("Second-")) {
-                lockDuration =
-                    (new Integer(lockDurationStr.substring(7))).intValue();
+                lockDuration = Integer.parseInt(lockDurationStr.substring(7));
             } else {
                 if (lockDurationStr.equalsIgnoreCase("infinity")) {
                     lockDuration = MAX_TIMEOUT;
                 } else {
                     try {
-                        lockDuration =
-                            (new Integer(lockDurationStr)).intValue();
+                        lockDuration = Integer.parseInt(lockDurationStr);
                     } catch (NumberFormatException e) {
                         lockDuration = MAX_TIMEOUT;
                     }
@@ -1493,7 +1497,7 @@ public class WebdavServlet
             // if the Destination URL contains the protocol, we can safely
             // trim everything upto the first "/" character after "://"
             int firstSeparator =
-                destinationPath.indexOf("/", protocolIndex + 4);
+                destinationPath.indexOf('/', protocolIndex + 4);
             if (firstSeparator < 0) {
                 destinationPath = "/";
             } else {
@@ -1505,13 +1509,13 @@ public class WebdavServlet
                 destinationPath = destinationPath.substring(hostName.length());
             }
 
-            int portIndex = destinationPath.indexOf(":");
+            int portIndex = destinationPath.indexOf(':');
             if (portIndex >= 0) {
                 destinationPath = destinationPath.substring(portIndex);
             }
 
             if (destinationPath.startsWith(":")) {
-                int firstSeparator = destinationPath.indexOf("/");
+                int firstSeparator = destinationPath.indexOf('/');
                 if (firstSeparator < 0) {
                     destinationPath = "/";
                 } else {
@@ -1640,7 +1644,7 @@ public class WebdavServlet
             if (!resources.mkdir(dest)) {
                 WebResource destResource = resources.getResource(dest);
                 if (!destResource.isDirectory()) {
-                    errorList.put(dest, new Integer(WebdavStatus.SC_CONFLICT));
+                    errorList.put(dest, Integer.valueOf(WebdavStatus.SC_CONFLICT));
                     return false;
                 }
             }
@@ -1667,7 +1671,7 @@ public class WebdavServlet
                     String parent = destResource.getWebappPath().substring(0, lastSlash);
                     WebResource parentResource = resources.getResource(parent);
                     if (!parentResource.isDirectory()) {
-                        errorList.put(source, new Integer(WebdavStatus.SC_CONFLICT));
+                        errorList.put(source, Integer.valueOf(WebdavStatus.SC_CONFLICT));
                         return false;
                     }
                 }
@@ -1675,12 +1679,12 @@ public class WebdavServlet
             if (!resources.write(dest, sourceResource.getInputStream(),
                     false)) {
                 errorList.put(source,
-                        new Integer(WebdavStatus.SC_INTERNAL_SERVER_ERROR));
+                        Integer.valueOf(WebdavStatus.SC_INTERNAL_SERVER_ERROR));
                 return false;
             }
         } else {
             errorList.put(source,
-                    new Integer(WebdavStatus.SC_INTERNAL_SERVER_ERROR));
+                    Integer.valueOf(WebdavStatus.SC_INTERNAL_SERVER_ERROR));
             return false;
         }
         return true;
@@ -1749,7 +1753,7 @@ public class WebdavServlet
 
             deleteCollection(req, path, errorList);
             if (!resource.delete()) {
-                errorList.put(path, new Integer
+                errorList.put(path, Integer.valueOf
                     (WebdavStatus.SC_INTERNAL_SERVER_ERROR));
             }
 
@@ -1780,7 +1784,7 @@ public class WebdavServlet
 
         // Prevent deletion of special subdirectories
         if (isSpecialPath(path)) {
-            errorList.put(path, new Integer(WebdavStatus.SC_FORBIDDEN));
+            errorList.put(path, Integer.valueOf(WebdavStatus.SC_FORBIDDEN));
             return;
         }
 
@@ -1802,7 +1806,7 @@ public class WebdavServlet
 
             if (isLocked(childName, ifHeader + lockTokenHeader)) {
 
-                errorList.put(childName, new Integer(WebdavStatus.SC_LOCKED));
+                errorList.put(childName, Integer.valueOf(WebdavStatus.SC_LOCKED));
 
             } else {
                 WebResource childResource = resources.getResource(childName);
@@ -1814,7 +1818,7 @@ public class WebdavServlet
                     if (!childResource.isDirectory()) {
                         // If it's not a collection, then it's an unknown
                         // error
-                        errorList.put(childName, new Integer(
+                        errorList.put(childName, Integer.valueOf(
                                 WebdavStatus.SC_INTERNAL_SERVER_ERROR));
                     }
                 }

@@ -107,6 +107,15 @@ public class JspC extends Task implements Options {
     // Logger
     private static final Log log = LogFactory.getLog(JspC.class);
 
+    /**
+     * System property that controls if the strict quoting rules are applied
+     * when parsing attribute values that use scriptlet expressions (<%=...%>).
+     */
+    private static final boolean STRICT_QUOTE_ESCAPING_DEFAULT= Boolean.parseBoolean(
+            System.getProperty(
+                    "org.apache.jasper.compiler.Parser.STRICT_QUOTE_ESCAPING",
+                    "true"));
+
     protected static final String SWITCH_VERBOSE = "-v";
     protected static final String SWITCH_HELP = "-help";
     protected static final String SWITCH_OUTPUT_DIR = "-d";
@@ -137,6 +146,10 @@ public class JspC extends Task implements Options {
     protected static final String SWITCH_VALIDATE_XML = "-validateXml";
     protected static final String SWITCH_BLOCK_EXTERNAL = "-blockExternal";
     protected static final String SWITCH_NO_BLOCK_EXTERNAL = "-no-blockExternal";
+    protected static final String SWITCH_STRICT_QUOTE_ESCAPING = "-strictQuoteEscaping";
+    protected static final String SWITCH_NO_STRICT_QUOTE_ESCAPING = "-no-strictQuoteEscaping";
+    protected static final String SWITCH_QUOTE_ATTRIBUTE_EL = "-quoteAttributeEL";
+    protected static final String SWITCH_NO_QUOTE_ATTRIBUTE_EL = "-no-quoteAttributeEL";
     protected static final String SHOW_SUCCESS ="-s";
     protected static final String LIST_ERRORS = "-l";
     protected static final int INC_WEBXML = 10;
@@ -170,6 +183,8 @@ public class JspC extends Task implements Options {
     protected boolean validateTld;
     protected boolean validateXml;
     protected boolean blockExternal = true;
+    protected boolean strictQuoteEscaping = STRICT_QUOTE_ESCAPING_DEFAULT;
+    protected boolean quoteAttributeEL = true;
     protected boolean xpoweredBy;
     protected boolean mappedFile = false;
     protected boolean poolingEnabled = true;
@@ -386,6 +401,14 @@ public class JspC extends Task implements Options {
                 setBlockExternal(true);
             } else if (tok.equals(SWITCH_NO_BLOCK_EXTERNAL)) {
                 setBlockExternal(false);
+            } else if (tok.equals(SWITCH_STRICT_QUOTE_ESCAPING)) {
+                setStrictQuoteEscaping(true);
+            } else if (tok.equals(SWITCH_NO_STRICT_QUOTE_ESCAPING)) {
+                setStrictQuoteEscaping(false);
+            } else if (tok.equals(SWITCH_QUOTE_ATTRIBUTE_EL)) {
+                setQuoteAttributeEL(true);
+            } else if (tok.equals(SWITCH_NO_QUOTE_ATTRIBUTE_EL)) {
+                setQuoteAttributeEL(false);
             } else {
                 if (tok.startsWith("-")) {
                     throw new JasperException("Unrecognized option: " + tok +
@@ -891,6 +914,24 @@ public class JspC extends Task implements Options {
 
     public boolean isBlockExternal() {
         return blockExternal;
+    }
+
+    public void setStrictQuoteEscaping( boolean b ) {
+        this.strictQuoteEscaping = b;
+    }
+
+    @Override
+    public boolean getStrictQuoteEscaping() {
+        return strictQuoteEscaping;
+    }
+
+    public void setQuoteAttributeEL(boolean b) {
+        quoteAttributeEL = b;
+    }
+
+    @Override
+    public boolean getQuoteAttributeEL() {
+        return quoteAttributeEL;
     }
 
     public void setListErrors( boolean b ) {
@@ -1554,26 +1595,28 @@ public class JspC extends Task implements Options {
             File lib = new File(webappBase, "/WEB-INF/lib");
             if (lib.exists() && lib.isDirectory()) {
                 String[] libs = lib.list();
-                for (int i = 0; i < libs.length; i++) {
-                    if( libs[i].length() <5 ) continue;
-                    String ext=libs[i].substring( libs[i].length() - 4 );
-                    if (! ".jar".equalsIgnoreCase(ext)) {
-                        if (".tld".equalsIgnoreCase(ext)) {
-                            log.warn("TLD files should not be placed in "
-                                     + "/WEB-INF/lib");
+                if (libs != null) {
+                    for (int i = 0; i < libs.length; i++) {
+                        if( libs[i].length() <5 ) continue;
+                        String ext=libs[i].substring( libs[i].length() - 4 );
+                        if (! ".jar".equalsIgnoreCase(ext)) {
+                            if (".tld".equalsIgnoreCase(ext)) {
+                                log.warn("TLD files should not be placed in "
+                                         + "/WEB-INF/lib");
+                            }
+                            continue;
                         }
-                        continue;
-                    }
-                    try {
-                        File libFile = new File(lib, libs[i]);
-                        classPath = classPath + File.pathSeparator
-                            + libFile.getAbsolutePath();
-                        urls.add(libFile.getAbsoluteFile().toURI().toURL());
-                    } catch (IOException ioe) {
-                        // failing a toCanonicalPath on a file that
-                        // exists() should be a JVM regression test,
-                        // therefore we have permission to freak out
-                        throw new RuntimeException(ioe.toString());
+                        try {
+                            File libFile = new File(lib, libs[i]);
+                            classPath = classPath + File.pathSeparator
+                                + libFile.getAbsolutePath();
+                            urls.add(libFile.getAbsoluteFile().toURI().toURL());
+                        } catch (IOException ioe) {
+                            // failing a toCanonicalPath on a file that
+                            // exists() should be a JVM regression test,
+                            // therefore we have permission to freak out
+                            throw new RuntimeException(ioe.toString());
+                        }
                     }
                 }
             }

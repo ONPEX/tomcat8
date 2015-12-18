@@ -493,7 +493,7 @@ public abstract class TomcatBaseTest extends LoggingBaseTest {
             out.println("REQUEST-CHARACTER-ENCODING: " +
                         request.getCharacterEncoding());
             out.println("REQUEST-CONTENT-LENGTH: " +
-                        request.getContentLength());
+                        request.getContentLengthLong());
             out.println("REQUEST-CONTENT-TYPE: " + request.getContentType());
             out.println("REQUEST-LOCALE: " + request.getLocale());
 
@@ -646,8 +646,7 @@ public abstract class TomcatBaseTest extends LoggingBaseTest {
             String method) throws IOException {
 
         URL url = new URL(path);
-        HttpURLConnection connection =
-            (HttpURLConnection) url.openConnection();
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setUseCaches(false);
         connection.setReadTimeout(readTimeout);
         connection.setRequestMethod(method);
@@ -809,6 +808,7 @@ public abstract class TomcatBaseTest extends LoggingBaseTest {
             // Use fast, insecure session ID generation for all tests
             Server server = getServer();
             for (Service service : server.findServices()) {
+                @SuppressWarnings("deprecation")
                 Container e = service.getContainer();
                 for (Container h : e.findChildren()) {
                     for (Container c : h.findChildren()) {

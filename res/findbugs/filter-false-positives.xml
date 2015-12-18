@@ -111,6 +111,12 @@
     <Bug code="IS" />
   </Match>
   <Match>
+  <!-- The header value is safe  -->
+    <Class name="org.apache.catalina.servlets.DefaultServlet" />
+    <Method name="serveResource" />
+    <Bug pattern="HRS_REQUEST_PARAMETER_TO_HTTP_HEADER" />
+  </Match>
+  <Match>
     <!-- Non-constant strings are configuration settings rather than client
          supplied -->
     <Class name="org.apache.catalina.session.JDBCStore" />
@@ -181,6 +187,21 @@
     <Class name="org.apache.catalina.tribes.membership.McastServiceImpl$RecoveryThread"/>
     <Method name="run"/>
     <Bug code="NS"/>
+  </Match>
+  <Match>
+    <!-- Sync is to protect construction of data not individual fields -->
+    <Class name="org.apache.catalina.tribes.membership.MemberImpl"/>
+    <Or>
+      <Method name="getCommand"/>
+      <Method name="getDomain"/>
+      <Method name="getHost"/>
+      <Method name="getPayload"/>
+      <Method name="getPort"/>
+      <Method name="getSecurePort"/>
+      <Method name="getUdpPort"/>
+      <Method name="getUniqueId"/>
+    </Or>
+    <Bug pattern="UG_SYNC_SET_UNSYNC_GET"/>
   </Match>
   <Match>
     <!-- Intentional in case thread is waiting -->
@@ -291,6 +312,18 @@
     <Bug code="Nm" />
   </Match>
   <Match>
+    <!-- Return value is never used -->
+    <Class name="org.apache.tomcat.dbcp.dbcp2.DelegatingConnection" />
+    <Method name="prepareStatement" />
+    <Bug pattern="NP_NONNULL_RETURN_VIOLATION" />
+  </Match>
+  <Match>
+    <!-- Pooled objects can't be null so this is OK -->
+    <Class name="org.apache.tomcat.dbcp.pool2.impl.BaseGenericObjectPool$IdentityWrapper" />
+    <Method name="equals" />
+    <Bug pattern="NP_EQUALS_SHOULD_HANDLE_NULL_ARGUMENT" />
+  </Match>
+  <Match>
     <!-- Increment is in sync block so it is safe. Volatile is used so reading
          thread sees latest value.  -->
     <Class name="org.apache.tomcat.dbcp.pool2.impl.DefaultPooledObject" />
@@ -330,12 +363,6 @@
       <Method name="prepare" />
     </Or>
     <Bug code="VO" />
-  </Match>
-  <Match>
-    <!-- Wait is in AprSocket -->
-    <Class name="org.apache.tomcat.jni.socket.AprSocketContext$AprPoller" />
-    <Method name="run"/>
-    <Bug code="NN" />
   </Match>
   <Match>
     <Class name="org.apache.tomcat.util.IntrospectionUtils" />
@@ -434,6 +461,15 @@
     <Bug code="ML" />
   </Match>
   <Match>
+    <!-- Modifications to SocketLists are always protected by syncs -->
+    <Class name="org.apache.tomcat.util.net.AprEndpoint$SocketList"/>
+    <Or>
+      <Method name="add"/>
+      <Method name="remove"/>
+    </Or>
+    <Bug pattern="VO_VOLATILE_INCREMENT"/>
+  </Match>
+  <Match>
     <!-- Object is only ever set to null, sync therefore is still valid -->
     <Class name="org.apache.tomcat.util.net.AprEndpoint$SocketProcessor"/>
     <Method name="run"/>
@@ -510,13 +546,20 @@
 
   <!-- Generated code -->
   <Match>
-    <Class name="org.apache.el.parser.ELParserTokenManager" />
-  </Match>
-  <Match>
-    <Class name="org.apache.el.parser.TokenMgrError" />
-  </Match>
-  <Match>
-    <Class name="org.apache.el.parser.ParseException" />
+    <Or>
+      <Class name="org.apache.el.parser.AstFloatingPoint" />
+      <Class name="org.apache.el.parser.AstFunction" />
+      <Class name="org.apache.el.parser.AstInteger" />
+      <Class name="org.apache.el.parser.AstNegative" />
+      <Class name="org.apache.el.parser.AstValue" />
+      <Class name="org.apache.el.parser.ELParser" />
+      <Class name="org.apache.el.parser.ELParserConstants" />
+      <Class name="org.apache.el.parser.ELParserTokenManager" />
+      <Class name="org.apache.el.parser.ELParserTreeConstants" />
+      <Class name="org.apache.el.parser.ParseException" />
+      <Class name="org.apache.el.parser.SimpleCharStream" />
+      <Class name="org.apache.el.parser.TokenMgrError" />
+    </Or>
   </Match>
   <Match>
     <!-- fCurrentEntity may be null after endEntity() call -->
@@ -650,8 +693,8 @@
   <Match>
     <!-- Code is deliberately unused -->
     <Or>
-      <Class name="org.apache.catalina.webresources.AbstractTestDirResourceSet" />
       <Class name="org.apache.catalina.webresources.AbstractTestFileResourceSet" />
+      <Class name="org.apache.catalina.webresources.TestDirResourceSet" />
       <Class name="org.apache.catalina.webresources.TestJarResourceSet" />
       <Class name="org.apache.catalina.webresources.TestJarResourceSetInternal" />
     </Or>
@@ -691,6 +734,22 @@
       <Method name="testRenegotiateWorks" />
     </Or>
     <Bug code="RR" />
+  </Match>
+  <Match>
+    <Class name="org.apache.tomcat.util.threads.TestLimitLatch" />
+    <Or>
+      <Method name="waitForThreadToStop" />
+      <Method name="testTenWait" />
+    </Or>
+    <Bug pattern="NN_NAKED_NOTIFY " />
+  </Match>
+  <Match>
+    <Class name="org.apache.tomcat.util.threads.TestLimitLatch$TestThread" />
+     <Method name="run" />
+     <Or>
+      <Bug pattern="WA_NOT_IN_LOOP" />
+      <Bug pattern="UW_UNCOND_WAIT " />
+    </Or>
   </Match>
   <Match>
     <!-- Code is deliberately unused -->

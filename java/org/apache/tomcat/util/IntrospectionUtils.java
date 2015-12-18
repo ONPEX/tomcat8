@@ -80,7 +80,7 @@ public final class IntrospectionUtils {
                     if ("java.lang.Integer".equals(paramType.getName())
                             || "int".equals(paramType.getName())) {
                         try {
-                            params[0] = new Integer(value);
+                            params[0] = Integer.valueOf(value);
                         } catch (NumberFormatException ex) {
                             ok = false;
                         }
@@ -88,7 +88,7 @@ public final class IntrospectionUtils {
                     }else if ("java.lang.Long".equals(paramType.getName())
                                 || "long".equals(paramType.getName())) {
                             try {
-                                params[0] = new Long(value);
+                                params[0] = Long.valueOf(value);
                             } catch (NumberFormatException ex) {
                                 ok = false;
                             }
@@ -226,14 +226,14 @@ public final class IntrospectionUtils {
      */
     public static String replaceProperties(String value,
             Hashtable<Object,Object> staticProp, PropertySource dynamicProp[]) {
-        if (value.indexOf("$") < 0) {
+        if (value.indexOf('$') < 0) {
             return value;
         }
         StringBuilder sb = new StringBuilder();
         int prev = 0;
         // assert value!=nil
         int pos;
-        while ((pos = value.indexOf("$", prev)) >= 0) {
+        while ((pos = value.indexOf('$', prev)) >= 0) {
             if (pos > 0) {
                 sb.append(value.substring(prev, pos));
             }
@@ -405,7 +405,7 @@ public final class IntrospectionUtils {
         } else if ("java.lang.Integer".equals(paramType.getName())
                 || "int".equals(paramType.getName())) {
             try {
-                result = new Integer(object);
+                result = Integer.valueOf(object);
             } catch (NumberFormatException ex) {
             }
             // Try a setFoo ( boolean )

@@ -27,13 +27,13 @@ import java.util.regex.Pattern;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpUpgradeHandler;
 
 import org.apache.coyote.AbstractProcessor;
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.AsyncContextCallback;
 import org.apache.coyote.ErrorState;
 import org.apache.coyote.RequestInfo;
+import org.apache.coyote.UpgradeToken;
 import org.apache.coyote.http11.filters.BufferedInputFilter;
 import org.apache.coyote.http11.filters.ChunkedInputFilter;
 import org.apache.coyote.http11.filters.ChunkedOutputFilter;
@@ -231,7 +231,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
      * Instance of the new protocol to use after the HTTP connection has been
      * upgraded.
      */
-    protected HttpUpgradeHandler httpUpgradeHandler = null;
+    protected UpgradeToken upgradeToken = null;
 
 
     public AbstractHttp11Processor(AbstractEndpoint<S> endpoint) {
@@ -867,13 +867,13 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             break;
         }
         case UPGRADE: {
-            httpUpgradeHandler = (HttpUpgradeHandler) param;
+            upgradeToken = (UpgradeToken) param;
             // Stop further HTTP output
             getOutputBuffer().finished = true;
             break;
         }
         case AVAILABLE: {
-            request.setAvailable(inputBuffer.available());
+            request.setAvailable(inputBuffer.available(Boolean.TRUE.equals(param)));
             break;
         }
         case NB_WRITE_INTEREST: {
@@ -920,6 +920,11 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             endRequest();
             break;
         }
+        case IS_COMET: {
+            AtomicBoolean result = (AtomicBoolean) param;
+            result.set(isComet());
+            break;
+        }
         default: {
             actionInternal(actionCode, param);
             break;
@@ -927,7 +932,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         }
     }
 
-    abstract void actionInternal(ActionCode actionCode, Object param);
+    protected abstract void actionInternal(ActionCode actionCode, Object param);
 
 
     /**
@@ -996,7 +1001,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         }
 
         while (!getErrorState().isError() && keepAlive && !comet && !isAsync() &&
-                httpUpgradeHandler == null && !endpoint.isPaused()) {
+                upgradeToken == null && !endpoint.isPaused()) {
 
             // Parsing the request header
             try {
@@ -1047,10 +1052,10 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
                                     "http11processor.fallToDebug");
                             //$FALL-THROUGH$
                         case INFO:
-                            getLog().info(message);
+                            getLog().info(message, t);
                             break;
                         case DEBUG:
-                            getLog().debug(message);
+                            getLog().debug(message, t);
                     }
                 }
                 // 400 - Bad Request
@@ -1585,7 +1590,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         return connection.equals(Constants.CLOSE);
     }
 
-    abstract boolean prepareSendfile(OutputFilter[] outputFilters);
+    protected abstract boolean prepareSendfile(OutputFilter[] outputFilters);
 
     /**
      * Parse host.
@@ -1748,7 +1753,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
 
     @Override
     public boolean isUpgrade() {
-        return httpUpgradeHandler != null;
+        return upgradeToken != null;
     }
 
 
@@ -1762,8 +1767,8 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
 
 
     @Override
-    public HttpUpgradeHandler getHttpUpgradeHandler() {
-        return httpUpgradeHandler;
+    public UpgradeToken getUpgradeToken() {
+        return upgradeToken;
     }
 
 
@@ -1836,7 +1841,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
         if (asyncStateMachine != null) {
             asyncStateMachine.recycle();
         }
-        httpUpgradeHandler = null;
+        upgradeToken = null;
         comet = false;
         resetErrorState();
         recycleInternal();
