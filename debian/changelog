@@ -1,4 +1,4 @@
-tomcat8 (8.0.30-1) UNRELEASED; urgency=medium
+tomcat8 (8.0.30-1) unstable; urgency=medium
 
   * Team upload.
   * New upstream release
@@ -6,7 +6,7 @@ tomcat8 (8.0.30-1) UNRELEASED; urgency=medium
   * Use LC_ALL instead of LANG to format the date and make the documentation
     reproducible on the builders
 
- -- Emmanuel Bourg <ebourg@apache.org>  Fri, 18 Dec 2015 09:48:39 +0100
+ -- Emmanuel Bourg <ebourg@apache.org>  Fri, 18 Dec 2015 11:44:06 +0100
 
 tomcat8 (8.0.28-1) unstable; urgency=medium
 
