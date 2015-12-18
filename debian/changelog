@@ -1,3 +1,11 @@
+tomcat8 (8.0.30-1) UNRELEASED; urgency=medium
+
+  * Team upload.
+  * New upstream release
+    - Refreshed the patches
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Fri, 18 Dec 2015 09:48:39 +0100
+
 tomcat8 (8.0.28-1) unstable; urgency=medium
 
   * Team upload.
