@@ -4,6 +4,7 @@ tomcat8 (8.0.32-1) UNRELEASED; urgency=medium
   * New upstream release
   * Fixed a warning in catalina.out caused by an incorrect path
     for the root context (Closes: #808378)
+  * Standards-Version updated to 3.9.7 (no changes)
 
  -- Emmanuel Bourg <ebourg@apache.org>  Mon, 21 Dec 2015 11:20:10 +0100
 
