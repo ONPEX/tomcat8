@@ -377,7 +377,7 @@ public class WsSession implements Session {
 
     @Override
     public boolean isOpen() {
-        return state == State.OPEN;
+        return state == State.OPEN || state == State.SENDING_CLOSED;
     }
 
 
@@ -461,7 +461,7 @@ public class WsSession implements Session {
      * Need internal close method as spec requires that the local endpoint
      * receives a 1006 on timeout.
      */
-    private void doClose(CloseReason closeReasonMessage,
+    public void doClose(CloseReason closeReasonMessage,
             CloseReason closeReasonLocal) {
         // Double-checked locking. OK because state is volatile
         if (state != State.OPEN) {
@@ -473,6 +473,8 @@ public class WsSession implements Session {
                 return;
             }
 
+            state = State.CLOSED_SENT;
+
             if (log.isDebugEnabled()) {
                 log.debug(sm.getString("wsSession.doClose", id));
             }
@@ -483,12 +485,8 @@ public class WsSession implements Session {
                 fireEndpointOnError(e);
             }
 
-            state = State.CLOSING;
-
             sendCloseMessage(closeReasonMessage);
             fireEndpointOnClose(closeReasonLocal);
-
-            state = State.CLOSED;
         }
 
         IOException ioe = new IOException(sm.getString("wsSession.messageFailed"));
@@ -510,20 +508,24 @@ public class WsSession implements Session {
     public void onClose(CloseReason closeReason) {
 
         synchronized (stateLock) {
-            if (state == State.OPEN) {
+            if (state != State.CLOSED) {
                 try {
                     wsRemoteEndpoint.setBatchingAllowed(false);
                 } catch (IOException e) {
                     log.warn(sm.getString("wsSession.flushFailOnClose"), e);
                     fireEndpointOnError(e);
                 }
-                sendCloseMessage(closeReason);
-                fireEndpointOnClose(closeReason);
+                if (state == State.OPEN) {
+                    state = State.SENDING_CLOSED;
+                    sendCloseMessage(closeReason);
+                    state = State.CLOSED_SENT;
+                    fireEndpointOnClose(closeReason);
+                }
                 state = State.CLOSED;
-            }
 
-            // Close the socket
-            wsRemoteEndpoint.close();
+                // Close the socket
+                wsRemoteEndpoint.close();
+            }
         }
     }
 
@@ -646,8 +648,12 @@ public class WsSession implements Session {
             // If the session has already been closed the any registered futures
             // will have been processed so the failure result for this future
             // needs to be set here.
-            if (state == State.OPEN) {
+            if (isOpen()) {
                 futures.put(f2sh, f2sh);
+            } else if (f2sh.isDone()) {
+                // NO-OP. The future completed before the session closed so no
+                // need to register in case the session closes before it
+                // completes.
             } else {
                 // Construct the exception outside of the sync block
                 fail = true;
@@ -764,13 +770,18 @@ public class WsSession implements Session {
 
     private void checkState() {
         if (state == State.CLOSED) {
+            /*
+             * As per RFC 6455, a WebSocket connection is considered to be
+             * closed once a peer has sent and received a WebSocket close frame.
+             */
             throw new IllegalStateException(sm.getString("wsSession.closed", id));
         }
     }
 
     private static enum State {
         OPEN,
-        CLOSING,
+        SENDING_CLOSED,
+        CLOSED_SENT,
         CLOSED
     }
 }

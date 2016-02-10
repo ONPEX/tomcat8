@@ -127,9 +127,6 @@ public class DeltaManager extends ClusterManagerBase{
         this.name = name;
     }
 
-    /**
-     * Return the descriptive short name of this Manager implementation.
-     */
     @Override
     public String getName() {
         return name;
@@ -409,34 +406,16 @@ public class DeltaManager extends ClusterManagerBase{
         this.notifyContainerListenersOnReplication = notifyContainerListenersOnReplication;
     }
 
+
     // --------------------------------------------------------- Public Methods
 
-    /**
-     * Construct and return a new session object, based on the default settings
-     * specified by this Manager's properties. The session id will be assigned
-     * by this method, and available via the getId() method of the returned
-     * session. If a new session cannot be created for any reason, return
-     * <code>null</code>.
-     *
-     * @exception IllegalStateException
-     *                if a new session cannot be instantiated for any reason
-     *
-     * Construct and return a new session object, based on the default settings
-     * specified by this Manager's properties. The session id will be assigned
-     * by this method, and available via the getId() method of the returned
-     * session. If a new session cannot be created for any reason, return
-     * <code>null</code>.
-     *
-     * @exception IllegalStateException
-     *                if a new session cannot be instantiated for any reason
-     */
     @Override
     public Session createSession(String sessionId) {
         return createSession(sessionId, true);
     }
 
     /**
-     * create new session with check maxActiveSessions and send session creation
+     * Create new session with check maxActiveSessions and send session creation
      * to other cluster nodes.
      *
      * @param distribute
@@ -486,8 +465,9 @@ public class DeltaManager extends ClusterManagerBase{
     }
 
     /**
-     * Create DeltaSession
-     * @see org.apache.catalina.Manager#createEmptySession()
+     * {@inheritDoc}
+     * <p>
+     * Creates new DeltaSession instance.
      */
     @Override
     public Session createEmptySession() {
@@ -501,23 +481,11 @@ public class DeltaManager extends ClusterManagerBase{
         return new DeltaSession(this);
     }
 
-    /**
-     * Change the session ID of the current session to a new randomly generated
-     * session ID.
-     *
-     * @param session   The session to change the session ID for
-     */
     @Override
     public void changeSessionId(Session session) {
         changeSessionId(session, true);
     }
 
-    /**
-     * Change the session ID of the current session to a specified session ID.
-     *
-     * @param session   The session to change the session ID for
-     * @param newId   new session ID
-     */
     @Override
     public void changeSessionId(Session session, String newId) {
         changeSessionId(session, newId, true);
@@ -991,23 +959,25 @@ public class DeltaManager extends ClusterManagerBase{
                 return null;
             }
             DeltaRequest deltaRequest = session.getDeltaRequest();
-            session.lock();
-            if (deltaRequest.getSize() > 0) {
-                counterSend_EVT_SESSION_DELTA++;
-                byte[] data = serializeDeltaRequest(session,deltaRequest);
-                msg = new SessionMessageImpl(getName(),
-                                             SessionMessage.EVT_SESSION_DELTA,
-                                             data,
-                                             sessionId,
-                                             sessionId + "-" + System.currentTimeMillis());
-                session.resetDeltaRequest();
+            try {
+                session.lock();
+                if (deltaRequest.getSize() > 0) {
+                    counterSend_EVT_SESSION_DELTA++;
+                    byte[] data = serializeDeltaRequest(session,deltaRequest);
+                    msg = new SessionMessageImpl(getName(),
+                                                 SessionMessage.EVT_SESSION_DELTA,
+                                                 data,
+                                                 sessionId,
+                                                 sessionId + "-" + System.currentTimeMillis());
+                    session.resetDeltaRequest();
+                }
+            } finally {
+                session.unlock();
             }
         } catch (IOException x) {
             log.error(sm.getString("deltaManager.createMessage.unableCreateDeltaRequest",
                     sessionId), x);
             return null;
-        } finally {
-            if (session!=null) session.unlock();
         }
         if(msg == null) {
             if(!expires && !session.isPrimarySession()) {
@@ -1155,13 +1125,6 @@ public class DeltaManager extends ClusterManagerBase{
 
     }
 
-    /**
-     * When the manager expires session not tied to a request. The cluster will
-     * periodically ask for a list of sessions that should expire and that
-     * should be sent across the wire.
-     *
-     * @return The invalidated sessions array
-     */
     @Override
     public String[] getInvalidatedSessions() {
         return new String[0];
@@ -1185,9 +1148,7 @@ public class DeltaManager extends ClusterManagerBase{
         try {
 
             ClassLoader[] loaders = getClassLoaders();
-            if ( loaders != null && loaders.length > 0) {
-                Thread.currentThread().setContextClassLoader(loaders[0]);
-            }
+            Thread.currentThread().setContextClassLoader(loaders[0]);
             if (log.isDebugEnabled()) {
                 log.debug(sm.getString("deltaManager.receiveMessage.eventType",
                         getName(), msg.getEventTypeString(), sender));
@@ -1334,7 +1295,7 @@ public class DeltaManager extends ClusterManagerBase{
         session.setCreationTime(msg.getTimestamp());
         // use container maxInactiveInterval so that session will expire correctly
         // in case of primary transfer
-        session.setMaxInactiveInterval(getMaxInactiveInterval(), false);
+        session.setMaxInactiveInterval(getContext().getSessionTimeout() * 60, false);
         session.access();
         session.setId(msg.getSessionID(), notifySessionListenersOnReplication);
         session.resetDeltaRequest();

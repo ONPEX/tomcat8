@@ -20,12 +20,11 @@ package org.apache.catalina.core;
 
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 
 import javax.servlet.DispatcherType;
@@ -39,7 +38,10 @@ import org.apache.catalina.Context;
 import org.apache.catalina.Globals;
 import org.apache.catalina.Manager;
 import org.apache.catalina.Session;
-import org.apache.catalina.util.RequestUtil;
+import org.apache.catalina.util.ParameterMap;
+import org.apache.tomcat.util.buf.B2CConverter;
+import org.apache.tomcat.util.buf.MessageBytes;
+import org.apache.tomcat.util.http.Parameters;
 
 
 /**
@@ -128,7 +130,7 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
 
     /**
      * The request parameters for this request.  This is initialized from the
-     * wrapped request, but updates are allowed.
+     * wrapped request.
      */
     protected Map<String, String[]> parameters = null;
 
@@ -623,27 +625,6 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
 
 
     /**
-     * Perform a shallow copy of the specified Map, and return the result.
-     *
-     * @param orig Origin Map to be copied
-     */
-    Map<String, String[]> copyMap(Map<String, String[]> orig) {
-
-        if (orig == null) {
-            return (new HashMap<>());
-        }
-        HashMap<String, String[]> dest = new HashMap<>();
-
-        for (Map.Entry<String, String[]> entry : orig.entrySet()) {
-            dest.put(entry.getKey(), entry.getValue());
-        }
-
-        return (dest);
-
-    }
-
-
-    /**
      * Set the context path for this request.
      *
      * @param contextPath The new context path
@@ -739,9 +720,10 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
             return;
         }
 
-        parameters = new HashMap<>();
-        parameters = copyMap(getRequest().getParameterMap());
+        parameters = new ParameterMap<>();
+        parameters.putAll(getRequest().getParameterMap());
         mergeParameters();
+        ((ParameterMap<String,String[]>) parameters).setLocked(true);
         parsedParams = true;
     }
 
@@ -835,25 +817,23 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
 
         if (values1 == null) {
             // Skip - nothing to merge
-        } else if (values1 instanceof String)
-            results.add(values1);
-        else if (values1 instanceof String[]) {
-            String values[] = (String[]) values1;
-            for (int i = 0; i < values.length; i++)
-                results.add(values[i]);
-        } else
+        } else if (values1 instanceof String[]) {
+            for (String value : (String[]) values1) {
+                results.add(value);
+            }
+        } else { // String
             results.add(values1.toString());
+        }
 
         if (values2 == null) {
             // Skip - nothing to merge
-        } else if (values2 instanceof String)
-            results.add(values2);
-        else if (values2 instanceof String[]) {
-            String values[] = (String[]) values2;
-            for (int i = 0; i < values.length; i++)
-                results.add(values[i]);
-        } else
+        } else if (values2 instanceof String[]) {
+            for (String value : (String[]) values2) {
+                results.add(value);
+            }
+        } else { // String
             results.add(values2.toString());
+        }
 
         String values[] = new String[results.size()];
         return results.toArray(values);
@@ -875,25 +855,38 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
         if ((queryParamString == null) || (queryParamString.length() < 1))
             return;
 
-        HashMap<String, String[]> queryParameters = new HashMap<>();
+        // Parse the query string from the dispatch target
+        Parameters paramParser = new Parameters();
+        MessageBytes queryMB = MessageBytes.newInstance();
+        queryMB.setString(queryParamString);
+
         String encoding = getCharacterEncoding();
-        if (encoding == null)
-            encoding = "ISO-8859-1";
-        RequestUtil.parseParameters(queryParameters, queryParamString,
-                encoding);
-        for (Entry<String, String[]> entry : parameters.entrySet()) {
-            String entryKey = entry.getKey();
-            String[] entryValue = entry.getValue();
-            Object value = queryParameters.get(entryKey);
-            if (value == null) {
-                queryParameters.put(entryKey, entryValue);
+        // No need to process null value, as ISO-8859-1 is the default encoding
+        // in MessageBytes.toBytes().
+        if (encoding != null) {
+            try {
+                queryMB.setCharset(B2CConverter.getCharset(encoding));
+            } catch (UnsupportedEncodingException ignored) {
+                // Fall-back to ISO-8859-1
+            }
+        }
+
+        paramParser.setQuery(queryMB);
+        paramParser.setQueryStringEncoding(encoding);
+        paramParser.handleQueryParameters();
+
+        // Insert the additional parameters from the dispatch target
+        Enumeration<String> dispParamNames = paramParser.getParameterNames();
+        while (dispParamNames.hasMoreElements()) {
+            String dispParamName = dispParamNames.nextElement();
+            String[] dispParamValues = paramParser.getParameterValues(dispParamName);
+            String[] originalValues = parameters.get(dispParamName);
+            if (originalValues == null) {
+                parameters.put(dispParamName, dispParamValues);
                 continue;
             }
-            queryParameters.put
-                (entryKey, mergeValues(value, entryValue));
+            parameters.put(dispParamName, mergeValues(dispParamValues, originalValues));
         }
-        parameters = queryParameters;
-
     }
 
 

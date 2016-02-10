@@ -21,13 +21,13 @@ package org.apache.catalina.servlets;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
@@ -871,7 +871,6 @@ public final class CGIServlet extends HttpServlet {
             String path = null;
             String name = null;
             String scriptname = null;
-            String cginame = "";
 
             if ((webAppRootDir != null)
                 && (webAppRootDir.lastIndexOf(File.separator) ==
@@ -896,14 +895,16 @@ public final class CGIServlet extends HttpServlet {
             if (debug >= 3) {
                 log("findCGI: currentLoc=" + currentLocation);
             }
+            StringBuilder cginameBuilder = new StringBuilder();
             while (!currentLocation.isFile() && dirWalker.hasMoreElements()) {
                 if (debug >= 3) {
                     log("findCGI: currentLoc=" + currentLocation);
                 }
                 String nextElement = (String) dirWalker.nextElement();
                 currentLocation = new File(currentLocation, nextElement);
-                cginame = cginame + "/" + nextElement;
+                cginameBuilder.append('/').append(nextElement);
             }
+            String cginame = cginameBuilder.toString();
             if (!currentLocation.isFile()) {
                 return new String[] { null, null, null, null };
             }
@@ -1048,7 +1049,7 @@ public final class CGIServlet extends HttpServlet {
              * SHOULD NOT be defined.
              *
              */
-            if (sPathInfoCGI != null && !("".equals(sPathInfoCGI))) {
+            if (!("".equals(sPathInfoCGI))) {
                 sPathTranslatedCGI = context.getRealPath(sPathInfoCGI);
             }
             if (sPathTranslatedCGI == null || "".equals(sPathTranslatedCGI)) {
@@ -1166,9 +1167,7 @@ public final class CGIServlet extends HttpServlet {
             }
 
             // create directories
-            String dirPath = destPath.toString().substring(
-                    0,destPath.toString().lastIndexOf('/'));
-            File dir = new File(dirPath);
+            File dir = f.getParentFile();
             if (!dir.mkdirs() && !dir.isDirectory()) {
                 if (debug >= 2) {
                     log("expandCGIScript: failed to create directories for '" +
@@ -1188,19 +1187,13 @@ public final class CGIServlet extends HttpServlet {
                     if (!f.createNewFile()) {
                         return;
                     }
-                    FileOutputStream fos = new FileOutputStream(f);
 
                     try {
-                        // copy data
-                        IOTools.flow(is, fos);
+                        Files.copy(is, f.toPath());
                     } finally {
-                        try {
-                            is.close();
-                        } catch (IOException e) {
-                            log("Could not close is.", e);
-                        }
-                        fos.close();
+                        is.close();
                     }
+
                     if (debug >= 2) {
                         log("expandCGIScript: expanded '" + srcPath + "' to '" + destPath + "'");
                     }
