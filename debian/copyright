@@ -1,6 +1,5 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: Apache Tomcat 8
-Upstream-Contact: Merten Falk <nevesenin@cpan.org>
 Source: http://tomcat.apache.org/download-80.cgi
 Upstream-Authors:
     Alex Chaffee
@@ -104,7 +103,7 @@ Upstream-Authors:
     Yoav Shapira <yoavs@apache.org>
 
 Files: *
-Copyright: 2000-2014, The Apache Software Foundation.
+Copyright: 2000-2016, The Apache Software Foundation.
            2002, International Business Machines Corporation.
 License: Apache-2.0
 
@@ -134,7 +133,7 @@ Copyright: 2008,2011, Canonical Ltd.
            2008, Paul Cager <paul-debian@home.paulcager.org>
            2010, Thierry Carrez <thierry.carrez@ubuntu.com>
            2011, Ernesto Hernanez-Novich <emhn@usb.ve>
-           2013, Emmanuel Bourg <ebourg@apache.org>
+           2013-2016, Emmanuel Bourg <ebourg@apache.org>
 License: Apache-2.0
 
 License: Apache-2.0
