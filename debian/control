@@ -24,7 +24,7 @@ Build-Depends-Indep: javahelper,
                      maven-repo-helper
 Standards-Version: 3.9.7
 Vcs-Git: git://anonscm.debian.org/pkg-java/tomcat8.git
-Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-java/tomcat8.git
+Vcs-Browser: https://anonscm.debian.org/cgit/pkg-java/tomcat8.git
 Homepage: http://tomcat.apache.org
 
 Package: tomcat8-common
