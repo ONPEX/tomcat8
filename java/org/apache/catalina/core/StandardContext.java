@@ -143,6 +143,7 @@ import org.apache.tomcat.util.security.PrivilegedSetTccl;
  * @author Craig R. McClanahan
  * @author Remy Maucherat
  */
+@SuppressWarnings("deprecation")
 public class StandardContext extends ContainerBase
         implements Context, NotificationEmitter {
 
@@ -815,7 +816,7 @@ public class StandardContext extends ContainerBase
 
     private boolean validateClientProvidedNewSessionId = true;
 
-    private boolean mapperContextRootRedirectEnabled = false;
+    private boolean mapperContextRootRedirectEnabled = true;
 
     private boolean mapperDirectoryRedirectEnabled = false;
 
@@ -1703,16 +1704,6 @@ public class StandardContext extends ContainerBase
         support.firePropertyChange("distributable",
                                    oldDistributable,
                                    this.distributable);
-
-        // Bugzilla 32866
-        Manager manager = getManager();
-        if(manager != null) {
-            if(log.isDebugEnabled()) {
-                log.debug("Propagating distributable=" + distributable
-                          + " to manager");
-            }
-            manager.setDistributable(distributable);
-        }
     }
 
 
@@ -1838,20 +1829,20 @@ public class StandardContext extends ContainerBase
             this.manager = manager;
 
             // Stop the old component if necessary
-            if (getState().isAvailable() && (oldManager != null) &&
-                (oldManager instanceof Lifecycle)) {
+            if (oldManager instanceof Lifecycle) {
                 try {
                     ((Lifecycle) oldManager).stop();
+                    ((Lifecycle) oldManager).destroy();
                 } catch (LifecycleException e) {
-                    log.error("StandardContext.setManager: stop: ", e);
+                    log.error("StandardContext.setManager: stop-destroy: ", e);
                 }
             }
 
             // Start the new component if necessary
-            if (manager != null)
+            if (manager != null) {
                 manager.setContext(this);
-            if (getState().isAvailable() && (manager != null) &&
-                (manager instanceof Lifecycle)) {
+            }
+            if (getState().isAvailable() && manager instanceof Lifecycle) {
                 try {
                     ((Lifecycle) manager).start();
                 } catch (LifecycleException e) {
@@ -2979,7 +2970,10 @@ public class StandardContext extends ContainerBase
      * Wrapper appended to this Context.
      *
      * @param listener Java class name of an InstanceListener class
+     *
+     * @deprecated Will be removed in 9.0.x onwards
      */
+    @Deprecated
     @Override
     public void addInstanceListener(String listener) {
 
@@ -3468,7 +3462,10 @@ public class StandardContext extends ContainerBase
     /**
      * Return the set of InstanceListener classes that will be added to
      * newly created Wrappers automatically.
+     *
+     * @deprecated Will be removed in 9.0.x onwards
      */
+    @Deprecated
     @Override
     public String[] findInstanceListeners() {
 
@@ -4043,7 +4040,10 @@ public class StandardContext extends ContainerBase
      * will be added to newly created Wrappers.
      *
      * @param listener Class name of an InstanceListener class to be removed
+     *
+     * @deprecated Will be removed in 9.0.x onwards
      */
+    @Deprecated
     @Override
     public void removeInstanceListener(String listener) {
 
@@ -6246,7 +6246,11 @@ public class StandardContext extends ContainerBase
      * JSR77 deploymentDescriptor attribute
      *
      * @return string deployment descriptor
+     *
+     * @deprecated The JSR-77 implementation is incomplete and will be removed
+     *             in 9.0.x
      */
+    @Deprecated
     public String getDeploymentDescriptor() {
 
         InputStream stream = null;
@@ -6277,7 +6281,11 @@ public class StandardContext extends ContainerBase
      * JSR77 servlets attribute
      *
      * @return list of all servlets ( we know about )
+     *
+     * @deprecated The JSR-77 implementation is incomplete and will be removed
+     *             in 9.0.x
      */
+    @Deprecated
     public String[] getServlets() {
 
         String[] result = null;
@@ -6490,7 +6498,11 @@ public class StandardContext extends ContainerBase
 
     /**
      * Support for "stateManageable" JSR77
+     *
+     * @deprecated The JSR-77 implementation is incomplete and will be removed
+     *             in 9.0.x
      */
+    @Deprecated
     public boolean isStateManageable() {
         return true;
     }

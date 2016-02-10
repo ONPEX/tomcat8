@@ -477,8 +477,6 @@ public class Request
             parts = null;
         }
         partsParseException = null;
-        cookiesParsed = false;
-        cookiesConverted = false;
         locales.clear();
         localesParsed = false;
         secure = false;
@@ -492,9 +490,9 @@ public class Request
         attributes.clear();
         sslAttributesParsed = false;
         notes.clear();
-        cookies = null;
 
         recycleSessionInfo();
+        recycleCookieInfo(false);
 
         if (Globals.IS_SECURITY_ENABLED || Connector.RECYCLE_FACADES) {
             parameterMap = new ParameterMap<>();
@@ -551,6 +549,16 @@ public class Request
         requestedSessionId = null;
         requestedSessionURL = false;
         requestedSessionSSL = false;
+    }
+
+
+    protected void recycleCookieInfo(boolean recycleCoyote) {
+        cookiesParsed = false;
+        cookiesConverted = false;
+        cookies = null;
+        if (recycleCoyote) {
+            getCoyoteRequest().getCookies().recycle();
+        }
     }
 
 
@@ -1935,15 +1943,17 @@ public class Request
             }
             lastSlash--;
         }
-        // Now allow for normalization and/or encoding. Essentially, keep
-        // extending the candidate path up to the next slash until the decoded
-        // and normalized candidate path is the same as the canonical path.
+        // Now allow for path parameters, normalization and/or encoding.
+        // Essentially, keep extending the candidate path up to the next slash
+        // until the decoded and normalized candidate path (with the path
+        // parameters removed) is the same as the canonical path.
         String candidate;
         if (pos == -1) {
             candidate = uri;
         } else {
             candidate = uri.substring(0, pos);
         }
+        candidate = removePathParameters(candidate);
         candidate = UDecoder.URLDecode(candidate, connector.getURIEncoding());
         candidate = org.apache.tomcat.util.http.RequestUtil.normalize(candidate);
         boolean match = canonicalContextPath.equals(candidate);
@@ -1954,6 +1964,7 @@ public class Request
             } else {
                 candidate = uri.substring(0, pos);
             }
+            candidate = removePathParameters(candidate);
             candidate = UDecoder.URLDecode(candidate, connector.getURIEncoding());
             candidate = org.apache.tomcat.util.http.RequestUtil.normalize(candidate);
             match = canonicalContextPath.equals(candidate);
@@ -1972,6 +1983,32 @@ public class Request
     }
 
 
+    private String removePathParameters(String input) {
+        int nextSemiColon = input.indexOf(';');
+        // Shortcut
+        if (nextSemiColon == -1) {
+            return input;
+        }
+        StringBuilder result = new StringBuilder(input.length());
+        result.append(input.substring(0, nextSemiColon));
+        while (true) {
+            int nextSlash = input.indexOf('/', nextSemiColon);
+            if (nextSlash == -1) {
+                break;
+            }
+            nextSemiColon = input.indexOf(';', nextSlash);
+            if (nextSemiColon == -1) {
+                result.append(input.substring(nextSlash));
+                break;
+            } else {
+                result.append(input.substring(nextSlash, nextSemiColon));
+            }
+        }
+
+        return result.toString();
+    }
+
+
     private int nextSlash(char[] uri, int startPos) {
         int len = uri.length;
         int pos = startPos;
@@ -1986,6 +2023,7 @@ public class Request
         }
         return -1;
     }
+
 
     /**
      * Return the set of Cookies received with this Request. Triggers parsing of
@@ -2903,7 +2941,7 @@ public class Request
              * multiple web applications on the same host. Typically this is
              * used by Portlet implementations. It only works if sessions are
              * tracked via cookies. The cookie must have a path of "/" else it
-             * won't be provided to for requests to all web applications.
+             * won't be provided for requests to all web applications.
              *
              * Any session ID provided by the client should be for a session
              * that already exists somewhere on the host. Check if the context
@@ -2928,7 +2966,6 @@ public class Request
                 if (!found) {
                     sessionId = null;
                 }
-                sessionId = getRequestedSessionId();
             }
         } else {
             sessionId = null;

@@ -62,8 +62,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.jar.Attributes;
 import java.util.jar.Attributes.Name;
 import java.util.jar.Manifest;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.catalina.Container;
 import org.apache.catalina.Globals;
@@ -110,8 +108,7 @@ import org.apache.tomcat.util.res.StringManager;
  * class is contained inside a JAR.
  * <p>
  * <strong>IMPLEMENTATION NOTE</strong> - Local repositories are searched in
- * the order they are added via the initial constructor and/or any subsequent
- * calls to <code>addRepository()</code> or <code>addJar()</code>.
+ * the order they are added via the initial constructor.
  * <p>
  * <strong>IMPLEMENTATION NOTE</strong> - No check for sealing violations or
  * security is made unless a security manager is present.
@@ -188,28 +185,6 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
 
     // ------------------------------------------------------- Static Variables
-
-    /**
-     * Regular expression of package names which are not allowed to be loaded
-     * from a webapp class loader without delegating first.
-     */
-    protected final Matcher packageTriggersDeny = Pattern.compile(
-            "^javax(\\.|/)el(\\.|/)|" +
-            "^javax(\\.|/)servlet(\\.|/)|" +
-            "^javax(\\.|/)websocket(\\.|/)|" +
-            "^org(\\.|/)apache(\\.|/)(catalina|coyote|el|jasper|juli|naming|tomcat)(\\.|/)"
-            ).matcher("");
-
-
-    /**
-     * Regular expression of package names which are allowed to be loaded from a
-     * webapp class loader without delegating first and override any set by
-     * {@link #packageTriggersDeny}.
-     */
-    protected final Matcher packageTriggersPermit =
-            Pattern.compile("^javax(\\.|/)servlet(\\.|/)jsp(\\.|/)jstl(\\.|/)|" +
-                    "^org(\\.|/)apache(\\.|/)tomcat(\\.|/)jdbc(\\.|/)").matcher("");
-
 
     /**
      * The string manager for this package.
@@ -1030,7 +1005,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
         URL url = null;
 
-        boolean delegateFirst = delegate || filter(name);
+        boolean delegateFirst = delegate || filter(name, false);
 
         // (1) Delegate to parent if requested
         if (delegateFirst) {
@@ -1097,7 +1072,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             return (stream);
         }
 
-        boolean delegateFirst = delegate || filter(name);
+        boolean delegateFirst = delegate || filter(name, false);
 
         // (1) Delegate to parent if requested
         if (delegateFirst) {
@@ -1275,7 +1250,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                 }
             }
 
-            boolean delegateLoad = delegate || filter(name);
+            boolean delegateLoad = delegate || filter(name, true);
 
             // (1) Delegate to our parent if requested
             if (delegateLoad) {
@@ -2766,33 +2741,94 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
      * Filter classes.
      *
      * @param name class name
-     * @return true if the class should be filtered
+     * @param isClassName <code>true</code> if name is a class name,
+     *                <code>false</code> if name is a resource name
+     * @return <code>true</code> if the class should be filtered
      */
-    protected synchronized boolean filter(String name) {
+    protected boolean filter(String name, boolean isClassName) {
 
         if (name == null)
             return false;
 
-        // Looking up the package
-        String packageName = null;
-        int pos = name.lastIndexOf('.');
-        if (pos != -1)
-            // Package names in the filters include the last '.'
-            packageName = name.substring(0, pos + 1);
-        else
-            return false;
-
-        packageTriggersPermit.reset(packageName);
-        if (packageTriggersPermit.lookingAt()) {
-            return false;
+        char ch;
+        if (name.startsWith("javax")) {
+            /* 5 == length("javax") */
+            ch = name.charAt(5);
+            if (isClassName && ch == '.') {
+                /* 6 == length("javax.") */
+                if (name.startsWith("servlet.jsp.jstl.", 6)) {
+                    return false;
+                }
+                if (name.startsWith("el.", 6) ||
+                    name.startsWith("servlet.", 6) ||
+                    name.startsWith("websocket.", 6)) {
+                    return true;
+                }
+            } else if (!isClassName && ch == '/') {
+                /* 6 == length("javax/") */
+                if (name.startsWith("servlet/jsp/jstl/", 6)) {
+                    return false;
+                }
+                if (name.startsWith("el/", 6) ||
+                    name.startsWith("servlet/", 6) ||
+                    name.startsWith("websocket/", 6)) {
+                    return true;
+                }
+            }
+        } else if (name.startsWith("org")) {
+            /* 3 == length("org") */
+            ch = name.charAt(3);
+            if (isClassName && ch == '.') {
+                /* 4 == length("org.") */
+                if (name.startsWith("apache.", 4)) {
+                    /* 11 == length("org.apache.") */
+                    if (name.startsWith("tomcat.jdbc.", 11)) {
+                        return false;
+                    }
+                    if (name.startsWith("el.", 11) ||
+                        name.startsWith("catalina.", 11) ||
+                        name.startsWith("jasper.", 11) ||
+                        name.startsWith("juli.", 11) ||
+                        name.startsWith("tomcat.", 11) ||
+                        name.startsWith("naming.", 11) ||
+                        name.startsWith("coyote.", 11)) {
+                        return true;
+                    }
+                }
+            } else if (!isClassName && ch == '/') {
+                /* 4 == length("org/") */
+                if (name.startsWith("apache/", 4)) {
+                    /* 11 == length("org/apache/") */
+                    if (name.startsWith("tomcat/jdbc/", 11)) {
+                        return false;
+                    }
+                    if (name.startsWith("el/", 11) ||
+                        name.startsWith("catalina/", 11) ||
+                        name.startsWith("jasper/", 11) ||
+                        name.startsWith("juli/", 11) ||
+                        name.startsWith("tomcat/", 11) ||
+                        name.startsWith("naming/", 11) ||
+                        name.startsWith("coyote/", 11)) {
+                        return true;
+                    }
+                }
+            }
         }
-
-        packageTriggersDeny.reset(packageName);
-        if (packageTriggersDeny.lookingAt()) {
-            return true;
-        }
-
         return false;
+    }
+
+
+    /**
+     * Filter classes.
+     *
+     * @param name class name
+     * @return <code>true</code> if the class should be filtered
+     * @deprecated Use {@link #filter(String, boolean)}.
+     *             Unused. Will be removed in Tomcat 9 onwards.
+     */
+    @Deprecated
+    protected boolean filter(String name) {
+        return filter(name, true) || filter(name, false);
     }
 
 

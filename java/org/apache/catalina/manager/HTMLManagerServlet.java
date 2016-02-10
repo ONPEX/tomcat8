@@ -78,16 +78,13 @@ public final class HTMLManagerServlet extends ManagerServlet {
 
     private static final long serialVersionUID = 1L;
 
-    protected static final URLEncoder URL_ENCODER;
-    protected static final String APPLICATION_MESSAGE = "message";
-    protected static final String APPLICATION_ERROR = "error";
+    static final URLEncoder URL_ENCODER;
+    static final String APPLICATION_MESSAGE = "message";
+    static final String APPLICATION_ERROR = "error";
 
-    protected static final String sessionsListJspPath  =
-            "/WEB-INF/jsp/sessionsList.jsp";
-    protected static final String sessionDetailJspPath =
-            "/WEB-INF/jsp/sessionDetail.jsp";
-    protected static final String connectorCiphersJspPath =
-            "/WEB-INF/jsp/connectorCiphers.jsp";
+    static final String sessionsListJspPath = "/WEB-INF/jsp/sessionsList.jsp";
+    static final String sessionDetailJspPath = "/WEB-INF/jsp/sessionDetail.jsp";
+    static final String connectorCiphersJspPath = "/WEB-INF/jsp/connectorCiphers.jsp";
 
     static {
         URL_ENCODER = new URLEncoder();
@@ -491,14 +488,11 @@ public final class HTMLManagerServlet extends ManagerServlet {
                 args[8] = RequestUtil.filter(response.encodeURL(request
                         .getContextPath() + "/html/expire?" + pathVersion));
                 args[9] = appsExpire;
-                args[10] = smClient.getString(
-                        "htmlManagerServlet.expire.explain");
+                args[10] = smClient.getString("htmlManagerServlet.expire.explain");
                 if (manager == null) {
-                    args[11] = smClient.getString(
-                            "htmlManagerServlet.noManager");
+                    args[11] = smClient.getString("htmlManagerServlet.noManager");
                 } else {
-                    args[11] = Integer.valueOf(
-                            ctxt.getManager().getMaxInactiveInterval()/60);
+                    args[11] = Integer.valueOf(ctxt.getSessionTimeout());
                 }
                 args[12] = smClient.getString("htmlManagerServlet.expire.unit");
                 args[13] = highlightColor;
@@ -739,7 +733,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
      */
     @Override
     public String getServletInfo() {
-        return "HTMLManagerServlet, Copyright (c) 1999-2015, The Apache Software Foundation";
+        return "HTMLManagerServlet, Copyright (c) 1999-2016, The Apache Software Foundation";
     }
 
     /**
@@ -860,7 +854,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
             StringManager smClient) {
 
         List<Session> sessions = getSessionsForName(cn, smClient);
-        if (sessions == null || sessions.isEmpty()) return null;
+        if (sessions.isEmpty()) return null;
         for(Session session : sessions) {
             if (session.getId().equals(id)) {
                 return session;

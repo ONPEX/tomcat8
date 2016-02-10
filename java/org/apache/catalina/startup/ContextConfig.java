@@ -600,8 +600,7 @@ public class ContextConfig implements LifecycleListener {
         file = new File(docBase);
         String origDocBase = docBase;
 
-        ContextName cn = new ContextName(context.getPath(),
-                context.getWebappVersion());
+        ContextName cn = new ContextName(context.getPath(), context.getWebappVersion());
         String pathName = cn.getBaseName();
 
         boolean unpackWARs = true;
@@ -628,11 +627,21 @@ public class ContextConfig implements LifecycleListener {
             }
         } else {
             File docDir = new File(docBase);
-            if (!docDir.exists()) {
-                File warFile = new File(docBase + ".war");
-                if (warFile.exists()) {
-                    URL war =
-                        new URL("jar:" + warFile.toURI().toURL() + "!/");
+            File warFile = new File(docBase + ".war");
+            URL war = null;
+            if (warFile.exists()) {
+                war = new URL("jar:" + warFile.toURI().toURL() + "!/");
+            }
+            if (docDir.exists()) {
+                if (war != null && unpackWARs) {
+                    // Check if WAR needs to be re-expanded (e.g. if it has
+                    // changed). Note: HostConfig.deployWar() takes care of
+                    // ensuring that the correct XML file is used.
+                    // This will be a NO-OP if the WAR is unchanged.
+                    ExpandWar.expand(host, war, pathName);
+                }
+            } else {
+                if (war != null) {
                     if (unpackWARs) {
                         docBase = ExpandWar.expand(host, war, pathName);
                         file = new File(docBase);
@@ -1199,10 +1208,8 @@ public class ContextConfig implements LifecycleListener {
             // Spec does not define an order.
             // Use ordered JARs followed by remaining JARs
             Set<WebXml> resourceJars = new LinkedHashSet<>();
-            if (orderedFragments != null) {
-                for (WebXml fragment : orderedFragments) {
-                    resourceJars.add(fragment);
-                }
+            for (WebXml fragment : orderedFragments) {
+                resourceJars.add(fragment);
             }
             for (WebXml fragment : fragments.values()) {
                 if (!resourceJars.contains(fragment)) {
@@ -1757,44 +1764,47 @@ public class ContextConfig implements LifecycleListener {
 
         // Open the application web.xml file, if it exists
         ServletContext servletContext = context.getServletContext();
-        if (servletContext != null) {
-            altDDName = (String)servletContext.getAttribute(Globals.ALT_DD_ATTR);
-            if (altDDName != null) {
-                try {
-                    stream = new FileInputStream(altDDName);
-                    url = new File(altDDName).toURI().toURL();
-                } catch (FileNotFoundException e) {
-                    log.error(sm.getString("contextConfig.altDDNotFound",
-                                           altDDName));
-                } catch (MalformedURLException e) {
-                    log.error(sm.getString("contextConfig.applicationUrl"));
+        try {
+            if (servletContext != null) {
+                altDDName = (String)servletContext.getAttribute(Globals.ALT_DD_ATTR);
+                if (altDDName != null) {
+                    try {
+                        stream = new FileInputStream(altDDName);
+                        url = new File(altDDName).toURI().toURL();
+                    } catch (FileNotFoundException e) {
+                        log.error(sm.getString("contextConfig.altDDNotFound",
+                                               altDDName));
+                    } catch (MalformedURLException e) {
+                        log.error(sm.getString("contextConfig.applicationUrl"));
+                    }
+                }
+                else {
+                    stream = servletContext.getResourceAsStream
+                        (Constants.ApplicationWebXml);
+                    try {
+                        url = servletContext.getResource(
+                                Constants.ApplicationWebXml);
+                    } catch (MalformedURLException e) {
+                        log.error(sm.getString("contextConfig.applicationUrl"));
+                    }
                 }
             }
-            else {
-                stream = servletContext.getResourceAsStream
-                    (Constants.ApplicationWebXml);
-                try {
-                    url = servletContext.getResource(
-                            Constants.ApplicationWebXml);
-                } catch (MalformedURLException e) {
-                    log.error(sm.getString("contextConfig.applicationUrl"));
+            if (stream == null || url == null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(sm.getString("contextConfig.applicationMissing") + " " + context);
                 }
+            } else {
+                source = new InputSource(url.toExternalForm());
+                source.setByteStream(stream);
             }
-        }
-        if (stream == null || url == null) {
-            if (log.isDebugEnabled()) {
-                log.debug(sm.getString("contextConfig.applicationMissing") + " " + context);
-            }
-            if (stream != null) {
+        } finally {
+            if (source == null && stream != null) {
                 try {
                     stream.close();
                 } catch (IOException e) {
                     // Ignore
                 }
             }
-        } else {
-            source = new InputSource(url.toExternalForm());
-            source.setByteStream(stream);
         }
 
         return source;
@@ -1836,6 +1846,14 @@ public class ContextConfig implements LifecycleListener {
         } catch (Exception e) {
             log.error(sm.getString(
                     "contextConfig.defaultError", filename, file), e);
+        } finally {
+            if (source == null && stream != null) {
+                try {
+                    stream.close();
+                } catch (IOException e) {
+                    // Ignore
+                }
+            }
         }
 
         return source;
@@ -1909,8 +1927,15 @@ public class ContextConfig implements LifecycleListener {
             WebResource[] webResources =
                     webResource.getWebResourceRoot().listResources(
                             webResource.getWebappPath());
-            for (WebResource r : webResources) {
-                processAnnotationsWebResource(r, fragment, handlesTypesOnly);
+            if (webResources.length > 0) {
+                if (log.isDebugEnabled()) {
+                    log.debug(sm.getString(
+                            "contextConfig.processAnnotationsWebDir.debug",
+                            webResource.getURL()));
+                }
+                for (WebResource r : webResources) {
+                    processAnnotationsWebResource(r, fragment, handlesTypesOnly);
+                }
             }
         } else if (webResource.isFile() &&
                 webResource.getName().endsWith(".class")) {
@@ -1953,6 +1978,11 @@ public class ContextConfig implements LifecycleListener {
             boolean handlesTypesOnly) {
 
         try (Jar jar = JarFactory.newInstance(url)) {
+            if (log.isDebugEnabled()) {
+                log.debug(sm.getString(
+                        "contextConfig.processAnnotationsJar.debug", url));
+            }
+
             jar.nextEntry();
             String entryName = jar.getEntryName();
             while (entryName != null) {
@@ -1984,12 +2014,16 @@ public class ContextConfig implements LifecycleListener {
             // Returns null if directory is not readable
             String[] dirs = file.list();
             if (dirs != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug(sm.getString(
+                            "contextConfig.processAnnotationsDir.debug", file));
+                }
                 for (String dir : dirs) {
                     processAnnotationsFile(
                             new File(file,dir), fragment, handlesTypesOnly);
                 }
             }
-        } else if (file.canRead() && file.getName().endsWith(".class")) {
+        } else if (file.getName().endsWith(".class") && file.canRead()) {
             try (FileInputStream fis = new FileInputStream(file)) {
                 processAnnotationsStream(fis, fragment, handlesTypesOnly);
             } catch (IOException e) {

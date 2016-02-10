@@ -246,7 +246,7 @@ public class StandardContextSF extends StoreFactoryBase {
             storeElement(aWriter, indent, loader);
 
             // Store nested <Manager> elements
-            if (context.getCluster() == null || !context.getManager().getDistributable()) {
+            if (context.getCluster() == null || !context.getDistributable()) {
                 Manager manager = context.getManager();
                 storeElement(aWriter, indent, manager);
             }
@@ -268,6 +268,7 @@ public class StandardContextSF extends StoreFactoryBase {
             storeElement(aWriter, indent, resources);
 
             // Store nested <InstanceListener> elements
+            @SuppressWarnings("deprecation")
             String iListeners[] = context.findInstanceListeners();
             getStoreAppender().printTagArray(aWriter, "InstanceListener",
                     indent + 2, iListeners);

@@ -68,6 +68,12 @@ public class TesterOpenSSL {
         unimplemented.add(Cipher.TLS_DHE_DSS_EXPORT1024_WITH_RC4_56_SHA);
         unimplemented.add(Cipher.TLS_RSA_EXPORT1024_WITH_RC4_56_SHA);
         unimplemented.add(Cipher.TLS_RSA_EXPORT1024_WITH_RC4_56_MD5);
+        unimplemented.add(Cipher.TLS_DH_DSS_EXPORT_WITH_DES40_CBC_SHA);
+        unimplemented.add(Cipher.TLS_DH_RSA_EXPORT_WITH_DES40_CBC_SHA);
+        unimplemented.add(Cipher.TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA256);
+        unimplemented.add(Cipher.TLS_DH_DSS_WITH_CAMELLIA_256_CBC_SHA256);
+        unimplemented.add(Cipher.TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA256);
+        unimplemented.add(Cipher.TLS_DH_RSA_WITH_CAMELLIA_256_CBC_SHA256);
 
         if (VERSION < 10000) {
             // These were implemented in 1.0.0 so won't be available in any
@@ -153,19 +159,12 @@ public class TesterOpenSSL {
         } else {
             // These were removed in 1.0.1 so won't be available from that
             // version onwards.
-            unimplemented.add(Cipher.TLS_RSA_EXPORT1024_WITH_RC4_56_MD5);
-            unimplemented.add(Cipher.TLS_RSA_EXPORT1024_WITH_RC2_CBC_56_MD5);
-            unimplemented.add(Cipher.TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA);
-            unimplemented.add(Cipher.TLS_DHE_DSS_EXPORT1024_WITH_DES_CBC_SHA);
-            unimplemented.add(Cipher.TLS_RSA_EXPORT1024_WITH_RC4_56_SHA);
-            unimplemented.add(Cipher.TLS_DHE_DSS_EXPORT1024_WITH_RC4_56_SHA);
-            unimplemented.add(Cipher.TLS_DHE_DSS_WITH_RC4_128_SHA);
+            // None at present.
         }
 
         if (VERSION < 10002) {
             // These were implemented in 1.0.2 so won't be available in any
             // earlier version
-            unimplemented.add(Cipher.TLS_DH_DSS_EXPORT_WITH_DES40_CBC_SHA);
             unimplemented.add(Cipher.TLS_DH_DSS_WITH_AES_128_CBC_SHA);
             unimplemented.add(Cipher.TLS_DH_DSS_WITH_AES_256_CBC_SHA);
             unimplemented.add(Cipher.TLS_DH_DSS_WITH_AES_128_CBC_SHA256);
@@ -177,7 +176,6 @@ public class TesterOpenSSL {
             unimplemented.add(Cipher.TLS_DH_DSS_WITH_DES_CBC_SHA);
             unimplemented.add(Cipher.TLS_DH_DSS_WITH_3DES_EDE_CBC_SHA);
             unimplemented.add(Cipher.TLS_DH_DSS_WITH_SEED_CBC_SHA);
-            unimplemented.add(Cipher.TLS_DH_RSA_EXPORT_WITH_DES40_CBC_SHA);
             unimplemented.add(Cipher.TLS_DH_RSA_WITH_AES_128_CBC_SHA);
             unimplemented.add(Cipher.TLS_DH_RSA_WITH_AES_256_CBC_SHA);
             unimplemented.add(Cipher.TLS_DH_RSA_WITH_AES_128_CBC_SHA256);
@@ -193,8 +191,7 @@ public class TesterOpenSSL {
         } else {
             // These were removed in 1.0.2 so won't be available from that
             // version onwards.
-            unimplemented.add(Cipher.TLS_DH_RSA_EXPORT_WITH_DES40_CBC_SHA);
-            unimplemented.add(Cipher.TLS_DH_DSS_EXPORT_WITH_DES40_CBC_SHA);
+            // None at present.
         }
 
         if (VERSION < 10100) {
@@ -244,12 +241,8 @@ public class TesterOpenSSL {
             unimplemented.add(Cipher.TLS_RSA_PSK_WITH_CAMELLIA_256_CBC_SHA384);
             unimplemented.add(Cipher.TLS_ECDHE_PSK_WITH_CAMELLIA_128_CBC_SHA256);
             unimplemented.add(Cipher.TLS_ECDHE_PSK_WITH_CAMELLIA_256_CBC_SHA384);
-            unimplemented.add(Cipher.TLS_DH_DSS_WITH_CAMELLIA_256_CBC_SHA256);
-            unimplemented.add(Cipher.TLS_DH_RSA_WITH_CAMELLIA_256_CBC_SHA256);
             unimplemented.add(Cipher.TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA256);
             unimplemented.add(Cipher.TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA256);
-            unimplemented.add(Cipher.TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA256);
-            unimplemented.add(Cipher.TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA256);
             unimplemented.add(Cipher.TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA256);
             unimplemented.add(Cipher.TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA256);
             unimplemented.add(Cipher.TLS_ECDH_ECDSA_WITH_CAMELLIA_256_CBC_SHA384);
@@ -261,8 +254,6 @@ public class TesterOpenSSL {
             unimplemented.add(Cipher.TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384);
             unimplemented.add(Cipher.TLS_ECDH_RSA_WITH_CAMELLIA_128_CBC_SHA256);
             unimplemented.add(Cipher.TLS_RSA_WITH_CAMELLIA_128_CBC_SHA256);
-            unimplemented.add(Cipher.TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA256);
-            unimplemented.add(Cipher.TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA256);
             unimplemented.add(Cipher.TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA256);
             unimplemented.add(Cipher.TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA256);
             unimplemented.add(Cipher.TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA256);
@@ -290,6 +281,13 @@ public class TesterOpenSSL {
             unimplemented.add(Cipher.TLS_ECDHE_ECDSA_WITH_AES_256_CCM);
             unimplemented.add(Cipher.TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8);
             unimplemented.add(Cipher.TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8);
+            unimplemented.add(Cipher.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256);
+            unimplemented.add(Cipher.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256);
+            unimplemented.add(Cipher.TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256);
+            unimplemented.add(Cipher.TLS_PSK_WITH_CHACHA20_POLY1305_SHA256);
+            unimplemented.add(Cipher.TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256);
+            unimplemented.add(Cipher.TLS_DHE_PSK_WITH_CHACHA20_POLY1305_SHA256);
+            unimplemented.add(Cipher.TLS_RSA_PSK_WITH_CHACHA20_POLY1305_SHA256);
         } else {
             // These were removed in 1.1.0 so won't be available from that
             // version onwards.
@@ -300,6 +298,39 @@ public class TesterOpenSSL {
             unimplemented.add(Cipher.SSL2_IDEA_128_CBC_WITH_MD5);
             unimplemented.add(Cipher.SSL2_RC4_128_EXPORT40_WITH_MD5);
             unimplemented.add(Cipher.SSL_CK_RC2_128_CBC_WITH_MD5);
+            unimplemented.add(Cipher.TLS_DH_anon_WITH_DES_CBC_SHA);
+            unimplemented.add(Cipher.TLS_DH_anon_EXPORT_WITH_DES40_CBC_SHA);
+            unimplemented.add(Cipher.TLS_DH_anon_EXPORT_WITH_RC4_40_MD5);
+            unimplemented.add(Cipher.TLS_DHE_RSA_WITH_DES_CBC_SHA);
+            unimplemented.add(Cipher.TLS_DHE_DSS_WITH_DES_CBC_SHA);
+            unimplemented.add(Cipher.TLS_DH_RSA_WITH_DES_CBC_SHA);
+            unimplemented.add(Cipher.TLS_DH_DSS_WITH_DES_CBC_SHA);
+            unimplemented.add(Cipher.TLS_RSA_WITH_DES_CBC_SHA);
+            unimplemented.add(Cipher.TLS_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA);
+            unimplemented.add(Cipher.TLS_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA);
+            unimplemented.add(Cipher.TLS_RSA_EXPORT_WITH_DES40_CBC_SHA);
+            unimplemented.add(Cipher.TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5);
+            unimplemented.add(Cipher.TLS_RSA_EXPORT_WITH_RC4_40_MD5);
+            unimplemented.add(Cipher.TLS_DH_DSS_WITH_3DES_EDE_CBC_SHA);
+            unimplemented.add(Cipher.TLS_DH_DSS_WITH_AES_128_CBC_SHA);
+            unimplemented.add(Cipher.TLS_DH_DSS_WITH_AES_128_CBC_SHA256);
+            unimplemented.add(Cipher.TLS_DH_DSS_WITH_AES_128_GCM_SHA256);
+            unimplemented.add(Cipher.TLS_DH_DSS_WITH_AES_256_CBC_SHA);
+            unimplemented.add(Cipher.TLS_DH_DSS_WITH_AES_256_CBC_SHA256);
+            unimplemented.add(Cipher.TLS_DH_DSS_WITH_AES_256_GCM_SHA384);
+            unimplemented.add(Cipher.TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA);
+            unimplemented.add(Cipher.TLS_DH_DSS_WITH_CAMELLIA_256_CBC_SHA);
+            unimplemented.add(Cipher.TLS_DH_DSS_WITH_SEED_CBC_SHA);
+            unimplemented.add(Cipher.TLS_DH_RSA_WITH_3DES_EDE_CBC_SHA);
+            unimplemented.add(Cipher.TLS_DH_RSA_WITH_AES_128_CBC_SHA);
+            unimplemented.add(Cipher.TLS_DH_RSA_WITH_AES_128_CBC_SHA256);
+            unimplemented.add(Cipher.TLS_DH_RSA_WITH_AES_128_GCM_SHA256);
+            unimplemented.add(Cipher.TLS_DH_RSA_WITH_AES_256_CBC_SHA);
+            unimplemented.add(Cipher.TLS_DH_RSA_WITH_AES_256_CBC_SHA256);
+            unimplemented.add(Cipher.TLS_DH_RSA_WITH_AES_256_GCM_SHA384);
+            unimplemented.add(Cipher.TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA);
+            unimplemented.add(Cipher.TLS_DH_RSA_WITH_CAMELLIA_256_CBC_SHA);
+            unimplemented.add(Cipher.TLS_DH_RSA_WITH_SEED_CBC_SHA);
         }
         OPENSSL_UNIMPLEMENTED_CIPHERS = Collections.unmodifiableSet(unimplemented);
     }

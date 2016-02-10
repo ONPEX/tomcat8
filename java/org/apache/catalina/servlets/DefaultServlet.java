@@ -562,39 +562,39 @@ public class DefaultServlet extends HttpServlet {
             contentFile.deleteOnExit();
         }
 
-        RandomAccessFile randAccessContentFile =
-            new RandomAccessFile(contentFile, "rw");
+        try (RandomAccessFile randAccessContentFile =
+            new RandomAccessFile(contentFile, "rw");) {
 
-        WebResource oldResource = resources.getResource(path);
+            WebResource oldResource = resources.getResource(path);
 
-        // Copy data in oldRevisionContent to contentFile
-        if (oldResource.isFile()) {
-            BufferedInputStream bufOldRevStream =
-                new BufferedInputStream(oldResource.getInputStream(),
-                        BUFFER_SIZE);
+            // Copy data in oldRevisionContent to contentFile
+            if (oldResource.isFile()) {
+                try (BufferedInputStream bufOldRevStream =
+                    new BufferedInputStream(oldResource.getInputStream(),
+                            BUFFER_SIZE);) {
 
-            int numBytesRead;
-            byte[] copyBuffer = new byte[BUFFER_SIZE];
-            while ((numBytesRead = bufOldRevStream.read(copyBuffer)) != -1) {
-                randAccessContentFile.write(copyBuffer, 0, numBytesRead);
+                    int numBytesRead;
+                    byte[] copyBuffer = new byte[BUFFER_SIZE];
+                    while ((numBytesRead = bufOldRevStream.read(copyBuffer)) != -1) {
+                        randAccessContentFile.write(copyBuffer, 0, numBytesRead);
+                    }
+
+                }
             }
 
-            bufOldRevStream.close();
-        }
+            randAccessContentFile.setLength(range.length);
 
-        randAccessContentFile.setLength(range.length);
-
-        // Append data in request input stream to contentFile
-        randAccessContentFile.seek(range.start);
-        int numBytesRead;
-        byte[] transferBuffer = new byte[BUFFER_SIZE];
-        BufferedInputStream requestBufInStream =
-            new BufferedInputStream(req.getInputStream(), BUFFER_SIZE);
-        while ((numBytesRead = requestBufInStream.read(transferBuffer)) != -1) {
-            randAccessContentFile.write(transferBuffer, 0, numBytesRead);
+            // Append data in request input stream to contentFile
+            randAccessContentFile.seek(range.start);
+            int numBytesRead;
+            byte[] transferBuffer = new byte[BUFFER_SIZE];
+            try (BufferedInputStream requestBufInStream =
+                new BufferedInputStream(req.getInputStream(), BUFFER_SIZE);) {
+                while ((numBytesRead = requestBufInStream.read(transferBuffer)) != -1) {
+                    randAccessContentFile.write(transferBuffer, 0, numBytesRead);
+                }
+            }
         }
-        randAccessContentFile.close();
-        requestBufInStream.close();
 
         return contentFile;
     }
@@ -936,7 +936,7 @@ public class DefaultServlet extends HttpServlet {
                     // Output via a writer so can't use sendfile or write
                     // content directly.
                     if (resource.isDirectory()) {
-                        renderResult = render(getPathPrefix(request), resource);
+                        renderResult = render(getPathPrefix(request), resource, encoding);
                     } else {
                         renderResult = resource.getInputStream();
                     }
@@ -944,7 +944,7 @@ public class DefaultServlet extends HttpServlet {
                 } else {
                     // Output is via an InputStream
                     if (resource.isDirectory()) {
-                        renderResult = render(getPathPrefix(request), resource);
+                        renderResult = render(getPathPrefix(request), resource, encoding);
                     } else {
                         // Output is content of resource
                         if (!checkSendfile(request, response, resource,
@@ -1248,13 +1248,18 @@ public class DefaultServlet extends HttpServlet {
      */
     protected InputStream render(String contextPath, WebResource resource)
         throws IOException, ServletException {
+        return render(contextPath, resource, null);
+    }
+
+    protected InputStream render(String contextPath, WebResource resource, String encoding)
+        throws IOException, ServletException {
 
         Source xsltSource = findXsltSource(resource);
 
         if (xsltSource == null) {
-            return renderHtml(contextPath, resource);
+            return renderHtml(contextPath, resource, encoding);
         }
-        return renderXml(contextPath, resource, xsltSource);
+        return renderXml(contextPath, resource, xsltSource, encoding);
 
     }
 
@@ -1265,9 +1270,13 @@ public class DefaultServlet extends HttpServlet {
      * @param contextPath Context path to which our internal paths are
      *  relative
      */
-    protected InputStream renderXml(String contextPath,
-                                    WebResource resource,
-                                    Source xsltSource)
+    protected InputStream renderXml(String contextPath, WebResource resource, Source xsltSource)
+        throws IOException, ServletException {
+        return renderXml(contextPath, resource, xsltSource, null);
+    }
+
+    protected InputStream renderXml(String contextPath, WebResource resource, Source xsltSource,
+            String encoding)
         throws IOException, ServletException {
 
         StringBuilder sb = new StringBuilder();
@@ -1333,7 +1342,7 @@ public class DefaultServlet extends HttpServlet {
         }
         sb.append("</entries>");
 
-        String readme = getReadme(resource);
+        String readme = getReadme(resource, encoding);
 
         if (readme!=null) {
             sb.append("<readme><![CDATA[");
@@ -1392,6 +1401,11 @@ public class DefaultServlet extends HttpServlet {
      *  relative
      */
     protected InputStream renderHtml(String contextPath, WebResource resource)
+        throws IOException {
+        return renderHtml(contextPath, resource, null);
+    }
+
+    protected InputStream renderHtml(String contextPath, WebResource resource, String encoding)
         throws IOException {
 
         // Prepare a writer to a buffered area
@@ -1512,7 +1526,7 @@ public class DefaultServlet extends HttpServlet {
 
         sb.append("<HR size=\"1\" noshade=\"noshade\">");
 
-        String readme = getReadme(resource);
+        String readme = getReadme(resource, encoding);
         if (readme!=null) {
             sb.append(readme);
             sb.append("<HR size=\"1\" noshade=\"noshade\">");
@@ -1553,17 +1567,33 @@ public class DefaultServlet extends HttpServlet {
      * Get the readme file as a string.
      */
     protected String getReadme(WebResource directory) {
+        return getReadme(directory, null);
+    }
+
+    protected String getReadme(WebResource directory, String encoding) {
 
         if (readmeFile != null) {
             WebResource resource = resources.getResource(
                     directory.getWebappPath() + readmeFile);
             if (resource.isFile()) {
                 StringWriter buffer = new StringWriter();
-                try (InputStream is = resource.getInputStream();
-                        InputStreamReader reader = new InputStreamReader(is)) {
+                InputStreamReader reader = null;
+                try (InputStream is = resource.getInputStream();){
+                    if (encoding != null) {
+                        reader = new InputStreamReader(is, encoding);
+                    } else {
+                        reader = new InputStreamReader(is);
+                    }
                     copyRange(reader, new PrintWriter(buffer));
                 } catch (IOException e) {
                     log("Failure to close reader", e);
+                } finally {
+                    if (reader != null) {
+                        try {
+                            reader.close();
+                        } catch (IOException e) {
+                        }
+                    }
                 }
                 return buffer.toString();
             } else {
