@@ -81,7 +81,7 @@ public class TestClose extends TomcatBaseTest {
 
     private static void awaitLatch(CountDownLatch latch, String failMessage) {
         try {
-            if (!latch.await(5000, TimeUnit.MILLISECONDS)) {
+            if (!latch.await(30000, TimeUnit.MILLISECONDS)) {
                 Assert.fail(failMessage);
             }
         } catch (InterruptedException e) {
@@ -110,7 +110,7 @@ public class TestClose extends TomcatBaseTest {
     public static void awaitOnError(Class<? extends Throwable> exceptionClazz) {
         awaitLatch(events.onErrorCalled, "onError not called");
         Assert.assertTrue(events.onErrorThrowable.getClass().getName(),
-                events.onErrorThrowable.getClass().isAssignableFrom(exceptionClazz));
+                exceptionClazz.isAssignableFrom(events.onErrorThrowable.getClass()));
     }
 
 
@@ -270,7 +270,9 @@ public class TestClose extends TomcatBaseTest {
     public static class TestEndpoint {
 
         @OnOpen
-        public void onOpen() {
+        public void onOpen(Session session) {
+            session.getUserProperties().put(
+                    "org.apache.tomcat.websocket.BLOCKING_SEND_TIMEOUT", Long.valueOf(3000));
             log.info("Session opened");
         }
 

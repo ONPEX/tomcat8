@@ -83,7 +83,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
 
 
     public static final int OP_REGISTER = 0x100; //register interest op
-    @Deprecated // Unused. Will be removed in Tomcat 9.0.x
+    @Deprecated // Unused. Will be removed in Tomcat 8.5.x
     public static final int OP_CALLBACK = 0x200; //callback interest op
 
     // ----------------------------------------------------------------- Fields
@@ -1140,7 +1140,8 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
             return result;
         }
 
-        public boolean processSendfile(SelectionKey sk, KeyAttachment attachment, boolean event) {
+        public SendfileState processSendfile(SelectionKey sk, KeyAttachment attachment,
+                boolean calledByProcessor) {
             NioChannel sc = null;
             try {
                 unreg(sk, attachment, sk.readyOps());
@@ -1150,31 +1151,31 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                     log.trace("Processing send file for: " + sd.fileName);
                 }
 
-                //setup the file channel
-                if ( sd.fchannel == null ) {
+                if (sd.fchannel == null) {
+                    // Setup the file channel
                     File f = new File(sd.fileName);
-                    if ( !f.exists() ) {
+                    if (!f.exists()) {
                         cancelledKey(sk,SocketStatus.ERROR);
-                        return false;
+                        return SendfileState.ERROR;
                     }
                     @SuppressWarnings("resource") // Closed when channel is closed
                     FileInputStream fis = new FileInputStream(f);
                     sd.fchannel = fis.getChannel();
                 }
 
-                //configure output channel
+                // Configure output channel
                 sc = attachment.getSocket();
-                //ssl channel is slightly different
+                // TLS/SSL channel is slightly different
                 WritableByteChannel wc = ((sc instanceof SecureNioChannel)?sc:sc.getIOChannel());
 
-                //we still have data in the buffer
+                // We still have data in the buffer
                 if (sc.getOutboundRemaining()>0) {
                     if (sc.flushOutbound()) {
                         attachment.access();
                     }
                 } else {
                     long written = sd.fchannel.transferTo(sd.pos,sd.length,wc);
-                    if ( written > 0 ) {
+                    if (written > 0) {
                         sd.pos += written;
                         sd.length -= written;
                         attachment.access();
@@ -1187,7 +1188,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                         }
                     }
                 }
-                if ( sd.length <= 0 && sc.getOutboundRemaining()<=0) {
+                if (sd.length <= 0 && sc.getOutboundRemaining()<=0) {
                     if (log.isDebugEnabled()) {
                         log.debug("Send file complete for: "+sd.fileName);
                     }
@@ -1196,42 +1197,43 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                         sd.fchannel.close();
                     } catch (Exception ignore) {
                     }
-                    if ( sd.keepAlive ) {
+                    // For calls from outside the Poller, the caller is
+                    // responsible for registering the socket for the
+                    // appropriate event(s) if sendfile completes.
+                    if (!calledByProcessor) {
+                        if (sd.keepAlive) {
                             if (log.isDebugEnabled()) {
                                 log.debug("Connection is keep alive, registering back for OP_READ");
                             }
-                            if (event) {
-                                this.add(attachment.getSocket(),SelectionKey.OP_READ);
-                            } else {
-                                reg(sk,attachment,SelectionKey.OP_READ);
+                            reg(sk,attachment,SelectionKey.OP_READ);
+                        } else {
+                            if (log.isDebugEnabled()) {
+                                log.debug("Send file connection is being closed");
                             }
-                    } else {
-                        if (log.isDebugEnabled()) {
-                            log.debug("Send file connection is being closed");
+                            cancelledKey(sk,SocketStatus.STOP);
                         }
-                        cancelledKey(sk,SocketStatus.STOP);
-                        return false;
                     }
+                    return SendfileState.DONE;
                 } else {
                     if (log.isDebugEnabled()) {
                         log.debug("OP_WRITE for sendfile: " + sd.fileName);
                     }
-                    if (event) {
+                    if (calledByProcessor) {
                         add(attachment.getSocket(),SelectionKey.OP_WRITE);
                     } else {
                         reg(sk,attachment,SelectionKey.OP_WRITE);
                     }
+                    return SendfileState.PENDING;
                 }
             }catch ( IOException x ) {
                 if ( log.isDebugEnabled() ) log.debug("Unable to complete sendfile request:", x);
                 cancelledKey(sk,SocketStatus.ERROR);
-                return false;
+                return SendfileState.ERROR;
             }catch ( Throwable t ) {
                 log.error("",t);
                 cancelledKey(sk, SocketStatus.ERROR);
-                return false;
+                return SendfileState.ERROR;
             }
-            return true;
         }
 
         protected void unreg(SelectionKey sk, KeyAttachment attachment, int readyOps) {
@@ -1329,9 +1331,9 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
 
         public Poller getPoller() { return poller;}
         public void setPoller(Poller poller){this.poller = poller;}
-        @Deprecated // Unused. NO-OP. Will be removed in Tomcat 9.0.x
+        @Deprecated // Unused. NO-OP. Will be removed in Tomcat 8.5.x
         public void setCometNotify(@SuppressWarnings("unused") boolean notify) { /* NO-OP */ }
-        @Deprecated // Unused. Always returns false. Will be removed in Tomcat 9.0.x
+        @Deprecated // Unused. Always returns false. Will be removed in Tomcat 8.5.x
         public boolean getCometNotify() { return false; }
         public int interestOps() { return interestOps;}
         public int interestOps(int ops) { this.interestOps  = ops; return ops; }

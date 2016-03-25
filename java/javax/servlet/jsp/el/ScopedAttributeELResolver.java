@@ -35,8 +35,18 @@ import javax.servlet.jsp.PageContext;
 */
 public class ScopedAttributeELResolver extends ELResolver {
 
-    public ScopedAttributeELResolver() {
-        super();
+    // Indicates if a performance short-cut is available
+    private static final Class<?> AST_IDENTIFIER_KEY;
+
+    static {
+        Class<?> key = null;
+        try {
+            key = Class.forName("org.apache.el.parser.AstIdentifier");
+        } catch (Exception e) {
+            // Ignore: Expected if not running on Tomcat. Not a problem since
+            //         this just allows a short-cut.
+        }
+        AST_IDENTIFIER_KEY = key;
     }
 
     @Override
@@ -51,15 +61,30 @@ public class ScopedAttributeELResolver extends ELResolver {
             context.setPropertyResolved(base, property);
             if (property != null) {
                 String key = property.toString();
-                PageContext page = (PageContext) context
-                        .getContext(JspContext.class);
+                PageContext page = (PageContext) context.getContext(JspContext.class);
                 result = page.findAttribute(key);
 
                 if (result == null) {
+                    boolean resolveClass = true;
+                    // Performance short-cut available when running on Tomcat
+                    if (AST_IDENTIFIER_KEY != null) {
+                        // Tomcat will set this key to Boolean.TRUE if the
+                        // identifier is a stand-alone identifier (i.e.
+                        // identifier) rather than part of an AstValue (i.e.
+                        // identifier.something). Imports do not need to be
+                        // checked if this is a stand-alone identifier
+                        Boolean value = (Boolean) context.getContext(AST_IDENTIFIER_KEY);
+                        if (value != null && value.booleanValue()) {
+                            resolveClass = false;
+                        }
+                    }
                     // This might be the name of an imported class
                     ImportHandler importHandler = context.getImportHandler();
                     if (importHandler != null) {
-                        Class<?> clazz = importHandler.resolveClass(key);
+                        Class<?> clazz = null;
+                        if (resolveClass) {
+                            clazz = importHandler.resolveClass(key);
+                        }
                         if (clazz != null) {
                             result = new ELClass(clazz);
                         }
@@ -86,8 +111,7 @@ public class ScopedAttributeELResolver extends ELResolver {
     }
 
     @Override
-    public Class<Object> getType(ELContext context, Object base,
-            Object property) {
+    public Class<Object> getType(ELContext context, Object base, Object property) {
         if (context == null) {
             throw new NullPointerException();
         }
@@ -101,8 +125,7 @@ public class ScopedAttributeELResolver extends ELResolver {
     }
 
     @Override
-    public void setValue(ELContext context, Object base, Object property,
-            Object value) {
+    public void setValue(ELContext context, Object base, Object property, Object value) {
         if (context == null) {
             throw new NullPointerException();
         }
@@ -111,8 +134,7 @@ public class ScopedAttributeELResolver extends ELResolver {
             context.setPropertyResolved(base, property);
             if (property != null) {
                 String key = property.toString();
-                PageContext page = (PageContext) context
-                        .getContext(JspContext.class);
+                PageContext page = (PageContext) context.getContext(JspContext.class);
                 int scope = page.getAttributesScope(key);
                 if (scope != 0) {
                     page.setAttribute(key, value, scope);
@@ -137,8 +159,7 @@ public class ScopedAttributeELResolver extends ELResolver {
     }
 
     @Override
-    public Iterator<FeatureDescriptor> getFeatureDescriptors(ELContext context,
-            Object base) {
+    public Iterator<FeatureDescriptor> getFeatureDescriptors(ELContext context, Object base) {
 
         PageContext ctxt = (PageContext) context.getContext(JspContext.class);
         List<FeatureDescriptor> list = new ArrayList<>();

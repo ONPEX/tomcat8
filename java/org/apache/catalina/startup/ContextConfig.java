@@ -78,6 +78,7 @@ import org.apache.tomcat.util.bcel.classfile.ClassParser;
 import org.apache.tomcat.util.bcel.classfile.ElementValue;
 import org.apache.tomcat.util.bcel.classfile.ElementValuePair;
 import org.apache.tomcat.util.bcel.classfile.JavaClass;
+import org.apache.tomcat.util.buf.UriUtil;
 import org.apache.tomcat.util.descriptor.XmlErrorHandler;
 import org.apache.tomcat.util.descriptor.web.ContextEjb;
 import org.apache.tomcat.util.descriptor.web.ContextEnvironment;
@@ -574,8 +575,7 @@ public class ContextConfig implements LifecycleListener {
     /**
      * Adjust docBase.
      */
-    protected void fixDocBase()
-        throws IOException {
+    protected void fixDocBase() throws IOException {
 
         Host host = (Host) context.getParent();
         File appBase = host.getAppBaseFile();
@@ -611,9 +611,11 @@ public class ContextConfig implements LifecycleListener {
             }
         }
 
+        boolean docBaseInAppBase = docBase.startsWith(appBase.getPath() + File.separatorChar);
+
         if (docBase.toLowerCase(Locale.ENGLISH).endsWith(".war") && !file.isDirectory()) {
+            URL war = UriUtil.buildJarUrl(new File(docBase));
             if (unpackWARs) {
-                URL war = new URL("jar:" + (new File(docBase)).toURI().toURL() + "!/");
                 docBase = ExpandWar.expand(host, war, pathName);
                 file = new File(docBase);
                 docBase = file.getCanonicalPath();
@@ -621,16 +623,14 @@ public class ContextConfig implements LifecycleListener {
                     ((StandardContext) context).setOriginalDocBase(origDocBase);
                 }
             } else {
-                URL war =
-                        new URL("jar:" + (new File (docBase)).toURI().toURL() + "!/");
                 ExpandWar.validate(host, war, pathName);
             }
         } else {
             File docDir = new File(docBase);
             File warFile = new File(docBase + ".war");
             URL war = null;
-            if (warFile.exists()) {
-                war = new URL("jar:" + warFile.toURI().toURL() + "!/");
+            if (warFile.exists() && docBaseInAppBase) {
+                war = UriUtil.buildJarUrl(warFile);
             }
             if (docDir.exists()) {
                 if (war != null && unpackWARs) {
@@ -657,7 +657,7 @@ public class ContextConfig implements LifecycleListener {
             }
         }
 
-        if (docBase.startsWith(appBase.getPath() + File.separatorChar)) {
+        if (docBaseInAppBase) {
             docBase = docBase.substring(appBase.getPath().length());
             docBase = docBase.replace(File.separatorChar, '/');
             if (docBase.startsWith("/")) {
@@ -668,7 +668,6 @@ public class ContextConfig implements LifecycleListener {
         }
 
         context.setDocBase(docBase);
-
     }
 
 
@@ -1191,13 +1190,11 @@ public class ContextConfig implements LifecycleListener {
         }
 
         // Step 9a. Make the merged web.xml available to other
-        // components, specifically Jasper, to save those components
-        // from having to re-generate it.
-        // TODO Use a ServletContainerInitializer for Jasper
+        // components.
         String mergedWebXml = webXml.toXml();
-        sContext.setAttribute(
-               org.apache.tomcat.util.scan.Constants.MERGED_WEB_XML,
-               mergedWebXml);
+        @SuppressWarnings("deprecation")
+        String attributeName = org.apache.tomcat.util.scan.Constants.MERGED_WEB_XML;
+        sContext.setAttribute(attributeName, mergedWebXml);
         if (context.getLogEffectiveWebXml()) {
             log.info("web.xml:\n" + mergedWebXml);
         }

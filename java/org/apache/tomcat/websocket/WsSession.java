@@ -60,8 +60,7 @@ public class WsSession implements Session {
     // An ellipsis is three bytes in UTF-8
     private static final int ELLIPSIS_BYTES_LEN = ELLIPSIS_BYTES.length;
 
-    private static final StringManager sm =
-            StringManager.getManager(Constants.PACKAGE_NAME);
+    private static final StringManager sm = StringManager.getManager(WsSession.class);
     private static AtomicLong ids = new AtomicLong(0);
 
     private final Log log = LogFactory.getLog(WsSession.class);
@@ -460,9 +459,11 @@ public class WsSession implements Session {
      * WebSocket 1.0. Section 2.1.5.
      * Need internal close method as spec requires that the local endpoint
      * receives a 1006 on timeout.
+     *
+     * @param closeReasonMessage The close reason to pass to the remote endpoint
+     * @param closeReasonLocal   The close reason to pass to the local endpoint
      */
-    public void doClose(CloseReason closeReasonMessage,
-            CloseReason closeReasonLocal) {
+    public void doClose(CloseReason closeReasonMessage, CloseReason closeReasonLocal) {
         // Double-checked locking. OK because state is volatile
         if (state != State.OPEN) {
             return;
@@ -607,6 +608,8 @@ public class WsSession implements Session {
 
     /**
      * Use protected so unit tests can access this method directly.
+     * @param msg The message
+     * @param reason The reason
      */
     protected static void appendCloseReasonWithTruncation(ByteBuffer msg,
             String reason) {
@@ -648,7 +651,8 @@ public class WsSession implements Session {
             // If the session has already been closed the any registered futures
             // will have been processed so the failure result for this future
             // needs to be set here.
-            if (isOpen()) {
+            if (isOpen() || f2sh.isCloseMessage()) {
+                // WebSocket session is open or this is the close message
                 futures.put(f2sh, f2sh);
             } else if (f2sh.isDone()) {
                 // NO-OP. The future completed before the session closed so no
@@ -670,6 +674,7 @@ public class WsSession implements Session {
 
     /**
      * Remove a {@link FutureToSendHandler} from the set of tracked instances.
+     * @param f2sh The handler
      */
     protected void unregisterFuture(FutureToSendHandler f2sh) {
         futures.remove(f2sh);

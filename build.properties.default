@@ -25,7 +25,7 @@
 # ----- Version Control Flags -----
 version.major=8
 version.minor=0
-version.build=32
+version.build=33
 version.patch=0
 version.suffix=
 
@@ -75,9 +75,7 @@ trydownload.httpusecaches=true
 # Please note this path must be absolute, not relative,
 # as it is referenced with different working directory
 # contexts by the various build scripts.
-base.path=/usr/share/java
-#base.path=C:/path/to/the/repository
-#base.path=/usr/local
+base.path=${user.home}/tomcat-build-libs
 
 compile.source=1.7
 compile.target=1.7
@@ -148,10 +146,10 @@ wsdl4j-lib.home=${base.path}/wsdl4j-${wsdl4j-lib.version}
 wsdl4j-lib.loc=${base-maven.loc}/wsdl4j/wsdl4j/${wsdl4j-lib.version}/wsdl4j-${wsdl4j-lib.version}.jar
 wsdl4j-lib.jar=${wsdl4j-lib.home}/wsdl4j-${wsdl4j-lib.version}.jar
 
-# ----- Eclipse JDT, version 4.4 or later -----#
+# ----- Eclipse JDT, version 4.5 or later -----#
 # See https://wiki.apache.org/tomcat/JDTCoreBatchCompiler before updating
-jdt.version=4.4.2
-jdt.release=R-4.4.2-201502041700
+jdt.version=4.5
+jdt.release=R-4.5-201506032000
 jdt.home=${base.path}/ecj-${jdt.version}
 jdt.jar=${jdt.home}/ecj-${jdt.version}.jar
 # The download will be moved to the archive area eventually. We are taking care of that in advance.
@@ -159,7 +157,7 @@ jdt.loc.1=http://archive.eclipse.org/eclipse/downloads/drops4/${jdt.release}/ecj
 jdt.loc.2=http://download.eclipse.org/eclipse/downloads/drops4/${jdt.release}/ecj-${jdt.version}.jar
 
 # ----- Tomcat native library -----
-tomcat-native.version=1.2.4
+tomcat-native.version=1.2.5
 tomcat-native.home=${base.path}/tomcat-native-${tomcat-native.version}
 tomcat-native.tar.gz=${tomcat-native.home}/tomcat-native.tar.gz
 tomcat-native.loc.1=${base-tomcat.loc.1}/tomcat-connectors/native/${tomcat-native.version}/source/tomcat-native-${tomcat-native.version}-src.tar.gz

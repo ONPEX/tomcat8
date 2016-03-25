@@ -111,17 +111,27 @@ public class Substitution {
         int pos = 0;
         int percentPos = 0;
         int dollarPos = 0;
+        int backslashPos = 0;
 
         while (pos < sub.length()) {
             percentPos = sub.indexOf('%', pos);
             dollarPos = sub.indexOf('$', pos);
-            if (percentPos == -1 && dollarPos == -1) {
+            backslashPos = sub.indexOf('\\', pos);
+            if (percentPos == -1 && dollarPos == -1 && backslashPos == -1) {
                 // Static text
                 StaticElement newElement = new StaticElement();
                 newElement.value = sub.substring(pos, sub.length());
                 pos = sub.length();
                 elements.add(newElement);
-            } else if (percentPos == -1 || ((dollarPos != -1) && (dollarPos < percentPos))) {
+            } else if (isFirstPos(backslashPos, dollarPos, percentPos)) {
+                if (backslashPos + 1 == sub.length()) {
+                    throw new IllegalArgumentException(sub);
+                }
+                StaticElement newElement = new StaticElement();
+                newElement.value = sub.substring(pos, backslashPos) + sub.substring(backslashPos + 1, backslashPos + 2);
+                pos = backslashPos + 2;
+                elements.add(newElement);
+            } else if (isFirstPos(dollarPos, percentPos)) {
                 // $: back reference to rule or map lookup
                 if (dollarPos + 1 == sub.length()) {
                     throw new IllegalArgumentException(sub);
@@ -139,7 +149,7 @@ public class Substitution {
                     newElement.n = Character.digit(sub.charAt(dollarPos + 1), 10);
                     pos = dollarPos + 2;
                     elements.add(newElement);
-                } else {
+                } else if (sub.charAt(dollarPos + 1) == '{') {
                     // $: map lookup as ${mapname:key|default}
                     MapElement newElement = new MapElement();
                     int open = sub.indexOf('{', dollarPos);
@@ -167,6 +177,8 @@ public class Substitution {
                     }
                     pos = close + 1;
                     elements.add(newElement);
+                } else {
+                    throw new IllegalArgumentException(sub + ": missing digit or curly brace.");
                 }
             } else {
                 // %: back reference to condition or server variable
@@ -186,7 +198,7 @@ public class Substitution {
                     newElement.n = Character.digit(sub.charAt(percentPos + 1), 10);
                     pos = percentPos + 2;
                     elements.add(newElement);
-                } else {
+                } else if (sub.charAt(percentPos + 1) == '{') {
                     // %: server variable as %{variable}
                     SubstitutionElement newElement = null;
                     int open = sub.indexOf('{', percentPos);
@@ -195,10 +207,7 @@ public class Substitution {
                     if (!(-1 < open && open < close)) {
                         throw new IllegalArgumentException(sub);
                     }
-                    if (colon > -1) {
-                        if (!(open < colon && colon < close)) {
-                            throw new IllegalArgumentException(sub);
-                        }
+                    if (colon > -1 && open < colon && colon < close) {
                         String type = sub.substring(open + 1, colon);
                         if (type.equals("ENV")) {
                             newElement = new ServerVariableEnvElement();
@@ -218,6 +227,8 @@ public class Substitution {
                     }
                     pos = close + 1;
                     elements.add(newElement);
+                } else {
+                    throw new IllegalArgumentException(sub + ": missing digit or curly brace.");
                 }
             }
         }
@@ -238,5 +249,29 @@ public class Substitution {
             buf.append(elements[i].evaluate(rule, cond, resolver));
         }
         return buf.toString();
+    }
+
+    /**
+     * Checks whether the first int is non negative and smaller than any non negative other int
+     * given with {@code others}.
+     *
+     * @param testPos
+     *            integer to test against
+     * @param others
+     *            list of integers that are paired against {@code testPos}. Any
+     *            negative integer will be ignored.
+     * @return {@code true} if {@code testPos} is not negative and is less then any given other
+     *         integer, {@code false} otherwise
+     */
+    private boolean isFirstPos(int testPos, int... others) {
+        if (testPos < 0) {
+            return false;
+        }
+        for (int other : others) {
+            if (other >= 0 && other < testPos) {
+                return false;
+            }
+        }
+        return true;
     }
 }

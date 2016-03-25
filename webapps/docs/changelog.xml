@@ -44,7 +44,264 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues do not "pop up" wrt. others).
 -->
-<section name="Tomcat 8.0.32 (markt)" rtext="release in progress">
+<section name="Tomcat 8.0.33 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        Correct a regression in the fix for <bug>58867</bug>. When configuring a
+        Context to use an external directory for the <code>docBase</code>, and
+        that directory happens to be located along side the original WAR, use
+        the directory as the <code>docBase</code> rather than expanding the
+        WAR into the <code>appBase</code> and using the newly created expanded
+        directory as the <code>docBase</code>. (markt)
+      </fix>
+      <add>
+        <bug>58351</bug>: Make the server build date and server version number
+        accessible via JMX. Patch provided by  Huxing Zhang. (markt)
+      </add>
+      <add>
+        <bug>58988</bug>: Special characters in the substitutions for the RewriteValve
+        can now be quoted with a backslash. (fschumacher)
+      </add>
+      <fix>
+        <bug>58999</bug>: Fix class and resource name filtering in WebappClassLoader.
+        It throws a StringIndexOutOfBoundsException if the name is exactly
+        "org" or "javax". (rjung)
+      </fix>
+      <scode>
+        Remove unnecessary code. There is no support for context level cluster.
+        (kfujino)
+      </scode>
+      <add>
+        Make checking for var and map replacement in RewriteValve a bit stricter and
+        correct detection of colon in var replacement. (fschumacher)
+      </add>
+      <fix>
+        Fix the type of <code>InstanceManager</code> attribute of mbean
+        definition of <code>StandardContext</code>. (kfujino)
+      </fix>
+      <fix>
+        Refactor the web application class loader to reduce the impact of JAR
+        scanning on the memory footprint of the web application. (markt)
+      </fix>
+      <fix>
+        Fix some resource leaks in the error handling for accessing files from
+        JARs and WARs. (markt)
+      </fix>
+      <fix>
+        Refactor the JAR and JAR-in-WAR resource handling to reduce the memory
+        footprint of the web application. (markt)
+      </fix>
+      <fix>
+        <bug>57809</bug>: Deprecate the custom context attribute
+        <code>org.apache.tomcat.util.scan.MergedWebXml</code> which will be
+        removed in Tomcat 9. (markt)
+      </fix>
+      <fix>
+        <bug>59001</bug>: Correctly handle the case when Tomcat is installed on
+        a path where one of the segments ends in an exclamation mark. (markt)
+      </fix>
+      <fix>
+        Expand the fix for <bug>59001</bug> to cover the special sequences used
+        in Tomcat&apos;s custom jar:war: URLs. (markt)
+      </fix>
+      <fix>
+        <bug>59043</bug>: Avoid warning while expiring sessions associated with
+        a single sign on if <code>HttpServletRequest.logout()</code> is used.
+        (markt)
+      </fix>
+      <fix>
+        <bug>59054</bug>: Ensure that using the
+        <code>CrawlerSessionManagerValve</code> in a distributed environment
+        does not trigger an error when the Valve registers itself in the
+        session. (markt)
+      </fix>
+      <fix>
+        Storeconfig handling of alternate cookie processors. (markt/remm)
+      </fix>
+      <fix>
+        Storeconfig handling for socket properties. (remm)
+      </fix>
+      <add>
+        Log a warning message if a user tries to configure the default session
+        timeout via the deprecated (and ignored)
+        <code>Manager.setMaxInactiveInterval()</code> method. (markt)
+      </add>
+      <fix>
+        Fix incorrect parsing of the NE and NC flags in rewrite rules. (remm)
+      </fix>
+      <fix>
+        <bug>59065</bug>: Correct the timing of the check for colons in paths
+        on non-Windows systems implemented in <code>catalina.sh</code> so it
+        works correctly with Cygwin. Patch provided by Ed Randall. (markt)
+      </fix>
+      <fix>
+        When a Host is configured with an appBase that does not exist, create
+        the appBase before trying to expand an external WAR file into it.
+        (markt)
+      </fix>
+      <fix>
+       <bug>59115</bug>: When using the Servlet 3.0 file upload, the submitted
+       file name may be provided as a token or a quoted-string. If a
+       quoted-string, unquote the string before returning it to the user.
+       (markt)
+      </fix>
+      <fix>
+        <bug>59123</bug>: Close <code>NamingEnumeration</code> objects used by
+        the <code>JNDIRealm</code> once they are no longer required.
+        (fschumacher/markt)
+      </fix>
+      <fix>
+        <bug>59138</bug>: Correct a false positive warning for ThreadLocal
+        related memory leaks when the key class but not the value class has been
+        loaded by the web application class loader. (markt)
+      </fix>
+      <fix>
+        <bug>59145</bug>: Don't log an invalid warning when a user logs out of
+        a session associated with SSO. (markt)
+      </fix>
+      <fix>
+        <bug>59151</bug>: Fix a regression in the fix for <bug>56917</bug> that
+        added additional (and arguably unnecessary) validation to the provided
+        redirect location. (markt)
+      </fix>
+      <fix>
+        <bug>59154</bug>: Fix a <code>NullPointerException</code> in the
+        <code>JASSMemoryLoginModue</code> resulting from the introduction of the
+        <code>CredentialHandler</code> to <code>Realm</code>s. (schultz/markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        <bug>58646</bug>: Correct a problem with sendfile that resulted in a
+        Processor being added to the cache twice leading to broken responses.
+        (markt)
+      </fix>
+      <fix>
+        <bug>59015</bug>: Fix potential cause of endless APR Poller loop during
+        shutdown if the Poller experiences an error during the shutdown process.
+        (markt)
+      </fix>
+      <fix>
+        Align cipher aliases for <code>kECDHE</code> and <code>ECDHE</code> with
+        the current OpenSSL implementation. (markt)
+      </fix>
+      <fix>
+        <bug>59081</bug>: Retain the user defined cipher order when defining
+        ciphers using the OpenSSL format. (markt)
+      </fix>
+      <fix>
+        <bug>59089</bug>: Correctly ignore HTTP headers that include non-token
+        characters in the header name. (markt)
+      </fix>
+      <add>
+        Add support for additional OpenSSL cipher aliases from OpenSSL master
+        when specifying ciphers using the OpenSSL syntax. (markt)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        <bug>57583</bug>: Improve the performance of
+        <code>javax.servlet.jsp.el.ScopedAttributeELResolver</code> when
+        resolving attributes that do not exist. This improvement only works when
+        Jasper is used with with Tomcat's EL implementation. (markt)
+      </fix>
+      <update>
+        <bug>58111</bug>: Update to the Eclipse JDT Compiler 4.5. (markt)
+      </update>
+      <add>
+        Add Java 9 support for JSPs. (markt)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="WebSocket">
+    <changelog>
+      <fix>
+        <bug>59014</bug>: Ensure that a WebSocket close message can be sent
+        after a close message has been received. (markt)
+      </fix>
+      <fix>
+        Correctly handle compression of partial messages when the final message
+        fragment has a zero length payload. (markt)
+      </fix>
+      <fix>
+        <bug>59119</bug>: Correct read logic for WebSocket client when using
+        secure connections. (markt)
+      </fix>
+      <fix>
+        <bug>59134</bug>: Correct client connect logic for secure connections
+        made through a proxy. (markt)
+      </fix>
+      <fix>
+        <bug>59189</bug>: Explicitly release the native memory held by the
+        <code>Inflater</code> and <code>Deflater</code> when using
+        PerMessageDeflate and the WebSocket session ends. Based on a patch by
+        Henrik Olsson. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <fix>
+        Correct an error in the documentation of the expected behaviour for
+        automatic deployment. If a WAR is updated and an expanded directory is
+        present, the directory will always be deleted and recreated by expanding
+        the WAR if <code>unpackWARs</code> is <code>true</code>. (markt)
+      </fix>
+      <fix>
+        <bug>58935</bug>: Remove incorrect references in the documentation to
+        using <code>jar:file:</code> URLs with the Manager application. (markt)
+      </fix>
+      <fix>
+        Correct the description of the
+        <code>ServletRequest.getServerPort()</code> in Proxy How-To.
+        Issue reported via comments.apache.org. (violetagg)
+      </fix>
+      <fix>
+        Fix a potenital indefinite wait in the Comet Chat servlet in the
+        examples web application. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Tribes">
+    <changelog>
+      <fix>
+        If promoting a proxy node to a primary node when getting a session,
+        notify the change of the new primary node to the original backup node.
+        (kfujino)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <fix>
+        <bug>58283</bug>: Change the default download location for libraries
+        during the build process from <code>/usr/share/java</code> to
+        <code>${user.home}/temp</code>. Patch provided by Ahmed Hosni. (markt)
+      </fix>
+      <fix>
+        <bug>59031</bug>: When using the Windows uninstaller, do not remove the
+        contents of any directories that have been symlinked into the Tomcat
+        directory structure. (markt)
+      </fix>
+      <update>
+        Update the packaged version of the Tomcat Native Library to 1.2.5 to
+        pick up the Windows binaries that are based on OpenSSL 1.0.2g and APR
+        1.5.1. (markt)
+      </update>
+      <update>
+        Modify the default <code>tomcat-users.xml</code> file to make it harder
+        for users to configure the entries intended for use with the examples
+        web application for the Manager application. (markt)
+      </update>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.0.32 (markt)" rtext="2016-02-08">
   <subsection name="General">
     <changelog>
       <add>
@@ -214,7 +471,7 @@
       <add>
         Extend the feature available in the cluster session manager
         implementations that enables session attribute replication to be
-        filtered bases on attribute name to all session manager implementations.
+        filtered based on attribute name to all session manager implementations.
         Note that configuration attribute name has changed from
         <code>sessionAttributeFilter</code> to
         <code>sessionAttributeNameFilter</code>. Apply the filter on load as
