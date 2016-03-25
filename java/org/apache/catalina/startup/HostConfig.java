@@ -22,7 +22,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,6 +58,7 @@ import org.apache.catalina.util.ContextName;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
+import org.apache.tomcat.util.buf.UriUtil;
 import org.apache.tomcat.util.digester.Digester;
 import org.apache.tomcat.util.modeler.Registry;
 import org.apache.tomcat.util.res.StringManager;
@@ -282,6 +282,8 @@ public class HostConfig
         // Process the event that has occurred
         if (event.getType().equals(Lifecycle.PERIODIC_EVENT)) {
             check();
+        } else if (event.getType().equals(Lifecycle.BEFORE_START_EVENT)) {
+            beforeStart();
         } else if (event.getType().equals(Lifecycle.START_EVENT)) {
             start();
         } else if (event.getType().equals(Lifecycle.STOP_EVENT)) {
@@ -840,9 +842,8 @@ public class HostConfig
                         if (context == null) {
                             context = new FailedContext();
                         }
-                        context.setConfigFile(new URL("jar:" +
-                                war.toURI().toString() + "!/" +
-                                Constants.ApplicationContextXml));
+                        context.setConfigFile(
+                                UriUtil.buildJarUrl(war, Constants.ApplicationContextXml));
                     }
                 }
             } else if (!deployXML && xmlInWar) {
@@ -1219,7 +1220,7 @@ public class HostConfig
      * Check resources for redeployment and reloading.
      *
      * @deprecated Use {@link #checkResources(DeployedApplication, boolean)}.
-     *             Will be removed in Tomcat 9.0.x
+     *             Will be removed in Tomcat 8.5.x
      */
     @Deprecated
     protected synchronized void checkResources(DeployedApplication app) {
@@ -1504,6 +1505,18 @@ public class HostConfig
     }
 
 
+    public void beforeStart() {
+        if (host.getCreateDirs()) {
+            File[] dirs = new File[] {host.getAppBaseFile(),host.getConfigBaseFile()};
+            for (int i=0; i<dirs.length; i++) {
+                if (!dirs[i].mkdirs() && !dirs[i].isDirectory()) {
+                    log.error(sm.getString("hostConfig.createDirs",dirs[i]));
+                }
+            }
+        }
+    }
+
+
     /**
      * Process a "start" event for this Host.
      */
@@ -1520,15 +1533,6 @@ public class HostConfig
                 (this, oname, this.getClass().getName());
         } catch (Exception e) {
             log.error(sm.getString("hostConfig.jmx.register", oname), e);
-        }
-
-        if (host.getCreateDirs()) {
-            File[] dirs = new File[] {host.getAppBaseFile(),host.getConfigBaseFile()};
-            for (int i=0; i<dirs.length; i++) {
-                if (!dirs[i].mkdirs() && !dirs[i].isDirectory()) {
-                    log.error(sm.getString("hostConfig.createDirs",dirs[i]));
-                }
-            }
         }
 
         if (!host.getAppBaseFile().isDirectory()) {

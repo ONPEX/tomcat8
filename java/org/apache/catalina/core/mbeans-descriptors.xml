@@ -151,7 +151,7 @@
 
     <attribute name="instanceManager"
                description="Object that creates and destroys servlets, filters, and listeners. Include dependency injection and postConstruct/preDestory handling"
-               type="org.apache.catalina.instanceManagement.InstanceManager" />
+               type="org.apache.tomcat.InstanceManager" />
 
     <attribute name="javaVMs"
                description="The Java virtual machines on which this module is running"
@@ -1350,6 +1350,16 @@
 
     <attribute name="serverInfo"
                description="Tomcat server release identifier"
+               type="java.lang.String"
+               writeable="false"/>
+
+    <attribute name="serverBuilt"
+               description="Tomcat server built timestamp"
+               type="java.lang.String"
+               writeable="false"/>
+
+    <attribute name="serverNumber"
+               description="Tomcat server's version number"
                type="java.lang.String"
                writeable="false"/>
 

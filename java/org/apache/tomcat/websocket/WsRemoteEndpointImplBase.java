@@ -268,7 +268,8 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
         // trigger a session close and depending on timing the client
         // session may close before we can read the timeout.
         long timeout = getBlockingSendTimeout();
-        FutureToSendHandler f2sh = new FutureToSendHandler(wsSession);
+        FutureToSendHandler f2sh =
+                new FutureToSendHandler(wsSession, opCode == Constants.OPCODE_CLOSE);
         startMessage(opCode, payload, last, f2sh);
         try {
             if (timeout == -1) {
@@ -660,6 +661,9 @@ public abstract class WsRemoteEndpointImplBase implements RemoteEndpoint {
         for (EncoderEntry entry : encoderEntries) {
             entry.getEncoder().destroy();
         }
+        // The transformation handles both input and output. It only needs to be
+        // closed once so it is closed here on the output side.
+        transformation.close();
         doClose();
     }
 

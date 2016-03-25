@@ -108,7 +108,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
      * MessageDigest class, or <code>null</code> if no digesting should
      * be performed.
      *
-     * @deprecated Unused. Will be removed in Tomcat 9.0.x onwards.
+     * @deprecated Unused. Will be removed in Tomcat 8.5.x onwards.
      */
     @Deprecated
     protected String digest = null;
@@ -116,7 +116,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
     /**
      * The encoding charset for the digest.
      *
-     * @deprecated Unused. Will be removed in Tomcat 9.0.x onwards.
+     * @deprecated Unused. Will be removed in Tomcat 8.5.x onwards.
      */
     @Deprecated
     protected String digestEncoding = null;
@@ -128,7 +128,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
     /**
      * The MessageDigest object for digesting user credentials (passwords).
      *
-     * @deprecated Unused. Will be removed in Tomcat 9.0.x onwards.
+     * @deprecated Unused. Will be removed in Tomcat 8.5.x onwards.
      */
     @Deprecated
     protected volatile MessageDigest md = null;
@@ -137,7 +137,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
     /**
      * MD5 message digest provider.
      *
-     * @deprecated Unused. Will be removed in Tomcat 9.0.x onwards.
+     * @deprecated Unused. Will be removed in Tomcat 8.5.x onwards.
      */
     @Deprecated
     protected static volatile MessageDigest md5Helper;
@@ -248,7 +248,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
      * @return The currently configured algorithm used to digest stored
      *         credentials
      *
-     * @deprecated  This will be removed in Tomcat 9.0.x as it has been replaced
+     * @deprecated  This will be removed in Tomcat 8.5.x as it has been replaced
      *              by the CredentialHandler
      */
     @Deprecated
@@ -266,7 +266,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
      *
      * @param digest The new digest algorithm
      *
-     * @deprecated  This will be removed in Tomcat 9.0.x as it has been replaced
+     * @deprecated  This will be removed in Tomcat 8.5.x as it has been replaced
      *              by the CredentialHandler
      */
     @Deprecated
@@ -294,7 +294,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
      *
      * @return The charset (may be null) for platform default
      *
-     * @deprecated  This will be removed in Tomcat 9.0.x as it has been replaced
+     * @deprecated  This will be removed in Tomcat 8.5.x as it has been replaced
      *              by the CredentialHandler
      */
     @Deprecated
@@ -311,7 +311,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
      *
      * @param charset The charset (null for platform default)
      *
-     * @deprecated  This will be removed in Tomcat 9.0.x as it has been replaced
+     * @deprecated  This will be removed in Tomcat 8.5.x as it has been replaced
      *              by the CredentialHandler
      */
     @Deprecated
@@ -332,7 +332,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
 
 
     /**
-     * @deprecated  This will be removed in Tomcat 9.0.x as it has been replaced
+     * @deprecated  This will be removed in Tomcat 8.5.x as it has been replaced
      *              by the CredentialHandler
      */
     @Deprecated
@@ -443,6 +443,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
      * @param username Username of the Principal to look up
      * @param credentials Password or other credentials to use in
      *  authenticating this username
+     * @return the associated principal, or <code>null</code> if there is none.
      */
     @Override
     public Principal authenticate(String username, String credentials) {
@@ -610,7 +611,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
 
 
     /**
-     * @deprecated Unused. Will be removed in Tomcat 9.0.x onwards.
+     * @deprecated Unused. Will be removed in Tomcat 8.5.x onwards.
      */
     @Deprecated
     protected boolean compareCredentials(String userCredentials,
@@ -1328,6 +1329,9 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
 
     /**
      * Return the digest associated with given principal's user name.
+     * @param username the user name
+     * @param realmName the realm name
+     * @return the digest for the specified user
      */
     protected String getDigest(String username, String realmName) {
         if (hasMessageDigest()) {
@@ -1351,20 +1355,24 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
 
 
     /**
-     * Return a short name for this Realm implementation, for use in
+     * @return a short name for this Realm implementation, for use in
      * log messages.
      */
     protected abstract String getName();
 
 
     /**
-     * Return the password associated with the given principal's user name.
+     * Get the password for the specified user.
+     * @param username The user name
+     * @return the password associated with the given principal's user name.
      */
     protected abstract String getPassword(String username);
 
 
     /**
-     * Return the Principal associated with the given certificate.
+     * Get the principal associated with the specified certificate.
+     * @param usercert The user certificate
+     * @return the Principal associated with the given certificate.
      */
     protected Principal getPrincipal(X509Certificate usercert) {
         String username = x509UsernameRetriever.getUsername(usercert);
@@ -1377,7 +1385,9 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
 
 
     /**
-     * Return the Principal associated with the given user name.
+     * Get the principal associated with the specified user.
+     * @param username The user name
+     * @return the Principal associated with the given user name.
      */
     protected abstract Principal getPrincipal(String username);
 
@@ -1398,6 +1408,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
      * with which this Realm is associated. If the server cannot be found (eg
      * because the container hierarchy is not complete), <code>null</code> is
      * returned.
+     * @return the Server associated with the realm
      */
     protected Server getServer() {
         Container c = container;
