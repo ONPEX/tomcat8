@@ -3,6 +3,7 @@ tomcat8 (8.0.36-1) UNRELEASED; urgency=medium
   * Team upload.
   * New upstream release
     - Refreshed the patches
+    - Depend on libecj-java (>= 3.11.0)
   * Standards-Version updated to 3.9.8 (no changes)
   * Use a secure Vcs-Git URL
 
