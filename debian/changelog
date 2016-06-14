@@ -4,6 +4,7 @@ tomcat8 (8.0.36-1) UNRELEASED; urgency=medium
   * New upstream release
     - Refreshed the patches
   * Standards-Version updated to 3.9.8 (no changes)
+  * Use a secure Vcs-Git URL
 
  -- Emmanuel Bourg <ebourg@apache.org>  Fri, 25 Mar 2016 09:22:23 +0100
 
