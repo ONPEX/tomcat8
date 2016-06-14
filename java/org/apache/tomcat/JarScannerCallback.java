@@ -27,24 +27,46 @@ import java.net.JarURLConnection;
 public interface JarScannerCallback {
 
     /**
-     * A JAR was found (probably packaged in a WAR) and may be accessed for
-     * further processing via the provided URL connection.
+     * A JAR was found and may be accessed for further processing via the
+     * provided URL connection. The caller is responsible for closing the JAR.
      *
      * @param urlConn    The connection to the identified JAR
      * @param webappPath The path, if any, to the JAR within the web application
      * @param isWebapp   Indicates if the JAR was found within a web
      *                       application. If <code>false</code> the JAR should
      *                       be treated as being provided by the container
+     *
+     * @deprecated Use {@link #scan(Jar, String, boolean)} instead. Because the
+     *             urlConn parameter could refer directly to a JAR or to a JAR
+     *             as an entry in a WAR, it required further processing that
+     *             included obtaining the original URL. It is simpler to provide
+     *             the URL to start with.
+     *             This method will be removed in Tomcat 8.5.x onwards.
      */
+    @Deprecated
     public void scan(JarURLConnection urlConn, String webappPath, boolean isWebapp)
             throws IOException;
 
     /**
-     * A JAR was found (probably in an unpacked WAR or possibly elsewhere on the
-     * class path) and may be accessed for further processing via the provided
-     * file.
+     * A JAR was found and may be accessed for further processing via the
+     * provided URL connection.
      *
-     * @param file       The file for the identified JAR.
+     * @param jar        The JAR to process
+     * @param webappPath The path, if any, to the JAR within the web application
+     * @param isWebapp   Indicates if the JAR was found within a web
+     *                       application. If <code>false</code> the JAR should
+     *                       be treated as being provided by the container
+     *
+     * @throws IOException if an I/O error occurs while scanning the JAR
+     */
+    public void scan(Jar jar, String webappPath, boolean isWebapp)
+            throws IOException;
+
+    /**
+     * A directory was found that is to be treated as an unpacked JAR. The
+     * directory may be accessed for further processing via the provided file.
+     *
+     * @param file       The directory containing the unpacked JAR.
      * @param webappPath The path, if any, to the file within the web
      *                       application
      * @param isWebapp   Indicates if the JAR was found within a web

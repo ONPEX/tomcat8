@@ -51,7 +51,6 @@ import org.junit.Test;
 import org.apache.catalina.Context;
 import org.apache.catalina.servlets.DefaultServlet;
 import org.apache.catalina.startup.Tomcat;
-import org.apache.catalina.startup.TomcatBaseTest;
 import org.apache.coyote.http11.Http11Protocol;
 import org.apache.tomcat.util.net.TesterSupport;
 import org.apache.tomcat.websocket.TesterMessageCountClient.BasicBinary;
@@ -62,7 +61,7 @@ import org.apache.tomcat.websocket.TesterMessageCountClient.TesterProgrammaticEn
 import org.apache.tomcat.websocket.server.Constants;
 import org.apache.tomcat.websocket.server.WsContextListener;
 
-public class TestWsWebSocketContainer extends TomcatBaseTest {
+public class TestWsWebSocketContainer extends WebSocketBaseTest {
 
     private static final String MESSAGE_EMPTY = "";
     private static final String MESSAGE_STRING_1 = "qwerty";
@@ -71,6 +70,9 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
 
     private static final long TIMEOUT_MS = 5 * 1000;
     private static final long MARGIN = 500;
+
+    // 5s should be plenty but Gump can be a lot slower
+    private static final long START_STOP_WAIT = 60 * 1000;
 
     static {
         StringBuilder sb = new StringBuilder(4096);
@@ -346,9 +348,9 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
         Exception exception = null;
         try {
             while (true) {
+                lastSend = System.currentTimeMillis();
                 Future<Void> f = wsSession.getAsyncRemote().sendBinary(
                         ByteBuffer.wrap(MESSAGE_BINARY_4K));
-                lastSend = System.currentTimeMillis();
                 f.get();
             }
         } catch (Exception e) {
@@ -357,9 +359,13 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
 
         long timeout = System.currentTimeMillis() - lastSend;
 
-        // Clear the server side block and prevent and further blocks to allow
-        // the server to shutdown cleanly
+        // Clear the server side block and prevent further blocks to allow the
+        // server to shutdown cleanly
         BlockingPojo.clearBlock();
+
+        // Close the client session, primarily to allow the
+        // BackgroundProcessManager to shut down.
+        wsSession.close();
 
         String msg = "Time out was [" + timeout + "] ms";
 
@@ -431,6 +437,10 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
             }
             loops++;
         }
+
+        // Close the client session, primarily to allow the
+        // BackgroundProcessManager to shut down.
+        wsSession.close();
 
         // Check the right exception was thrown
         Assert.assertNotNull(ConstantTxEndpoint.getException());
@@ -557,10 +567,15 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
                 session.getAsyncRemote().setSendTimeout(TIMEOUT_MS);
             }
 
-            long lastSend = 0;
+            // The close message is written with a blocking write. This is going
+            // to fail so reduce the timeout from the default so the test
+            // completes faster
+            session.getUserProperties().put(
+                    WsRemoteEndpointImplBase.BLOCKING_SEND_TIMEOUT_PROPERTY, Long.valueOf(5000));
 
             // Should send quickly until the network buffers fill up and then
             // block until the timeout kicks in
+            long lastSend = 0;
             try {
                 while (true) {
                     lastSend = System.currentTimeMillis();
@@ -658,6 +673,13 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
         Assert.assertEquals(2, setB.size());
         Assert.assertTrue(setB.remove(s1b));
         Assert.assertTrue(setB.remove(s2b));
+
+        // Close sessions explicitly as Gump reports a session remains open at
+        // the end of this test
+        s2a.close();
+        s3a.close();
+        s1b.close();
+        s2b.close();
     }
 
 
@@ -905,6 +927,9 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
 
         Session s = connectToEchoServer(wsContainer, new EndpointA(), path);
 
+        // One for the client, one for the server
+        validateBackgroundProcessCount(2);
+
         StringBuilder msg = new StringBuilder();
         for (long i = 0; i < size; i++) {
             msg.append('x');
@@ -912,7 +937,7 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
 
         s.getBasicRemote().sendText(msg.toString());
 
-        // Wait for up to 5 seconds for session to close
+        // Wait for up to 5 seconds for the client session to open
         boolean open = s.isOpen();
         int count = 0;
         while (open != expectOpen && count < 50) {
@@ -923,8 +948,29 @@ public class TestWsWebSocketContainer extends TomcatBaseTest {
 
         Assert.assertEquals(Boolean.valueOf(expectOpen),
                 Boolean.valueOf(s.isOpen()));
+
+        // Close the session if it is expected to be open
+        if (expectOpen) {
+            s.close();
+        }
+
+        // Ensure both server and client have shutdown
+        validateBackgroundProcessCount(0);
     }
 
+
+    private void validateBackgroundProcessCount(int expected) throws Exception {
+        int count = 0;
+        while (count < (START_STOP_WAIT / 100)) {
+            if (BackgroundProcessManager.getInstance().getProcessCount() == expected) {
+                break;
+            }
+            Thread.sleep(100);
+            count++;
+        }
+        Assert.assertEquals(expected, BackgroundProcessManager.getInstance().getProcessCount());
+
+    }
 
     @Test
     public void testPerMessageDefalteClient01() throws Exception {

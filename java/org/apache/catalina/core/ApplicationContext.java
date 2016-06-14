@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.naming.NamingException;
 import javax.servlet.Filter;
@@ -65,6 +66,7 @@ import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.mapper.MappingData;
 import org.apache.catalina.util.ServerInfo;
+import org.apache.catalina.util.URLEncoder;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.buf.CharChunk;
 import org.apache.tomcat.util.buf.MessageBytes;
@@ -81,8 +83,7 @@ import org.apache.tomcat.util.res.StringManager;
  * @author Craig R. McClanahan
  * @author Remy Maucherat
  */
-public class ApplicationContext
-    implements ServletContext {
+public class ApplicationContext implements ServletContext {
 
     protected static final boolean STRICT_SERVLET_COMPLIANCE;
 
@@ -133,8 +134,7 @@ public class ApplicationContext
     /**
      * List of read only attributes for this context.
      */
-    private final Map<String,String> readOnlyAttributes =
-            new ConcurrentHashMap<>();
+    private final Map<String,String> readOnlyAttributes = new ConcurrentHashMap<>();
 
 
     /**
@@ -170,8 +170,7 @@ public class ApplicationContext
     /**
      * The merged context initialization parameters for this Context.
      */
-    private final ConcurrentHashMap<String,String> parameters =
-            new ConcurrentHashMap<>();
+    private final ConcurrentMap<String,String> parameters = new ConcurrentHashMap<>();
 
 
     /**
@@ -520,11 +519,11 @@ public class ApplicationContext
 
         mappingData.recycle();
 
-        // Construct a RequestDispatcher to process this request
-        return new ApplicationDispatcher
-            (wrapper, uriCC.toString(), wrapperPath, pathInfo,
-             queryString, null);
+        String encodedUri = URLEncoder.DEFAULT.encode(uriCC.toString());
 
+        // Construct a RequestDispatcher to process this request
+        return new ApplicationDispatcher(wrapper, encodedUri, wrapperPath, pathInfo,
+                queryString, null);
     }
 
 

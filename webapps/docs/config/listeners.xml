@@ -208,13 +208,6 @@
         startup on non-Sun JVMs. The default is <code>true</code>.</p>
       </attribute>
 
-      <attribute name="java2DDisposerProtection" required="false">
-        <p>Enables protection so that loading the
-        <code>sun.java2d.Disposer</code> class by a web application does not
-        result in a memory leak.
-        Defaults to <code>false</code> because a thread is launched.</p>
-      </attribute>
-
       <attribute name="ldapPoolProtection" required="false">
         <p>Enables protection so that the PoolCleaner thread started by
         <code>com.sun.jndi.ldap.LdapPoolManager</code> does not result in a
@@ -246,6 +239,9 @@
         class loader. The protection calls the <code>getPolicy()</code> method
         of this class to ensure that the static initializer is not triggered by
         a web application. Defaults to <code>true</code>.</p>
+        <p>Note: The underlying leak has been fixed in Java 7 update 51 onwards
+        and Java 8 onwards. This option is unnecessary if running on a fixed
+        version of Java.</p>
       </attribute>
 
       <attribute name="tokenPollerProtection" required="false">

@@ -46,6 +46,7 @@ import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.collections.SynchronizedStack;
+import org.apache.tomcat.util.compat.JreCompat;
 import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 import org.apache.tomcat.util.net.SecureNio2Channel.ApplicationBufferHandler;
 import org.apache.tomcat.util.net.jsse.NioX509KeyManager;
@@ -120,8 +121,18 @@ public class Nio2Endpoint extends AbstractEndpoint<Nio2Channel> {
     private SynchronizedStack<Nio2Channel> nioChannels;
 
 
-    // ------------------------------------------------------------- Properties
+    // ------------------------------------------------------------ Constructor
 
+    public Nio2Endpoint() {
+        // If running on Java 7, the insecure DHE ciphers need to be excluded by
+        // default
+        if (!JreCompat.isJre8Available()) {
+            setCiphers(DEFAULT_CIPHERS + ":!DHE");
+        }
+    }
+
+
+    // ------------------------------------------------------------- Properties
 
     /**
      * Use the object caches to reduce GC at the expense of additional memory use.
@@ -622,27 +633,38 @@ public class Nio2Endpoint extends AbstractEndpoint<Nio2Channel> {
                     processSocket0(socket, status, false);
                 }
             }
+        } catch (Throwable e) {
+            ExceptionUtils.handleThrowable(e);
+            if (log.isDebugEnabled()) log.error("",e);
+        }
+        try {
             handler.release(socket);
-            try {
-                if (socket.getSocket() != null) {
-                    socket.getSocket().close(true);
-                }
-            } catch (Exception e){
-                if (log.isDebugEnabled()) {
-                    log.debug(sm.getString(
-                            "endpoint.debug.socketCloseFail"), e);
+        } catch (Throwable e) {
+            ExceptionUtils.handleThrowable(e);
+            if (log.isDebugEnabled()) log.error("",e);
+        }
+        try {
+            if (socket.getSocket() != null) {
+                synchronized (socket.getSocket()) {
+                    if (socket.getSocket() != null && socket.getSocket().isOpen()) {
+                        countDownConnection();
+                        socket.getSocket().close(true);
+                    }
                 }
             }
+        } catch (Exception e){
+            if (log.isDebugEnabled()) {
+                log.debug(sm.getString(
+                        "endpoint.debug.socketCloseFail"), e);
+            }
+        }
+        try {
             Nio2SocketWrapper nio2Socket = (Nio2SocketWrapper) socket;
-            try {
-                if (nio2Socket.getSendfileData() != null
-                        && nio2Socket.getSendfileData().fchannel != null
-                        && nio2Socket.getSendfileData().fchannel.isOpen()) {
-                    nio2Socket.getSendfileData().fchannel.close();
-                }
-            } catch (Exception ignore) {
+            if (nio2Socket.getSendfileData() != null
+                    && nio2Socket.getSendfileData().fchannel != null
+                    && nio2Socket.getSendfileData().fchannel.isOpen()) {
+                nio2Socket.getSendfileData().fchannel.close();
             }
-            countDownConnection();
         } catch (Throwable e) {
             ExceptionUtils.handleThrowable(e);
             if (log.isDebugEnabled()) log.error("",e);

@@ -55,6 +55,7 @@ import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.IntrospectionUtils;
 import org.apache.tomcat.util.collections.SynchronizedQueue;
 import org.apache.tomcat.util.collections.SynchronizedStack;
+import org.apache.tomcat.util.compat.JreCompat;
 import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 import org.apache.tomcat.util.net.SecureNioChannel.ApplicationBufferHandler;
 import org.apache.tomcat.util.net.jsse.NioX509KeyManager;
@@ -143,8 +144,18 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
     private SynchronizedStack<NioChannel> nioChannels;
 
 
-    // ------------------------------------------------------------- Properties
+    // ------------------------------------------------------------ Constructor
 
+    public NioEndpoint() {
+        // If running on Java 7, the insecure DHE ciphers need to be excluded by
+        // default
+        if (!JreCompat.isJre8Available()) {
+            setCiphers(DEFAULT_CIPHERS + ":!DHE");
+        }
+    }
+
+
+    // ------------------------------------------------------------- Properties
 
     /**
      * Generic properties, introspected
@@ -565,7 +576,7 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
             try {
                 log.error("",t);
             } catch (Throwable tt) {
-                ExceptionUtils.handleThrowable(t);
+                ExceptionUtils.handleThrowable(tt);
             }
             // Tell to close the socket
             return false;
@@ -790,8 +801,14 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
             } else {
                 final SelectionKey key = socket.getIOChannel().keyFor(socket.getPoller().getSelector());
                 try {
-                    boolean cancel = false;
-                    if (key != null) {
+                    if (key == null) {
+                        // The key was cancelled (e.g. due to socket closure)
+                        // and removed from the selector while it was being
+                        // processed. Count down the connections at this point
+                        // since it won't have been counted down when the socket
+                        // closed.
+                        socket.getPoller().getEndpoint().countDownConnection();
+                    } else {
                         final KeyAttachment att = (KeyAttachment) key.attachment();
                         if ( att!=null ) {
                             att.access();//to prevent timeout
@@ -800,16 +817,13 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
                             att.interestOps(ops);
                             key.interestOps(ops);
                         } else {
-                            cancel = true;
+                            socket.getPoller().cancelledKey(key, SocketStatus.ERROR);
                         }
-                    } else {
-                        cancel = true;
                     }
-                    if ( cancel ) socket.getPoller().cancelledKey(key,SocketStatus.ERROR);
-                }catch (CancelledKeyException ckx) {
+                } catch (CancelledKeyException ckx) {
                     try {
-                        socket.getPoller().cancelledKey(key,SocketStatus.DISCONNECT);
-                    }catch (Exception ignore) {}
+                        socket.getPoller().cancelledKey(key, SocketStatus.DISCONNECT);
+                    } catch (Exception ignore) {}
                 }
             }//end if
         }//run
@@ -848,6 +862,10 @@ public class NioEndpoint extends AbstractEndpoint<NioChannel> {
         public int getKeyCount() { return keyCount; }
 
         public Selector getSelector() { return selector;}
+
+        NioEndpoint getEndpoint() {
+            return NioEndpoint.this;
+        }
 
         /**
          * Destroy the poller.

@@ -26,9 +26,11 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.catalina.tribes.Channel;
 import org.apache.catalina.tribes.ChannelMessage;
 import org.apache.catalina.tribes.ChannelReceiver;
 import org.apache.catalina.tribes.MessageListener;
+import org.apache.catalina.tribes.group.GroupChannel;
 import org.apache.catalina.tribes.io.ListenCallback;
 import org.apache.catalina.tribes.util.ExecutorFactory;
 import org.apache.catalina.tribes.util.StringManager;
@@ -79,7 +81,7 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
     private long maxIdleTime = 60000;
 
     private ExecutorService executor;
-
+    private Channel channel;
 
     public ReceiverBase() {
     }
@@ -88,7 +90,11 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
     public void start() throws IOException {
         if ( executor == null ) {
             //executor = new ThreadPoolExecutor(minThreads,maxThreads,60,TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>());
-            TaskThreadFactory tf = new TaskThreadFactory("Tribes-Task-Receiver-");
+            String channelName = "";
+            if (channel instanceof GroupChannel && ((GroupChannel)channel).getName() != null) {
+                channelName = "[" + ((GroupChannel)channel).getName() + "]";
+            }
+            TaskThreadFactory tf = new TaskThreadFactory("Tribes-Task-Receiver" + channelName + "-");
             executor = ExecutorFactory.newThreadPool(minThreads, maxThreads, maxIdleTime, TimeUnit.MILLISECONDS, tf);
         }
     }
@@ -97,13 +103,13 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
     public void stop() {
         if ( executor != null ) executor.shutdownNow();//ignore left overs
         executor = null;
+        channel = null;
     }
 
     /**
      * getMessageListener
      *
      * @return MessageListener
-     * TODO Implement this org.apache.catalina.tribes.ChannelReceiver method
      */
     @Override
     public MessageListener getMessageListener() {
@@ -113,7 +119,6 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
     /**
      *
      * @return The port
-     * TODO Implement this org.apache.catalina.tribes.ChannelReceiver method
      */
     @Override
     public int getPort() {
@@ -132,7 +137,6 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
      * setMessageListener
      *
      * @param listener MessageListener
-     * TODO Implement this org.apache.catalina.tribes.ChannelReceiver method
      */
     @Override
     public void setMessageListener(MessageListener listener) {
@@ -486,6 +490,14 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
 
     public void setUdpTxBufSize(int udpTxBufSize) {
         this.udpTxBufSize = udpTxBufSize;
+    }
+
+    public Channel getChannel() {
+        return channel;
+    }
+
+    public void setChannel(Channel channel) {
+        this.channel = channel;
     }
 
     // ---------------------------------------------- ThreadFactory Inner Class

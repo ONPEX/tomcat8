@@ -865,6 +865,10 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             }
             break;
         }
+        case ASYNC_POST_PROCESS: {
+            asyncStateMachine.asyncPostProcess();
+            break;
+        }
         case UPGRADE: {
             upgradeToken = (UpgradeToken) param;
             // Stop further HTTP output
@@ -1098,10 +1102,8 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
                     // set the status to 500 and set the errorException.
                     // If we fail here, then the response is likely already
                     // committed, so we can't try and set headers.
-                    if(keepAlive && !getErrorState().isError() && (
-                            response.getErrorException() != null ||
-                                    (!isAsync() &&
-                                    statusDropsConnection(response.getStatus())))) {
+                    if(keepAlive && !getErrorState().isError() && !isAsync() &&
+                            statusDropsConnection(response.getStatus())) {
                         setErrorState(ErrorState.CLOSE_CLEAN, null);
                     }
                     setCometTimeouts(socketWrapper);
@@ -1736,6 +1738,7 @@ public abstract class AbstractHttp11Processor<S> extends AbstractProcessor<S> {
             if (!keepAlive) {
                 return SocketState.CLOSED;
             } else {
+                endRequest();
                 getInputBuffer().nextRequest();
                 getOutputBuffer().nextRequest();
                 return SocketState.OPEN;
