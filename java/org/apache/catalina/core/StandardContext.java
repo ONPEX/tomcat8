@@ -42,6 +42,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
@@ -85,6 +86,7 @@ import org.apache.catalina.Authenticator;
 import org.apache.catalina.Container;
 import org.apache.catalina.ContainerListener;
 import org.apache.catalina.Context;
+import org.apache.catalina.CredentialHandler;
 import org.apache.catalina.Globals;
 import org.apache.catalina.InstanceListener;
 import org.apache.catalina.Lifecycle;
@@ -460,7 +462,7 @@ public class StandardContext extends ContainerBase
      * The context initialization parameters for this web application,
      * keyed by name.
      */
-    private final ConcurrentHashMap<String, String> parameters = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, String> parameters = new ConcurrentHashMap<>();
 
 
     /**
@@ -717,6 +719,13 @@ public class StandardContext extends ContainerBase
     private JarScanner jarScanner = null;
 
     /**
+     * Enables the RMI Target memory leak detection to be controlled. This is
+     * necessary since the detection can only work on Java 9 if some of the
+     * modularity checks are disabled.
+     */
+    private boolean clearReferencesRmiTargets = true;
+
+    /**
      * Should Tomcat attempt to null out any static or final fields from loaded
      * classes when a web application is stopped as a work around for apparent
      * garbage collection bugs and application coding errors? There have been
@@ -724,7 +733,10 @@ public class StandardContext extends ContainerBase
      * without memory leaks using recent JVMs should operate correctly with this
      * option set to <code>false</code>. If not specified, the default value of
      * <code>false</code> will be used.
+     *
+     * @deprecated This option will be removed in Tomcat 8.5
      */
+    @Deprecated
     private boolean clearReferencesStatic = false;
 
     /**
@@ -2560,9 +2572,25 @@ public class StandardContext extends ContainerBase
     }
 
 
+    public boolean getClearReferencesRmiTargets() {
+        return this.clearReferencesRmiTargets;
+    }
+
+
+    public void setClearReferencesRmiTargets(boolean clearReferencesRmiTargets) {
+        boolean oldClearReferencesRmiTargets = this.clearReferencesRmiTargets;
+        this.clearReferencesRmiTargets = clearReferencesRmiTargets;
+        support.firePropertyChange("clearReferencesRmiTargets",
+                oldClearReferencesRmiTargets, this.clearReferencesRmiTargets);
+    }
+
+
     /**
      * Return the clearReferencesStatic flag for this Context.
+     *
+     * @deprecated This option will be removed in Tomcat 8.5
      */
+    @Deprecated
     public boolean getClearReferencesStatic() {
 
         return (this.clearReferencesStatic);
@@ -2574,7 +2602,10 @@ public class StandardContext extends ContainerBase
      * Set the clearReferencesStatic feature for this Context.
      *
      * @param clearReferencesStatic The new flag value
+     *
+     * @deprecated This option will be removed in Tomcat 8.5
      */
+    @Deprecated
     public void setClearReferencesStatic(boolean clearReferencesStatic) {
 
         boolean oldClearReferencesStatic = this.clearReferencesStatic;
@@ -5123,6 +5154,8 @@ public class StandardContext extends ContainerBase
 
                 // since the loader just started, the webapp classloader is now
                 // created.
+                setClassLoaderProperty("clearReferencesRmiTargets",
+                        getClearReferencesRmiTargets());
                 setClassLoaderProperty("clearReferencesStatic",
                         getClearReferencesStatic());
                 setClassLoaderProperty("clearReferencesStopThreads",
@@ -5143,8 +5176,27 @@ public class StandardContext extends ContainerBase
                 getLogger();
 
                 Realm realm = getRealmInternal();
-                if ((realm != null) && (realm instanceof Lifecycle))
-                    ((Lifecycle) realm).start();
+
+                if (realm != null) {
+                    if (realm instanceof Lifecycle)
+                        ((Lifecycle) realm).start();
+
+                    // Place the CredentialHandler into the ServletContext so
+                    // applications can have access to it. Wrap it in a "safe"
+                    // handler so application's can't modify it.
+                    CredentialHandler safeHandler = new CredentialHandler() {
+                        @Override
+                        public boolean matches(String inputCredentials, String storedCredentials) {
+                            return getRealmInternal().getCredentialHandler().matches(inputCredentials, storedCredentials);
+                        }
+
+                        @Override
+                        public String mutate(String inputCredentials) {
+                            return getRealmInternal().getCredentialHandler().mutate(inputCredentials);
+                        }
+                    };
+                    context.setAttribute(Globals.CREDENTIAL_HANDLER, safeHandler);
+                }
 
                 // Notify our interested LifecycleListeners
                 fireLifecycleEvent(Lifecycle.CONFIGURE_START_EVENT, null);

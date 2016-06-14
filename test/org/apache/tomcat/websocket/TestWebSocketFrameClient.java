@@ -32,11 +32,10 @@ import org.junit.Test;
 import org.apache.catalina.Context;
 import org.apache.catalina.servlets.DefaultServlet;
 import org.apache.catalina.startup.Tomcat;
-import org.apache.catalina.startup.TomcatBaseTest;
 import org.apache.tomcat.websocket.TesterMessageCountClient.BasicText;
 import org.apache.tomcat.websocket.TesterMessageCountClient.TesterProgrammaticEndpoint;
 
-public class TestWebSocketFrameClient extends TomcatBaseTest {
+public class TestWebSocketFrameClient extends WebSocketBaseTest {
 
     @Test
     public void testConnectToServerEndpoint() throws Exception {
@@ -121,7 +120,8 @@ public class TestWebSocketFrameClient extends TomcatBaseTest {
         wsSession.addMessageHandler(handler);
         wsSession.getBasicRemote().sendText("Hello");
 
-        handler.getLatch().await(100, TimeUnit.MILLISECONDS);
+        boolean latchResult = handler.getLatch().await(10, TimeUnit.SECONDS);
+        Assert.assertTrue(latchResult);
 
         Queue<String> messages = handler.getMessages();
         Assert.assertEquals(1, messages.size());

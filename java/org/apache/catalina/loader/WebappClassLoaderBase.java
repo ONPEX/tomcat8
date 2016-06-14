@@ -77,6 +77,7 @@ import org.apache.juli.WebappProperties;
 import org.apache.tomcat.InstrumentableClassLoader;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.IntrospectionUtils;
+import org.apache.tomcat.util.compat.JreCompat;
 import org.apache.tomcat.util.compat.JreVendor;
 import org.apache.tomcat.util.res.StringManager;
 
@@ -338,6 +339,13 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
 
     /**
+     * Enables the RMI Target memory leak detection to be controlled. This is
+     * necessary since the detection can only work on Java 9 if some of the
+     * modularity checks are disabled.
+     */
+    private boolean clearReferencesRmiTargets = true;
+
+    /**
      * Should Tomcat attempt to null out any static or final fields from loaded
      * classes when a web application is stopped as a work around for apparent
      * garbage collection bugs and application coding errors? There have been
@@ -345,7 +353,10 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
      * without memory leaks using recent JVMs should operate correctly with this
      * option set to <code>false</code>. If not specified, the default value of
      * <code>false</code> will be used.
+     *
+     * @deprecated This option will be removed in Tomcat 8.5
      */
+    @Deprecated
     private boolean clearReferencesStatic = false;
 
     /**
@@ -527,9 +538,22 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
     }
 
 
+    public boolean getClearReferencesRmiTargets() {
+        return this.clearReferencesRmiTargets;
+    }
+
+
+    public void setClearReferencesRmiTargets(boolean clearReferencesRmiTargets) {
+        this.clearReferencesRmiTargets = clearReferencesRmiTargets;
+    }
+
+
     /**
      * Return the clearReferencesStatic flag for this Context.
+     *
+     * @deprecated This option will be removed in Tomcat 8.5
      */
+    @Deprecated
     public boolean getClearReferencesStatic() {
         return (this.clearReferencesStatic);
     }
@@ -539,7 +563,10 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
      * Set the clearReferencesStatic feature for this Context.
      *
      * @param clearReferencesStatic The new flag value
+     *
+     * @deprecated This option will be removed in Tomcat 8.5
      */
+    @Deprecated
     public void setClearReferencesStatic(boolean clearReferencesStatic) {
         this.clearReferencesStatic = clearReferencesStatic;
     }
@@ -1547,7 +1574,9 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
         checkThreadLocalsForLeaks();
 
         // Clear RMI Targets loaded by this class loader
-        clearReferencesRmiTargets();
+        if (clearReferencesRmiTargets) {
+            clearReferencesRmiTargets();
+        }
 
         // Null out any static or final fields from loaded classes,
         // as a workaround for apparent garbage collection bugs
@@ -2231,11 +2260,15 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
      */
     private void clearReferencesRmiTargets() {
         try {
-            // Need access to the ccl field of sun.rmi.transport.Target
+            // Need access to the ccl field of sun.rmi.transport.Target to find
+            // the leaks
             Class<?> objectTargetClass =
                 Class.forName("sun.rmi.transport.Target");
             Field cclField = objectTargetClass.getDeclaredField("ccl");
             cclField.setAccessible(true);
+            // Need access to the stub field to report the leaks
+            Field stubField = objectTargetClass.getDeclaredField("stub");
+            stubField.setAccessible(true);
 
             // Clear the objTable map
             Class<?> objectTableClass =
@@ -2255,6 +2288,9 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                     Object cclObject = cclField.get(obj);
                     if (this == cclObject) {
                         iter.remove();
+                        Object stubObject = stubField.get(obj);
+                        log.error(sm.getString("webappClassLoader.clearRmi",
+                                stubObject.getClass().getName(), stubObject));
                     }
                 }
             }
@@ -2281,18 +2317,20 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
         } catch (ClassNotFoundException e) {
             log.info(sm.getString("webappClassLoader.clearRmiInfo",
                     getContextName()), e);
-        } catch (SecurityException e) {
+        } catch (SecurityException | NoSuchFieldException | IllegalArgumentException |
+                IllegalAccessException e) {
             log.warn(sm.getString("webappClassLoader.clearRmiFail",
                     getContextName()), e);
-        } catch (NoSuchFieldException e) {
-            log.warn(sm.getString("webappClassLoader.clearRmiFail",
-                    getContextName()), e);
-        } catch (IllegalArgumentException e) {
-            log.warn(sm.getString("webappClassLoader.clearRmiFail",
-                    getContextName()), e);
-        } catch (IllegalAccessException e) {
-            log.warn(sm.getString("webappClassLoader.clearRmiFail",
-                    getContextName()), e);
+        } catch (Exception e) {
+            JreCompat jreCompat = JreCompat.getInstance();
+            if (jreCompat.isInstanceOfInaccessibleObjectException(e)) {
+                // Must be running on Java 9 without the necessary command line
+                // options.
+                log.warn(sm.getString("webappClassLoader.addExports"));
+            } else {
+                // Re-throw all other exceptions
+                throw e;
+            }
         }
     }
 
