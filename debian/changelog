@@ -1,6 +1,11 @@
 tomcat8 (8.0.14-1+deb8u2) jessie-security; urgency=high
 
   * Team upload.
+
+  [ Emmanuel Bourg ]
+  * Fix CVE-2016-3092: Denial-of-Service vulnerability with file uploads
+
+  [ Markus Koschany ]
   * Fix CVE-2015-5174:
     Directory traversal vulnerability in RequestUtil.java allows remote
     authenticated users to bypass intended SecurityManager restrictions and
