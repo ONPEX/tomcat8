@@ -48,7 +48,7 @@ tomcat8 (8.0.14-1+deb8u2) jessie-security; urgency=high
     data, or cause a denial of service (application disruption), via a web
     application that sets a crafted global context.
 
- -- Markus Koschany <apo@debian.org>  Sun, 29 May 2016 23:11:52 +0200
+ -- Emmanuel Bourg <ebourg@apache.org>  Thu, 23 Jun 2016 00:27:20 +0200
 
 tomcat8 (8.0.14-1+deb8u1) jessie-security; urgency=medium
 
