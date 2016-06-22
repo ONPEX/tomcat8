@@ -1,3 +1,50 @@
+tomcat8 (8.0.14-1+deb8u2) jessie-security; urgency=high
+
+  * Team upload.
+  * Fix CVE-2015-5174:
+    Directory traversal vulnerability in RequestUtil.java allows remote
+    authenticated users to bypass intended SecurityManager restrictions and
+    list a parent directory via a /.. (slash dot dot) in a pathname used by a
+    web application in a getResource, getResourceAsStream, or getResourcePaths
+    call, as demonstrated by the $CATALINA_BASE/webapps directory.
+  * Fix CVE-2015-5345:
+    The Mapper component in Apache Tomcat processes redirects before
+    considering security constraints and Filters, which allows remote attackers
+    to determine the existence of a directory via a URL that lacks a trailing /
+    (slash) character.
+  * Fix CVE-2015-5346:
+    Session fixation vulnerability in Apache Tomcat when different session
+    settings are used for deployments of multiple versions of the same web
+    application, might allow remote attackers to hijack web sessions by
+    leveraging use of a requestedSessionSSL field for an unintended request,
+    related to CoyoteAdapter.java and Request.java.
+  * Fix CVE-2015-5351:
+    The Manager and Host Manager applications in Apache Tomcat establish
+    sessions and send CSRF tokens for arbitrary new requests, which allows
+    remote attackers to bypass a CSRF protection mechanism by using a token.
+  * Fix CVE-2016-0706:
+    Apache Tomcat does not place
+    org.apache.catalina.manager.StatusManagerServlet on the
+    org/apache/catalina/core/RestrictedServlets.properties list, which allows
+    remote authenticated users to bypass intended SecurityManager restrictions
+    and read arbitrary HTTP requests, and consequently discover session ID
+    values, via a crafted web application.
+  * Fix CVE-2016-0714:
+    The session-persistence implementation in Apache Tomcat mishandles session
+    attributes, which allows remote authenticated users to bypass intended
+    SecurityManager restrictions and execute arbitrary code in a privileged
+    context via a web application that places a crafted object in a session.
+  * Fix CVE-2016-0763:
+    The setGlobalContext method in
+    org/apache/naming/factory/ResourceLinkFactory.java in Apache Tomcat does
+    not consider whether ResourceLinkFactory.setGlobalContext callers are
+    authorized, which allows remote authenticated users to bypass intended
+    SecurityManager restrictions and read or write to arbitrary application
+    data, or cause a denial of service (application disruption), via a web
+    application that sets a crafted global context.
+
+ -- Markus Koschany <apo@debian.org>  Sun, 29 May 2016 23:11:52 +0200
+
 tomcat8 (8.0.14-1+deb8u1) jessie-security; urgency=medium
 
   * Fixed CVE-2014-7810: Malicious web applications could use expression

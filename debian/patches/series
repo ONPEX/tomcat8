@@ -13,3 +13,10 @@
 0019-add-distribution-to-error-page.patch
 #0020-disable-java8-support-with-jdtcompiler.patch
 CVE-2014-7810.patch
+CVE-2015-5174.patch
+CVE-2015-5346.patch
+CVE-2015-5351.patch
+CVE-2016-0706.patch
+CVE-2016-0763.patch
+CVE-2016-0714.patch
+CVE-2015-5345.patch
