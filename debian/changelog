@@ -1,3 +1,10 @@
+tomcat8 (8.0.36-2) UNRELEASED; urgency=medium
+
+  * Team upload.
+  * Removed the default 128M heap limit (LP: #568823)
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Thu, 21 Jul 2016 14:26:01 +0200
+
 tomcat8 (8.0.36-1) unstable; urgency=medium
 
   * Team upload.
