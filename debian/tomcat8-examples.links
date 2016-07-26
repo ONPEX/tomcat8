@@ -1,2 +1,2 @@
-/usr/share/java/jstl1.1.jar /usr/share/tomcat8-examples/examples/WEB-INF/lib/jstl.jar
-/usr/share/java/standard.jar /usr/share/tomcat8-examples/examples/WEB-INF/lib/standard.jar
+/usr/share/java/taglibs-standard-spec.jar /usr/share/tomcat8-examples/examples/WEB-INF/lib/taglibs-standard-spec.jar
+/usr/share/java/taglibs-standard-impl.jar /usr/share/tomcat8-examples/examples/WEB-INF/lib/taglibs-standard-impl.jar
