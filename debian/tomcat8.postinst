@@ -48,10 +48,25 @@ case "$1" in
 	# configuration files should not be modifiable by tomcat8 user, as this can be a security issue
 	# (an attacker may insert code in a webapp and have access to all tomcat configuration)
 	# but those files should be readable by tomcat8, so we set the group to tomcat8
-	chown -Rh root:$TOMCAT8_GROUP /etc/tomcat8/*
-	if [ -f /etc/tomcat8/tomcat-users.xml ] ; then
-		chmod 640 /etc/tomcat8/tomcat-users.xml
-	fi
+	for i in tomcat-users.xml web.xml server.xml logging.properties context.xml catalina.properties;
+	do
+		if [ -f "/etc/tomcat8/$i" ]; then
+			chown root:$TOMCAT8_GROUP /etc/tomcat8/$i
+			chmod 640 /etc/tomcat8/$i
+		fi
+	done
+	# configuration policy files should not be modifiable by the tomcat8 user. Only
+	# diverge from default permissions for known Debian files
+	chown root:$TOMCAT8_GROUP /etc/tomcat8/policy.d
+	for i in 01system.policy 02debian.policy 03catalina.policy 04webapps.policy 50local.policy;
+	do
+		if [ -f "/etc/tomcat8/policy.d/$i" ]; then
+			chown root:$TOMCAT8_GROUP /etc/tomcat8/policy.d/$i
+			chmod 640 /etc/tomcat8/policy.d/$i
+		fi
+	done
+	chown -Rh root:$TOMCAT8_GROUP /etc/tomcat8/Catalina
+
 	chown -Rh $TOMCAT8_USER:$TOMCAT8_GROUP /var/lib/tomcat8/webapps /var/lib/tomcat8/lib
 	chmod 775 /var/lib/tomcat8/webapps
 	chmod 775 /etc/tomcat8/Catalina /etc/tomcat8/Catalina/localhost
