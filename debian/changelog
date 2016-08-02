@@ -1,3 +1,11 @@
+tomcat8 (8.0.36-2) unstable; urgency=medium
+
+  * Team upload.
+  * Do not unconditionally overwrite files in /etc/tomcat8 anymore.
+    (Closes: #825786)
+
+ -- Markus Koschany <apo@debian.org>  Tue, 02 Aug 2016 10:50:42 +0200
+
 tomcat8 (8.0.36-1) unstable; urgency=medium
 
   * Team upload.
