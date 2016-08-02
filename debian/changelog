@@ -1,3 +1,11 @@
+tomcat8 (8.0.36-3) UNRELEASED; urgency=medium
+
+  * Team upload.
+  * Removed the default 128M heap limit (LP: #568823)
+  * Depend on taglibs-standard instead of jakarta-taglibs-standard
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Thu, 21 Jul 2016 14:26:01 +0200
+
 tomcat8 (8.0.36-2) unstable; urgency=medium
 
   * Team upload.

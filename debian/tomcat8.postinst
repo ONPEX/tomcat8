@@ -6,7 +6,7 @@ TEMPLATE="/usr/share/tomcat8/defaults.template"
 CONFFILE="/etc/default/tomcat8"
 LR_TEMPLATE="/usr/share/tomcat8/logrotate.template"
 LR_CONFFILE="/etc/logrotate.d/tomcat8"
-JAVA_OPTS="-Djava.awt.headless=true -Xmx128m -XX:+UseConcMarkSweepGC"
+JAVA_OPTS="-Djava.awt.headless=true -XX:+UseConcMarkSweepGC"
 
 case "$1" in
     configure)
@@ -15,7 +15,7 @@ case "$1" in
 	db_version 2.0
 	db_get tomcat8/username && TOMCAT8_USER="$RET" || TOMCAT8_USER="tomcat8"
 	db_get tomcat8/groupname && TOMCAT8_GROUP="$RET" || TOMCAT8_GROUP="tomcat8"
-	db_get tomcat8/javaopts && JAVA_OPTS="$RET" || JAVA_OPTS="-Djava.awt.headless=true -Xmx128m -XX:+UseConcMarkSweepGC"
+	db_get tomcat8/javaopts && JAVA_OPTS="$RET" || JAVA_OPTS="-Djava.awt.headless=true -XX:+UseConcMarkSweepGC"
 
 	tmpfile=`mktemp /tmp/tomcat8.XXXXXXXXXX`
 	chmod 644 $tmpfile

@@ -16,7 +16,7 @@ _Description: Dedicated system group for the tomcat8 daemon:
 
 Template: tomcat8/javaopts
 Type: string
-Default: -Djava.awt.headless=true -Xmx128m -XX:+UseConcMarkSweepGC
+Default: -Djava.awt.headless=true -XX:+UseConcMarkSweepGC
 _Description: Please choose the tomcat8 JVM Java options:
  Tomcat's JVM will be launched with a specific set of Java options.
  .

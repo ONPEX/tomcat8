@@ -21,6 +21,6 @@ done
 
 # Default Java options
 if [ -z "$JAVA_OPTS" ]; then
-	JAVA_OPTS="-Djava.awt.headless=true -Xmx128M"
+	JAVA_OPTS="-Djava.awt.headless=true"
 fi
 
