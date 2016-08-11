@@ -1,3 +1,11 @@
+tomcat8 (8.0.14-1+deb8u3) jessie-security; urgency=medium
+
+  * Team upload.
+  * tomcat8.init: Protect /var/lib/tomcat8/catalina.out against a symlink
+    attack and possible root privilege escalation.
+
+ -- Markus Koschany <apo@debian.org>  Thu, 11 Aug 2016 22:19:27 +0200
+
 tomcat8 (8.0.14-1+deb8u2) jessie-security; urgency=high
 
   * Team upload.
