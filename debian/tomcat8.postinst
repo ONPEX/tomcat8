@@ -52,7 +52,7 @@ case "$1" in
 	do
 		if [ -f "/etc/tomcat8/$i" ]; then
 			chown root:$TOMCAT8_GROUP /etc/tomcat8/$i
-			chmod 644 /etc/tomcat8/$i
+			chmod 640 /etc/tomcat8/$i
 		fi
 	done
 	# configuration policy files should not be modifiable by the tomcat8 user. Only
@@ -62,7 +62,7 @@ case "$1" in
 	do
 		if [ -f "/etc/tomcat8/policy.d/$i" ]; then
 			chown root:$TOMCAT8_GROUP /etc/tomcat8/policy.d/$i
-			chmod 644 /etc/tomcat8/policy.d/$i
+			chmod 640 /etc/tomcat8/policy.d/$i
 		fi
 	done
 	chown -Rh root:$TOMCAT8_GROUP /etc/tomcat8/Catalina

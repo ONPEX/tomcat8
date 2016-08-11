@@ -5,6 +5,7 @@ tomcat8 (8.0.14-1+deb8u3) jessie-security; urgency=medium
     attack and possible root privilege escalation.
   * Do not unconditionally overwrite files in /etc/tomcat8 anymore.
     (Closes: #825786)
+  * Change file permissions to 640 for Debian files in /etc/tomcat8.
 
  -- Markus Koschany <apo@debian.org>  Thu, 11 Aug 2016 22:19:27 +0200
 
