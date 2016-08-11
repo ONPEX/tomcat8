@@ -170,8 +170,10 @@ catalina_sh() {
 
 	# Run the catalina.sh script as a daemon
 	set +e
-	touch "$CATALINA_PID" "$CATALINA_BASE"/logs/catalina.out
-	chown $TOMCAT8_USER "$CATALINA_PID" "$CATALINA_BASE"/logs/catalina.out
+	if [ ! -f "$CATALINA_BASE"/logs/catalina.out ]; then
+		install -o $TOMCAT8_USER -g adm -m 644 /dev/null "$CATALINA_BASE"/logs/catalina.out
+	fi
+	install -o $TOMCAT8_USER -g adm -m 644 /dev/null "$CATALINA_PID"
 	start-stop-daemon --start -b -u "$TOMCAT8_USER" -g "$TOMCAT8_GROUP" \
 		-c "$TOMCAT8_USER" -d "$CATALINA_TMPDIR" -p "$CATALINA_PID" \
 		-x /bin/bash -- -c "$AUTHBIND_COMMAND $TOMCAT_SH"
