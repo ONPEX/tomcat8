@@ -1,13 +1,14 @@
-tomcat8 (8.0.14-1+deb8u3) jessie-security; urgency=medium
+tomcat8 (8.0.14-1+deb8u3) jessie-security; urgency=high
 
   * Team upload.
-  * tomcat8.init: Protect /var/lib/tomcat8/catalina.out against a symlink
+  * Fix CVE-2016-1240:
+    tomcat8.init: Protect /var/lib/tomcat8/catalina.out against a symlink
     attack and possible root privilege escalation.
   * Do not unconditionally overwrite files in /etc/tomcat8 anymore.
     (Closes: #825786)
   * Change file permissions to 640 for Debian files in /etc/tomcat8.
 
- -- Markus Koschany <apo@debian.org>  Thu, 11 Aug 2016 22:19:27 +0200
+ -- Markus Koschany <apo@debian.org>  Mon, 15 Aug 2016 17:38:02 +0200
 
 tomcat8 (8.0.14-1+deb8u2) jessie-security; urgency=high
 
