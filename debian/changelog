@@ -1,4 +1,4 @@
-tomcat8 (8.0.36-3) UNRELEASED; urgency=high
+tomcat8 (8.0.36-3) unstable; urgency=high
 
   * Team upload.
   * Fixed CVE-2016-1240: A flaw in the init.d startup script allows local
@@ -10,7 +10,7 @@ tomcat8 (8.0.36-3) UNRELEASED; urgency=high
   * Removed the default 128M heap limit (LP: #568823)
   * Depend on taglibs-standard instead of jakarta-taglibs-standard
 
- -- Emmanuel Bourg <ebourg@apache.org>  Thu, 21 Jul 2016 14:26:01 +0200
+ -- Emmanuel Bourg <ebourg@apache.org>  Wed, 14 Sep 2016 10:20:28 +0200
 
 tomcat8 (8.0.36-2) unstable; urgency=medium
 
