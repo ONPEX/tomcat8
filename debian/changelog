@@ -1,6 +1,12 @@
-tomcat8 (8.0.36-3) UNRELEASED; urgency=medium
+tomcat8 (8.0.36-3) UNRELEASED; urgency=high
 
   * Team upload.
+  * Fixed CVE-2016-1240: A flaw in the init.d startup script allows local
+    attackers who have gained access to the server in the context of the
+    tomcat user through a vulnerability in a web application to replace
+    the catalina.out file with a symlink to an arbitrary file on the system,
+    potentially leading to a root privilege escalation.
+    Thanks to Dawid Golunski for the report.
   * Removed the default 128M heap limit (LP: #568823)
   * Depend on taglibs-standard instead of jakarta-taglibs-standard
 
