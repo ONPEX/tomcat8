@@ -427,10 +427,10 @@ public final class HTMLManagerServlet extends ManagerServlet {
 
                 StringBuilder tmp = new StringBuilder();
                 tmp.append("path=");
-                tmp.append(URL_ENCODER.encode(displayPath));
+                tmp.append(URL_ENCODER.encode(displayPath, "UTF-8"));
                 if (ctxt.getWebappVersion().length() > 0) {
                     tmp.append("&version=");
-                    tmp.append(URL_ENCODER.encode(ctxt.getWebappVersion()));
+                    tmp.append(URL_ENCODER.encode(ctxt.getWebappVersion(), "UTF-8"));
                 }
                 String pathVersion = tmp.toString();
 
@@ -442,7 +442,7 @@ public final class HTMLManagerServlet extends ManagerServlet {
                 }
 
                 args = new Object[7];
-                args[0] = "<a href=\"" + URL_ENCODER.encode(contextPath + "/")
+                args[0] = "<a href=\"" + URL_ENCODER.encode(contextPath + "/", "UTF-8")
                         + "\">" + RequestUtil.filter(displayPath) + "</a>";
                 if ("".equals(ctxt.getWebappVersion())) {
                     args[1] = noVersion;
@@ -559,8 +559,8 @@ public final class HTMLManagerServlet extends ManagerServlet {
         args[4] = smClient.getString("htmlManagerServlet.serverOSName");
         args[5] = smClient.getString("htmlManagerServlet.serverOSVersion");
         args[6] = smClient.getString("htmlManagerServlet.serverOSArch");
-        args[7] = sm.getString("htmlManagerServlet.serverHostname");
-        args[8] = sm.getString("htmlManagerServlet.serverIPAddress");
+        args[7] = smClient.getString("htmlManagerServlet.serverHostname");
+        args[8] = smClient.getString("htmlManagerServlet.serverIPAddress");
         writer.print(MessageFormat.format
                      (Constants.SERVER_HEADER_SECTION, args));
 

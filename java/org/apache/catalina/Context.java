@@ -857,10 +857,42 @@ public interface Context extends Container, ContextBind {
      * Add a new servlet mapping, replacing any existing mapping for
      * the specified pattern.
      *
+     * @param pattern URL pattern to be mapped. The pattern will be % decoded
+     *                using UTF-8
+     * @param name    Name of the corresponding servlet to execute
+     *
+     * @deprecated Will be removed in Tomcat 9. Use
+     *             {@link #addServletMappingDecoded(String, String)}
+     */
+    @Deprecated
+    public void addServletMapping(String pattern, String name);
+
+
+    /**
+     * Add a new servlet mapping, replacing any existing mapping for
+     * the specified pattern.
+     *
+     * @param pattern     URL pattern to be mapped. The pattern will be %
+     *                    decoded using UTF-8
+     * @param name        Name of the corresponding servlet to execute
+     * @param jspWildcard true if name identifies the JspServlet and pattern
+     *                    contains a wildcard; false otherwise
+     *
+     * @deprecated Will be removed in Tomcat 9. Use
+     *             {@link #addServletMappingDecoded(String, String, boolean)}
+     */
+    @Deprecated
+    public void addServletMapping(String pattern, String name, boolean jspWildcard);
+
+
+    /**
+     * Add a new servlet mapping, replacing any existing mapping for
+     * the specified pattern.
+     *
      * @param pattern URL pattern to be mapped
      * @param name Name of the corresponding servlet to execute
      */
-    public void addServletMapping(String pattern, String name);
+    public void addServletMappingDecoded(String pattern, String name);
 
 
     /**
@@ -872,7 +904,7 @@ public interface Context extends Container, ContextBind {
      * @param jspWildcard true if name identifies the JspServlet
      * and pattern contains a wildcard; false otherwise
      */
-    public void addServletMapping(String pattern, String name,
+    public void addServletMappingDecoded(String pattern, String name,
             boolean jspWildcard);
 
 
@@ -1741,4 +1773,26 @@ public interface Context extends Container, ContextBind {
      * @see #setUseRelativeRedirects(boolean)
      */
     public boolean getUseRelativeRedirects();
+
+    /**
+     * Are paths used in calls to obtain a request dispatcher expected to be
+     * encoded? This affects both how Tomcat handles calls to obtain a request
+     * dispatcher as well as how Tomcat generates paths used to obtain request
+     * dispatchers internally.
+     *
+     * @param dispatchersUseEncodedPaths {@code true} to use encoded paths,
+     *        otherwise {@code false}
+     */
+    public void setDispatchersUseEncodedPaths(boolean dispatchersUseEncodedPaths);
+
+    /**
+     * Are paths used in calls to obtain a request dispatcher expected to be
+     * encoded? This applys to both how Tomcat handles calls to obtain a request
+     * dispatcher as well as how Tomcat generates paths used to obtain request
+     * dispatchers internally.
+     *
+     * @return {@code true} if encoded paths will be used, otherwise
+     *         {@code false}
+     */
+    public boolean getDispatchersUseEncodedPaths();
 }

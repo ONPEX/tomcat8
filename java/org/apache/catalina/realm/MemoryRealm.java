@@ -114,30 +114,37 @@ public class MemoryRealm  extends RealmBase {
     @Override
     public Principal authenticate(String username, String credentials) {
 
+        // No user or no credentials
+        // Can't possibly authenticate, don't bother the database then
+        if (username == null || credentials == null) {
+            if (log.isDebugEnabled())
+                log.debug(sm.getString("memoryRealm.authenticateFailure", username));
+            return null;
+        }
+
         GenericPrincipal principal = principals.get(username);
 
-        boolean validated;
-        if (principal == null) {
-            validated = false;
-        } else {
-            if (credentials == null || principal.getPassword() == null) {
-                if (log.isDebugEnabled())
-                    log.debug(sm.getString("memoryRealm.authenticateFailure", username));
-                return (null);
-            }
-            validated = getCredentialHandler().matches(credentials, principal.getPassword());
+        if(principal == null || principal.getPassword() == null) {
+            // User was not found in the database or the password was null
+            // Waste a bit of time as not to reveal that the user does not exist.
+            getCredentialHandler().mutate(credentials);
+
+            if (log.isDebugEnabled())
+                log.debug(sm.getString("memoryRealm.authenticateFailure", username));
+            return null;
         }
+
+        boolean validated = getCredentialHandler().matches(credentials, principal.getPassword());
 
         if (validated) {
             if (log.isDebugEnabled())
                 log.debug(sm.getString("memoryRealm.authenticateSuccess", username));
-            return (principal);
+            return principal;
         } else {
             if (log.isDebugEnabled())
                 log.debug(sm.getString("memoryRealm.authenticateFailure", username));
-            return (null);
+            return null;
         }
-
     }
 
 

@@ -760,12 +760,25 @@ public class TesterContext implements Context {
     }
 
     @Override
+    @Deprecated
     public void addServletMapping(String pattern, String name) {
         // NO-OP
     }
 
     @Override
+    @Deprecated
     public void addServletMapping(String pattern, String name,
+            boolean jspWildcard) {
+        // NO-OP
+    }
+
+    @Override
+    public void addServletMappingDecoded(String pattern, String name) {
+        // NO-OP
+    }
+
+    @Override
+    public void addServletMappingDecoded(String pattern, String name,
             boolean jspWildcard) {
         // NO-OP
     }
@@ -1261,4 +1274,9 @@ public class TesterContext implements Context {
     public void setUseRelativeRedirects(boolean useRelativeRedirects) { /* NO-OP */ }
     @Override
     public boolean getUseRelativeRedirects() { return true; }
+
+    @Override
+    public void setDispatchersUseEncodedPaths(boolean dispatchersUseEncodedPaths) { /* NO-OP */ }
+    @Override
+    public boolean getDispatchersUseEncodedPaths() { return true; }
 }

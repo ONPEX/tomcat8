@@ -38,8 +38,8 @@ import org.apache.jasper.EmbeddedServletOptions;
 import org.apache.jasper.Options;
 import org.apache.jasper.compiler.JspRuntimeContext;
 import org.apache.jasper.compiler.Localizer;
+import org.apache.jasper.runtime.ExceptionUtils;
 import org.apache.jasper.security.SecurityUtil;
-import org.apache.jasper.util.ExceptionUtils;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.PeriodicEventListener;
@@ -71,8 +71,8 @@ public class JspServlet extends HttpServlet implements PeriodicEventListener {
     private ServletConfig config;
     private transient Options options;
     private transient JspRuntimeContext rctxt;
-    //jspFile for a jsp configured explicitly as a servlet, in environments where this configuration is
-    //translated into an init-param for this servlet.
+    // jspFile for a jsp configured explicitly as a servlet, in environments where this
+    // configuration is translated into an init-param for this servlet.
     private String jspFile;
 
 
@@ -88,19 +88,19 @@ public class JspServlet extends HttpServlet implements PeriodicEventListener {
 
         // Initialize the JSP Runtime Context
         // Check for a custom Options implementation
-        String engineOptionsName =
-            config.getInitParameter("engineOptionsClass");
+        String engineOptionsName = config.getInitParameter("engineOptionsClass");
+        if (Constants.IS_SECURITY_ENABLED && engineOptionsName != null) {
+            log.info(Localizer.getMessage(
+                    "jsp.info.ignoreSetting", "engineOptionsClass", engineOptionsName));
+            engineOptionsName = null;
+        }
         if (engineOptionsName != null) {
             // Instantiate the indicated Options implementation
             try {
-                ClassLoader loader = Thread.currentThread()
-                        .getContextClassLoader();
-                Class<?> engineOptionsClass =
-                    loader.loadClass(engineOptionsName);
-                Class<?>[] ctorSig =
-                    { ServletConfig.class, ServletContext.class };
-                Constructor<?> ctor =
-                    engineOptionsClass.getConstructor(ctorSig);
+                ClassLoader loader = Thread.currentThread().getContextClassLoader();
+                Class<?> engineOptionsClass = loader.loadClass(engineOptionsName);
+                Class<?>[] ctorSig = { ServletConfig.class, ServletContext.class };
+                Constructor<?> ctor = engineOptionsClass.getConstructor(ctorSig);
                 Object[] args = { config, context };
                 options = (Options) ctor.newInstance(args);
             } catch (Throwable e) {

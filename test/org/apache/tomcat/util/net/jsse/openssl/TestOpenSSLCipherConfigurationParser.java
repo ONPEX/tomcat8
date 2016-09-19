@@ -26,9 +26,9 @@ public class TestOpenSSLCipherConfigurationParser {
 
     @Test
     public void testDEFAULT() throws Exception {
-        // NULL, RC4, DSS, SEED, IDEA, CAMELLIA and SEC-CCM were removed from default in 1.1.0-dev
         if (TesterOpenSSL.VERSION < 10100) {
-            testSpecification("DEFAULT:!RC4:!DSS:!SEED:!IDEA:!CAMELLIA:!AESCCM");
+            // Account for classes of ciphers removed from DEFAULT in 1.1.0
+            testSpecification("DEFAULT:!RC4:!DSS:!SEED:!IDEA:!CAMELLIA:!AESCCM:!3DES");
         } else {
             testSpecification("DEFAULT");
         }
@@ -37,9 +37,9 @@ public class TestOpenSSLCipherConfigurationParser {
 
     @Test
     public void testCOMPLEMENTOFDEFAULT() throws Exception {
-        // NULL, RC4, DSS, SEED, IDEA, CAMELLIA and SEC-CCM were removed from default in 1.1.0-dev
         if (TesterOpenSSL.VERSION < 10100) {
-            testSpecification("COMPLEMENTOFDEFAULT:RC4:DSS:SEED:IDEA:CAMELLIA:AESCCM:aNULL");
+            // Account for classes of ciphers removed from DEFAULT in 1.1.0
+            testSpecification("COMPLEMENTOFDEFAULT:RC4:DSS:SEED:IDEA:CAMELLIA:AESCCM:aNULL:3DES");
         } else {
             testSpecification("COMPLEMENTOFDEFAULT");
         }
@@ -128,8 +128,8 @@ public class TestOpenSSLCipherConfigurationParser {
     public void testkDHE() throws Exception {
         // This alias was introduced in 1.0.2
         if (TesterOpenSSL.VERSION >= 10002) {
-        testSpecification("kDHE");
-    }
+            testSpecification("kDHE");
+        }
     }
 
 
@@ -143,8 +143,8 @@ public class TestOpenSSLCipherConfigurationParser {
     public void testDHE() throws Exception {
         // This alias was introduced in 1.0.2
         if (TesterOpenSSL.VERSION >= 10002) {
-        testSpecification("DHE");
-    }
+            testSpecification("DHE");
+        }
     }
 
 
@@ -289,7 +289,11 @@ public class TestOpenSSLCipherConfigurationParser {
 
     @Test
     public void testTLSv1() throws Exception {
-        testSpecification("TLSv1");
+        // In OpenSSL 1.1.0-dev, TLSv1 refers to those ciphers that require
+        // TLSv1 rather than being an alias for SSLv3
+        if (TesterOpenSSL.VERSION >= 10100) {
+            testSpecification("TLSv1");
+        }
     }
 
 
@@ -535,8 +539,8 @@ public class TestOpenSSLCipherConfigurationParser {
     @Test
     public void testSpecification02() throws Exception {
         // Suggestion from dev list (s/ECDHE/kEECDH/, s/DHE/EDH/
-            testSpecification("!aNULL:!eNULL:!EXPORT:!DSS:!DES:!SSLv2:kEECDH:ECDH:EDH:AES256-GCM-SHA384:AES128-GCM-SHA256:+RC4:HIGH:aRSA:kECDHr:MEDIUM");
-        }
+        testSpecification("!aNULL:!eNULL:!EXPORT:!DSS:!DES:!SSLv2:kEECDH:ECDH:EDH:AES256-GCM-SHA384:AES128-GCM-SHA256:+RC4:HIGH:aRSA:kECDHr:MEDIUM");
+    }
 
 
     @Test

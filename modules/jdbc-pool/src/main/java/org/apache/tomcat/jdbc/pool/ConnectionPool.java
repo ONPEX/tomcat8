@@ -554,9 +554,11 @@ public class ConnectionPool {
     }
 
     /**
-     * thread safe way to abandon a connection
-     * signals a connection to be abandoned.
-     * this will disconnect the connection, and log the stack trace if logAbanded=true
+     * Thread safe way to suspect a connection. Similar to
+     * {@link #abandon(PooledConnection)}, but instead of actually abandoning
+     * the connection, this will log a warning and set the suspect flag on the
+     * {@link PooledConnection} if logAbandoned=true
+     *
      * @param con PooledConnection
      */
     protected void suspect(PooledConnection con) {
@@ -626,7 +628,6 @@ public class ConnectionPool {
             if (con!=null) {
                 //configure the connection and return it
                 PooledConnection result = borrowConnection(now, con, username, password);
-                //null should never be returned, but was in a previous impl.
                 if (result!=null) return result;
             }
 
@@ -808,8 +809,6 @@ public class ConnectionPool {
                     return con;
                 } else {
                     //validation failed.
-                    release(con);
-                    setToNull = true;
                     throw new SQLException("Failed to validate a newly established connection.");
                 }
             } catch (Exception x) {
@@ -889,7 +888,12 @@ public class ConnectionPool {
         if (con != null) {
             try {
                 con.lock();
-
+                if (con.isSuspect()) {
+                    if (poolProperties.isLogAbandoned() && log.isInfoEnabled()) {
+                        log.info("Connection(" + con + ") that has been marked suspect was returned."
+                                + " The processing time is " + (System.currentTimeMillis()-con.getTimestamp()) + " ms.");
+                    }
+                }
                 if (busy.remove(con)) {
 
                     if (!shouldClose(con,PooledConnection.VALIDATE_RETURN)) {
@@ -925,6 +929,7 @@ public class ConnectionPool {
      * @return true if the connection should be abandoned
      */
     protected boolean shouldAbandon() {
+        if (!poolProperties.isRemoveAbandoned()) return false;
         if (poolProperties.getAbandonWhenPercentageFull()==0) return true;
         float used = busy.size();
         float max  = poolProperties.getMaxActive();
@@ -945,9 +950,9 @@ public class ConnectionPool {
                 boolean setToNull = false;
                 try {
                     con.lock();
-                    //the con has been returned to the pool
+                    //the con has been returned to the pool or released
                     //ignore it
-                    if (idle.contains(con))
+                    if (idle.contains(con) || con.isReleased())
                         continue;
                     long time = con.getTimestamp();
                     long now = System.currentTimeMillis();
@@ -1289,7 +1294,7 @@ public class ConnectionPool {
                 Thread.currentThread().setContextClassLoader(loader);
             }
         }
-        poolCleanTimer.scheduleAtFixedRate(cleaner, cleaner.sleepTime,cleaner.sleepTime);
+        poolCleanTimer.schedule(cleaner, cleaner.sleepTime,cleaner.sleepTime);
     }
 
     private static synchronized void unregisterCleaner(PoolCleaner cleaner) {
@@ -1329,7 +1334,6 @@ public class ConnectionPool {
     protected static class PoolCleaner extends TimerTask {
         protected WeakReference<ConnectionPool> pool;
         protected long sleepTime;
-        protected volatile long lastRun = 0;
 
         PoolCleaner(ConnectionPool pool, long sleepTime) {
             this.pool = new WeakReference<>(pool);
@@ -1347,11 +1351,10 @@ public class ConnectionPool {
             ConnectionPool pool = this.pool.get();
             if (pool == null) {
                 stopRunning();
-            } else if (!pool.isClosed() &&
-                    (System.currentTimeMillis() - lastRun) > sleepTime) {
-                lastRun = System.currentTimeMillis();
+            } else if (!pool.isClosed()) {
                 try {
-                    if (pool.getPoolProperties().isRemoveAbandoned())
+                    if (pool.getPoolProperties().isRemoveAbandoned()
+                            || pool.getPoolProperties().getSuspectTimeout() > 0)
                         pool.checkAbandoned();
                     if (pool.getPoolProperties().getMinIdle() < pool.idle
                             .size())

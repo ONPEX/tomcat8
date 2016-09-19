@@ -40,9 +40,9 @@ import org.apache.jasper.compiler.ErrorDispatcher;
 import org.apache.jasper.compiler.JavacErrorDetail;
 import org.apache.jasper.compiler.JspRuntimeContext;
 import org.apache.jasper.compiler.Localizer;
+import org.apache.jasper.runtime.ExceptionUtils;
 import org.apache.jasper.runtime.InstanceManagerFactory;
 import org.apache.jasper.runtime.JspSourceDependent;
-import org.apache.jasper.util.ExceptionUtils;
 import org.apache.jasper.util.FastRemovalDequeue;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
@@ -481,7 +481,12 @@ public class JspServletWrapper {
 
     public void destroy() {
         if (theServlet != null) {
-            theServlet.destroy();
+            try {
+                theServlet.destroy();
+            } catch (Throwable t) {
+                ExceptionUtils.handleThrowable(t);
+                log.error(Localizer.getMessage("jsp.error.servlet.destroy.failed"), t);
+            }
             InstanceManager instanceManager = InstanceManagerFactory.getInstanceManager(config);
             try {
                 instanceManager.destroyInstance(theServlet);

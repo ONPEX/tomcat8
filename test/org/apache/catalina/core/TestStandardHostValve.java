@@ -49,11 +49,11 @@ public class TestStandardHostValve extends TomcatBaseTest {
 
         // Add the error page
         Tomcat.addServlet(ctx, "error", new ErrorServlet());
-        ctx.addServletMapping("/error", "error");
+        ctx.addServletMappingDecoded("/error", "error");
 
         // Add the error handling page
         Tomcat.addServlet(ctx, "report", new ReportServlet());
-        ctx.addServletMapping("/report/*", "report");
+        ctx.addServletMappingDecoded("/report/*", "report");
 
         // And the handling for 500 responses
         ErrorPage errorPage500 = new ErrorPage();
@@ -73,6 +73,22 @@ public class TestStandardHostValve extends TomcatBaseTest {
     }
 
 
+    @Test(expected=IllegalArgumentException.class)
+    public void testInvalidErrorPage() throws Exception {
+        // Set up a container
+        Tomcat tomcat = getTomcatInstance();
+
+        // No file system docBase required
+        Context ctx = tomcat.addContext("", null);
+
+        // Add a broken error page configuration
+        ErrorPage errorPage500 = new ErrorPage();
+        errorPage500.setErrorCode("java.lang.Exception");
+        errorPage500.setLocation("/report/500");
+        ctx.addErrorPage(errorPage500);
+    }
+
+
     @Test
     public void testSRLAfterError() throws Exception {
         // Set up a container
@@ -83,7 +99,7 @@ public class TestStandardHostValve extends TomcatBaseTest {
 
         // Add the error page
         Tomcat.addServlet(ctx, "error", new ErrorServlet());
-        ctx.addServletMapping("/error", "error");
+        ctx.addServletMappingDecoded("/error", "error");
 
         final List<String> result = new ArrayList<>();
 

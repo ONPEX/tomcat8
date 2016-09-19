@@ -92,6 +92,13 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
     protected AbstractEndpoint<S> endpoint = null;
 
 
+    /**
+     * The maximum number of cookies permitted for a request. Use a value less
+     * than zero for no limit. Defaults to 200.
+     */
+    private int maxCookieCount = 200;
+
+
     // ----------------------------------------------- Generic property handling
 
     /**
@@ -177,6 +184,16 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
     @Override
     public boolean isSendfileSupported() {
         return endpoint.getUseSendfile();
+    }
+
+
+    public int getMaxCookieCount() {
+        return maxCookieCount;
+    }
+
+
+    public void setMaxCookieCount(int maxCookieCount) {
+        this.maxCookieCount = maxCookieCount;
     }
 
 
@@ -760,8 +777,13 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                             ClassLoader oldCL = upgradeToken.getContextBind().bind(false, null);
                             try {
                                 httpUpgradeHandler.destroy();
-                                instanceManager.destroyInstance(httpUpgradeHandler);
                             } finally {
+                                try {
+                                    instanceManager.destroyInstance(httpUpgradeHandler);
+                                } catch (Throwable e) {
+                                    ExceptionUtils.handleThrowable(e);
+                                    getLog().error(sm.getString("abstractConnectionHandler.error"), e);
+                                }
                                 upgradeToken.getContextBind().unbind(false, oldCL);
                             }
                         }
