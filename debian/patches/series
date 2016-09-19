@@ -1,4 +1,3 @@
-0001-set-UTF-8-as-default-character-encoding.patch
 0002-do-not-load-AJP13-connector-by-default.patch
 0003-disable-APR-library-loading.patch
 0004-split-deploy-webapps-target-from-deploy-target.patch

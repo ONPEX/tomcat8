@@ -2,6 +2,7 @@ tomcat8 (8.0.37-1) UNRELEASED; urgency=medium
 
   * Team upload.
   * New upstream release
+  * Removed 0001-set-UTF-8-as-default-character-encoding.patch (fixed upstream)
 
  -- Emmanuel Bourg <ebourg@apache.org>  Mon, 19 Sep 2016 09:20:39 +0200
 
