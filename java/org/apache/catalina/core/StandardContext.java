@@ -709,7 +709,7 @@ public class StandardContext extends ContainerBase
      * particularly IE, don't send a session cookie for context /foo with
      * requests intended for context /foobar.
      */
-    private boolean sessionCookiePathUsesTrailingSlash = true;
+    private boolean sessionCookiePathUsesTrailingSlash = false;
 
 
     /**
@@ -833,8 +833,27 @@ public class StandardContext extends ContainerBase
 
     private boolean useRelativeRedirects = !Globals.STRICT_SERVLET_COMPLIANCE;
 
+    private boolean dispatchersUseEncodedPaths = true;
+
 
     // ----------------------------------------------------- Context Properties
+
+    @Override
+    public void setDispatchersUseEncodedPaths(boolean dispatchersUseEncodedPaths) {
+        this.dispatchersUseEncodedPaths = dispatchersUseEncodedPaths;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The default value for this implementation is {@code true}.
+     */
+    @Override
+    public boolean getDispatchersUseEncodedPaths() {
+        return dispatchersUseEncodedPaths;
+    }
+
 
     @Override
     public void setUseRelativeRedirects(boolean useRelativeRedirects) {
@@ -2052,7 +2071,7 @@ public class StandardContext extends ContainerBase
             log.warn(sm.getString(
                     "standardContext.pathInvalid", path, this.path));
         }
-        encodedPath = URLEncoder.DEFAULT.encode(this.path);
+        encodedPath = URLEncoder.DEFAULT.encode(this.path, "UTF-8");
         if (getName() == null) {
             setName(this.path);
         }
@@ -2822,7 +2841,7 @@ public class StandardContext extends ContainerBase
              */
             String[] jspMappings = oldJspServlet.findMappings();
             for (int i=0; jspMappings!=null && i<jspMappings.length; i++) {
-                addServletMapping(jspMappings[i], child.getName());
+                addServletMappingDecoded(jspMappings[i], child.getName());
             }
         }
     }
@@ -3144,60 +3163,52 @@ public class StandardContext extends ContainerBase
     }
 
 
-    /**
-     * Add a new servlet mapping, replacing any existing mapping for
-     * the specified pattern.
-     *
-     * @param pattern URL pattern to be mapped
-     * @param name Name of the corresponding servlet to execute
-     *
-     * @exception IllegalArgumentException if the specified servlet name
-     *  is not known to this Context
-     */
     @Override
+    @Deprecated
     public void addServletMapping(String pattern, String name) {
         addServletMapping(pattern, name, false);
     }
 
 
-    /**
-     * Add a new servlet mapping, replacing any existing mapping for
-     * the specified pattern.
-     *
-     * @param pattern URL pattern to be mapped
-     * @param name Name of the corresponding servlet to execute
-     * @param jspWildCard true if name identifies the JspServlet
-     * and pattern contains a wildcard; false otherwise
-     *
-     * @exception IllegalArgumentException if the specified servlet name
-     *  is not known to this Context
-     */
     @Override
-    public void addServletMapping(String pattern, String name,
+    @Deprecated
+    public void addServletMapping(String pattern, String name, boolean jspWildCard) {
+        addServletMappingDecoded(UDecoder.URLDecode(pattern, "UTF-8"), name, false);
+    }
+
+
+    @Override
+    public void addServletMappingDecoded(String pattern, String name) {
+        addServletMappingDecoded(pattern, name, false);
+    }
+
+
+    @Override
+    public void addServletMappingDecoded(String pattern, String name,
                                   boolean jspWildCard) {
         // Validate the proposed mapping
         if (findChild(name) == null)
             throw new IllegalArgumentException
                 (sm.getString("standardContext.servletMap.name", name));
-        String decodedPattern = adjustURLPattern(UDecoder.URLDecode(pattern));
-        if (!validateURLPattern(decodedPattern))
+        String adjustedPattern = adjustURLPattern(pattern);
+        if (!validateURLPattern(adjustedPattern))
             throw new IllegalArgumentException
-                (sm.getString("standardContext.servletMap.pattern", decodedPattern));
+                (sm.getString("standardContext.servletMap.pattern", adjustedPattern));
 
         // Add this mapping to our registered set
         synchronized (servletMappingsLock) {
-            String name2 = servletMappings.get(decodedPattern);
+            String name2 = servletMappings.get(adjustedPattern);
             if (name2 != null) {
                 // Don't allow more than one servlet on the same pattern
                 Wrapper wrapper = (Wrapper) findChild(name2);
-                wrapper.removeMapping(decodedPattern);
+                wrapper.removeMapping(adjustedPattern);
             }
-            servletMappings.put(decodedPattern, name);
+            servletMappings.put(adjustedPattern, name);
         }
         Wrapper wrapper = (Wrapper) findChild(name);
-        wrapper.addMapping(decodedPattern);
+        wrapper.addMapping(adjustedPattern);
 
-        fireContainerEvent("addServletMapping", decodedPattern);
+        fireContainerEvent("addServletMapping", adjustedPattern);
     }
 
 
@@ -4952,8 +4963,8 @@ public class StandardContext extends ContainerBase
      */
     public void resourcesStart() throws LifecycleException {
 
-        // May have been started (but not fully configured) in init() so no need
-        // to start the resources if they are already available
+        // Check current status in case resources were added that had already
+        // been started
         if (!resources.getState().isAvailable()) {
             resources.start();
         }
@@ -6385,10 +6396,6 @@ public class StandardContext extends ContainerBase
         // Register the naming resources
         if (namingResources != null) {
             namingResources.init();
-        }
-
-        if (resources != null) {
-            resources.start();
         }
 
         // Send j2ee.object.created notification

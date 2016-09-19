@@ -306,6 +306,7 @@ public abstract class AbstractReplicatedMap<K,V>
             for (Member member : members) {
                 long access = mapMembers.get(member).longValue();
                 if ( (now - access) > timeout ) {
+                    log.warn(sm.getString("abstractReplicatedMap.ping.timeout", member, mapname));
                     memberDisappeared(member);
                 }
             }
@@ -613,7 +614,8 @@ public abstract class AbstractReplicatedMap<K,V>
             mapmsg.deserialize(getExternalLoaders());
             if (mapmsg.getMsgType() == MapMessage.MSG_START) {
                 mapMemberAdded(mapmsg.getPrimary());
-            } else if (mapmsg.getMsgType() == MapMessage.MSG_INIT) {
+            } else if (mapmsg.getMsgType() == MapMessage.MSG_INIT
+                    || mapmsg.getMsgType() == MapMessage.MSG_PING) {
                 memberAlive(mapmsg.getPrimary());
             } else {
                 // other messages are ignored.

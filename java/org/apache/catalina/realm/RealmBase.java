@@ -185,7 +185,33 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
     protected boolean stripRealmForGss = true;
 
 
+    private int transportGuaranteeRedirectStatus = HttpServletResponse.SC_FOUND;
+
+
     // ------------------------------------------------------------- Properties
+
+
+    /**
+     * @return The HTTP status code used when the container needs to issue an
+     *         HTTP redirect to meet the requirements of a configured transport
+     *         guarantee.
+     */
+    public int getTransportGuaranteeRedirectStatus() {
+        return transportGuaranteeRedirectStatus;
+    }
+
+
+    /**
+     * Set the HTTP status code used when the container needs to issue an HTTP
+     * redirect to meet the requirements of a configured transport guarantee.
+     *
+     * @param transportGuaranteeRedirectStatus The status to use. This value is
+     *                                         not validated
+     */
+    public void setTransportGuaranteeRedirectStatus(int transportGuaranteeRedirectStatus) {
+        this.transportGuaranteeRedirectStatus = transportGuaranteeRedirectStatus;
+    }
+
 
     @Override
     public CredentialHandler getCredentialHandler() {
@@ -447,23 +473,46 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
      */
     @Override
     public Principal authenticate(String username, String credentials) {
-
-        String serverCredentials = getPassword(username);
-
-        boolean validated = getCredentialHandler().matches(credentials, serverCredentials);
-        if (!validated) {
+        // No user or no credentials
+        // Can't possibly authenticate, don't bother doing anything.
+        if(username == null || credentials == null) {
             if (containerLog.isTraceEnabled()) {
                 containerLog.trace(sm.getString("realmBase.authenticateFailure",
                                                 username));
             }
             return null;
         }
-        if (containerLog.isTraceEnabled()) {
-            containerLog.trace(sm.getString("realmBase.authenticateSuccess",
-                                            username));
+
+        // Look up the user's credentials
+        String serverCredentials = getPassword(username);
+
+        if (serverCredentials == null) {
+            // User was not found
+            // Waste a bit of time as not to reveal that the user does not exist.
+            getCredentialHandler().mutate(credentials);
+
+            if (containerLog.isTraceEnabled()) {
+                containerLog.trace(sm.getString("realmBase.authenticateFailure",
+                                                username));
+            }
+            return null;
         }
 
-        return getPrincipal(username);
+        boolean validated = getCredentialHandler().matches(credentials, serverCredentials);
+
+        if (validated) {
+            if (containerLog.isTraceEnabled()) {
+                containerLog.trace(sm.getString("realmBase.authenticateSuccess",
+                                                username));
+            }
+            return getPrincipal(username);
+        } else {
+            if (containerLog.isTraceEnabled()) {
+                containerLog.trace(sm.getString("realmBase.authenticateFailure",
+                                                username));
+            }
+            return null;
+        }
     }
 
     /**
@@ -1190,7 +1239,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
         }
         if (log.isDebugEnabled())
             log.debug("  Redirecting to " + file.toString());
-        response.sendRedirect(file.toString());
+        response.sendRedirect(file.toString(), transportGuaranteeRedirectStatus);
         return (false);
 
     }

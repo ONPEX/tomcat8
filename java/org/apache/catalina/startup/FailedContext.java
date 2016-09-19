@@ -579,6 +579,11 @@ public class FailedContext extends LifecycleMBeanBase implements Context {
     public void addServletMapping(String pattern, String name,
             boolean jspWildcard) { /* NO-OP */ }
     @Override
+    public void addServletMappingDecoded(String pattern, String name) { /* NO-OP */ }
+    @Override
+    public void addServletMappingDecoded(String pattern, String name,
+            boolean jspWildcard) { /* NO-OP */ }
+    @Override
     public String findServletMapping(String pattern) { return null; }
     @Override
     public String[] findServletMappings() { return null; }
@@ -790,4 +795,9 @@ public class FailedContext extends LifecycleMBeanBase implements Context {
     public void setUseRelativeRedirects(boolean useRelativeRedirects) { /* NO-OP */ }
     @Override
     public boolean getUseRelativeRedirects() { return true; }
+
+    @Override
+    public void setDispatchersUseEncodedPaths(boolean dispatchersUseEncodedPaths) { /* NO-OP */ }
+    @Override
+    public boolean getDispatchersUseEncodedPaths() { return true; }
 }
