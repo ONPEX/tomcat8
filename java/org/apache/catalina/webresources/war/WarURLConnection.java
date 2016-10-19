@@ -14,34 +14,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.catalina.webresources;
+package org.apache.catalina.webresources.war;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
-import java.net.URLStreamHandler;
+import java.security.Permission;
 
-public class WarURLStreamHandler extends URLStreamHandler {
+import org.apache.tomcat.util.buf.UriUtil;
 
-    @Override
-    protected void parseURL(URL u, String spec, int start, int limit) {
-        // Need to make this look like a JAR URL for the WAR file
-        // Assumes that the spec is absolute and starts war:file:/...
 
-        // Only the path needs to be changed
-        String path = "jar:" + spec.substring(4);
-        if (path.contains("*/")) {
-            path = path.replaceFirst("\\*/", "!/");
-        } else {
-            path = path.replaceFirst("\\^/", "!/");
-        }
+public class WarURLConnection extends URLConnection {
 
-        setURL(u, u.getProtocol(), "", -1, null, null,
-                path, null, null);
+    private final URLConnection wrappedJarUrlConnection;
+    private boolean connected;
+
+    protected WarURLConnection(URL url) throws IOException {
+        super(url);
+        URL innerJarUrl = UriUtil.warToJar(url);
+        wrappedJarUrlConnection = innerJarUrl.openConnection();
     }
 
+
     @Override
-    protected URLConnection openConnection(URL u) throws IOException {
-        return new WarURLConnection(u);
+    public void connect() throws IOException {
+        if (!connected) {
+            wrappedJarUrlConnection.connect();
+            connected = true;
+        }
+    }
+
+
+    @Override
+    public InputStream getInputStream() throws IOException {
+        connect();
+        return wrappedJarUrlConnection.getInputStream();
+    }
+
+
+    @Override
+    public Permission getPermission() throws IOException {
+        return wrappedJarUrlConnection.getPermission();
     }
 }

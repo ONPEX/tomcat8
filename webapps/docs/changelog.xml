@@ -44,7 +44,178 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues do not "pop up" wrt. others).
 -->
-<section name="Tomcat 8.0.37 (markt)">
+<section name="Tomcat 8.0.38 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <add>
+        <bug>59961</bug>: Add an option to the <code>StandardJarScanner</code>
+        to control whether or not JAR Manifests are scanned for additional
+        class path entries. (markt)
+      </add>
+      <fix>
+        <bug>60013</bug>: Refactor the previous fix to align the behaviour of
+        the Rewrite Valve with mod_rewite. As part of this, provide an
+        implementation for the <code>B</code> and <code>NE</code> flags and
+        improve the handling for the <code>QSA</code> flag. Includes multiple
+        test cases by Santhana Preethiand a patch by Tiago Oliveira. (markt)
+      </fix>
+      <fix>
+        <bug>60087</bug>: Refactor the web resources handling to use the Tomcat
+        specific <code>war:file:...</code> URL protocol to refer to WAR files
+        and their contents rather than the standard <code>jar:file:...</code>
+        form since some components of the JRE, such as JAR verification, give
+        unexpected results when the standard form is used. A side-effect of the
+        refactoring is that when using packed WARs, it is now possible to
+        reference a WAR and/or specific JARs within a WAR in the security policy
+        file used when running under a <code>SecurityManager</code>. (markt)
+      </fix>
+      <fix>
+        <bug>60116</bug>: Fix a problem with the rewrite valve that caused back
+        references evaluated in conditions to be forced to lower case when using
+        the <code>NC</code> flag. (markt)
+      </fix>
+      <fix>
+        Ensure <code>Digester.useContextClassLoader</code> is considered in
+        case the class loader is used. (violetagg)
+      </fix>
+      <fix>
+        <bug>60117</bug>: Ensure that the name of <code>LogLevel</code> is
+        localized when using <code>OneLineFormatter</code>. Patch provided by
+        Tatsuya Bessho. (kfujino)
+      </fix>
+      <fix>
+        <bug>60146</bug>: Improve performance for resource retrieval by making
+        calls to WebResource.getInputStream() trigger caching if the resource is
+        small enough. Patch provided by mohitchugh. (markt)
+      </fix>
+      <add>
+        <bug>60151</bug>: Improve the exception error messages when a
+        <code>ResourceLink</code> fails to specify the type, specifies an
+        unknown type or specifies the wrong type. (markt)
+      </add>
+      <fix>
+        <bug>60167</bug>: Ignore empty lines in <code>/etc/passwd</code> files
+        when using the <code>PasswdUserDatabase</code>. (markt)
+      </fix>
+      <fix>
+        <bug>60170</bug>: Exclude the compressed test file
+        <code>index.html.br</code> from RAT analysis. Patch provided by Gavin
+        McDonald. (markt)
+      </fix>
+      <fix>
+        When starting web resources, ensure that class resources are only
+        started once. (markt)
+      </fix>
+      <fix>
+        Improve the access checks for linked global resources to handle the case
+        where the current class loader is a child of the web application class
+        loader. (markt)
+      </fix>
+      <fix>
+        <bug>60199</bug>: Log a warning if deserialization issues prevent a
+        session attribute from being loaded. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        Correctly handle a call to <code>AsyncContext.complete()</code> from a
+        non-container thread when non-blocking I/O is being used. (markt)
+      </fix>
+      <add>
+        Refactor the code that implements the requirement that a call to
+        <code>complete()</code> or <code>dispatch()</code> made from a
+        non-container thread before the container initiated thread that called
+        <code>startAsync()</code> completes must be delayed until the container
+        initiated thread has completed. Rather than implementing this by
+        blocking the non-container thread, extend the internal state machine to
+        track this. This removes the possibility that blocking the non-container
+        thread could trigger a deadlock. (markt)
+      </add>
+      <fix>
+        <bug>60123</bug>: Avoid potential threading issues that could cause
+        excessively large vales to be returned for the processing time of
+        a current request. (markt)
+      </fix>
+      <fix>
+        <bug>60174</bug>: Log instances of <code>HeadersTooLargeException</code>
+        during request processing. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        <bug>60101</bug>: Remove preloading of the class that was deleted.
+        (violetagg)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <add>
+        Expand the documentation for the nested elements within a
+        <code>Resources</code> element to clarify the behaviour of different
+        configuration options with respect to the order in which resources are
+        searched. (markt)
+      </add>
+      <add>
+        Add an example of using the <code>classesToInitialize</code> attribute
+        of the <code>JreMemoryLeakPreventionListener</code> to the documentation
+        web application. Based on a patch by Cris Berneburg. (markt)
+      </add>
+      <fix>
+        <bug>60192</bug>: Correct a typo in the status output of the Manager
+        application. Patch provided by  Radhakrishna Pemmasani. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="jdbc-pool">
+    <changelog>
+      <fix>
+        Notify jmx when returning the connection that has been marked suspect.
+        (kfujino)
+      </fix>
+      <fix>
+        Ensure that the <code>POOL_EMPTY</code> notification has been added to
+        the jmx notification types. (kfujino)
+      </fix>
+      <fix>
+        <bug>60099</bug>: Ensure that use all method arguments as a cache key
+        when using <code>StatementCache</code>. (kfujino)
+      </fix>
+      <fix>
+        <bug>60139</bug>: Correct Javadocs for
+        <code>PoolConfiguration.getValidationInterval</code> and
+        <code>setValidationInterval</code>. Reported by Phillip Webb. (kfujino)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <fix>
+        Update the download location for Objenesis. (violetagg)
+      </fix>
+      <fix>
+        <bug>60164</bug>: Replace <code>log4j-core*.jar</code> with
+        <code>log4j-web*.jar</code> since it is <code>log4j-web*.jar</code> that
+        contains the <code>ServletContainerInitializer</code>. (markt)
+      </fix>
+      <add>
+        Add documentation to the bin/catalina.bat script to remind users that
+        environment variables don't affect the configuration of Tomcat when
+        run as a Windows Service. Based upon a documentation patch by
+        James H.H. Lampert. (schultz)
+      </add>
+      <update>
+        Update the packaged version of the Tomcat Native Library to 1.2.10 to
+        pick up the latest Windows binaries built with OpenSSL 1.0.2j. (markt)
+      </update>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.0.37 (markt)" rtext="2016-09-05">
   <subsection name="Catalina">
     <changelog>
       <fix>
@@ -294,7 +465,7 @@
         connection is borrowed. (kfujino)
       </fix>
       <fix>
-        <bug>59774</bug>: Correct the <code>prefix</code> values in the the
+        <bug>59774</bug>: Correct the <code>prefix</code> values in the
         documented examples for configuring the <code>AccessLogValve</code>.
         Patch provided by Mike Noordermeer. (markt)
       </fix>
@@ -5865,7 +6036,7 @@
       </fix>
       <add>
         Add a work around for validating XML documents (often TLDs) that use
-        just the file name to refer to refer to the JavaEE schema on which they
+        just the file name to refer to the JavaEE schema on which they
         are based. (markt)
       </add>
       <add>

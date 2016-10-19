@@ -25,7 +25,7 @@
 # ----- Version Control Flags -----
 version.major=8
 version.minor=0
-version.build=37
+version.build=38
 version.patch=0
 version.suffix=
 
@@ -157,7 +157,7 @@ jdt.loc.1=http://archive.eclipse.org/eclipse/downloads/drops4/${jdt.release}/ecj
 jdt.loc.2=http://download.eclipse.org/eclipse/downloads/drops4/${jdt.release}/ecj-${jdt.version}.jar
 
 # ----- Tomcat native library -----
-tomcat-native.version=1.2.8
+tomcat-native.version=1.2.10
 tomcat-native.home=${base.path}/tomcat-native-${tomcat-native.version}
 tomcat-native.tar.gz=${tomcat-native.home}/tomcat-native.tar.gz
 tomcat-native.loc.1=${base-tomcat.loc.1}/tomcat-connectors/native/${tomcat-native.version}/source/tomcat-native-${tomcat-native.version}-src.tar.gz
@@ -216,7 +216,7 @@ cglib.jar=${cglib.home}/cglib-nodep-${cglib.version}.jar
 # ----- objenesis, used by EasyMock, version 1.2 or later -----
 objenesis.version=1.2
 objenesis.home=${base.path}/objenesis-${objenesis.version}
-objenesis.loc=https://objenesis.googlecode.com/files/objenesis-${objenesis.version}-bin.zip
+objenesis.loc=https://bintray.com/easymock/distributions/download_file?file_path=objenesis-${objenesis.version}-bin.zip
 objenesis.jar=${objenesis.home}/objenesis-${objenesis.version}.jar
 
 # ----- Checkstyle, version 6.16 or later -----
