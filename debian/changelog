@@ -7,6 +7,7 @@ tomcat8 (8.0.14-1+deb8u4) UNRELEASED; urgency=medium
     - The catalina.policy file generated on startup was affected by a similar
       vulnerability that could be exploited to overwrite any file on the system.
       Thanks to Paul Szabo for the report.
+  * Hardened the init.d script, thanks to Paul Szabo (Closes: #840685)
 
  -- Emmanuel Bourg <ebourg@apache.org>  Sat, 12 Nov 2016 00:34:05 +0100
 
