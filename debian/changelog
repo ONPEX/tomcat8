@@ -1,3 +1,10 @@
+tomcat8 (8.0.37-2) UNRELEASED; urgency=medium
+
+  * Team upload.
+  * Fixed the OSGi metadata for tomcat8-jasper.jar and tomcat8-jasper-el.jar
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Wed, 19 Oct 2016 09:06:20 +0200
+
 tomcat8 (8.0.37-1) unstable; urgency=medium
 
   * Team upload.
