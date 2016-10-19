@@ -1,2 +1,0 @@
-# Tomcat requires Java 7
-libservlet3.1-java: incompatible-java-bytecode-format Java7 version (Class format: 51)

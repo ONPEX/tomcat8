@@ -1,2 +1,0 @@
-# Tomcat requires Java 7
-tomcat8-common: incompatible-java-bytecode-format Java7 version (Class format: 51)
