@@ -13,7 +13,7 @@ Build-Depends: ant-optional,
                po-debconf
 Build-Depends-Indep: javahelper,
                      junit4 (>= 4.11),
-                     libcglib3-java,
+                     libcglib-nodep-java,
                      libeasymock-java (>= 3.0),
                      libecj-java (>= 3.11.0),
                      libhamcrest-java (>= 1.3),
