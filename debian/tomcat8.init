@@ -208,11 +208,11 @@ case "$1" in
 
 		# Remove / recreate JVM_TMP directory
 		rm -rf "$JVM_TMP"
-		mkdir -p "$JVM_TMP" || {
+		mkdir "$JVM_TMP" || {
 			log_failure_msg "could not create JVM temporary directory"
 			exit 1
 		}
-		chown $TOMCAT8_USER "$JVM_TMP"
+		chown -h $TOMCAT8_USER "$JVM_TMP"
 
 		catalina_sh start $SECURITY
 		sleep 5

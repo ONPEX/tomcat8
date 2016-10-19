@@ -3,6 +3,7 @@ tomcat8 (8.0.38-1) UNRELEASED; urgency=medium
   * Team upload.
   * New upstream release
     - Refreshed the patches
+  * Hardened the init.d script, thanks to Paul Szabo (Closes: #840685)
   * Fixed the OSGi metadata for tomcat8-jasper.jar and tomcat8-jasper-el.jar
   * Depend on libcglib-nodep-java instead of libcglib3-java
   * Removed the unused Lintian overrides
