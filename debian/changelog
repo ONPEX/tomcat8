@@ -1,4 +1,4 @@
-tomcat8 (8.0.38-1) UNRELEASED; urgency=medium
+tomcat8 (8.0.38-1) unstable; urgency=medium
 
   * Team upload.
   * New upstream release
@@ -8,7 +8,7 @@ tomcat8 (8.0.38-1) UNRELEASED; urgency=medium
   * Depend on libcglib-nodep-java instead of libcglib3-java
   * Removed the unused Lintian overrides
 
- -- Emmanuel Bourg <ebourg@apache.org>  Wed, 19 Oct 2016 09:06:20 +0200
+ -- Emmanuel Bourg <ebourg@apache.org>  Wed, 19 Oct 2016 11:01:03 +0200
 
 tomcat8 (8.0.37-1) unstable; urgency=medium
 
