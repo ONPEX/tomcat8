@@ -1,3 +1,9 @@
+tomcat8 (8.0.38-1~bpo8+1) jessie-backports; urgency=medium
+
+  * Rebuild for jessie-backports.
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Tue, 25 Oct 2016 15:28:28 +0200
+
 tomcat8 (8.0.38-1) unstable; urgency=medium
 
   * Team upload.
