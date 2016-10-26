@@ -8,7 +8,7 @@ Uploaders: James Page <james.page@ubuntu.com>,
            Jakub Adam <jakub.adam@ktknet.cz>,
            Emmanuel Bourg <ebourg@apache.org>
 Build-Depends: ant-optional,
-               debhelper (>= 9),
+               debhelper (>= 10),
                default-jdk,
                po-debconf
 Build-Depends-Indep: javahelper,

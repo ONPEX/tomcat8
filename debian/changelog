@@ -4,6 +4,7 @@ tomcat8 (8.0.38-2) UNRELEASED; urgency=medium
   * Install the extra jar catalina-jmx-remote.jar (Closes: #762916)
   * Added the new libtomcat8-embed-java package containing the libraries
     for embedding Tomcat into other applications.
+  * Switch to debhelper level 10
 
  -- Emmanuel Bourg <ebourg@apache.org>  Wed, 26 Oct 2016 11:09:33 +0200
 
