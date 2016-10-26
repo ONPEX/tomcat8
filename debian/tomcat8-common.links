@@ -6,6 +6,7 @@
 /usr/share/java/tomcat8-catalina.jar             /usr/share/tomcat8/lib/catalina.jar
 /usr/share/java/tomcat8-catalina-ant.jar         /usr/share/tomcat8/lib/catalina-ant.jar
 /usr/share/java/tomcat8-catalina-ha.jar          /usr/share/tomcat8/lib/catalina-ha.jar
+/usr/share/java/tomcat8-catalina-jmx-remote.jar  /usr/share/tomcat8/lib/catalina-jmx-remote.jar
 /usr/share/java/tomcat8-catalina-storeconfig.jar /usr/share/tomcat8/lib/catalina-storeconfig.jar
 /usr/share/java/tomcat8-coyote.jar               /usr/share/tomcat8/lib/tomcat-coyote.jar
 /usr/share/java/tomcat8-dbcp.jar                 /usr/share/tomcat8/lib/tomcat-dbcp.jar

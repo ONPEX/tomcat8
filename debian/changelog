@@ -1,6 +1,7 @@
 tomcat8 (8.0.38-2) UNRELEASED; urgency=medium
 
   * Team upload.
+  * Install the extra jar catalina-jmx-remote.jar (Closes: #762916)
   * Added the new libtomcat8-embed-java package containing the libraries
     for embedding Tomcat into other applications.
 

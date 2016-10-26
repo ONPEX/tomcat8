@@ -21,3 +21,4 @@ debian/poms/tomcat-util.pom            --java-lib --usj-name=tomcat8-util       
 debian/poms/tomcat-util-scan.pom       --java-lib --usj-name=tomcat8-util-scan       --artifact=output/build/lib/tomcat-util-scan.jar
 debian/poms/tomcat-websocket.pom       --java-lib --usj-name=tomcat8-websocket       --artifact=output/build/lib/tomcat-websocket.jar
 debian/poms/tomcat-websocket-api.pom   --java-lib --usj-name=tomcat8-websocket-api   --artifact=output/build/lib/websocket-api.jar
+debian/poms/tomcat-catalina-jmx-remote.pom --java-lib --usj-name=tomcat8-catalina-jmx-remote --artifact=output/extras/catalina-jmx-remote.jar
