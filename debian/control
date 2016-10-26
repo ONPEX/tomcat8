@@ -90,6 +90,17 @@ Description: Apache Tomcat 8 - Servlet and JSP engine -- core libraries
  This package contains the Tomcat core classes which can be used by other
  Java applications to embed Tomcat.
 
+Package: libtomcat8-embed-java
+Architecture: all
+Depends: libecj-java (>= 3.11.0), ${misc:Depends}
+Description: Apache Tomcat 8 - Servlet and JSP engine -- embed libraries
+ Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
+ specifications from Oracle, and provides a "pure Java" HTTP web
+ server environment for Java code to run.
+ .
+ This package contains the libraries required to embed Tomcat into Java
+ applications.
+
 Package: libservlet3.1-java
 Architecture: all
 Depends: ${misc:Depends}

@@ -16,7 +16,7 @@ ANT       := ant -propertyfile debian/ant.properties \
 	dh $@
 
 override_dh_auto_build:
-	$(ANT) deploy
+	$(ANT) deploy embed-jars
 
 	# Build the Javadoc for the Servlet, JSP, EL and WebSocket APIs
 	$(JAVA_HOME)/bin/javadoc -locale en_US -subpackages "javax.servlet:javax.el:javax.websocket" -d "output/api" \
