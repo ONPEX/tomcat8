@@ -171,7 +171,8 @@ catalina_sh() {
 	# Run the catalina.sh script as a daemon
 	set +e
 	if [ ! -f "$CATALINA_BASE"/logs/catalina.out ]; then
-		install -o $TOMCAT8_USER -g adm -m 644 /dev/null "$CATALINA_BASE"/logs/catalina.out
+		# run install as tomcat8 to work around #841371
+		su $TOMCAT8_USER -s /bin/bash -c "install -m 644 /dev/null $CATALINA_BASE/logs/catalina.out"
 	fi
 	install -o $TOMCAT8_USER -g adm -m 644 /dev/null "$CATALINA_PID"
 	start-stop-daemon --start -b -u "$TOMCAT8_USER" -g "$TOMCAT8_GROUP" \
