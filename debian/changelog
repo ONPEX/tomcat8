@@ -1,9 +1,13 @@
-tomcat8 (8.0.38-2) UNRELEASED; urgency=medium
+tomcat8 (8.0.38-2) UNRELEASED; urgency=high
 
   * Team upload.
-  * CVE-2016-1240 follow-up: Fixed a race condition in the init.d script
-    that could be exploited to make any existing file writable by the tomcat
-    user. Thanks to Paul Szabo for the report and the fix.
+  * CVE-2016-1240 follow-up:
+    - The previous init.d fix was vulnerable to a race condition that could
+      be exploited to make any existing file writable by the tomcat user.
+      Thanks to Paul Szabo for the report and the fix.
+    - The catalina.policy file generated on startup was affected by a similar
+      vulnerability that could be exploited to overwrite any file on the system.
+      Thanks to Paul Szabo for the report.
   * Install the extra jar catalina-jmx-remote.jar (Closes: #762916)
   * Added the new libtomcat8-embed-java package containing the libraries
     for embedding Tomcat into other applications.
