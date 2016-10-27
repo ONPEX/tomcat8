@@ -1,8 +1,12 @@
 tomcat8 (8.0.14-1+deb8u4) UNRELEASED; urgency=medium
 
-  * CVE-2016-1240 follow-up: Fixed a race condition in the init.d script
-    that could be exploited to make any existing file writable by the tomcat
-    user. Thanks to Paul Szabo for the report and the fix.
+  * CVE-2016-1240 follow-up:
+    - The previous init.d fix was vulnerable to a race condition that could
+      be exploited to make any existing file writable by the tomcat user.
+      Thanks to Paul Szabo for the report and the fix.
+    - The catalina.policy file generated on startup was affected by a similar
+      vulnerability that could be exploited to overwrite any file on the system.
+      Thanks to Paul Szabo for the report.
 
  -- Emmanuel Bourg <ebourg@apache.org>  Sat, 12 Nov 2016 00:34:05 +0100
 

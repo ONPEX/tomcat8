@@ -8,6 +8,7 @@ LR_CONFFILE=/etc/logrotate.d/tomcat8
 
 # Remove cached files and auto-generated catalina.policy
 rm -rf /var/cache/tomcat8/*
+rm -rf /var/lib/tomcat8/policy
 
 case "$1" in
     remove)

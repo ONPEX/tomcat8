@@ -14,7 +14,7 @@ Forwarded: not-needed
          -sourcepath "$CATALINA_HOME"/../../java \
          -Djava.security.manager \
 -        -Djava.security.policy=="$CATALINA_BASE"/conf/catalina.policy \
-+        -Djava.security.policy=="$CATALINA_BASE"/work/catalina.policy \
++        -Djava.security.policy=="$CATALINA_BASE"/policy/catalina.policy \
          -Dcatalina.base="$CATALINA_BASE" \
          -Dcatalina.home="$CATALINA_HOME" \
          -Djava.io.tmpdir="$CATALINA_TMPDIR" \
@@ -23,7 +23,7 @@ Forwarded: not-needed
        -Djava.endorsed.dirs="\"$JAVA_ENDORSED_DIRS\"" -classpath "\"$CLASSPATH\"" \
        -Djava.security.manager \
 -      -Djava.security.policy=="\"$CATALINA_BASE/conf/catalina.policy\"" \
-+      -Djava.security.policy=="\"$CATALINA_BASE/work/catalina.policy\"" \
++      -Djava.security.policy=="\"$CATALINA_BASE/policy/catalina.policy\"" \
        -Dcatalina.base="\"$CATALINA_BASE\"" \
        -Dcatalina.home="\"$CATALINA_HOME\"" \
        -Djava.io.tmpdir="\"$CATALINA_TMPDIR\"" \
@@ -32,7 +32,7 @@ Forwarded: not-needed
        -Djava.endorsed.dirs="\"$JAVA_ENDORSED_DIRS\"" -classpath "\"$CLASSPATH\"" \
        -Djava.security.manager \
 -      -Djava.security.policy=="\"$CATALINA_BASE/conf/catalina.policy\"" \
-+      -Djava.security.policy=="\"$CATALINA_BASE/work/catalina.policy\"" \
++      -Djava.security.policy=="\"$CATALINA_BASE/policy/catalina.policy\"" \
        -Dcatalina.base="\"$CATALINA_BASE\"" \
        -Dcatalina.home="\"$CATALINA_HOME\"" \
        -Djava.io.tmpdir="\"$CATALINA_TMPDIR\"" \

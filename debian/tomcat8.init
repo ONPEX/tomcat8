@@ -118,7 +118,7 @@ if [ ! -f "$CATALINA_HOME/bin/bootstrap.jar" ]; then
 	exit 1
 fi
 
-POLICY_CACHE="$CATALINA_BASE/work/catalina.policy"
+POLICY_CACHE="$CATALINA_BASE/policy/catalina.policy"
 
 if [ -z "$CATALINA_TMPDIR" ]; then
 	CATALINA_TMPDIR="$JVM_TMP"
@@ -202,6 +202,8 @@ case "$1" in
 
 		# Regenerate POLICY_CACHE file
 		umask 022
+		rm -rf "$CATALINA_BASE/policy"
+		mkdir "$CATALINA_BASE/policy"
 		echo "// AUTO-GENERATED FILE from /etc/tomcat8/policy.d/" \
 			> "$POLICY_CACHE"
 		echo ""  >> "$POLICY_CACHE"
