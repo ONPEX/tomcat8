@@ -1,5 +1,10 @@
 tomcat8 (8.0.14-1+deb8u4) UNRELEASED; urgency=medium
 
+  * Fixed CVE-2016-6794: When a SecurityManager is configured, a web
+    application's ability to read system properties should be controlled by
+    the SecurityManager. Tomcat's system property replacement feature for
+    configuration files could be used by a malicious web application to bypass
+    the SecurityManager and read system properties that should not be visible.
   * CVE-2016-1240 follow-up:
     - The previous init.d fix was vulnerable to a race condition that could
       be exploited to make any existing file writable by the tomcat user.
