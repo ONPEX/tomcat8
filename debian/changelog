@@ -1,5 +1,8 @@
 tomcat8 (8.0.14-1+deb8u4) UNRELEASED; urgency=medium
 
+  * Fixed CVE-2016-0762: The Realm implementations did not process the supplied
+    password if the supplied user name did not exist. This made a timing attack
+    possible to determine valid user names.
   * Fixed CVE-2016-5018: A malicious web application was able to bypass
     a configured SecurityManager via a Tomcat utility method that was
     accessible to web applications.
