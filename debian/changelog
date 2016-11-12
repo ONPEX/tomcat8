@@ -8,6 +8,9 @@ tomcat8 (8.0.14-1+deb8u4) UNRELEASED; urgency=medium
     the SecurityManager. Tomcat's system property replacement feature for
     configuration files could be used by a malicious web application to bypass
     the SecurityManager and read system properties that should not be visible.
+  * Fixed CVE-2016-6796: A malicious web application was able to bypass
+    a configured SecurityManager via manipulation of the configuration
+    parameters for the JSP Servlet.
   * Fixed CVE-2016-6797: The ResourceLinkFactory did not limit web application
     access to global JNDI resources to those resources explicitly linked to the
     web application. Therefore, it was possible for a web application to access
