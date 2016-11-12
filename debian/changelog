@@ -1,5 +1,8 @@
 tomcat8 (8.0.14-1+deb8u4) UNRELEASED; urgency=medium
 
+  * Fixed CVE-2016-5018: A malicious web application was able to bypass
+    a configured SecurityManager via a Tomcat utility method that was
+    accessible to web applications.
   * Fixed CVE-2016-6794: When a SecurityManager is configured, a web
     application's ability to read system properties should be controlled by
     the SecurityManager. Tomcat's system property replacement feature for
