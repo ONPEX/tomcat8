@@ -688,7 +688,11 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
         case CLOSE_NOW: {
             // Prevent further writes to the response
             swallowResponse = true;
-            setErrorState(ErrorState.CLOSE_NOW, null);
+            if (param instanceof Throwable) {
+                setErrorState(ErrorState.CLOSE_NOW, (Throwable) param);
+            } else {
+                setErrorState(ErrorState.CLOSE_NOW, null);
+            }
             break;
         }
         case END_REQUEST: {
@@ -719,7 +723,7 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
                     if (getLog().isDebugEnabled()) {
                         getLog().debug("Unable to write async data.",x);
                     }
-                    status = SocketStatus.ASYNC_WRITE_ERROR;
+                    status = SocketStatus.ERROR;
                     request.setAttribute(RequestDispatcher.ERROR_EXCEPTION, x);
                 }
             } catch (IllegalStateException x) {
@@ -1818,7 +1822,13 @@ public abstract class AbstractAjpProcessor<S> extends AbstractProcessor<S> {
             }
 
             if (!swallowResponse) {
-                writeData(chunk);
+                try {
+                    writeData(chunk);
+                } catch (IOException ioe) {
+                    response.action(ActionCode.CLOSE_NOW, ioe);
+                    // Re-throw
+                    throw ioe;
+                }
             }
             return chunk.getLength();
         }
