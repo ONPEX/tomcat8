@@ -479,7 +479,10 @@
       maximum number of simultaneous requests that can be handled.  If
       not specified, this attribute is set to 200. If an executor is associated
       with this connector, this attribute is ignored as the connector will
-      execute tasks using the executor rather than an internal thread pool.</p>
+      execute tasks using the executor rather than an internal thread pool. Note
+      that if an executor is configured any value set for this attribute will be
+      recorded correctly but it will be reported (e.g. via JMX) as
+      <code>-1</code> to make clear that it is not used.</p>
     </attribute>
 
     <attribute name="maxTrailerSize" required="false">
@@ -491,7 +494,12 @@
 
     <attribute name="minSpareThreads" required="false">
       <p>The minimum number of threads always kept running. If not specified,
-      the default of <code>10</code> is used.</p>
+      the default of <code>10</code> is used. If an executor is associated
+      with this connector, this attribute is ignored as the connector will
+      execute tasks using the executor rather than an internal thread pool. Note
+      that if an executor is configured any value set for this attribute will be
+      recorded correctly but it will be reported (e.g. via JMX) as
+      <code>-1</code> to make clear that it is not used.</p>
     </attribute>
 
     <attribute name="noCompressionUserAgents" required="false">
@@ -561,8 +569,12 @@
       The default value is <code>5</code> (the value of the
       <code>java.lang.Thread.NORM_PRIORITY</code> constant). See the JavaDoc
       for the <code>java.lang.Thread</code> class for more details on what
-      this priority means.
-      </p>
+      this priority means. If an executor is associated
+      with this connector, this attribute is ignored as the connector will
+      execute tasks using the executor rather than an internal thread pool. Note
+      that if an executor is configured any value set for this attribute will be
+      recorded correctly but it will be reported (e.g. via JMX) as
+      <code>-1</code> to make clear that it is not used.</p>
     </attribute>
 
     <attribute name="upgradeAsyncWriteBufferSize" required="false">
@@ -1180,7 +1192,7 @@
       <p>The certificate revocation list to be used to verify client
       certificates. If not defined, client certificates will not be checked
       against a certificate revocation list. The file may be specified using a
-      URL, an absolute path or a relative (to CATAINA_BASE) path.</p>
+      URL, an absolute path or a relative (to CATALINA_BASE) path.</p>
     </attribute>
 
     <attribute name="keyAlias" required="false">
@@ -1206,7 +1218,7 @@
       directory of the user that is running Tomcat. If your
       <code>keystoreType</code> doesn't need a file use <code>""</code>
       (empty string) for this parameter. The file may be specified using a
-      URL, an absolute path or a relative (to CATAINA_BASE) path.</p>
+      URL, an absolute path or a relative (to CATALINA_BASE) path.</p>
     </attribute>
 
     <attribute name="keystorePass" required="false">
@@ -1297,7 +1309,7 @@
       default is the value of the <code>javax.net.ssl.trustStore</code> system
       property. If neither this attribute nor the default system property is
       set, no trust store will be configured. The file may be specified using a
-      URL, an absolute path or a relative (to CATAINA_BASE) path.</p>
+      URL, an absolute path or a relative (to CATALINA_BASE) path.</p>
     </attribute>
 
     <attribute name="truststorePass" required="false">

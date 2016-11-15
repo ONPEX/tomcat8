@@ -66,7 +66,7 @@ public class JmxRemoteLifecycleListener implements LifecycleListener {
     private static final Log log = LogFactory.getLog(JmxRemoteLifecycleListener.class);
 
     protected static final StringManager sm =
-            StringManager.getManager(Constants.Package);
+            StringManager.getManager(JmxRemoteLifecycleListener.class);
 
     protected String rmiBindAddress = null;
     protected int rmiRegistryPortPlatform = -1;
@@ -264,6 +264,10 @@ public class JmxRemoteLifecycleListener implements LifecycleListener {
                 serverCsf = new RmiClientLocalhostSocketFactory(serverCsf);
             }
 
+            env.put("jmx.remote.rmi.server.credential.types", new String[] {
+                    String[].class.getName(),
+                    String.class.getName() });
+
             // Populate the env properties used to create the server
             if (serverCsf != null) {
                 env.put(RMIConnectorServer.RMI_CLIENT_SOCKET_FACTORY_ATTRIBUTE, serverCsf);
@@ -328,7 +332,7 @@ public class JmxRemoteLifecycleListener implements LifecycleListener {
             cs = new RMIConnectorServer(serviceUrl, theEnv, server,
                     ManagementFactory.getPlatformMBeanServer());
             cs.start();
-            registry.bind("jmxrmi", server);
+            registry.bind("jmxrmi", server.toStub());
             log.info(sm.getString("jmxRemoteLifecycleListener.start",
                     Integer.toString(theRmiRegistryPort),
                     Integer.toString(theRmiServerPort), serverName));

@@ -14,22 +14,15 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+package org.apache.tomcat.util.http.parser;
 
-package org.apache.tomcat.util.net;
+import org.junit.Assert;
+import org.junit.Test;
 
-/**
- * Someone, please change the enum name.
- *
- * @author remm
- */
-public enum SocketStatus {
-    OPEN_READ, OPEN_WRITE, STOP, TIMEOUT, DISCONNECT, ERROR,
+public class TestHttpParser {
 
-    // All replaced by ERROR
-    @Deprecated
-    ASYNC_WRITE_ERROR,
-    @Deprecated
-    ASYNC_READ_ERROR,
-    @Deprecated
-    CLOSE_NOW
+    @Test
+    public void testTokenDel() {
+        Assert.assertFalse("DEL is not a token", HttpParser.isToken(127));
+    }
 }
