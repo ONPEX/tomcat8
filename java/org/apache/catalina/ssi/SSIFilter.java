@@ -62,13 +62,6 @@ public class SSIFilter implements Filter {
     protected boolean allowExec = false;
 
 
-    //----------------- Public methods.
-    /**
-     * Initialize this servlet.
-     *
-     * @exception ServletException
-     *                if an error occurs
-     */
     @Override
     public void init(FilterConfig config) throws ServletException {
         this.config = config;

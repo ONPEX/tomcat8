@@ -20,9 +20,6 @@ package org.apache.catalina.authenticator;
 
 
 public class Constants {
-
-    public static final String Package = "org.apache.catalina.authenticator";
-
     // Authentication methods for login configuration
     // Servlet spec schemes are defined in HttpServletRequest
     // Vendor specific schemes
@@ -41,6 +38,10 @@ public class Constants {
     public static final String DEFAULT_JAAS_CONF = "conf/jaas.conf";
     public static final String DEFAULT_LOGIN_MODULE_NAME =
         "com.sun.security.jgss.krb5.accept";
+    /**
+     * @deprecated Unused. Will be removed in Tomcat 9.
+     */
+    @Deprecated
     public static final String USE_SUBJECT_CREDS_ONLY_PROPERTY =
             "javax.security.auth.useSubjectCredsOnly";
 
@@ -58,7 +59,11 @@ public class Constants {
      * request is associated.
      */
     public static final String REQ_SSOID_NOTE =
-      "org.apache.catalina.request.SSOID";
+            "org.apache.catalina.request.SSOID";
+
+
+    public static final String REQ_JASPIC_SUBJECT_NOTE =
+            "org.apache.catalina.authenticator.jaspic.SUBJECT";
 
 
     // ---------------------------------------------------------- Session Notes

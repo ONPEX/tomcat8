@@ -37,15 +37,15 @@
   <xsl:param    name="apache-logo"         select="'/images/asf-feather.png'"/>
   <xsl:param    name="subdir"              select="''"/>
   <xsl:param    name="relative-path"       select="'.'"/>
-  <xsl:param    name="version"             select="'8.0.x'"/>
+  <xsl:param    name="version"             select="'8.5.x'"/>
   <xsl:param    name="majorversion"        select="'8'"/>
-  <xsl:param    name="majorminorversion"   select="'8.0'"/>
+  <xsl:param    name="majorminorversion"   select="'8.5'"/>
   <xsl:param    name="build-date"          select="'MMM d yyyy'"/>
   <xsl:param    name="build-date-iso-8601" select="'yyyy-dd-MM'"/>
   <xsl:param    name="year"                select="'yyyy'"/>
   <xsl:param    name="buglink"             select="'http://bz.apache.org/bugzilla/show_bug.cgi?id='"/>
   <xsl:param    name="revlink"             select="'http://svn.apache.org/viewvc?view=rev&amp;rev='"/>
-  <xsl:param    name="doclink"             select="'http://tomcat.apache.org/tomcat-8.0-doc'"/>
+  <xsl:param    name="doclink"             select="'http://tomcat.apache.org/tomcat-8.5-doc'"/>
   <xsl:param    name="sylink"              select="'http://tomcat.apache.org/security-8.html'"/>
   <xsl:param    name="dllink"              select="'http://tomcat.apache.org/download-80.cgi'"/>
   <xsl:param    name="sitedir"             select="''"/>

@@ -63,6 +63,9 @@ public class TestStandardContextAliases extends TomcatBaseTest {
         ByteChunk res = getUrl("http://localhost:" + getPort() + "/");
 
         String result = res.toString();
+        if (result == null) {
+            result = "";
+        }
 
         assertTrue(result.indexOf("00-PASS") > -1);
         assertTrue(result.indexOf("01-PASS") > -1);

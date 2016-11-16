@@ -106,8 +106,7 @@ public class ResponseFacade
     /**
      * The string manager for this package.
      */
-    protected static final StringManager sm =
-        StringManager.getManager(Constants.Package);
+    protected static final StringManager sm = StringManager.getManager(ResponseFacade.class);
 
 
     /**
@@ -226,22 +225,17 @@ public class ResponseFacade
         }
 
         response.setContentLength(len);
-
     }
 
 
-    /**
-     * TODO SERVLET 3.1
-     */
     @Override
     public void setContentLengthLong(long length) {
         if (isCommitted()) {
             return;
         }
-
         response.setContentLengthLong(length);
-
     }
+
 
     @Override
     public void setContentType(String type) {

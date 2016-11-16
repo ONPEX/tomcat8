@@ -27,10 +27,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.catalina.comet.CometEvent;
-import org.apache.catalina.comet.CometFilter;
-import org.apache.catalina.comet.CometFilterChain;
-
 /**
  * Implementation of a Filter that performs filtering based on comparing the
  * appropriate request property (selected based on which subclass you choose
@@ -56,7 +52,7 @@ import org.apache.catalina.comet.CometFilterChain;
  * <li>The request will be rejected with a "Forbidden" HTTP response.</li>
  * </ul>
  */
-public abstract class RequestFilter extends FilterBase implements CometFilter {
+public abstract class RequestFilter extends FilterBase {
 
 
     // ----------------------------------------------------- Instance Variables
@@ -87,7 +83,7 @@ public abstract class RequestFilter extends FilterBase implements CometFilter {
 
 
     /**
-     * Return the regular expression used to test for allowed requests for this
+     * @return the regular expression used to test for allowed requests for this
      * Filter, if any; otherwise, return <code>null</code>.
      */
     public String getAllow() {
@@ -114,7 +110,7 @@ public abstract class RequestFilter extends FilterBase implements CometFilter {
 
 
     /**
-     * Return the regular expression used to test for denied requests for this
+     * @return the regular expression used to test for denied requests for this
      * Filter, if any; otherwise, return <code>null</code>.
      */
     public String getDeny() {
@@ -141,7 +137,7 @@ public abstract class RequestFilter extends FilterBase implements CometFilter {
 
 
     /**
-     * Return response status code that is used to reject denied request.
+     * @return response status code that is used to reject denied request.
      */
     public int getDenyStatus() {
         return denyStatus;
@@ -150,6 +146,8 @@ public abstract class RequestFilter extends FilterBase implements CometFilter {
 
     /**
      * Set response status code that is used to reject denied request.
+     *
+     * @param denyStatus The status code for deny
      */
     public void setDenyStatus(int denyStatus) {
         this.denyStatus = denyStatus;
@@ -194,6 +192,7 @@ public abstract class RequestFilter extends FilterBase implements CometFilter {
      * @param property The request property on which to filter
      * @param request The servlet request to be processed
      * @param response The servlet response to be processed
+     * @param chain The filter chain
      *
      * @exception IOException if an input/output error occurs
      * @exception ServletException if a servlet error occurs
@@ -217,28 +216,6 @@ public abstract class RequestFilter extends FilterBase implements CometFilter {
         }
     }
 
-
-    /**
-     * Perform the filtering that has been configured for this Filter, matching
-     * against the specified request property.
-     *
-     * @param property  The property to check against the allow/deny rules
-     * @param event     The comet event to be filtered
-     * @param chain     The comet filter chain
-     * @exception IOException if an input/output error occurs
-     * @exception ServletException if a servlet error occurs
-     */
-    protected void processCometEvent(String property, CometEvent event,
-            CometFilterChain chain) throws IOException, ServletException {
-        HttpServletResponse response = event.getHttpServletResponse();
-
-        if (isAllowed(property)) {
-            chain.doFilterEvent(event);
-        } else {
-            response.sendError(denyStatus);
-            event.close();
-        }
-    }
 
     /**
      * Process the allow and deny rules for the provided property.

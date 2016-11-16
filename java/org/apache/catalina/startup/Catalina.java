@@ -36,6 +36,8 @@ import org.apache.catalina.LifecycleState;
 import org.apache.catalina.Server;
 import org.apache.catalina.security.SecurityConfig;
 import org.apache.juli.ClassLoaderLogManager;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.digester.Digester;
 import org.apache.tomcat.util.digester.Rule;
@@ -175,7 +177,7 @@ public class Catalina {
 
 
     /**
-     * Return true if naming is enabled.
+     * @return <code>true</code> if naming is enabled.
      */
     public boolean isUseNaming() {
         return (this.useNaming);
@@ -203,11 +205,10 @@ public class Catalina {
 
 
     /**
-     * Process the specified command line arguments, and return
-     * <code>true</code> if we should continue processing; otherwise
-     * return <code>false</code>.
+     * Process the specified command line arguments.
      *
      * @param args Command line arguments to process
+     * @return <code>true</code> if we should continue processing
      */
     protected boolean arguments(String args[]) {
 
@@ -247,6 +248,7 @@ public class Catalina {
 
     /**
      * Return a File object representing our configuration file.
+     * @return the main configuration file
      */
     protected File configFile() {
 
@@ -261,6 +263,7 @@ public class Catalina {
 
     /**
      * Create and configure the Digester we will be using for startup.
+     * @return the main digester to parse server.xml
      */
     protected Digester createStartDigester() {
         long t1=System.currentTimeMillis();
@@ -329,11 +332,25 @@ public class Catalina {
         digester.addRule("Server/Service/Connector",
                          new ConnectorCreateRule());
         digester.addRule("Server/Service/Connector",
-                         new SetAllPropertiesRule(new String[]{"executor"}));
+                         new SetAllPropertiesRule(new String[]{"executor", "sslImplementationName"}));
         digester.addSetNext("Server/Service/Connector",
                             "addConnector",
                             "org.apache.catalina.connector.Connector");
 
+        digester.addObjectCreate("Server/Service/Connector/SSLHostConfig",
+                                 "org.apache.tomcat.util.net.SSLHostConfig");
+        digester.addSetProperties("Server/Service/Connector/SSLHostConfig");
+        digester.addSetNext("Server/Service/Connector/SSLHostConfig",
+                "addSslHostConfig",
+                "org.apache.tomcat.util.net.SSLHostConfig");
+
+        digester.addRule("Server/Service/Connector/SSLHostConfig/Certificate",
+                         new CertificateCreateRule());
+        digester.addRule("Server/Service/Connector/SSLHostConfig/Certificate",
+                         new SetAllPropertiesRule(new String[]{"type"}));
+        digester.addSetNext("Server/Service/Connector/SSLHostConfig/Certificate",
+                            "addCertificate",
+                            "org.apache.tomcat.util.net.SSLHostConfigCertificate");
 
         digester.addObjectCreate("Server/Service/Connector/Listener",
                                  null, // MUST be specified in the element
@@ -342,6 +359,14 @@ public class Catalina {
         digester.addSetNext("Server/Service/Connector/Listener",
                             "addLifecycleListener",
                             "org.apache.catalina.LifecycleListener");
+
+        digester.addObjectCreate("Server/Service/Connector/UpgradeProtocol",
+                                  null, // MUST be specified in the element
+                                  "className");
+        digester.addSetProperties("Server/Service/Connector/UpgradeProtocol");
+        digester.addSetNext("Server/Service/Connector/UpgradeProtocol",
+                            "addUpgradeProtocol",
+                            "org.apache.coyote.UpgradeProtocol");
 
         // Add RuleSets for nested elements
         digester.addRuleSet(new NamingRuleSet("Server/GlobalNamingResources/"));
@@ -388,6 +413,7 @@ public class Catalina {
 
     /**
      * Create and configure the Digester we will be using for shutdown.
+     * @return the digester to process the stop operation
      */
     protected Digester createStopDigester() {
 
@@ -817,8 +843,7 @@ public class Catalina {
     }
 
 
-    private static final org.apache.juli.logging.Log log=
-        org.apache.juli.logging.LogFactory.getLog( Catalina.class );
+    private static final Log log = LogFactory.getLog(Catalina.class);
 
 }
 

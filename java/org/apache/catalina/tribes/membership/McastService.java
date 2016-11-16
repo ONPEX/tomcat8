@@ -33,6 +33,8 @@ import org.apache.catalina.tribes.io.XByteBuffer;
 import org.apache.catalina.tribes.util.Arrays;
 import org.apache.catalina.tribes.util.StringManager;
 import org.apache.catalina.tribes.util.UUIDGenerator;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 
 /**
  * A <b>membership</b> implementation using simple multicast.
@@ -42,8 +44,7 @@ import org.apache.catalina.tribes.util.UUIDGenerator;
  */
 public class McastService implements MembershipService,MembershipListener,MessageListener {
 
-    private static final org.apache.juli.logging.Log log =
-        org.apache.juli.logging.LogFactory.getLog( McastService.class );
+    private static final Log log = LogFactory.getLog(McastService.class);
 
     /**
      * The string manager for this package.
@@ -92,7 +93,7 @@ public class McastService implements MembershipService,MembershipListener,Messag
     }
 
     /**
-     *
+     * Sets the properties for the membership service.
      * @param properties
      * <br>All are required<br>
      * 1. mcastPort - the port to listen to<BR>
@@ -116,7 +117,7 @@ public class McastService implements MembershipService,MembershipListener,Messag
     }
 
     /**
-     * Return the properties, see setProperties
+     * {@inheritDoc}
      */
     @Override
     public Properties getProperties() {
@@ -124,14 +125,14 @@ public class McastService implements MembershipService,MembershipListener,Messag
     }
 
     /**
-     * Return the local member name
+     * @return the local member name
      */
     public String getLocalMemberName() {
         return localMember.toString() ;
     }
 
     /**
-     * Return the local member
+     * {@inheritDoc}
      */
     @Override
     public Member getLocalMember(boolean alive) {
@@ -140,7 +141,7 @@ public class McastService implements MembershipService,MembershipListener,Messag
     }
 
     /**
-     * Sets the local member properties for broadcasting
+     * {@inheritDoc}
      */
     @Override
     public void setLocalMemberProperties(String listenHost, int listenPort, int securePort, int udpPort) {
@@ -570,10 +571,12 @@ public class McastService implements MembershipService,MembershipListener,Messag
         else setDomain(Arrays.convert(domain));
     }
 
+    @Override
     public Channel getChannel() {
         return channel;
     }
 
+    @Override
     public void setChannel(Channel channel) {
         this.channel = channel;
     }

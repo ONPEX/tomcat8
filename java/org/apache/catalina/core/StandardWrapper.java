@@ -52,13 +52,10 @@ import org.apache.catalina.Container;
 import org.apache.catalina.ContainerServlet;
 import org.apache.catalina.Context;
 import org.apache.catalina.Globals;
-import org.apache.catalina.InstanceEvent;
-import org.apache.catalina.InstanceListener;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleState;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.security.SecurityUtil;
-import org.apache.catalina.util.InstanceSupport;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.InstanceManager;
@@ -140,14 +137,6 @@ public class StandardWrapper extends ContainerBase
      * Flag that indicates if this instance has been initialized
      */
     protected volatile boolean instanceInitialized = false;
-
-    /**
-     * The support object for our instance listeners.
-     *
-     * @deprecated Will be removed in 8.5.x onwards
-     */
-    @Deprecated
-    protected final InstanceSupport instanceSupport = new InstanceSupport(this);
 
 
     /**
@@ -339,32 +328,17 @@ public class StandardWrapper extends ContainerBase
 
 
     /**
-     * Return the number of active allocations of this servlet, even if they
+     * @return the number of active allocations of this servlet, even if they
      * are all for the same instance (as will be true for servlets that do
      * not implement <code>SingleThreadModel</code>.
      */
     public int getCountAllocated() {
-
-        return (this.countAllocated.get());
-
+        return this.countAllocated.get();
     }
 
 
     /**
-     * Return the InstanceSupport object for this Wrapper instance.
-     *
-     * @deprecated Will be removed in 8.5.x onwards
-     */
-    @Deprecated
-    public InstanceSupport getInstanceSupport() {
-
-        return (this.instanceSupport);
-
-    }
-
-
-    /**
-     * Return the load-on-startup order value (negative value means
+     * @return the load-on-startup order value (negative value means
      * load on first call).
      */
     @Override
@@ -419,13 +393,16 @@ public class StandardWrapper extends ContainerBase
         }
     }
 
+    /**
+     * @return the load-on-startup value that was parsed
+     */
     public String getLoadOnStartupString() {
         return Integer.toString( getLoadOnStartup());
     }
 
 
     /**
-     * Return maximum number of instances that will be allocated when a single
+     * @return maximum number of instances that will be allocated when a single
      * thread model servlet is used.
      */
     public int getMaxInstances() {
@@ -473,7 +450,7 @@ public class StandardWrapper extends ContainerBase
 
 
     /**
-     * Return the run-as identity for this servlet.
+     * @return the run-as identity for this servlet.
      */
     @Override
     public String getRunAs() {
@@ -499,7 +476,7 @@ public class StandardWrapper extends ContainerBase
 
 
     /**
-     * Return the fully qualified servlet class name for this servlet.
+     * @return the fully qualified servlet class name for this servlet.
      */
     @Override
     public String getServletClass() {
@@ -564,7 +541,7 @@ public class StandardWrapper extends ContainerBase
 
 
     /**
-     * Is this servlet currently unavailable?
+     * @return <code>true</code> if the Servlet has been marked unavailable.
      */
     @Override
     public boolean isUnavailable() {
@@ -620,7 +597,7 @@ public class StandardWrapper extends ContainerBase
 
 
     /**
-     * Return the associated servlet instance.
+     * @return the associated servlet instance.
      */
     @Override
     public Servlet getServlet() {
@@ -660,7 +637,7 @@ public class StandardWrapper extends ContainerBase
         if (!getState().isAvailable())
             return;
 
-        if (getServlet() != null && (getServlet() instanceof PeriodicEventListener)) {
+        if (getServlet() instanceof PeriodicEventListener) {
             ((PeriodicEventListener) getServlet()).periodicEvent();
         }
     }
@@ -670,6 +647,7 @@ public class StandardWrapper extends ContainerBase
      * Extract the root cause from a servlet exception.
      *
      * @param e The servlet exception
+     * @return the root cause of the Servlet exception
      */
     public static Throwable getRootCause(ServletException e) {
         Throwable rootCause = e;
@@ -717,22 +695,6 @@ public class StandardWrapper extends ContainerBase
             parametersLock.writeLock().unlock();
         }
         fireContainerEvent("addInitParameter", name);
-
-    }
-
-
-    /**
-     * Add a new listener interested in InstanceEvents.
-     *
-     * @param listener The new listener
-     *
-     * @deprecated Will be removed in 8.5.x onwards
-     */
-    @Deprecated
-    @Override
-    public void addInstanceListener(InstanceListener listener) {
-
-        instanceSupport.addInstanceListener(listener);
 
     }
 
@@ -1059,13 +1021,10 @@ public class StandardWrapper extends ContainerBase
      * at least one initialized instance.  This can be used, for example, to
      * load servlets that are marked in the deployment descriptor to be loaded
      * at server startup time.
+     * @return the loaded Servlet instance
+     * @throws ServletException for a Servlet load error
      */
     public synchronized Servlet loadServlet() throws ServletException {
-
-        if (unloading) {
-            throw new ServletException(
-                    sm.getString("standardWrapper.unloading", getName()));
-        }
 
         // Nothing to do if we already have an instance or an instance pool
         if (!singleThreadModel && (instance != null))
@@ -1205,9 +1164,6 @@ public class StandardWrapper extends ContainerBase
 
         // Call the initialization method of this servlet
         try {
-            instanceSupport.fireInstanceEvent(InstanceEvent.BEFORE_INIT_EVENT,
-                                              servlet);
-
             if( Globals.IS_SECURITY_ENABLED) {
                 boolean success = false;
                 try {
@@ -1228,25 +1184,16 @@ public class StandardWrapper extends ContainerBase
             }
 
             instanceInitialized = true;
-
-            instanceSupport.fireInstanceEvent(InstanceEvent.AFTER_INIT_EVENT,
-                                              servlet);
         } catch (UnavailableException f) {
-            instanceSupport.fireInstanceEvent(InstanceEvent.AFTER_INIT_EVENT,
-                                              servlet, f);
             unavailable(f);
             throw f;
         } catch (ServletException f) {
-            instanceSupport.fireInstanceEvent(InstanceEvent.AFTER_INIT_EVENT,
-                                              servlet, f);
             // If the servlet wanted to be unavailable it would have
             // said so, so do not call unavailable(null).
             throw f;
         } catch (Throwable f) {
             ExceptionUtils.handleThrowable(f);
             getServletContext().log("StandardWrapper.Throwable", f );
-            instanceSupport.fireInstanceEvent(InstanceEvent.AFTER_INIT_EVENT,
-                                              servlet, f);
             // If the servlet wanted to be unavailable it would have
             // said so, so do not call unavailable(null).
             throw new ServletException
@@ -1269,22 +1216,6 @@ public class StandardWrapper extends ContainerBase
             parametersLock.writeLock().unlock();
         }
         fireContainerEvent("removeInitParameter", name);
-
-    }
-
-
-    /**
-     * Remove a listener no longer interested in InstanceEvents.
-     *
-     * @param listener The listener to remove
-     *
-     * @deprecated Will be removed in 8.5.x onwards
-     */
-    @Deprecated
-    @Override
-    public void removeInstanceListener(InstanceListener listener) {
-
-        instanceSupport.removeInstanceListener(listener);
 
     }
 
@@ -1329,7 +1260,7 @@ public class StandardWrapper extends ContainerBase
 
 
     /**
-     * Return a String representation of this component.
+     * @return a String representation of this component.
      */
     @Override
     public String toString() {
@@ -1418,13 +1349,9 @@ public class StandardWrapper extends ContainerBase
 
             // Call the servlet destroy() method
             try {
-                instanceSupport.fireInstanceEvent
-                  (InstanceEvent.BEFORE_DESTROY_EVENT, instance);
-
                 if( Globals.IS_SECURITY_ENABLED) {
                     try {
-                        SecurityUtil.doAsPrivilege("destroy",
-                                                   instance);
+                        SecurityUtil.doAsPrivilege("destroy", instance);
                     } finally {
                         SecurityUtil.remove(instance);
                     }
@@ -1432,14 +1359,9 @@ public class StandardWrapper extends ContainerBase
                     instance.destroy();
                 }
 
-                instanceSupport.fireInstanceEvent
-                  (InstanceEvent.AFTER_DESTROY_EVENT, instance);
-
             } catch (Throwable t) {
                 t = ExceptionUtils.unwrapInvocationTargetException(t);
                 ExceptionUtils.handleThrowable(t);
-                instanceSupport.fireInstanceEvent
-                  (InstanceEvent.AFTER_DESTROY_EVENT, instance, t);
                 instance = null;
                 instancePool = null;
                 nInstances = 0;
@@ -1525,7 +1447,7 @@ public class StandardWrapper extends ContainerBase
 
 
     /**
-     * Return the initialization parameter value for the specified name,
+     * @return the initialization parameter value for the specified name,
      * if any; otherwise return <code>null</code>.
      *
      * @param name Name of the initialization parameter to retrieve
@@ -1539,7 +1461,7 @@ public class StandardWrapper extends ContainerBase
 
 
     /**
-     * Return the set of initialization parameter names defined for this
+     * @return the set of initialization parameter names defined for this
      * servlet.  If none are defined, an empty Enumeration is returned.
      */
     @Override
@@ -1556,7 +1478,7 @@ public class StandardWrapper extends ContainerBase
 
 
     /**
-     * Return the servlet context with which this servlet is associated.
+     * @return the servlet context with which this servlet is associated.
      */
     @Override
     public ServletContext getServletContext() {
@@ -1572,7 +1494,7 @@ public class StandardWrapper extends ContainerBase
 
 
     /**
-     * Return the name of this servlet.
+     * @return the name of this servlet.
      */
     @Override
     public String getServletName() {
@@ -1655,7 +1577,7 @@ public class StandardWrapper extends ContainerBase
 
 
     /**
-     * Return <code>true</code> if the specified class name represents a
+     * @return <code>true</code> if the specified class name represents a
      * container provided servlet class that should be loaded by the
      * server class loader.
      *
@@ -1664,7 +1586,7 @@ public class StandardWrapper extends ContainerBase
     protected boolean isContainerProvidedServlet(String classname) {
 
         if (classname.startsWith("org.apache.catalina.")) {
-            return (true);
+            return true;
         }
         try {
             Class<?> clazz =
@@ -1672,7 +1594,7 @@ public class StandardWrapper extends ContainerBase
             return (ContainerServlet.class.isAssignableFrom(clazz));
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
-            return (false);
+            return false;
         }
 
     }
@@ -1858,18 +1780,7 @@ public class StandardWrapper extends ContainerBase
 
 
     /**
-     * JSR 77. Always return false.
-     *
-     * @deprecated The JSR-77 implementation is incomplete and will be removed
-     *             in 8.5.x
-     */
-    @Deprecated
-    public boolean isStateManageable() {
-        return false;
-    }
-
-
-    /* Remove a JMX notficationListener
+     * Remove a JMX notficationListener
      * @see javax.management.NotificationEmitter#removeNotificationListener(javax.management.NotificationListener, javax.management.NotificationFilter, java.lang.Object)
      */
     @Override
@@ -1880,9 +1791,9 @@ public class StandardWrapper extends ContainerBase
 
     protected MBeanNotificationInfo[] notificationInfo;
 
-    /* Get JMX Broadcaster Info
-     * @TODO use StringManager for international support!
-     * @TODO This two events we not send j2ee.state.failed and j2ee.attribute.changed!
+    /**
+     * Get JMX Broadcaster Info
+     * FIXME: This two events we not send j2ee.state.failed and j2ee.attribute.changed!
      * @see javax.management.NotificationBroadcaster#getNotificationInfo()
      */
     @Override
@@ -1927,7 +1838,8 @@ public class StandardWrapper extends ContainerBase
     }
 
 
-    /* Add a JMX-NotificationListener
+    /**
+     * Add a JMX-NotificationListener
      * @see javax.management.NotificationBroadcaster#addNotificationListener(javax.management.NotificationListener, javax.management.NotificationFilter, java.lang.Object)
      */
     @Override

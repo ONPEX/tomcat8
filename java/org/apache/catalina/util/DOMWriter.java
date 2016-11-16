@@ -34,10 +34,18 @@ public class DOMWriter {
     /** Default Encoding */
     private static final String PRINTWRITER_ENCODING = "UTF8";
 
-    /** Print writer. */
+    /** Print writer.
+     *
+     * @deprecated Will be made private in Tomcat 9.
+     */
+    @Deprecated
     protected final PrintWriter out;
 
-    /** Canonical output. */
+    /** Canonical output.
+     *
+     * @deprecated Will be made private in Tomcat 9.
+     */
+    @Deprecated
     protected final boolean canonical;
 
 
@@ -47,12 +55,21 @@ public class DOMWriter {
     }
 
 
+    /**
+     * @deprecated Unused. Will be removed in Tomcat 9.
+     *
+     * @return Always <code>UTF-8</code>
+     */
+    @Deprecated
     public static String getWriterEncoding() {
         return (PRINTWRITER_ENCODING);
     }
 
 
-    /** Prints the specified node, recursively. */
+    /**
+     * Prints the specified node, recursively.
+     * @param node The node to output
+     */
     public void print(Node node) {
 
         // is there anything to do?
@@ -65,16 +82,7 @@ public class DOMWriter {
             // print document
             case Node.DOCUMENT_NODE:
                 if (!canonical) {
-                    String Encoding = getWriterEncoding();
-                    if (Encoding.equalsIgnoreCase("DEFAULT"))
-                        Encoding = "UTF-8";
-                    else if (Encoding.equalsIgnoreCase("Unicode"))
-                        Encoding = "UTF-16";
-                    else
-                        Encoding = MIME2Java.reverse(Encoding);
-
-                    out.println("<?xml version=\"1.0\" encoding=\"" + Encoding +
-                            "\"?>");
+                    out.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
                 }
                 print(((Document) node).getDocumentElement());
                 out.flush();
@@ -161,7 +169,14 @@ public class DOMWriter {
     }
 
 
-    /** Returns a sorted list of attributes. */
+    /**
+     * Returns a sorted list of attributes.
+     * @param attrs The map to sort
+     * @return a sorted attribute array
+     *
+     * @deprecated Will be made private in Tomcat 9.
+     */
+    @Deprecated
     protected Attr[] sortAttributes(NamedNodeMap attrs) {
         if (attrs == null) {
             return new Attr[0];
@@ -195,7 +210,14 @@ public class DOMWriter {
 
     }
 
-    /** Normalizes the given string. */
+    /**
+     * Normalizes the given string.
+     * @param s The string to escape
+     * @return the escaped string
+     *
+     * @deprecated Will be made private in Tomcat 9.
+     */
+    @Deprecated
     protected String normalize(String s) {
         if (s == null) {
             return "";

@@ -170,10 +170,6 @@
       type="long"
       writeable="false"/>
     <attribute
-      name="distributable"
-      description="The distributable flag for Sessions created by this Manager"
-      type="boolean"/>
-    <attribute
       name="duplicates"
       description="Number of duplicated session ids generated"
       type="int"/>
@@ -198,10 +194,6 @@
     <attribute
       name="maxActiveSessions"
       description="The maximum number of active Sessions allowed, or -1 for no limit"
-      type="int"/>
-    <attribute
-      name="maxInactiveInterval"
-      description="The default maximum inactive interval for Sessions created by this Manager"
       type="int"/>
     <attribute
       name="name"
@@ -252,10 +244,6 @@
       name="sessionCounter"
       description="Total number of sessions created by this manager"
       type="long"/>
-    <attribute
-      name="sessionIdLength"
-      description="The session id length (in bytes) of Sessions created by this Manager"
-      type="int"/>
     <attribute
       name="sessionMaxAliveTime"
       description="Longest time an expired session had been alive"
@@ -444,10 +432,6 @@
       type="java.lang.String"
       writeable="false"/>
     <attribute
-      name="distributable"
-      description="The distributable flag for Sessions created by this Manager"
-      type="boolean"/>
-    <attribute
       name="duplicates"
       description="Number of duplicated session ids generated"
       type="int"/>
@@ -478,10 +462,6 @@
       description="The maximum number of active Sessions allowed, or -1 for no limit"
       type="int"/>
     <attribute
-      name="maxInactiveInterval"
-      description="The default maximum inactive interval for Sessions created by this Manager"
-      type="int"/>
-    <attribute
       name="name"
       description="The name of component. "
       type="java.lang.String"/>
@@ -506,10 +486,6 @@
       name="sessionCounter"
       description="Total number of sessions created by this manager"
       type="long"/>
-    <attribute
-      name="sessionIdLength"
-      description="The session id length (in bytes) of Sessions created by this Manager"
-      type="int"/>
     <attribute
       name="sessionMaxAliveTime"
       description="Longest time an expired session had been alive"

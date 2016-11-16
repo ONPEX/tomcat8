@@ -47,8 +47,6 @@ public enum ActionCode {
      */
     CLIENT_FLUSH,
 
-    RESET,
-
     /**
      * Has the processor been placed into the error state? Note that the
      * response may not have an appropriate error code set.
@@ -63,24 +61,24 @@ public enum ActionCode {
     DISABLE_SWALLOW_INPUT,
 
     /**
-     * Callback for lazy evaluation - extract the remote host address.
+     * Callback for lazy evaluation - extract the remote host name and address.
      */
     REQ_HOST_ATTRIBUTE,
 
     /**
-     * Callback for lazy evaluation - extract the remote host infos (address,
-     * name, port) and local address.
+     * Callback for lazy evaluation - extract the remote host address.
      */
     REQ_HOST_ADDR_ATTRIBUTE,
 
     /**
-     * Callback for lazy evaluation - extract the SSL-related attributes.
+     * Callback for lazy evaluation - extract the SSL-related attributes
+     * including the client certificate if present.
      */
     REQ_SSL_ATTRIBUTE,
 
     /**
-     * Callback for lazy evaluation - extract the SSL-certificate (including
-     * forcing a re-handshake if necessary)
+     * Force a TLS re-handshake and make the resulting client certificate (if
+     * any) available as a request attribute.
      */
     REQ_SSL_CERTIFICATE,
 
@@ -110,34 +108,9 @@ public enum ActionCode {
     REQ_SET_BODY_REPLAY,
 
     /**
-     * Callback for begin Comet processing.
-     */
-    COMET_BEGIN,
-
-    /**
-     * Callback for end Comet processing.
-     */
-    COMET_END,
-
-    /**
      * Callback for getting the amount of available bytes.
      */
     AVAILABLE,
-
-    /**
-     * Callback for an asynchronous close of the Comet event
-     */
-    COMET_CLOSE,
-
-    /**
-     * Callback for setting the timeout asynchronously
-     */
-    COMET_SETTIMEOUT,
-
-    /**
-     * Callback to determine if the current request is a Comet request.
-     */
-    IS_COMET,
 
     /**
      * Callback for an async request.
@@ -227,13 +200,15 @@ public enum ActionCode {
 
     /**
      * Indicator that Servlet is interested in being
-     * notified when data is available to be read
+     * notified when data is available to be read.
      */
     NB_READ_INTEREST,
 
     /**
-     *Indicator that the Servlet is interested
-     *in being notified when it can write data
+     * Used with non-blocking writes to determine if a write is currently
+     * allowed (sets passed parameter to <code>true</code>) or not (sets passed
+     * parameter to <code>false</code>). If a write is not allowed then callback
+     * will be triggered at some future point when write becomes possible again.
      */
     NB_WRITE_INTEREST,
 
@@ -263,8 +238,12 @@ public enum ActionCode {
     DISPATCH_EXECUTE,
 
     /**
-     * Trigger end of request processing (remaining input swallowed, write any
-     * remaining parts of the response etc.).
+     * Is server push supported and allowed for the current request?
      */
-    END_REQUEST
+    IS_PUSH_SUPPORTED,
+
+    /**
+     * Push a request on behalf of the client of the current request.
+     */
+    PUSH_REQUEST
 }

@@ -24,6 +24,9 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.Properties;
 
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
+
 
 /**
  * Utility class to read the bootstrap Catalina configuration.
@@ -32,8 +35,7 @@ import java.util.Properties;
  */
 public class CatalinaProperties {
 
-    private static final org.apache.juli.logging.Log log=
-        org.apache.juli.logging.LogFactory.getLog( CatalinaProperties.class );
+    private static final Log log = LogFactory.getLog(CatalinaProperties.class);
 
     private static Properties properties = null;
 
@@ -44,7 +46,8 @@ public class CatalinaProperties {
 
 
     /**
-     * Return specified property value.
+     * @param name The property name
+     * @return specified property value
      */
     public static String getProperty(String name) {
         return properties.getProperty(name);
@@ -57,8 +60,6 @@ public class CatalinaProperties {
     private static void loadProperties() {
 
         InputStream is = null;
-        Throwable error = null;
-
         try {
             String configUrl = System.getProperty("catalina.config");
             if (configUrl != null) {
@@ -94,7 +95,7 @@ public class CatalinaProperties {
                 properties.load(is);
             } catch (Throwable t) {
                 handleThrowable(t);
-                error = t;
+                log.warn(t);
             } finally {
                 try {
                     is.close();
@@ -104,9 +105,9 @@ public class CatalinaProperties {
             }
         }
 
-        if ((is == null) || (error != null)) {
+        if ((is == null)) {
             // Do something
-            log.warn("Failed to load catalina.properties", error);
+            log.warn("Failed to load catalina.properties");
             // That's fine - we have reasonable defaults.
             properties = new Properties();
         }

@@ -18,6 +18,7 @@ package org.apache.coyote;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.servlet.ReadListener;
@@ -28,6 +29,7 @@ import org.apache.tomcat.util.buf.UDecoder;
 import org.apache.tomcat.util.http.MimeHeaders;
 import org.apache.tomcat.util.http.Parameters;
 import org.apache.tomcat.util.http.ServerCookies;
+import org.apache.tomcat.util.net.ApplicationBufferHandler;
 import org.apache.tomcat.util.res.StringManager;
 
 /**
@@ -59,10 +61,9 @@ import org.apache.tomcat.util.res.StringManager;
  */
 public final class Request {
 
-    private static final StringManager sm =
-            StringManager.getManager(Constants.Package);
+    private static final StringManager sm = StringManager.getManager(Request.class);
 
-    // Expected maximum typica number of cookies per request.
+    // Expected maximum typical number of cookies per request.
     private static final int INITIAL_COOKIE_SIZE = 4;
 
     // ----------------------------------------------------------- Constructors
@@ -97,7 +98,11 @@ public final class Request {
 
     private final MimeHeaders headers = new MimeHeaders();
 
-    private final MessageBytes instanceId = MessageBytes.newInstance();
+
+    /**
+     * Path parameters
+     */
+    private final Map<String,String> pathParameters = new HashMap<>();
 
     /**
      * Notes.
@@ -123,6 +128,10 @@ public final class Request {
     private long contentLength = -1;
     private MessageBytes contentTypeMB = null;
     private String charEncoding = null;
+    /**
+     * Is there an expectation ?
+     */
+    private boolean expectation = false;
 
     private final ServerCookies serverCookies = new ServerCookies(INITIAL_COOKIE_SIZE);
     private final Parameters parameters = new Parameters();
@@ -142,6 +151,7 @@ public final class Request {
 
     private final RequestInfo reqProcessorMX=new RequestInfo(this);
 
+    private boolean sendfile = true;
 
     volatile ReadListener listener;
 
@@ -178,18 +188,6 @@ public final class Request {
 
 
     // ------------------------------------------------------------- Properties
-
-    /**
-     * Get the instance id (or JVM route). Currently Ajp is sending it with each
-     * request. In future this should be fixed, and sent only once ( or
-     * 'negotiated' at config time so both tomcat and apache share the same name.
-     *
-     * @return the instance id
-     */
-    public MessageBytes instanceId() {
-        return instanceId;
-    }
-
 
     public MimeHeaders getMimeHeaders() {
         return headers;
@@ -228,11 +226,11 @@ public final class Request {
     }
 
     /**
-     * Return the buffer holding the server name, if
-     * any. Use isNull() to check if there is no value
-     * set.
-     * This is the "virtual host", derived from the
-     * Host: header.
+     * Get the "virtual host", derived from the Host: header associated with
+     * this request.
+     *
+     * @return The buffer holding the server name, if any. Use isNull() to check
+     *         if there is no value set.
      */
     public MessageBytes serverName() {
         return serverNameMB;
@@ -283,6 +281,10 @@ public final class Request {
 
     /**
      * Get the character encoding used for this request.
+     *
+     * @return The value set via {@link #setCharacterEncoding(String)} or if no
+     *         call has been made to that method try to obtain if from the
+     *         content type.
      */
     public String getCharacterEncoding() {
 
@@ -357,6 +359,17 @@ public final class Request {
         return headers.getHeader(name);
     }
 
+
+    public void setExpectation(boolean expectation) {
+        this.expectation = expectation;
+    }
+
+
+    public boolean hasExpectation() {
+        return expectation;
+    }
+
+
     // -------------------- Associated response --------------------
 
     public Response getResponse() {
@@ -394,6 +407,15 @@ public final class Request {
 
     public Parameters getParameters() {
         return parameters;
+    }
+
+
+    public void addPathParameter(String name, String value) {
+        pathParameters.put(name, value);
+    }
+
+    public String getPathParameter(String name) {
+        return pathParameters.get(name);
     }
 
 
@@ -436,6 +458,14 @@ public final class Request {
         this.available = available;
     }
 
+    public boolean getSendfile() {
+        return sendfile;
+    }
+
+    public void setSendfile(boolean sendfile) {
+        this.sendfile = sendfile;
+    }
+
     public boolean isFinished() {
         AtomicBoolean result = new AtomicBoolean(false);
         action(ActionCode.REQUEST_BODY_FULLY_READ, result);
@@ -465,15 +495,49 @@ public final class Request {
     /**
      * Read data from the input buffer and put it into a byte chunk.
      *
-     * The buffer is owned by the protocol implementation - it will be reused on the next read.
-     * The Adapter must either process the data in place or copy it to a separate buffer if it needs
-     * to hold it. In most cases this is done during byte-&gt;char conversions or via InputStream. Unlike
-     * InputStream, this interface allows the app to process data in place, without copy.
+     * The buffer is owned by the protocol implementation - it will be reused on
+     * the next read. The Adapter must either process the data in place or copy
+     * it to a separate buffer if it needs to hold it. In most cases this is
+     * done during byte-&gt;char conversions or via InputStream. Unlike
+     * InputStream, this interface allows the app to process data in place,
+     * without copy.
      *
+     * @param chunk The destination to which to copy the data
+     *
+     * @return The number of bytes copied
+     *
+     * @throws IOException If an I/O error occurs during the copy
+     *
+     * @deprecated Unused. Will be removed in Tomcat 9. Use
+     *             {@link #doRead(ApplicationBufferHandler)}
      */
-    public int doRead(ByteChunk chunk)
-        throws IOException {
-        int n = inputBuffer.doRead(chunk, this);
+    public int doRead(ByteChunk chunk) throws IOException {
+        int n = inputBuffer.doRead(chunk);
+        if (n > 0) {
+            bytesRead+=n;
+        }
+        return n;
+    }
+
+
+    /**
+     * Read data from the input buffer and put it into ApplicationBufferHandler.
+     *
+     * The buffer is owned by the protocol implementation - it will be reused on
+     * the next read. The Adapter must either process the data in place or copy
+     * it to a separate buffer if it needs to hold it. In most cases this is
+     * done during byte-&gt;char conversions or via InputStream. Unlike
+     * InputStream, this interface allows the app to process data in place,
+     * without copy.
+     *
+     * @param handler The destination to which to copy the data
+     *
+     * @return The number of bytes copied
+     *
+     * @throws IOException If an I/O error occurs during the copy
+     */
+    public int doRead(ApplicationBufferHandler handler) throws IOException {
+        int n = inputBuffer.doRead(handler);
         if (n > 0) {
             bytesRead+=n;
         }
@@ -505,10 +569,6 @@ public final class Request {
      * be faster than ThreadLocal for very frequent operations.
      *
      *  Example use:
-     *   Jk:
-     *     HandlerRequest.HOSTBUFFER = 10 CharChunk, buffer for Host decoding
-     *     WorkerEnv: SSL_CERT_NOTE=16 - MessageBytes containing the cert
-     *
      *   Catalina CoyoteAdapter:
      *      ADAPTER_NOTES = 1 - stores the HttpServletRequest object ( req/res)
      *
@@ -517,6 +577,9 @@ public final class Request {
      *   for connector use.
      *
      *   17-31 range is not allocated or used.
+     *
+     * @param pos Index to use to store the note
+     * @param value The value to store at that index
      */
     public final void setNote(int pos, Object value) {
         notes[pos] = value;
@@ -537,16 +600,22 @@ public final class Request {
         contentLength = -1;
         contentTypeMB = null;
         charEncoding = null;
+        expectation = false;
         headers.recycle();
         serverNameMB.recycle();
         serverPort=-1;
+        localAddrMB.recycle();
         localNameMB.recycle();
         localPort = -1;
+        remoteAddrMB.recycle();
+        remoteHostMB.recycle();
         remotePort = -1;
         available = 0;
+        sendfile = true;
 
         serverCookies.recycle();
         parameters.recycle();
+        pathParameters.clear();
 
         uriMB.recycle();
         decodedUriMB.recycle();
@@ -556,7 +625,6 @@ public final class Request {
 
         schemeMB.recycle();
 
-        instanceId.recycle();
         remoteUser.recycle();
         remoteUserNeedsAuthorization = false;
         authType.recycle();

@@ -30,7 +30,6 @@ import org.apache.catalina.tribes.Channel;
 import org.apache.catalina.tribes.ChannelMessage;
 import org.apache.catalina.tribes.ChannelReceiver;
 import org.apache.catalina.tribes.MessageListener;
-import org.apache.catalina.tribes.group.GroupChannel;
 import org.apache.catalina.tribes.io.ListenCallback;
 import org.apache.catalina.tribes.util.ExecutorFactory;
 import org.apache.catalina.tribes.util.StringManager;
@@ -91,9 +90,7 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
         if ( executor == null ) {
             //executor = new ThreadPoolExecutor(minThreads,maxThreads,60,TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>());
             String channelName = "";
-            if (channel instanceof GroupChannel && ((GroupChannel)channel).getName() != null) {
-                channelName = "[" + ((GroupChannel)channel).getName() + "]";
-            }
+            if (channel.getName() != null) channelName = "[" + channel.getName() + "]";
             TaskThreadFactory tf = new TaskThreadFactory("Tribes-Task-Receiver" + channelName + "-");
             executor = ExecutorFactory.newThreadPool(minThreads, maxThreads, maxIdleTime, TimeUnit.MILLISECONDS, tf);
         }
@@ -179,7 +176,7 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
      * @param portstart     Starting port for bind attempts
      * @param retries       Number of times to attempt to bind (port incremented
      *                      between attempts)
-     * @throws IOException
+     * @throws IOException Socket bind error
      */
     protected void bind(ServerSocket socket, int portstart, int retries) throws IOException {
         synchronized (bindLock) {
@@ -206,11 +203,12 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
 
     /**
      * Same as bind() except it does it for the UDP port
-     * @param socket
-     * @param portstart
-     * @param retries
-     * @return int
-     * @throws IOException
+     * @param socket The socket to bind
+     * @param portstart     Starting port for bind attempts
+     * @param retries       Number of times to attempt to bind (port incremented
+     *                      between attempts)
+     * @return int The retry count
+     * @throws IOException Socket bind error
      */
     protected int bindUdp(DatagramSocket socket, int portstart, int retries) throws IOException {
         InetSocketAddress addr = null;
@@ -492,10 +490,12 @@ public abstract class ReceiverBase implements ChannelReceiver, ListenCallback, R
         this.udpTxBufSize = udpTxBufSize;
     }
 
+    @Override
     public Channel getChannel() {
         return channel;
     }
 
+    @Override
     public void setChannel(Channel channel) {
         this.channel = channel;
     }

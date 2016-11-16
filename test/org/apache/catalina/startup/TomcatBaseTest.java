@@ -55,6 +55,7 @@ import org.apache.catalina.LifecycleState;
 import org.apache.catalina.Manager;
 import org.apache.catalina.Server;
 import org.apache.catalina.Service;
+import org.apache.catalina.Session;
 import org.apache.catalina.WebResourceRoot;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.AprLifecycleListener;
@@ -66,13 +67,16 @@ import org.apache.catalina.valves.AccessLogValve;
 import org.apache.catalina.webresources.StandardRoot;
 import org.apache.coyote.http11.Http11NioProtocol;
 import org.apache.tomcat.util.buf.ByteChunk;
-import org.apache.tomcat.websocket.CaseInsensitiveKeyMap;
+import org.apache.tomcat.util.collections.CaseInsensitiveKeyMap;
+import org.apache.tomcat.util.scan.StandardJarScanFilter;
+import org.apache.tomcat.util.scan.StandardJarScanner;
 
 /**
  * Base test case that provides a Tomcat instance for each test - mainly so we
  * don't have to keep writing the cleanup code.
  */
 public abstract class TomcatBaseTest extends LoggingBaseTest {
+    private static final int DEFAULT_CLIENT_TIMEOUT_MS = 300_000;
     private Tomcat tomcat;
     private boolean accessLogEnabled = false;
 
@@ -103,6 +107,11 @@ public abstract class TomcatBaseTest extends LoggingBaseTest {
             throws LifecycleException {
         File appDir = new File("test/webapp");
         Context ctx = tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+
+        StandardJarScanner scanner = (StandardJarScanner) ctx.getJarScanner();
+        StandardJarScanFilter filter = (StandardJarScanFilter) scanner.getJarScanFilter();
+        filter.setTldSkip(filter.getTldSkip() + ",testclasses");
+        filter.setPluggabilitySkip(filter.getPluggabilitySkip() + ",testclasses");
 
         if (addJstl) {
             File lib = new File("webapps/examples/WEB-INF/lib");
@@ -622,13 +631,13 @@ public abstract class TomcatBaseTest extends LoggingBaseTest {
 
     public static int headUrl(String path, ByteChunk out,
             Map<String, List<String>> resHead) throws IOException {
-        return methodUrl(path, out, 1000000, null, resHead, "HEAD");
+        return methodUrl(path, out, DEFAULT_CLIENT_TIMEOUT_MS, null, resHead, "HEAD");
     }
 
     public static int getUrl(String path, ByteChunk out,
             Map<String, List<String>> reqHead,
             Map<String, List<String>> resHead) throws IOException {
-        return getUrl(path, out, 1000000, reqHead, resHead);
+        return getUrl(path, out, DEFAULT_CLIENT_TIMEOUT_MS, reqHead, resHead);
     }
 
     public static int getUrl(String path, ByteChunk out, int readTimeout,
@@ -762,10 +771,6 @@ public abstract class TomcatBaseTest extends LoggingBaseTest {
                 os.write(next);
                 os.flush();
             }
-        } catch (IOException ioe) {
-            // Failed to write the request body. Server may have closed the
-            // connection.
-            ioe.printStackTrace();
         }
 
         int rc = connection.getResponseCode();
@@ -805,7 +810,6 @@ public abstract class TomcatBaseTest extends LoggingBaseTest {
             // Use fast, insecure session ID generation for all tests
             Server server = getServer();
             for (Service service : server.findServices()) {
-                @SuppressWarnings("deprecation")
                 Container e = service.getContainer();
                 for (Container h : e.findChildren()) {
                     for (Container c : h.findChildren()) {
@@ -861,5 +865,20 @@ public abstract class TomcatBaseTest extends LoggingBaseTest {
                 // NO-OP
                 return FileVisitResult.CONTINUE;
             }});
+    }
+
+
+    public static void skipTldsForResourceJars(Context context) {
+        StandardJarScanner scanner = (StandardJarScanner) context.getJarScanner();
+        StandardJarScanFilter filter = (StandardJarScanFilter) scanner.getJarScanFilter();
+        filter.setTldSkip(filter.getTldSkip() + ",resources*.jar");
+    }
+
+
+    public static void forceSessionMaxInactiveInterval(Context context, int newIntervalSecs) {
+        Session[] sessions = context.getManager().findSessions();
+        for (Session session : sessions) {
+            session.setMaxInactiveInterval(newIntervalSecs);
+        }
     }
 }

@@ -16,28 +16,15 @@
  */
 package org.apache.coyote.ajp;
 
-import java.nio.channels.SocketChannel;
-import java.util.Iterator;
-
-import org.apache.coyote.AbstractProtocol;
-import org.apache.coyote.Processor;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
-import org.apache.tomcat.util.net.AbstractEndpoint;
 import org.apache.tomcat.util.net.NioChannel;
 import org.apache.tomcat.util.net.NioEndpoint;
-import org.apache.tomcat.util.net.NioEndpoint.Handler;
-import org.apache.tomcat.util.net.SSLImplementation;
-import org.apache.tomcat.util.net.SocketWrapper;
-
 
 /**
- * Abstract the protocol implementation, including threading, etc.
- * Processor is single threaded and specific to stream-based protocols,
- * will not fit Jk protocols like JNI.
+ * This the NIO based protocol handler implementation for AJP.
  */
 public class AjpNioProtocol extends AbstractAjpProtocol<NioChannel> {
-
 
     private static final Log log = LogFactory.getLog(AjpNioProtocol.class);
 
@@ -45,34 +32,11 @@ public class AjpNioProtocol extends AbstractAjpProtocol<NioChannel> {
     protected Log getLog() { return log; }
 
 
-    @Override
-    protected AbstractEndpoint.Handler getHandler() {
-        return cHandler;
-    }
-
-
     // ------------------------------------------------------------ Constructor
 
-
     public AjpNioProtocol() {
-        endpoint = new NioEndpoint();
-        cHandler = new AjpConnectionHandler(this);
-        ((NioEndpoint) endpoint).setHandler(cHandler);
-        setSoLinger(Constants.DEFAULT_CONNECTION_LINGER);
-        setSoTimeout(Constants.DEFAULT_CONNECTION_TIMEOUT);
-        setTcpNoDelay(Constants.DEFAULT_TCP_NO_DELAY);
-        // AJP does not use Send File
-        ((NioEndpoint) endpoint).setUseSendfile(false);
+        super(new NioEndpoint());
     }
-
-
-    // ----------------------------------------------------- Instance Variables
-
-
-    /**
-     * Connection handler for AJP.
-     */
-    private final AjpConnectionHandler cHandler;
 
 
     // ----------------------------------------------------- JMX related methods
@@ -80,104 +44,5 @@ public class AjpNioProtocol extends AbstractAjpProtocol<NioChannel> {
     @Override
     protected String getNamePrefix() {
         return ("ajp-nio");
-    }
-
-
-    // --------------------------------------  AjpConnectionHandler Inner Class
-
-
-    protected static class AjpConnectionHandler
-            extends AbstractAjpConnectionHandler<NioChannel, AjpNioProcessor>
-            implements Handler {
-
-        protected final AjpNioProtocol proto;
-
-        public AjpConnectionHandler(AjpNioProtocol proto) {
-            this.proto = proto;
-        }
-
-        @Override
-        protected AbstractProtocol<NioChannel> getProtocol() {
-            return proto;
-        }
-
-        @Override
-        protected Log getLog() {
-            return log;
-        }
-
-        @Override
-        public SSLImplementation getSslImplementation() {
-            // AJP does not support SSL
-            return null;
-        }
-
-        /**
-         * Expected to be used by the Poller to release resources on socket
-         * close, errors etc.
-         */
-        @Override
-        public void release(SocketChannel socket) {
-            if (log.isDebugEnabled())
-                log.debug(sm.getString("ajpnioprotocol.releaseStart", socket));
-            boolean released = false;
-            Iterator<java.util.Map.Entry<NioChannel, Processor<NioChannel>>> it = connections.entrySet().iterator();
-            while (it.hasNext()) {
-                java.util.Map.Entry<NioChannel, Processor<NioChannel>> entry = it.next();
-                if (entry.getKey().getIOChannel()==socket) {
-                    it.remove();
-                    Processor<NioChannel> result = entry.getValue();
-                    result.recycle(true);
-                    unregister(result);
-                    released = true;
-                    break;
-                }
-            }
-            if (log.isDebugEnabled())
-                log.debug(sm.getString("ajpnioprotocol.releaseEnd",
-                        socket, Boolean.valueOf(released)));
-        }
-
-        /**
-         * Expected to be used by the Poller to release resources on socket
-         * close, errors etc.
-         */
-        @Override
-        public void release(SocketWrapper<NioChannel> socket) {
-            Processor<NioChannel> processor =
-                    connections.remove(socket.getSocket());
-            if (processor != null) {
-                processor.recycle(true);
-                recycledProcessors.push(processor);
-            }
-        }
-
-        /**
-         * Expected to be used by the handler once the processor is no longer
-         * required.
-         */
-        @Override
-        public void release(SocketWrapper<NioChannel> socket,
-                Processor<NioChannel> processor, boolean isSocketClosing,
-                boolean addToPoller) {
-            processor.recycle(isSocketClosing);
-            recycledProcessors.push(processor);
-            if (addToPoller) {
-                // The only time this method is called with addToPoller == true
-                // is when the socket is in keep-alive so set the appropriate
-                // timeout.
-                socket.setTimeout(getProtocol().getKeepAliveTimeout());
-                socket.getSocket().getPoller().add(socket.getSocket());
-            }
-        }
-
-
-        @Override
-        protected AjpNioProcessor createProcessor() {
-            AjpNioProcessor processor = new AjpNioProcessor(proto.packetSize, (NioEndpoint)proto.endpoint);
-            proto.configureProcessor(processor);
-            register(processor);
-            return processor;
-        }
     }
 }

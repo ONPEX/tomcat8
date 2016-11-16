@@ -39,9 +39,9 @@ import org.apache.catalina.Context;
 import org.apache.catalina.authenticator.SSLAuthenticator;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.AprLifecycleListener;
+import org.apache.catalina.core.StandardServer;
 import org.apache.catalina.startup.TesterMapRealm;
 import org.apache.catalina.startup.Tomcat;
-import org.apache.tomcat.jni.SSL;
 import org.apache.tomcat.util.descriptor.web.LoginConfig;
 import org.apache.tomcat.util.descriptor.web.SecurityCollection;
 import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
@@ -60,6 +60,14 @@ public final class TesterSupport {
         String protocol = tomcat.getConnector().getProtocolHandlerClassName();
         if (protocol.indexOf("Apr") == -1) {
             Connector connector = tomcat.getConnector();
+            String sslImplementation = System.getProperty("tomcat.test.sslImplementation");
+            if (sslImplementation != null && !"${test.sslImplementation}".equals(sslImplementation)) {
+                StandardServer server = (StandardServer) tomcat.getServer();
+                AprLifecycleListener listener = new AprLifecycleListener();
+                listener.setSSLRandomSeed("/dev/urandom");
+                server.addLifecycleListener(listener);
+                tomcat.getConnector().setAttribute("sslImplementationName", sslImplementation);
+            }
             connector.setProperty("sslProtocol", "tls");
             File keystoreFile =
                 new File("test/org/apache/tomcat/util/net/" + keystore);
@@ -87,14 +95,6 @@ public final class TesterSupport {
         }
         tomcat.getConnector().setSecure(true);
         tomcat.getConnector().setProperty("SSLEnabled", "true");
-        // OpenSSL before 1.0.1 only supports TLSv1.
-        // Our default SSLProtocol setting "all" includes unsupported TLSv1.1 and 1.2
-        // and would produce an error during init.
-        // Trigger loading of the native library and choose old protocol
-        // if we use old OpenSSL.
-        if (AprLifecycleListener.isAprAvailable() && SSL.version() < 0x10001000L) {
-            tomcat.getConnector().setProperty("SSLProtocol", Constants.SSL_PROTO_TLSv1);
-        }
     }
 
     protected static KeyManager[] getUser1KeyManagers() throws Exception {
@@ -144,8 +144,23 @@ public final class TesterSupport {
             // Disabled by default in 1.1.20 windows binary (2010-07-27)
             return false;
         }
+
+        return true;
+    }
+
+    protected static boolean isClientRenegotiationSupported(Tomcat tomcat) {
+        String protocol = tomcat.getConnector().getProtocolHandlerClassName();
+        if (protocol.contains("Apr")) {
+            // Disabled by default in 1.1.20 windows binary (2010-07-27)
+            return false;
+        }
         if (protocol.contains("NioProtocol") || (protocol.contains("Nio2Protocol") && isMacOs())) {
             // Doesn't work on all platforms - see BZ 56448.
+            return false;
+        }
+        String sslImplementation = System.getProperty("tomcat.test.sslImplementation");
+        if (sslImplementation != null && !"${test.sslImplementation}".equals(sslImplementation)) {
+            // Assume custom SSL is not supporting this
             return false;
         }
 

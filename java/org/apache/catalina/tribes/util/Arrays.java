@@ -31,7 +31,7 @@ import org.apache.catalina.tribes.membership.Membership;
  * @version 1.0
  */
 public class Arrays {
-    protected static final StringManager sm = StringManager.getManager(Arrays.class.getPackage().getName());
+    protected static final StringManager sm = StringManager.getManager(Arrays.class);
 
     public static boolean contains(byte[] source, int srcoffset, byte[] key, int keyoffset, int length) {
         if ( srcoffset < 0 || srcoffset >= source.length) throw new ArrayIndexOutOfBoundsException(sm.getString("arrays.srcoffset.outOfBounds"));

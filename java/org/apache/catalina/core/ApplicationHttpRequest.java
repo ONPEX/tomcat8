@@ -31,13 +31,14 @@ import javax.servlet.DispatcherType;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpSession;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.Globals;
 import org.apache.catalina.Manager;
 import org.apache.catalina.Session;
+import org.apache.catalina.servlet4preview.http.Mapping;
+import org.apache.catalina.servlet4preview.http.PushBuilder;
 import org.apache.catalina.util.ParameterMap;
 import org.apache.tomcat.util.buf.B2CConverter;
 import org.apache.tomcat.util.buf.MessageBytes;
@@ -59,7 +60,8 @@ import org.apache.tomcat.util.http.Parameters;
  * @author Craig R. McClanahan
  * @author Remy Maucherat
  */
-class ApplicationHttpRequest extends HttpServletRequestWrapper {
+class ApplicationHttpRequest
+        extends org.apache.catalina.servlet4preview.http.HttpServletRequestWrapper {
 
 
     // ------------------------------------------------------- Static Variables
@@ -74,11 +76,15 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
       RequestDispatcher.INCLUDE_SERVLET_PATH,
       RequestDispatcher.INCLUDE_PATH_INFO,
       RequestDispatcher.INCLUDE_QUERY_STRING,
+      org.apache.catalina.servlet4preview.RequestDispatcher.INCLUDE_MAPPING,
       RequestDispatcher.FORWARD_REQUEST_URI,
       RequestDispatcher.FORWARD_CONTEXT_PATH,
       RequestDispatcher.FORWARD_SERVLET_PATH,
       RequestDispatcher.FORWARD_PATH_INFO,
-      RequestDispatcher.FORWARD_QUERY_STRING };
+      RequestDispatcher.FORWARD_QUERY_STRING,
+      org.apache.catalina.servlet4preview.RequestDispatcher.FORWARD_MAPPING};
+
+    private static final int SPECIALS_FIRST_FORWARD_INDEX = 6;
 
 
     // ----------------------------------------------------------- Constructors
@@ -88,6 +94,9 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
      * Construct a new wrapped request around the specified servlet request.
      *
      * @param request The servlet request being wrapped
+     * @param context The target context for the wrapped request
+     * @param crossContext {@code true} if the wrapped request will be a
+     *                     cross-context request, otherwise {@code false}
      */
     public ApplicationHttpRequest(HttpServletRequest request, Context context,
                                   boolean crossContext) {
@@ -178,6 +187,12 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
 
 
     /**
+     * The mapping for this request.
+     */
+    private Mapping mapping = null;
+
+
+    /**
      * The currently active session for this request.
      */
     protected Session session = null;
@@ -222,8 +237,9 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
         if (pos == -1) {
             return getRequest().getAttribute(name);
         } else {
-            if ((specialAttributes[pos] == null)
-                && (specialAttributes[5] == null) && (pos >= 5)) {
+            if ((specialAttributes[pos] == null) &&
+                    (specialAttributes[SPECIALS_FIRST_FORWARD_INDEX] == null) &&
+                    (pos >= SPECIALS_FIRST_FORWARD_INDEX)) {
                 // If it's a forward special attribute, and null, it means this
                 // is an include, so we check the wrapped request since
                 // the request could have been forwarded before the include
@@ -506,6 +522,12 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
     }
 
 
+    @Override
+    public Mapping getMapping() {
+        return mapping;
+    }
+
+
     /**
      * Return the session associated with this Request, creating one
      * if necessary.
@@ -587,12 +609,12 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
 
             String requestedSessionId = getRequestedSessionId();
             if (requestedSessionId == null)
-                return (false);
+                return false;
             if (context == null)
-                return (false);
+                return false;
             Manager manager = context.getManager();
             if (manager == null)
-                return (false);
+                return false;
             Session session = null;
             try {
                 session = manager.findSession(requestedSessionId);
@@ -600,9 +622,9 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
                 // Ignore
             }
             if ((session != null) && session.isValid()) {
-                return (true);
+                return true;
             } else {
-                return (false);
+                return false;
             }
 
         } else {
@@ -611,8 +633,13 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
     }
 
 
-    // -------------------------------------------------------- Package Methods
+    @Override
+    public PushBuilder getPushBuilder() {
+        return new ApplicationPushBuilder(this);
+    }
 
+
+    // -------------------------------------------------------- Package Methods
 
     /**
      * Recycle this request
@@ -671,8 +698,7 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
 
         // Initialize the attributes for this request
         dispatcherType = (DispatcherType)request.getAttribute(Globals.DISPATCHER_TYPE_ATTR);
-        requestDispatcherPath =
-            request.getAttribute(Globals.DISPATCHER_REQUEST_PATH_ATTR);
+        requestDispatcherPath = request.getAttribute(Globals.DISPATCHER_REQUEST_PATH_ATTR);
 
         // Initialize the path elements for this request
         contextPath = request.getContextPath();
@@ -680,7 +706,11 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
         queryString = request.getQueryString();
         requestURI = request.getRequestURI();
         servletPath = request.getServletPath();
-
+        if (request instanceof org.apache.catalina.servlet4preview.http.HttpServletRequest) {
+            mapping = ((org.apache.catalina.servlet4preview.http.HttpServletRequest) request).getMapping();
+        } else {
+            mapping = (new ApplicationMapping(null)).getMapping();
+        }
     }
 
 
@@ -738,6 +768,12 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
         this.queryParamString = queryString;
     }
 
+
+    void setMapping(Mapping mapping) {
+        this.mapping = mapping;
+    }
+
+
     // ------------------------------------------------------ Protected Methods
 
     /**
@@ -750,9 +786,9 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
 
         for (int i = 0; i < specials.length; i++) {
             if (specials[i].equals(name))
-                return (true);
+                return true;
         }
-        return (false);
+        return false;
 
     }
 
@@ -782,10 +818,10 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
         for (int i = 0; i < specials.length; i++) {
             if (specials[i].equals(name)) {
                 specialAttributes[i] = value;
-                return (true);
+                return true;
             }
         }
-        return (false);
+        return false;
     }
 
 
@@ -798,10 +834,10 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
         for (int i = 0; i < specials.length; i++) {
             if (specials[i].equals(name)) {
                 specialAttributes[i] = null;
-                return (true);
+                return true;
             }
         }
-        return (false);
+        return false;
     }
 
 
@@ -811,33 +847,28 @@ class ApplicationHttpRequest extends HttpServletRequestWrapper {
      * @param values1 First set of values
      * @param values2 Second set of values
      */
-    protected String[] mergeValues(Object values1, Object values2) {
+    private String[] mergeValues(String[] values1, String[] values2) {
 
         ArrayList<Object> results = new ArrayList<>();
 
         if (values1 == null) {
             // Skip - nothing to merge
-        } else if (values1 instanceof String[]) {
-            for (String value : (String[]) values1) {
+        } else {
+            for (String value : values1) {
                 results.add(value);
             }
-        } else { // String
-            results.add(values1.toString());
         }
 
         if (values2 == null) {
             // Skip - nothing to merge
-        } else if (values2 instanceof String[]) {
-            for (String value : (String[]) values2) {
+        } else {
+            for (String value : values2) {
                 results.add(value);
             }
-        } else { // String
-            results.add(values2.toString());
         }
 
         String values[] = new String[results.size()];
         return results.toArray(values);
-
     }
 
 

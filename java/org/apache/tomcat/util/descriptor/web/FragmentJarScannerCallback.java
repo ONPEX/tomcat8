@@ -20,14 +20,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.JarURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.tomcat.Jar;
 import org.apache.tomcat.JarScannerCallback;
-import org.apache.tomcat.util.scan.JarFactory;
 import org.xml.sax.InputSource;
 
 /**
@@ -48,12 +46,6 @@ public class FragmentJarScannerCallback implements JarScannerCallback {
         this.webXmlParser = webXmlParser;
         this.delegate = delegate;
         this.parseRequired = parseRequired;
-    }
-
-    @Override
-    public void scan(JarURLConnection jarConn, String webappPath, boolean isWebapp)
-            throws IOException {
-        scan(JarFactory.newInstance(jarConn.getURL()), webappPath, isWebapp);
     }
 
 

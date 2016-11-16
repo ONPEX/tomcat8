@@ -77,6 +77,8 @@ public class ContextRuleSet extends RuleSetBase {
      *
      * @param prefix Prefix for matching pattern rules (including the
      *  trailing slash character)
+     * @param create <code>true</code> if the main context instance should be
+     *  created
      */
     public ContextRuleSet(String prefix, boolean create) {
         this.namespaceURI = null;
@@ -117,8 +119,6 @@ public class ContextRuleSet extends RuleSetBase {
                                 "addChild",
                                 "org.apache.catalina.Container");
         }
-        digester.addCallMethod(prefix + "Context/InstanceListener",
-                               "addInstanceListener", 0);
 
         digester.addObjectCreate(prefix + "Context/Listener",
                                  null, // MUST be specified in the element
@@ -243,7 +243,7 @@ public class ContextRuleSet extends RuleSetBase {
                             "org.apache.tomcat.JarScanFilter");
 
         digester.addObjectCreate(prefix + "Context/CookieProcessor",
-                                 "org.apache.tomcat.util.http.LegacyCookieProcessor",
+                                 "org.apache.tomcat.util.http.Rfc6265CookieProcessor",
                                  "className");
         digester.addSetProperties(prefix + "Context/CookieProcessor");
         digester.addSetNext(prefix + "Context/CookieProcessor",

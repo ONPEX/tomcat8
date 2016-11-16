@@ -34,7 +34,7 @@ public class ClusterSessionListener extends ClusterListener {
 
     private static final Log log =
         LogFactory.getLog(ClusterSessionListener.class);
-    private static final StringManager sm = StringManager.getManager(Constants.Package);
+    private static final StringManager sm = StringManager.getManager(ClusterSessionListener.class);
 
     //--Constructor---------------------------------------------
 
@@ -53,7 +53,7 @@ public class ClusterSessionListener extends ClusterListener {
      */
     @Override
     public void messageReceived(ClusterMessage myobj) {
-        if (myobj != null && myobj instanceof SessionMessage) {
+        if (myobj instanceof SessionMessage) {
             SessionMessage msg = (SessionMessage) myobj;
             String ctxname = msg.getContextName();
             //check if the message is a EVT_GET_ALL_SESSIONS,

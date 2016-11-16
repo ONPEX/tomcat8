@@ -25,9 +25,9 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
 
+import org.apache.catalina.util.RequestUtil;
 import org.apache.catalina.util.Strftime;
 import org.apache.catalina.util.URLEncoder;
-import org.apache.tomcat.util.http.HttpMessages;
 
 /**
  * Allows the different SSICommand implementations to share data/talk to each
@@ -201,6 +201,8 @@ public class SSIMediator {
     /**
      * Applies variable substitution to the specified String and returns the
      * new resolved string.
+     * @param val The value which should be checked
+     * @return the value after variable substitution
      */
     public String substituteVariables(String val) {
         // If it has no references or HTML entities then no work
@@ -298,7 +300,7 @@ public class SSIMediator {
         } else if (encoding.equalsIgnoreCase("none")) {
             retVal = value;
         } else if (encoding.equalsIgnoreCase("entity")) {
-            retVal = HttpMessages.filter(value);
+            retVal = RequestUtil.filter(value);
         } else {
             //This shouldn't be possible
             throw new IllegalArgumentException("Unknown encoding: " + encoding);

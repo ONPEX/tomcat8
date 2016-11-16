@@ -72,7 +72,7 @@ public class TestAsyncContextImpl extends TomcatBaseTest {
     // Timeout thread (where used) checks for timeout every second
     private static final long TIMEOUT_MARGIN = 1000;
     // Default timeout for these tests
-    private static final long TIMEOUT = 3000;
+    private static final long TIMEOUT = 5000;
 
     private static StringBuilder tracker;
 
@@ -548,8 +548,8 @@ public class TestAsyncContextImpl extends TomcatBaseTest {
             long timeoutDelay = TimeoutServlet.ASYNC_TIMEOUT;
             if (asyncDispatch != null && asyncDispatch.booleanValue() &&
                     !completeOnTimeout.booleanValue()) {
-                // Extra timeout in this case
-                timeoutDelay += TimeoutServlet.ASYNC_TIMEOUT;
+                // The async dispatch includes a sleep
+                timeoutDelay += AsyncStartRunnable.THREAD_SLEEP_TIME;
             }
             alvGlobal.validateAccessLog(1, 200, timeoutDelay,
                     timeoutDelay + TIMEOUT_MARGIN + REQUEST_TIME);
@@ -564,7 +564,7 @@ public class TestAsyncContextImpl extends TomcatBaseTest {
         private final Boolean completeOnTimeout;
         private final String dispatchUrl;
 
-        public static final long ASYNC_TIMEOUT = 3000;
+        public static final long ASYNC_TIMEOUT = 100;
 
         public TimeoutServlet(Boolean completeOnTimeout, String dispatchUrl) {
             this.completeOnTimeout = completeOnTimeout;
@@ -2223,6 +2223,7 @@ public class TestAsyncContextImpl extends TomcatBaseTest {
          }
     }
 
+    // https://bz.apache.org/bugzilla/show_bug.cgi?id=57559
     @Test
     public void testAsyncRequestURI() throws Exception {
         // Setup Tomcat instance

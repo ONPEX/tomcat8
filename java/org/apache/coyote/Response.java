@@ -18,6 +18,7 @@ package org.apache.coyote;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -42,8 +43,7 @@ import org.apache.tomcat.util.res.StringManager;
  */
 public final class Response {
 
-    private static final StringManager sm =
-            StringManager.getManager(Constants.Package);
+    private static final StringManager sm = StringManager.getManager(Response.class);
 
     // ----------------------------------------------------- Class Variables
 
@@ -94,7 +94,7 @@ public final class Response {
     /**
      * Action hook.
      */
-    public volatile ActionHook hook;
+    volatile ActionHook hook;
 
 
     /**
@@ -132,10 +132,6 @@ public final class Response {
         this.req=req;
     }
 
-    public OutputBuffer getOutputBuffer() {
-        return outputBuffer;
-    }
-
 
     public void setOutputBuffer(OutputBuffer outputBuffer) {
         this.outputBuffer = outputBuffer;
@@ -147,12 +143,7 @@ public final class Response {
     }
 
 
-    public ActionHook getHook() {
-        return hook;
-    }
-
-
-    public void setHook(ActionHook hook) {
+    protected void setHook(ActionHook hook) {
         this.hook = hook;
     }
 
@@ -190,15 +181,19 @@ public final class Response {
 
 
     /**
-     * Set the response status
+     * Set the response status.
+     *
+     * @param status The status value to set
      */
-    public void setStatus( int status ) {
+    public void setStatus(int status) {
         this.status = status;
     }
 
 
     /**
      * Get the status message.
+     *
+     * @return The message associated with the current status
      */
     public String getMessage() {
         return message;
@@ -207,6 +202,8 @@ public final class Response {
 
     /**
      * Set the status message.
+     *
+     * @param message The status message to set
      */
     public void setMessage(String message) {
         this.message = message;
@@ -238,8 +235,9 @@ public final class Response {
 
 
     /**
-     * Set the error Exception that occurred during
-     * request processing.
+     * Set the error Exception that occurred during request processing.
+     *
+     * @param ex The exception that occurred
      */
     public void setErrorException(Exception ex) {
         errorException = ex;
@@ -247,8 +245,9 @@ public final class Response {
 
 
     /**
-     * Get the Exception that occurred during request
-     * processing.
+     * Get the Exception that occurred during request processing.
+     *
+     * @return The exception that occurred
      */
     public Exception getErrorException() {
         return errorException;
@@ -270,16 +269,19 @@ public final class Response {
         }
 
         recycle();
-
-        // Reset the stream
-        action(ActionCode.RESET, this);
     }
 
 
     // -------------------- Headers --------------------
     /**
+     * Does the response contain the given header.
+     * <br>
      * Warning: This method always returns <code>false</code> for Content-Type
      * and Content-Length.
+     *
+     * @param name The name of the header of interest
+     *
+     * @return {@code true} if the response contains the header.
      */
     public boolean containsHeader(String name) {
         return headers.getHeader(name) != null;
@@ -360,8 +362,10 @@ public final class Response {
     }
 
     /**
-     * Called explicitly by user to set the Content-Language and
-     * the default encoding
+     * Called explicitly by user to set the Content-Language and the default
+     * encoding.
+     *
+     * @param locale The locale to use for this response
      */
     public void setLocale(Locale locale) {
 
@@ -378,6 +382,9 @@ public final class Response {
 
     /**
      * Return the content language.
+     *
+     * @return The language code for the language currently associated with this
+     *         response
      */
     public String getContentLanguage() {
         return contentLanguage;
@@ -484,12 +491,31 @@ public final class Response {
 
     /**
      * Write a chunk of bytes.
+     *
+     * @param chunk The bytes to write
+     *
+     * @throws IOException If an I/O error occurs during the write
+     *
+     * @deprecated Unused. Will be removed in Tomcat 9. Use
+     *             {@link #doWrite(ByteBuffer)}
      */
-    public void doWrite(ByteChunk chunk/*byte buffer[], int pos, int count*/)
-        throws IOException
-    {
-        outputBuffer.doWrite(chunk, this);
+    public void doWrite(ByteChunk chunk) throws IOException {
+        outputBuffer.doWrite(chunk);
         contentWritten+=chunk.getLength();
+    }
+
+
+    /**
+     * Write a chunk of bytes.
+     *
+     * @param chunk The ByteBuffer to write
+     *
+     * @throws IOException If an I/O error occurs during the write
+     */
+    public void doWrite(ByteBuffer chunk) throws IOException {
+        int len = chunk.remaining();
+        outputBuffer.doWrite(chunk);
+        contentWritten += len - chunk.remaining();
     }
 
     // --------------------
@@ -519,6 +545,10 @@ public final class Response {
 
     /**
      * Bytes written by application - i.e. before compression, chunking, etc.
+     *
+     * @return The total number of bytes written to the response by the
+     *         application. This will not be the number of bytes written to the
+     *         network which may be more or less than this value.
      */
     public long getContentWritten() {
         return contentWritten;
@@ -526,6 +556,12 @@ public final class Response {
 
     /**
      * Bytes written to socket - i.e. after compression, chunking, etc.
+     *
+     * @param flush Should any remaining bytes be flushed before returning the
+     *              total? If {@code false} bytes remaining in the buffer will
+     *              not be included in the returned value
+     *
+     * @return The total number of bytes written to the socket for this response
      */
     public long getBytesWritten(boolean flush) {
         if (flush) {
@@ -577,7 +613,7 @@ public final class Response {
         if (isReady()) {
             synchronized (nonBlockingStateLock) {
                 // Ensure we don't get multiple write registrations if
-                // ServletOutoutStream.isReady() returns false during a call to
+                // ServletOutputStream.isReady() returns false during a call to
                 // onDataAvailable()
                 registeredForWrite = true;
                 // Need to set the fireListener flag otherwise when the
@@ -595,8 +631,7 @@ public final class Response {
 
     public boolean isReady() {
         if (listener == null) {
-            // TODO i18n
-            throw new IllegalStateException("not in non blocking mode.");
+            throw new IllegalStateException(sm.getString("response.notNonBlocking"));
         }
         // Assume write is not possible
         boolean ready = false;

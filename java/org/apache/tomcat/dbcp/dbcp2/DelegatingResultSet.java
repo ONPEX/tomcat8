@@ -133,6 +133,7 @@ public final class DelegatingResultSet extends AbandonedTrace implements ResultS
      * This method is useful when you may have nested
      * {@code DelegatingResultSet}s, and you want to make
      * sure to obtain a "genuine" {@link ResultSet}.
+     * @return the result set
      */
     public ResultSet getInnermostDelegate() {
         ResultSet r = _res;
@@ -225,7 +226,7 @@ public final class DelegatingResultSet extends AbandonedTrace implements ResultS
     public double getDouble(final int columnIndex) throws SQLException
     { try { return _res.getDouble(columnIndex); } catch (final SQLException e) { handleException(e); return 0; } }
 
-    /** @deprecated */
+    /** @deprecated Use {@link #getBigDecimal(int)} */
     @Deprecated
     @Override
     public BigDecimal getBigDecimal(final int columnIndex, final int scale) throws SQLException
@@ -251,7 +252,7 @@ public final class DelegatingResultSet extends AbandonedTrace implements ResultS
     public InputStream getAsciiStream(final int columnIndex) throws SQLException
     { try { return _res.getAsciiStream(columnIndex); } catch (final SQLException e) { handleException(e); return null; } }
 
-    /** @deprecated */
+    /** @deprecated Use {@link #getCharacterStream(int)} */
     @Deprecated
     @Override
     public InputStream getUnicodeStream(final int columnIndex) throws SQLException
@@ -293,7 +294,7 @@ public final class DelegatingResultSet extends AbandonedTrace implements ResultS
     public double getDouble(final String columnName) throws SQLException
     { try { return _res.getDouble(columnName); } catch (final SQLException e) { handleException(e); return 0; } }
 
-    /** @deprecated */
+    /** @deprecated Use {@link #getBigDecimal(String)} */
     @Deprecated
     @Override
     public BigDecimal getBigDecimal(final String columnName, final int scale) throws SQLException
@@ -319,7 +320,7 @@ public final class DelegatingResultSet extends AbandonedTrace implements ResultS
     public InputStream getAsciiStream(final String columnName) throws SQLException
     { try { return _res.getAsciiStream(columnName); } catch (final SQLException e) { handleException(e); return null; } }
 
-    /** @deprecated */
+    /** @deprecated Use {@link #getCharacterStream(String)} */
     @Deprecated
     @Override
     public InputStream getUnicodeStream(final String columnName) throws SQLException

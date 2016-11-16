@@ -84,19 +84,16 @@ public final class LegacyCookieProcessor implements CookieProcessor {
         ANCIENT_DATE = COOKIE_DATE_FORMAT.get().format(new Date(10000));
     }
 
+    private final boolean STRICT_SERVLET_COMPLIANCE =
+            Boolean.getBoolean("org.apache.catalina.STRICT_SERVLET_COMPLIANCE");
 
-    @SuppressWarnings("deprecation") // Default to false when deprecated code is removed
-    private boolean allowEqualsInValue = CookieSupport.ALLOW_EQUALS_IN_VALUE;
+    private boolean allowEqualsInValue = false;
 
-    @SuppressWarnings("deprecation") // Default to false when deprecated code is removed
-    private boolean allowNameOnly = CookieSupport.ALLOW_NAME_ONLY;
+    private boolean allowNameOnly = false;
 
-    @SuppressWarnings("deprecation") // Default to false when deprecated code is removed
-    private boolean allowHttpSepsInV0 = CookieSupport.ALLOW_HTTP_SEPARATORS_IN_V0;
+    private boolean allowHttpSepsInV0 = false;
 
-    @SuppressWarnings("deprecation") // Default to !STRICT_SERVLET_COMPLIANCE
-                                     // when deprecated code is removed
-    private boolean alwaysAddExpires = SetCookieSupport.ALWAYS_ADD_EXPIRES;
+    private boolean alwaysAddExpires = !STRICT_SERVLET_COMPLIANCE;
 
     private final BitSet httpSeparatorFlags = new BitSet(128);
 
@@ -108,9 +105,7 @@ public final class LegacyCookieProcessor implements CookieProcessor {
         for (char c : HTTP_SEPARATORS) {
             httpSeparatorFlags.set(c);
         }
-        @SuppressWarnings("deprecation") // Default to STRICT_SERVLET_COMPLIANCE
-                                         // when deprecated code is removed
-        boolean b = CookieSupport.FWD_SLASH_IS_SEPARATOR;
+        boolean b = STRICT_SERVLET_COMPLIANCE;
         if (b) {
             httpSeparatorFlags.set('/');
         }
@@ -191,31 +186,6 @@ public final class LegacyCookieProcessor implements CookieProcessor {
     }
 
 
-    /**
-     * @return Always returns true
-     *
-     * @deprecated No longer used. Cookie headers are now always preserved. Will
-     *             be removed in Tomcat 8.5.x.
-     */
-    @Deprecated
-    public boolean getPreserveCookieHeader() {
-        return true;
-    }
-
-
-    /**
-     * NO-OP.
-     *
-     * @param preserveCookieHeader Ignored
-     *
-     * @deprecated No longer used. Cookie headers are now always preserved. Will
-     *             be removed in Tomcat 8.5.x.
-     */
-    @Deprecated
-    public void setPreserveCookieHeader(boolean preserveCookieHeader) {
-    }
-
-
     public boolean getForwardSlashIsSeparator() {
         return httpSeparatorFlags.get('/');
     }
@@ -266,7 +236,8 @@ public final class LegacyCookieProcessor implements CookieProcessor {
             if (cookieValue != null && !cookieValue.isNull() ) {
                 if (cookieValue.getType() != MessageBytes.T_BYTES ) {
                     Exception e = new Exception();
-                    log.warn("Cookies: Parsing cookie as String. Expected bytes.", e);
+                    // TODO: Review this in light of HTTP/2
+                    log.debug("Cookies: Parsing cookie as String. Expected bytes.", e);
                     cookieValue.toBytes();
                 }
                 if (log.isDebugEnabled()) {

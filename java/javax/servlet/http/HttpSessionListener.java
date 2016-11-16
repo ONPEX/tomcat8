@@ -44,5 +44,4 @@ public interface HttpSessionListener extends EventListener {
      *            the notification event
      */
     public void sessionDestroyed(HttpSessionEvent se);
-
 }

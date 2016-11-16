@@ -153,7 +153,8 @@ public class TestStandardWrapper extends TomcatBaseTest {
         Tomcat tomcat = getTomcatInstance();
 
         File appDir = new File("test/webapp-fragments");
-        tomcat.addWebapp(null, "", appDir.getAbsolutePath());
+        Context ctx = tomcat.addWebapp(null, "", appDir.getAbsolutePath());
+        skipTldsForResourceJars(ctx);
 
         tomcat.start();
 
@@ -410,7 +411,7 @@ public class TestStandardWrapper extends TomcatBaseTest {
     public static final int BUG51445_THREAD_COUNT = 5;
 
     public static CountDownLatch latch = null;
-    public static AtomicInteger counter = new AtomicInteger(0);
+    public static final AtomicInteger counter = new AtomicInteger(0);
 
     public static void initLatch() {
         latch = new CountDownLatch(BUG51445_THREAD_COUNT);

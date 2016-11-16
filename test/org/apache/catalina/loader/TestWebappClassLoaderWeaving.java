@@ -27,6 +27,7 @@ import java.security.ProtectionDomain;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.junit.After;
@@ -69,7 +70,7 @@ public class TestWebappClassLoaderWeaving extends TomcatBaseTest {
 
     private Tomcat tomcat;
     private Context context;
-    private WebappClassLoader loader;
+    private WebappClassLoaderBase loader;
 
     @Before
     @Override
@@ -83,9 +84,9 @@ public class TestWebappClassLoaderWeaving extends TomcatBaseTest {
 
         ClassLoader loader = this.context.getLoader().getClassLoader();
         assertNotNull("The class loader should not be null.", loader);
-        assertSame("The class loader is not correct.", WebappClassLoader.class, loader.getClass());
+        assertTrue("The class loader is not correct.", loader instanceof WebappClassLoaderBase);
 
-        this.loader = (WebappClassLoader) loader;
+        this.loader = (WebappClassLoaderBase) loader;
 
     }
 
@@ -238,7 +239,6 @@ public class TestWebappClassLoaderWeaving extends TomcatBaseTest {
 
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testCopiedClassLoaderExcludesResourcesAndTransformers() throws Exception {
 
@@ -251,7 +251,7 @@ public class TestWebappClassLoaderWeaving extends TomcatBaseTest {
         result = invokeDoMethodOnClass(this.loader, "TesterUnweavedClass");
         assertEquals("The second result is not correct.", "Hello, Weaver #2!", result);
 
-        WebappClassLoader copiedLoader = this.loader.copyWithoutTransformers();
+        WebappClassLoaderBase copiedLoader = (WebappClassLoaderBase) this.loader.copyWithoutTransformers();
 
         result = invokeDoMethodOnClass(copiedLoader, "TesterNeverWeavedClass");
         assertEquals("The third result is not correct.", "This will never be weaved.", result);
@@ -265,9 +265,6 @@ public class TestWebappClassLoaderWeaving extends TomcatBaseTest {
         assertEquals("getClearReferencesLogFactoryRelease did not match.",
                 Boolean.valueOf(this.loader.getClearReferencesLogFactoryRelease()),
                 Boolean.valueOf(copiedLoader.getClearReferencesLogFactoryRelease()));
-        assertEquals("getClearReferencesStatic did not match.",
-                Boolean.valueOf(this.loader.getClearReferencesStatic()),
-                Boolean.valueOf(copiedLoader.getClearReferencesStatic()));
         assertEquals("getClearReferencesStopThreads did not match.",
                 Boolean.valueOf(this.loader.getClearReferencesStopThreads()),
                 Boolean.valueOf(copiedLoader.getClearReferencesStopThreads()));
@@ -300,7 +297,7 @@ public class TestWebappClassLoaderWeaving extends TomcatBaseTest {
         }
     }
 
-    private static String invokeDoMethodOnClass(WebappClassLoader loader, String className)
+    private static String invokeDoMethodOnClass(WebappClassLoaderBase loader, String className)
             throws Exception {
 
         Class<?> c = loader.findClass("org.apache.catalina.loader." + className);

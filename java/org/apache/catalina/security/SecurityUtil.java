@@ -35,8 +35,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.apache.catalina.Globals;
-import org.apache.catalina.comet.CometFilter;
-import org.apache.catalina.comet.CometProcessor;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.res.StringManager;
 /**
@@ -73,8 +73,7 @@ public final class SecurityUtil{
      */
     private static final Map<Class<?>,Method[]> classCache = new ConcurrentHashMap<>();
 
-    private static final org.apache.juli.logging.Log log=
-        org.apache.juli.logging.LogFactory.getLog( SecurityUtil.class );
+    private static final Log log = LogFactory.getLog(SecurityUtil.class);
 
     private static final boolean packageDefinitionEnabled =
          (System.getProperty("package.definition") == null &&
@@ -151,23 +150,18 @@ public final class SecurityUtil{
                                      Principal principal)
         throws Exception {
 
-        // CometProcessor instances must not be cached as Servlet or
-        // NoSuchMethodException will be thrown.
-        Class<? extends Servlet> targetType =
-                targetObject instanceof CometProcessor ? CometProcessor.class : Servlet.class;
-
         Method method = null;
         Method[] methodsCache = classCache.get(Servlet.class);
         if(methodsCache == null) {
             method = createMethodAndCacheIt(methodsCache,
-                                            targetType,
+                                            Servlet.class,
                                             methodName,
                                             targetParameterTypes);
         } else {
             method = findMethod(methodsCache, methodName);
             if (method == null) {
                 method = createMethodAndCacheIt(methodsCache,
-                                                targetType,
+                                                Servlet.class,
                                                 methodName,
                                                 targetParameterTypes);
             }
@@ -239,23 +233,18 @@ public final class SecurityUtil{
                                      Principal principal)
         throws Exception {
 
-        // CometFilter instances must not be cached as Filter or
-        // NoSuchMethodException will be thrown.
-        Class<? extends Filter> targetType =
-                targetObject instanceof CometFilter ? CometFilter.class : Filter.class;
-
         Method method = null;
         Method[] methodsCache = classCache.get(Filter.class);
         if(methodsCache == null) {
             method = createMethodAndCacheIt(methodsCache,
-                                            targetType,
+                                            Filter.class,
                                             methodName,
                                             targetParameterTypes);
         } else {
             method = findMethod(methodsCache, methodName);
             if (method == null) {
                 method = createMethodAndCacheIt(methodsCache,
-                                                targetType,
+                                                Filter.class,
                                                 methodName,
                                                 targetParameterTypes);
             }
@@ -269,7 +258,7 @@ public final class SecurityUtil{
      * Perform work as a particular <code>Subject</code>. Here the work
      * will be granted to a <code>null</code> subject.
      *
-     * @param method the method to apply the security restriction
+     * @param methodName the method to apply the security restriction
      * @param targetObject the <code>Servlet</code> on which the method will
      *  be called.
      * @param targetArguments <code>Object</code> array contains the

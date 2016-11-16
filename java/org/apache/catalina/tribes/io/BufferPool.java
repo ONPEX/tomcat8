@@ -31,8 +31,7 @@ public class BufferPool {
 
     public static final int DEFAULT_POOL_SIZE = 100*1024*1024; //100MB
 
-    protected static final StringManager sm =
-            StringManager.getManager(BufferPool.class.getPackage().getName());
+    protected static final StringManager sm = StringManager.getManager(BufferPool.class);
 
 
 

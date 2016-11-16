@@ -1194,5 +1194,4 @@ public class GenericObjectPool<T> extends BaseGenericObjectPool<T>
         builder.append(", abandonedConfig=");
         builder.append(abandonedConfig);
     }
-
 }

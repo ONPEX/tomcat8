@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -48,8 +49,8 @@ import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 
 /**
- *
- * @version 1.0
+ * @param <K> The type of Key
+ * @param <V> The type of Value
  */
 public abstract class AbstractReplicatedMap<K,V>
         implements Map<K,V>, Serializable, RpcCallback, ChannelListener,
@@ -57,8 +58,7 @@ public abstract class AbstractReplicatedMap<K,V>
 
     private static final long serialVersionUID = 1L;
 
-    protected static final StringManager sm =
-            StringManager.getManager(AbstractReplicatedMap.class.getPackage().getName());
+    protected static final StringManager sm = StringManager.getManager(AbstractReplicatedMap.class);
 
     private final Log log = LogFactory.getLog(AbstractReplicatedMap.class);
 
@@ -163,12 +163,14 @@ public abstract class AbstractReplicatedMap<K,V>
 //------------------------------------------------------------------------------
 
     /**
-     * Creates a new map
+     * Creates a new map.
+     * @param owner The map owner
      * @param channel The channel to use for communication
      * @param timeout long - timeout for RPC messags
      * @param mapContextName String - unique name for this map, to allow multiple maps per channel
      * @param initialCapacity int - the size of this map, see HashMap
      * @param loadFactor float - load factor, see HashMap
+     * @param channelSendOptions Send options
      * @param cls - a list of classloaders to be used for deserialization of objects.
      * @param terminate - Flag for whether to terminate this map that failed to start.
      */
@@ -255,7 +257,7 @@ public abstract class AbstractReplicatedMap<K,V>
      * Sends a ping out to all the members in the cluster, not just map members
      * that this map is alive.
      * @param timeout long
-     * @throws ChannelException
+     * @throws ChannelException Send error
      */
     protected void ping(long timeout) throws ChannelException {
         MapMessage msg = new MapMessage(this.mapContextName,
@@ -327,7 +329,7 @@ public abstract class AbstractReplicatedMap<K,V>
      * Helper method to broadcast a message to all members in a channel
      * @param msgtype int
      * @param rpc boolean
-     * @throws ChannelException
+     * @throws ChannelException Send error
      */
     protected void broadcast(int msgtype, boolean rpc) throws ChannelException {
         Member[] members = channel.getMembers();
@@ -421,6 +423,7 @@ public abstract class AbstractReplicatedMap<K,V>
     /**
      * Replicates any changes to the object since the last time
      * The object has to be primary, ie, if the object is a proxy or a backup, it will not be replicated<br>
+     * @param key The object to replicate
      * @param complete - if set to true, the object is replicated to its backup
      * if set to false, only objects that implement ReplicatedMapEntry and the isDirty() returns true will
      * be replicated
@@ -687,7 +690,7 @@ public abstract class AbstractReplicatedMap<K,V>
                 entry.setCopy(mapmsg.getMsgType() == MapMessage.MSG_COPY);
                 entry.setBackupNodes(mapmsg.getBackupNodes());
                 entry.setPrimary(mapmsg.getPrimary());
-                if (mapmsg.getValue()!=null && mapmsg.getValue() instanceof ReplicatedMapEntry ) {
+                if (mapmsg.getValue() instanceof ReplicatedMapEntry ) {
                     ((ReplicatedMapEntry)mapmsg.getValue()).setOwner(getMapOwner());
                 }
             } else {
@@ -775,7 +778,6 @@ public abstract class AbstractReplicatedMap<K,V>
             if (!mapMembers.containsKey(mapMember) ) {
                 if (log.isInfoEnabled())
                     log.info(sm.getString("abstractReplicatedMap.mapMemberAdded.added", mapMember));
-                mapMembers.put(mapMember, Long.valueOf(System.currentTimeMillis()));
                 mapMembers.put(mapMember, Long.valueOf(System.currentTimeMillis()));
                 memberAdded = true;
             }
@@ -1119,9 +1121,7 @@ public abstract class AbstractReplicatedMap<K,V>
 
     @Override
     public boolean containsValue(Object value) {
-        if (value == null) {
-            throw new NullPointerException();
-        }
+        Objects.requireNonNull(value);
         Iterator<Map.Entry<K,MapEntry<K,V>>> i = innerMap.entrySet().iterator();
         while (i.hasNext()) {
             Map.Entry<K,MapEntry<K,V>> e = i.next();
@@ -1243,7 +1243,7 @@ public abstract class AbstractReplicatedMap<K,V>
         }
 
         public boolean isValueSerializable() {
-            return (value==null) || (value instanceof Serializable);
+            return (value == null) || (value instanceof Serializable);
         }
 
         public boolean isSerializable() {
@@ -1342,8 +1342,8 @@ public abstract class AbstractReplicatedMap<K,V>
          * @param offset int
          * @param length int
          * @param diff boolean
-         * @throws IOException
-         * @throws ClassNotFoundException
+         * @throws IOException IO error
+         * @throws ClassNotFoundException Deserialization error
          */
         @SuppressWarnings("unchecked")
         public void apply(byte[] data, int offset, int length, boolean diff) throws IOException, ClassNotFoundException {

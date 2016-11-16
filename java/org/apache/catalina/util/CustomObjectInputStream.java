@@ -110,9 +110,18 @@ public final class CustomObjectInputStream extends ObjectInputStream {
         Set<String> reportedClasses;
         synchronized (reportedClassCache) {
             reportedClasses = reportedClassCache.get(classLoader);
-            if (reportedClasses == null) {
-                reportedClasses = Collections.newSetFromMap(new ConcurrentHashMap<String,Boolean>());
-                reportedClassCache.put(classLoader, reportedClasses);
+        }
+        if (reportedClasses == null) {
+            reportedClasses = Collections.newSetFromMap(new ConcurrentHashMap<String,Boolean>());
+            synchronized (reportedClassCache) {
+                Set<String> original = reportedClassCache.get(classLoader);
+                if (original == null) {
+                    reportedClassCache.put(classLoader, reportedClasses);
+                } else {
+                    // Concurrent attempts to create the new Set. Make sure all
+                    // threads use the first successfully added Set.
+                    reportedClasses = original;
+                }
             }
         }
         this.reportedClasses = reportedClasses;

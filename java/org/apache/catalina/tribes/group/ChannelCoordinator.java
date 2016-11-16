@@ -27,7 +27,6 @@ import org.apache.catalina.tribes.MessageListener;
 import org.apache.catalina.tribes.UniqueId;
 import org.apache.catalina.tribes.membership.McastService;
 import org.apache.catalina.tribes.membership.StaticMember;
-import org.apache.catalina.tribes.transport.ReceiverBase;
 import org.apache.catalina.tribes.transport.ReplicationTransmitter;
 import org.apache.catalina.tribes.transport.SenderState;
 import org.apache.catalina.tribes.transport.nio.NioReceiver;
@@ -42,8 +41,7 @@ import org.apache.catalina.tribes.util.StringManager;
  * This is the last interceptor in the chain.
  */
 public class ChannelCoordinator extends ChannelInterceptorBase implements MessageListener {
-    protected static final StringManager sm =
-            StringManager.getManager(ChannelCoordinator.class.getPackage().getName());
+    protected static final StringManager sm = StringManager.getManager(ChannelCoordinator.class);
     private ChannelReceiver clusterReceiver;
     private ChannelSender clusterSender;
     private MembershipService membershipService;
@@ -153,9 +151,7 @@ public class ChannelCoordinator extends ChannelInterceptorBase implements Messag
             //listens to with the local membership settings
             if ( Channel.SND_RX_SEQ==(svc & Channel.SND_RX_SEQ) ) {
                 clusterReceiver.setMessageListener(this);
-                if (clusterReceiver instanceof ReceiverBase) {
-                    ((ReceiverBase)clusterReceiver).setChannel(getChannel());
-                }
+                clusterReceiver.setChannel(getChannel());
                 clusterReceiver.start();
                 //synchronize, big time FIXME
                 Member localMember = getChannel().getLocalMember(false);
@@ -175,26 +171,22 @@ public class ChannelCoordinator extends ChannelInterceptorBase implements Messag
                 valid = true;
             }
             if ( Channel.SND_TX_SEQ==(svc & Channel.SND_TX_SEQ) ) {
-                if (clusterSender instanceof ReplicationTransmitter) {
-                    ((ReplicationTransmitter)clusterSender).setChannel(getChannel());
-                }
+                clusterSender.setChannel(getChannel());
                 clusterSender.start();
                 valid = true;
             }
 
             if ( Channel.MBR_RX_SEQ==(svc & Channel.MBR_RX_SEQ) ) {
                 membershipService.setMembershipListener(this);
+                membershipService.setChannel(getChannel());
                 if (membershipService instanceof McastService) {
                     ((McastService)membershipService).setMessageListener(this);
-                    ((McastService)membershipService).setChannel(getChannel());
                 }
                 membershipService.start(MembershipService.MBR_RX);
                 valid = true;
             }
             if ( Channel.MBR_TX_SEQ==(svc & Channel.MBR_TX_SEQ) ) {
-                if (membershipService instanceof McastService) {
-                    ((McastService)membershipService).setChannel(getChannel());
-                }
+                membershipService.setChannel(getChannel());
                 membershipService.start(MembershipService.MBR_TX);
                 valid = true;
             }

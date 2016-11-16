@@ -162,19 +162,6 @@ public class StandardSession implements HttpSession, Session, Serializable {
 
 
     /**
-     * Set of attribute names which are not allowed to be persisted.
-     *
-     * @deprecated Use {@link Constants#excludedAttributeNames} instead. Will be
-     *             removed in Tomcat 9.
-     */
-    @Deprecated
-    protected static final String[] excludedAttributes = {
-        Globals.SUBJECT_ATTR,
-        Globals.GSS_CREDENTIAL_ATTR
-    };
-
-
-    /**
      * We are currently processing a session expiration, so bypass
      * certain IllegalStateException tests.  NOTE:  This value is not
      * included in the serialized version of this object.
@@ -1561,7 +1548,7 @@ public class StandardSession implements HttpSession, Session, Serializable {
 
 
     /**
-     * Return the <code>isValid</code> flag for this session without any expiration
+     * @return the <code>isValid</code> flag for this session without any expiration
      * check.
      */
     protected boolean isValidInternal() {
@@ -1726,19 +1713,6 @@ public class StandardSession implements HttpSession, Session, Serializable {
 
 
     /**
-     * Exclude standard attributes that cannot be serialized.
-     * @param name the attribute's name
-     *
-     * @deprecated Use {@link #exclude(String, Object)}. Will be removed in
-     *             Tomcat 8.5.x.
-     */
-    @Deprecated
-    protected boolean exclude(String name){
-        return exclude(name, null);
-    }
-
-
-    /**
      * Should the given session attribute be excluded? This implementation
      * checks:
      * <ul>
@@ -1801,7 +1775,7 @@ public class StandardSession implements HttpSession, Session, Serializable {
 
 
     /**
-     * Return the names of all currently defined session attributes
+     * @return the names of all currently defined session attributes
      * as an array of Strings.  If there are no defined attributes, a
      * zero-length array is returned.
      */

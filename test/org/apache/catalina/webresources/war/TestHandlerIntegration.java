@@ -35,6 +35,7 @@ public class TestHandlerIntegration extends TomcatBaseTest {
 
         File docBase = new File("test/webresources/war-url-connection.war");
         Context ctx = tomcat.addWebapp("/test", docBase.getAbsolutePath());
+        skipTldsForResourceJars(ctx);
 
         ((StandardHost) tomcat.getHost()).setUnpackWARs(false);
 

@@ -38,14 +38,13 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.catalina.AsyncDispatcher;
 import org.apache.catalina.Context;
 import org.apache.catalina.Globals;
-import org.apache.catalina.InstanceEvent;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.ClientAbortException;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.RequestFacade;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.connector.ResponseFacade;
-import org.apache.catalina.util.InstanceSupport;
+import org.apache.catalina.servlet4preview.http.Mapping;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.res.StringManager;
 
@@ -61,7 +60,6 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  */
-@SuppressWarnings("deprecation")
 final class ApplicationDispatcher implements AsyncDispatcher, RequestDispatcher {
 
     static final boolean STRICT_SERVLET_COMPLIANCE;
@@ -202,12 +200,13 @@ final class ApplicationDispatcher implements AsyncDispatcher, RequestDispatcher 
      *  (if any)
      * @param queryString Query string parameters included with this request
      *  (if any)
+     * @param mapping The mapping for this resource (if any)
      * @param name Servlet name (if a named dispatcher was created)
      *  else <code>null</code>
      */
     public ApplicationDispatcher
         (Wrapper wrapper, String requestURI, String servletPath,
-         String pathInfo, String queryString, String name) {
+         String pathInfo, String queryString, Mapping mapping, String name) {
 
         super();
 
@@ -218,12 +217,8 @@ final class ApplicationDispatcher implements AsyncDispatcher, RequestDispatcher 
         this.servletPath = servletPath;
         this.pathInfo = pathInfo;
         this.queryString = queryString;
+        this.mapping = mapping;
         this.name = name;
-        if (wrapper instanceof StandardWrapper)
-            this.support = ((StandardWrapper) wrapper).getInstanceSupport();
-        else
-            this.support = new InstanceSupport(wrapper);
-
     }
 
 
@@ -266,17 +261,15 @@ final class ApplicationDispatcher implements AsyncDispatcher, RequestDispatcher 
 
 
     /**
-     * The StringManager for this package.
+     * The mapping for this RequestDispatcher.
      */
-    private static final StringManager sm =
-      StringManager.getManager(Constants.Package);
+    private final Mapping mapping;
 
 
     /**
-     * The InstanceSupport instance associated with our Wrapper (used to
-     * send "before dispatch" and "after dispatch" events.
+     * The StringManager for this package.
      */
-    private final InstanceSupport support;
+    private static final StringManager sm = StringManager.getManager(Constants.Package);
 
 
     /**
@@ -365,8 +358,7 @@ final class ApplicationDispatcher implements AsyncDispatcher, RequestDispatcher 
                 (ApplicationHttpRequest) wrapRequest(state);
             String contextPath = context.getPath();
             HttpServletRequest hrequest = state.hrequest;
-            if (hrequest.getAttribute(
-                    RequestDispatcher.FORWARD_REQUEST_URI) == null) {
+            if (hrequest.getAttribute(RequestDispatcher.FORWARD_REQUEST_URI) == null) {
                 wrequest.setAttribute(RequestDispatcher.FORWARD_REQUEST_URI,
                                       hrequest.getRequestURI());
                 wrequest.setAttribute(RequestDispatcher.FORWARD_CONTEXT_PATH,
@@ -377,6 +369,16 @@ final class ApplicationDispatcher implements AsyncDispatcher, RequestDispatcher 
                                       hrequest.getPathInfo());
                 wrequest.setAttribute(RequestDispatcher.FORWARD_QUERY_STRING,
                                       hrequest.getQueryString());
+                Mapping mapping;
+                if (hrequest instanceof org.apache.catalina.servlet4preview.http.HttpServletRequest) {
+                    mapping = ((org.apache.catalina.servlet4preview.http.HttpServletRequest)
+                            hrequest).getMapping();
+                } else {
+                    mapping = (new ApplicationMapping(null)).getMapping();
+                }
+                wrequest.setAttribute(
+                        org.apache.catalina.servlet4preview.RequestDispatcher.FORWARD_MAPPING,
+                        mapping);
             }
 
             wrequest.setContextPath(contextPath);
@@ -387,6 +389,7 @@ final class ApplicationDispatcher implements AsyncDispatcher, RequestDispatcher 
                 wrequest.setQueryString(queryString);
                 wrequest.setQueryParams(queryString);
             }
+            wrequest.setMapping(mapping);
 
             processRequest(request,response,state);
         }
@@ -576,6 +579,11 @@ final class ApplicationDispatcher implements AsyncDispatcher, RequestDispatcher 
                                       queryString);
                 wrequest.setQueryParams(queryString);
             }
+            if (mapping != null) {
+                wrequest.setAttribute(
+                        org.apache.catalina.servlet4preview.RequestDispatcher.INCLUDE_MAPPING,
+                        mapping);
+            }
 
             wrequest.setAttribute(Globals.DISPATCHER_TYPE_ATTR,
                     DispatcherType.INCLUDE);
@@ -713,35 +721,23 @@ final class ApplicationDispatcher implements AsyncDispatcher, RequestDispatcher 
 
         // Call the service() method for the allocated servlet instance
         try {
-            support.fireInstanceEvent(InstanceEvent.BEFORE_DISPATCH_EVENT,
-                                      servlet, request, response);
             // for includes/forwards
             if ((servlet != null) && (filterChain != null)) {
                filterChain.doFilter(request, response);
              }
             // Servlet Service Method is called by the FilterChain
-            support.fireInstanceEvent(InstanceEvent.AFTER_DISPATCH_EVENT,
-                                      servlet, request, response);
         } catch (ClientAbortException e) {
-            support.fireInstanceEvent(InstanceEvent.AFTER_DISPATCH_EVENT,
-                                      servlet, request, response);
             ioException = e;
         } catch (IOException e) {
-            support.fireInstanceEvent(InstanceEvent.AFTER_DISPATCH_EVENT,
-                                      servlet, request, response);
             wrapper.getLogger().error(sm.getString("applicationDispatcher.serviceException",
                              wrapper.getName()), e);
             ioException = e;
         } catch (UnavailableException e) {
-            support.fireInstanceEvent(InstanceEvent.AFTER_DISPATCH_EVENT,
-                                      servlet, request, response);
             wrapper.getLogger().error(sm.getString("applicationDispatcher.serviceException",
                              wrapper.getName()), e);
             servletException = e;
             wrapper.unavailable(e);
         } catch (ServletException e) {
-            support.fireInstanceEvent(InstanceEvent.AFTER_DISPATCH_EVENT,
-                                      servlet, request, response);
             Throwable rootCause = StandardWrapper.getRootCause(e);
             if (!(rootCause instanceof ClientAbortException)) {
                 wrapper.getLogger().error(sm.getString("applicationDispatcher.serviceException",
@@ -749,8 +745,6 @@ final class ApplicationDispatcher implements AsyncDispatcher, RequestDispatcher 
             }
             servletException = e;
         } catch (RuntimeException e) {
-            support.fireInstanceEvent(InstanceEvent.AFTER_DISPATCH_EVENT,
-                                      servlet, request, response);
             wrapper.getLogger().error(sm.getString("applicationDispatcher.serviceException",
                              wrapper.getName()), e);
             runtimeException = e;

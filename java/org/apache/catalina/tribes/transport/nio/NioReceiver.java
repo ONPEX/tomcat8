@@ -33,7 +33,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.catalina.tribes.group.GroupChannel;
 import org.apache.catalina.tribes.io.ObjectReader;
 import org.apache.catalina.tribes.transport.AbstractRxTask;
 import org.apache.catalina.tribes.transport.ReceiverBase;
@@ -50,8 +49,7 @@ public class NioReceiver extends ReceiverBase implements Runnable {
     /**
      * The string manager for this package.
      */
-    protected static final StringManager sm =
-            StringManager.getManager(NioReceiver.class.getPackage().getName());
+    protected static final StringManager sm = StringManager.getManager(NioReceiver.class);
 
     private volatile boolean running = false;
 
@@ -91,10 +89,7 @@ public class NioReceiver extends ReceiverBase implements Runnable {
             getBind();
             bind();
             String channelName = "";
-            if (getChannel() instanceof GroupChannel
-                    && ((GroupChannel)getChannel()).getName() != null) {
-                channelName = "[" + ((GroupChannel)getChannel()).getName() + "]";
-            }
+            if (getChannel().getName() != null) channelName = "[" + getChannel().getName() + "]";
             Thread t = new Thread(this, "NioReceiver" + channelName);
             t.setDaemon(true);
             t.start();
@@ -122,12 +117,7 @@ public class NioReceiver extends ReceiverBase implements Runnable {
         // Get the associated ServerSocket to bind it with
         ServerSocket serverSocket = serverChannel.socket();
         // create a new Selector for use below
-        synchronized (Selector.class) {
-            // Selector.open() isn't thread safe
-            // http://bugs.sun.com/view_bug.do?bug_id=6427854
-            // Affects 1.6.0_29, fixed in 1.7.0_01
-            this.selector.set(Selector.open());
-        }
+        this.selector.set(Selector.open());
         // set the port the server channel will listen to
         //serverSocket.bind(new InetSocketAddress(getBind(), getTcpListenPort()));
         bind(serverSocket,getPort(),getAutoBind());
@@ -248,10 +238,9 @@ public class NioReceiver extends ReceiverBase implements Runnable {
 
 
     /**
-     * get data from channel and store in byte array
+     * Get data from channel and store in byte array
      * send it to cluster
-     * @throws IOException
-     * @throws java.nio.channels.ClosedChannelException
+     * @throws IOException IO error
      */
     protected void listen() throws Exception {
         if (doListen()) {
@@ -409,6 +398,11 @@ public class NioReceiver extends ReceiverBase implements Runnable {
     /**
      * Register the given channel with the given selector for
      * the given operations of interest
+     * @param selector The selector to use
+     * @param channel The channel
+     * @param ops The operations to register
+     * @param attach Attachment object
+     * @throws Exception IO error with channel
      */
     protected void registerChannel(Selector selector,
                                    SelectableChannel channel,
@@ -445,6 +439,7 @@ public class NioReceiver extends ReceiverBase implements Runnable {
      *  channel returns an EOF condition, it is closed here, which
      *  automatically invalidates the associated key.  The selector
      *  will then de-register the channel on the next select call.
+     * @throws Exception IO error with channel
      */
     protected void readDataFromSocket(SelectionKey key) throws Exception {
         NioReplicationTask task = (NioReplicationTask) getTaskPool().getRxTask();

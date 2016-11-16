@@ -57,8 +57,6 @@ public class TestWsPingPongMessages extends WebSocketBaseTest {
         WebSocketContainer wsContainer = ContainerProvider
                 .getWebSocketContainer();
 
-        tomcat.start();
-
         Session wsSession = wsContainer.connectToServer(
                 TesterProgrammaticEndpoint.class, ClientEndpointConfig.Builder
                         .create().build(), new URI("ws://localhost:"

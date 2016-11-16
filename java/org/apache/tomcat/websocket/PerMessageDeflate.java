@@ -32,7 +32,7 @@ import org.apache.tomcat.util.res.StringManager;
 
 public class PerMessageDeflate implements Transformation {
 
-    private static final StringManager sm = StringManager.getManager(Constants.PACKAGE_NAME);
+    private static final StringManager sm = StringManager.getManager(PerMessageDeflate.class);
 
     private static final String SERVER_NO_CONTEXT_TAKEOVER = "server_no_context_takeover";
     private static final String CLIENT_NO_CONTEXT_TAKEOVER = "client_no_context_takeover";
@@ -367,13 +367,14 @@ public class PerMessageDeflate implements Transformation {
                     boolean fin = uncompressedPart.isFin();
                     boolean full = compressedPayload.limit() == compressedPayload.capacity();
                     boolean needsInput = deflater.needsInput();
+                    long blockingWriteTimeoutExpiry = uncompressedPart.getBlockingWriteTimeoutExpiry();
 
                     if (fin && !full && needsInput) {
                         // End of compressed message. Drop EOM bytes and output.
                         compressedPayload.limit(compressedPayload.limit() - EOM_BYTES.length);
                         compressedPart = new MessagePart(true, getRsv(uncompressedPart),
                                 opCode, compressedPayload, uncompressedIntermediateHandler,
-                                uncompressedIntermediateHandler);
+                                uncompressedIntermediateHandler, blockingWriteTimeoutExpiry);
                         deflateRequired = false;
                         startNewMessage();
                     } else if (full && !needsInput) {
@@ -381,13 +382,13 @@ public class PerMessageDeflate implements Transformation {
                         // Output and start new compressed part.
                         compressedPart = new MessagePart(false, getRsv(uncompressedPart),
                                 opCode, compressedPayload, uncompressedIntermediateHandler,
-                                uncompressedIntermediateHandler);
+                                uncompressedIntermediateHandler, blockingWriteTimeoutExpiry);
                     } else if (!fin && full && needsInput) {
                         // Write buffer full and input message not fully read.
                         // Output and get more data.
                         compressedPart = new MessagePart(false, getRsv(uncompressedPart),
                                 opCode, compressedPayload, uncompressedIntermediateHandler,
-                                uncompressedIntermediateHandler);
+                                uncompressedIntermediateHandler, blockingWriteTimeoutExpiry);
                         deflateRequired = false;
                     } else if (fin && full && needsInput) {
                         // Write buffer full. Input fully read. Deflater may be
@@ -403,7 +404,8 @@ public class PerMessageDeflate implements Transformation {
                             compressedPayload.limit(compressedPayload.limit() - EOM_BYTES.length + eomBufferWritten);
                             compressedPart = new MessagePart(true,
                                     getRsv(uncompressedPart), opCode, compressedPayload,
-                                    uncompressedIntermediateHandler, uncompressedIntermediateHandler);
+                                    uncompressedIntermediateHandler, uncompressedIntermediateHandler,
+                                    blockingWriteTimeoutExpiry);
                             deflateRequired = false;
                             startNewMessage();
                         } else {
@@ -412,7 +414,8 @@ public class PerMessageDeflate implements Transformation {
                             writeBuffer.put(EOM_BUFFER, 0, eomBufferWritten);
                             compressedPart = new MessagePart(false,
                                     getRsv(uncompressedPart), opCode, compressedPayload,
-                                    uncompressedIntermediateHandler, uncompressedIntermediateHandler);
+                                    uncompressedIntermediateHandler, uncompressedIntermediateHandler,
+                                    blockingWriteTimeoutExpiry);
                         }
                     } else {
                         throw new IllegalStateException("Should never happen");

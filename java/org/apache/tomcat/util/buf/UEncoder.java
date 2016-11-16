@@ -17,6 +17,7 @@
 package org.apache.tomcat.util.buf;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
 
 /**
@@ -55,37 +56,15 @@ public final class UEncoder {
     private ByteChunk bb=null;
     private CharChunk cb=null;
     private CharChunk output=null;
-    private final boolean readOnlySafeChars;
-
-    private final String ENCODING = "UTF8";
-
-    public UEncoder() {
-        this.safeChars = initialSafeChars();
-        readOnlySafeChars = false;
-    }
 
     /**
      * Create a UEncoder with an unmodifiable safe character set.
-     * <p>
-     * Calls to {@link UEncoder#addSafeCharacter(char) addSafeCharacter(char)}
-     * on instances created by this constructor will throw an
-     * {@link IllegalStateException}.
      *
-     * @param safeCharsSet
-     *            safe characters for this encoder
+     * @param safeCharsSet safe characters for this encoder
      */
     public UEncoder(SafeCharsSet safeCharsSet) {
         this.safeChars = safeCharsSet.getSafeChars();
-        readOnlySafeChars = true;
     }
-
-    public void addSafeCharacter( char c ) {
-        if (readOnlySafeChars) {
-            throw new IllegalStateException("UEncoders safeChararacters are read only");
-        }
-        safeChars.set( c );
-    }
-
 
    /**
     * URL Encode string, using a specified encoding.
@@ -93,6 +72,9 @@ public final class UEncoder {
     * @param s string to be encoded
     * @param start the beginning index, inclusive
     * @param end the ending index, exclusive
+    *
+    * @return A new CharChunk contained the URL encoded string
+    *
     * @throws IOException If an I/O error occurs
     */
    public CharChunk encodeURL(String s, int start, int end)
@@ -101,7 +83,7 @@ public final class UEncoder {
            bb = new ByteChunk(8); // small enough.
            cb = new CharChunk(2); // small enough.
            output = new CharChunk(64); // small enough.
-           c2b = new C2BConverter(ENCODING);
+           c2b = new C2BConverter(StandardCharsets.UTF_8);
        } else {
            bb.recycle();
            cb.recycle();

@@ -110,10 +110,12 @@ public class ReplicationTransmitter implements ChannelSender {
         getTransport().remove(member);
     }
 
+    @Override
     public Channel getChannel() {
         return channel;
     }
 
+    @Override
     public void setChannel(Channel channel) {
         this.channel = channel;
     }

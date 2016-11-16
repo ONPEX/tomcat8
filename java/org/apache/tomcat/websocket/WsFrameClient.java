@@ -32,7 +32,7 @@ public class WsFrameClient extends WsFrameBase {
 
     private final Log log = LogFactory.getLog(WsFrameClient.class);
     private static final StringManager sm =
-            StringManager.getManager(Constants.PACKAGE_NAME);
+            StringManager.getManager(WsFrameClient.class);
 
     private final AsyncChannelWrapper channel;
     private final CompletionHandler<Integer,Void> handler;
@@ -60,14 +60,20 @@ public class WsFrameClient extends WsFrameBase {
     private void processSocketRead() throws IOException {
 
         while (response.hasRemaining()) {
-            int remaining = response.remaining();
+            inputBuffer.mark();
+            inputBuffer.position(inputBuffer.limit()).limit(inputBuffer.capacity());
 
-            int toCopy = Math.min(remaining, inputBuffer.length - writePos);
+            int toCopy = Math.min(response.remaining(), inputBuffer.remaining());
 
             // Copy remaining bytes read in HTTP phase to input buffer used by
             // frame processing
-            response.get(inputBuffer, writePos, toCopy);
-            writePos += toCopy;
+
+            int orgLimit = response.limit();
+            response.limit(response.position() + toCopy);
+            inputBuffer.put(response);
+            response.limit(orgLimit);
+
+            inputBuffer.limit(inputBuffer.position()).reset();
 
             // Process the data we have
             processInputBuffer();
@@ -136,7 +142,7 @@ public class WsFrameClient extends WsFrameBase {
                 // continuing to send a message after the server sent a close
                 // control message.
                 if (isOpen()) {
-                    log.debug(sm.getString("wsFrameClient.ioe", e));
+                    log.debug(sm.getString("wsFrameClient.ioe"), e);
                     close(e);
                 }
             }

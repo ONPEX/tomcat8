@@ -26,8 +26,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.tomcat.util.net.SecureNio2Channel.ApplicationBufferHandler;
-
 /**
  * Base class for a SocketChannel wrapper used by the endpoint.
  * This way, logic for a SSL socket channel remains the same as for
@@ -35,40 +33,42 @@ import org.apache.tomcat.util.net.SecureNio2Channel.ApplicationBufferHandler;
  */
 public class Nio2Channel implements AsynchronousByteChannel {
 
-    protected static ByteBuffer emptyBuf = ByteBuffer.allocate(0);
+    protected static final ByteBuffer emptyBuf = ByteBuffer.allocate(0);
 
     protected AsynchronousSocketChannel sc = null;
-    protected SocketWrapper<Nio2Channel> socket = null;
-    protected ApplicationBufferHandler bufHandler;
+    protected SocketWrapperBase<Nio2Channel> socket = null;
+    protected final SocketBufferHandler bufHandler;
 
-    public Nio2Channel(ApplicationBufferHandler bufHandler) {
+    public Nio2Channel(SocketBufferHandler bufHandler) {
         this.bufHandler = bufHandler;
     }
 
     /**
-     * Reset the channel
+     * Reset the channel.
+     *
+     * @param channel The new async channel to associate with this NIO2 channel
+     * @param socket  The new socket to associate with this NIO2 channel
      *
      * @throws IOException If a problem was encountered resetting the channel
      */
-    public void reset(AsynchronousSocketChannel channel, SocketWrapper<Nio2Channel> socket)
+    public void reset(AsynchronousSocketChannel channel, SocketWrapperBase<Nio2Channel> socket)
             throws IOException {
         this.sc = channel;
         this.socket = socket;
-        bufHandler.getReadBuffer().clear();
-        bufHandler.getWriteBuffer().clear();
+        bufHandler.reset();
     }
 
-    public SocketWrapper<Nio2Channel> getSocket() {
+    /**
+     * Free the channel memory
+     */
+    public void free() {
+        bufHandler.free();
+    }
+
+    public SocketWrapperBase<Nio2Channel> getSocket() {
         return socket;
     }
 
-    public int getBufferSize() {
-        if ( bufHandler == null ) return 0;
-        int size = 0;
-        size += bufHandler.getReadBuffer()!=null?bufHandler.getReadBuffer().capacity():0;
-        size += bufHandler.getWriteBuffer()!=null?bufHandler.getWriteBuffer().capacity():0;
-        return size;
-    }
 
     /**
      * Closes this channel.
@@ -80,11 +80,20 @@ public class Nio2Channel implements AsynchronousByteChannel {
         sc.close();
     }
 
+
+    /**
+     * Close the connection.
+     *
+     * @param force Should the underlying socket be forcibly closed?
+     *
+     * @throws IOException If closing the secure channel fails.
+     */
     public void close(boolean force) throws IOException {
         if (isOpen() || force) {
             close();
         }
     }
+
 
     /**
      * Tells whether or not this channel is open.
@@ -96,7 +105,7 @@ public class Nio2Channel implements AsynchronousByteChannel {
         return sc.isOpen();
     }
 
-    public ApplicationBufferHandler getBufHandler() {
+    public SocketBufferHandler getBufHandler() {
         return bufHandler;
     }
 
@@ -117,7 +126,8 @@ public class Nio2Channel implements AsynchronousByteChannel {
      * implementation.
      *
      * @return Always returns zero
-     * @throws IOException
+     *
+     * @throws IOException Never for non-secure channel
      */
     public int handshake() throws IOException {
         return 0;
@@ -143,6 +153,12 @@ public class Nio2Channel implements AsynchronousByteChannel {
             long timeout, TimeUnit unit, A attachment,
             CompletionHandler<Integer, ? super A> handler) {
         sc.read(dst, timeout, unit, attachment, handler);
+    }
+
+    public <A> void read(ByteBuffer[] dsts,
+            int offset, int length, long timeout, TimeUnit unit,
+            A attachment, CompletionHandler<Long,? super A> handler) {
+        sc.read(dsts, offset, length, timeout, unit, attachment, handler);
     }
 
     @Override
@@ -197,4 +213,12 @@ public class Nio2Channel implements AsynchronousByteChannel {
         return DONE;
     }
 
+
+    private ApplicationBufferHandler appReadBufHandler;
+    public void setAppReadBufHandler(ApplicationBufferHandler handler) {
+        this.appReadBufHandler = handler;
+    }
+    protected ApplicationBufferHandler getAppReadBufHandler() {
+        return appReadBufHandler;
+    }
 }

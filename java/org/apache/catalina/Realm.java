@@ -223,4 +223,12 @@ public interface Realm {
      * @param listener The listener to remove
      */
     public void removePropertyChangeListener(PropertyChangeListener listener);
+
+
+    /**
+     * Return roles associated with given principal
+     * @param principal the {@link Principal} to get the roles for.
+     * @return principal roles
+     */
+    public String[] getRoles(Principal principal);
 }

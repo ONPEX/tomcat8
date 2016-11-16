@@ -49,6 +49,7 @@ import javax.websocket.WebSocketContainer;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.InstanceManager;
+import org.apache.tomcat.InstanceManagerBindings;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.res.StringManager;
 
@@ -182,6 +183,9 @@ public class WsSession implements Session {
         this.id = Long.toHexString(ids.getAndIncrement());
 
         InstanceManager instanceManager = webSocketContainer.getInstanceManager();
+        if (instanceManager == null) {
+            instanceManager = InstanceManagerBindings.get(applicationClassLoader);
+        }
         if (instanceManager != null) {
             try {
                 instanceManager.newInstance(localEndpoint);
@@ -377,7 +381,7 @@ public class WsSession implements Session {
 
     @Override
     public boolean isOpen() {
-        return state == State.OPEN || state == State.SENDING_CLOSED;
+        return state == State.OPEN;
     }
 
 
@@ -475,8 +479,6 @@ public class WsSession implements Session {
                 return;
             }
 
-            state = State.CLOSED_SENT;
-
             if (log.isDebugEnabled()) {
                 log.debug(sm.getString("wsSession.doClose", id));
             }
@@ -486,6 +488,8 @@ public class WsSession implements Session {
                 log.warn(sm.getString("wsSession.flushFailOnClose"), e);
                 fireEndpointOnError(e);
             }
+
+            state = State.OUTPUT_CLOSED;
 
             sendCloseMessage(closeReasonMessage);
             fireEndpointOnClose(closeReasonLocal);
@@ -518,9 +522,8 @@ public class WsSession implements Session {
                     fireEndpointOnError(e);
                 }
                 if (state == State.OPEN) {
-                    state = State.SENDING_CLOSED;
+                    state = State.OUTPUT_CLOSED;
                     sendCloseMessage(closeReason);
-                    state = State.CLOSED_SENT;
                     fireEndpointOnClose(closeReason);
                 }
                 state = State.CLOSED;
@@ -536,6 +539,9 @@ public class WsSession implements Session {
         // Fire the onClose event
         Throwable throwable = null;
         InstanceManager instanceManager = webSocketContainer.getInstanceManager();
+        if (instanceManager == null) {
+            instanceManager = InstanceManagerBindings.get(applicationClassLoader);
+        }
         Thread t = Thread.currentThread();
         ClassLoader cl = t.getContextClassLoader();
         t.setContextClassLoader(applicationClassLoader);
@@ -597,7 +603,7 @@ public class WsSession implements Session {
         }
         msg.flip();
         try {
-            wsRemoteEndpoint.startMessageBlock(Constants.OPCODE_CLOSE, msg, true);
+            wsRemoteEndpoint.sendMessageBlock(Constants.OPCODE_CLOSE, msg, true);
         } catch (IOException | WritePendingException e) {
             // Failed to send close message. Close the socket and let the caller
             // deal with the Exception
@@ -656,6 +662,7 @@ public class WsSession implements Session {
      * Make the session aware of a {@link FutureToSendHandler} that will need to
      * be forcibly closed if the session closes before the
      * {@link FutureToSendHandler} completes.
+     * @param f2sh The handler
      */
     protected void registerFuture(FutureToSendHandler f2sh) {
         boolean fail = false;
@@ -663,8 +670,7 @@ public class WsSession implements Session {
             // If the session has already been closed the any registered futures
             // will have been processed so the failure result for this future
             // needs to be set here.
-            if (isOpen() || f2sh.isCloseMessage()) {
-                // WebSocket session is open or this is the close message
+            if (state == State.OPEN) {
                 futures.put(f2sh, f2sh);
             } else if (f2sh.isDone()) {
                 // NO-OP. The future completed before the session closed so no
@@ -778,7 +784,10 @@ public class WsSession implements Session {
         }
 
         if (System.currentTimeMillis() - lastActive > timeout) {
-            String msg = sm.getString("wsSession.timeout");
+            String msg = sm.getString("wsSession.timeout", getId());
+            if (log.isDebugEnabled()) {
+                log.debug(msg);
+            }
             doClose(new CloseReason(CloseCodes.GOING_AWAY, msg),
                     new CloseReason(CloseCodes.CLOSED_ABNORMALLY, msg));
         }
@@ -797,8 +806,7 @@ public class WsSession implements Session {
 
     private static enum State {
         OPEN,
-        SENDING_CLOSED,
-        CLOSED_SENT,
+        OUTPUT_CLOSED,
         CLOSED
     }
 }

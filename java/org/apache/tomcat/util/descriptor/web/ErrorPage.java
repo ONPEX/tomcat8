@@ -57,7 +57,7 @@ public class ErrorPage implements Serializable {
 
 
     /**
-     * Return the error code.
+     * @return the error code.
      */
     public int getErrorCode() {
 
@@ -94,7 +94,7 @@ public class ErrorPage implements Serializable {
 
 
     /**
-     * Return the exception type.
+     * @return the exception type.
      */
     public String getExceptionType() {
 
@@ -116,7 +116,7 @@ public class ErrorPage implements Serializable {
 
 
     /**
-     * Return the location.
+     * @return the location.
      */
     public String getLocation() {
 

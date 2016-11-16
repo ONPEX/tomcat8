@@ -48,9 +48,8 @@ import java.util.ResourceBundle;
  * cache pages that use cookies created with this class. This class does not
  * support the cache control defined with HTTP 1.1.
  * <p>
- * This class supports both the Version 0 (by Netscape) and Version 1 (by RFC
- * 2109) cookie specifications. By default, cookies are created using Version 0
- * to ensure the best interoperability.
+ * This class supports both the RFC 2109 and the RFC 6265 specifications.
+ * By default, cookies are created using RFC 6265.
  */
 public class Cookie implements Cloneable, Serializable {
 
@@ -68,7 +67,7 @@ public class Cookie implements Cloneable, Serializable {
             validation = new RFC2109Validator();
         }
         else {
-            validation = new NetscapeValidator();
+            validation = new RFC6265Validator();
         }
     }
 
@@ -420,23 +419,16 @@ class CookieNameValidator {
     }
 }
 
-class NetscapeValidator extends CookieNameValidator {
-    // the Netscape specification describes NAME=VALUE as
-    // "a sequence of characters excluding semi-colon, comma and white space"
-    // we also exclude the '=' character that separates NAME from VALUE
-    private static final String NETSCAPE_SEPARATORS = ",; " + "=";
-
-    NetscapeValidator() {
-        super(NETSCAPE_SEPARATORS);
-    }
-}
-
 class RFC6265Validator extends CookieNameValidator {
     private static final String RFC2616_SEPARATORS = "()<>@,;:\\\"/[]?={} \t";
 
     RFC6265Validator() {
         super(RFC2616_SEPARATORS);
+    }
+}
 
+class RFC2109Validator extends RFC6265Validator {
+    RFC2109Validator() {
         // special treatment to allow for FWD_SLASH_IS_SEPARATOR property
         boolean allowSlash;
         String prop = System.getProperty("org.apache.tomcat.util.http.ServerCookie.FWD_SLASH_IS_SEPARATOR");
@@ -448,11 +440,6 @@ class RFC6265Validator extends CookieNameValidator {
         if (allowSlash) {
             allowed.set('/');
         }
-    }
-}
-
-class RFC2109Validator extends RFC6265Validator {
-    RFC2109Validator() {
     }
 
     @Override

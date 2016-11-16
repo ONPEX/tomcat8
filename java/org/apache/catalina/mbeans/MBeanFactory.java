@@ -44,6 +44,8 @@ import org.apache.catalina.realm.UserDatabaseRealm;
 import org.apache.catalina.session.StandardManager;
 import org.apache.catalina.startup.ContextConfig;
 import org.apache.catalina.startup.HostConfig;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.res.StringManager;
 
 
@@ -52,11 +54,9 @@ import org.apache.tomcat.util.res.StringManager;
  */
 public class MBeanFactory {
 
-    private static final org.apache.juli.logging.Log log =
-        org.apache.juli.logging.LogFactory.getLog(MBeanFactory.class);
+    private static final Log log = LogFactory.getLog(MBeanFactory.class);
 
-    protected static final StringManager sm =
-            StringManager.getManager(Constants.Package);
+    protected static final StringManager sm = StringManager.getManager(MBeanFactory.class);
 
     /**
      * The <code>MBeanServer</code> for this application.
@@ -107,7 +107,6 @@ public class MBeanFactory {
         String type = pname.getKeyProperty("type");
         String j2eeType = pname.getKeyProperty("j2eeType");
         Service service = getService(pname);
-        @SuppressWarnings("deprecation")
         StandardEngine engine = (StandardEngine) service.getContainer();
         if ((j2eeType!=null) && (j2eeType.equals("WebModule"))) {
             String name = pname.getKeyProperty("name");
@@ -143,7 +142,6 @@ public class MBeanFactory {
         String hostName = oname.getKeyProperty("host");
         String path = oname.getKeyProperty("path");
         Service service = getService(oname);
-        @SuppressWarnings("deprecation")
         Container engine = service.getContainer();
         if (hostName == null) {
             // child's container is Engine
@@ -490,8 +488,7 @@ public class MBeanFactory {
         } else {
             log.warn("Deployer not found for "+pname.getKeyProperty("host"));
             Service service = getService(pname);
-            @SuppressWarnings("deprecation")
-            Engine engine = (Engine) service.getContainer();
+            Engine engine = service.getContainer();
             Host host = (Host) engine.findChild(pname.getKeyProperty("host"));
             host.addChild(context);
         }
@@ -540,8 +537,7 @@ public class MBeanFactory {
         // Add the new instance to its parent component
         ObjectName pname = new ObjectName(parent);
         Service service = getService(pname);
-        @SuppressWarnings("deprecation")
-        Engine engine = (Engine) service.getContainer();
+        Engine engine = service.getContainer();
         engine.addChild(host);
 
         // Return the corresponding MBean name
@@ -769,7 +765,7 @@ public class MBeanFactory {
         String domain = oname.getDomain();
         StandardService service = (StandardService) getService(oname);
 
-        Engine engine = (Engine) service.getContainer();
+        Engine engine = service.getContainer();
         String name = oname.getKeyProperty("name");
         name = name.substring(2);
         int i = name.indexOf('/');
@@ -819,8 +815,7 @@ public class MBeanFactory {
         ObjectName oname = new ObjectName(name);
         String hostName = oname.getKeyProperty("host");
         Service service = getService(oname);
-        @SuppressWarnings("deprecation")
-        Engine engine = (Engine) service.getContainer();
+        Engine engine = service.getContainer();
         Host host = (Host) engine.findChild(hostName);
 
         // Remove this component from its parent component

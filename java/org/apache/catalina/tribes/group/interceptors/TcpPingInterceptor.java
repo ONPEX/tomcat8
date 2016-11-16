@@ -26,7 +26,6 @@ import org.apache.catalina.tribes.ChannelInterceptor;
 import org.apache.catalina.tribes.ChannelMessage;
 import org.apache.catalina.tribes.Member;
 import org.apache.catalina.tribes.group.ChannelInterceptorBase;
-import org.apache.catalina.tribes.group.GroupChannel;
 import org.apache.catalina.tribes.io.ChannelData;
 import org.apache.catalina.tribes.io.XByteBuffer;
 import org.apache.catalina.tribes.util.StringManager;
@@ -44,8 +43,7 @@ import org.apache.juli.logging.LogFactory;
 public class TcpPingInterceptor extends ChannelInterceptorBase {
 
     private static final Log log = LogFactory.getLog(TcpPingInterceptor.class);
-    protected static final StringManager sm =
-            StringManager.getManager(TcpPingInterceptor.class.getPackage().getName());
+    protected static final StringManager sm = StringManager.getManager(TcpPingInterceptor.class);
 
     protected static final byte[] TCP_PING_DATA = new byte[] {
         79, -89, 115, 72, 121, -33, 67, -55, -97, 111, -119, -128, -95, 91, 7, 20,
@@ -72,10 +70,7 @@ public class TcpPingInterceptor extends ChannelInterceptorBase {
             thread = new PingThread();
             thread.setDaemon(true);
             String channelName = "";
-            if (getChannel() instanceof GroupChannel
-                    && ((GroupChannel)getChannel()).getName() != null) {
-                channelName = "[" + ((GroupChannel)getChannel()).getName() + "]";
-            }
+            if (getChannel().getName() != null) channelName = "[" + getChannel().getName() + "]";
             thread.setName("TcpPingInterceptor.PingThread" + channelName +"-"+cnt.addAndGet(1));
             thread.start();
         }

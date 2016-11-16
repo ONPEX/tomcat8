@@ -20,21 +20,19 @@ import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
-import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLEngine;
-
 import org.apache.juli.logging.Log;
+import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.IntrospectionUtils;
-import org.apache.tomcat.util.compat.JreCompat;
+import org.apache.tomcat.util.collections.SynchronizedStack;
 import org.apache.tomcat.util.net.AbstractEndpoint.Acceptor.AcceptorState;
 import org.apache.tomcat.util.res.StringManager;
 import org.apache.tomcat.util.threads.LimitLatch;
@@ -42,7 +40,9 @@ import org.apache.tomcat.util.threads.ResizableExecutor;
 import org.apache.tomcat.util.threads.TaskQueue;
 import org.apache.tomcat.util.threads.TaskThreadFactory;
 import org.apache.tomcat.util.threads.ThreadPoolExecutor;
+
 /**
+ * @param <S> The type for the sockets managed by this endpoint.
  *
  * @author Mladen Turk
  * @author Remy Maucherat
@@ -51,11 +51,10 @@ public abstract class AbstractEndpoint<S> {
 
     // -------------------------------------------------------------- Constants
 
-    protected static final String DEFAULT_CIPHERS = "HIGH:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!kRSA";
+    protected static final StringManager sm = StringManager.getManager(AbstractEndpoint.class);
 
-    protected static final StringManager sm = StringManager.getManager("org.apache.tomcat.util.net.res");
+    public static interface Handler<S> {
 
-    public static interface Handler {
         /**
          * Different types of socket states to react upon.
          */
@@ -67,9 +66,48 @@ public abstract class AbstractEndpoint<S> {
 
 
         /**
+         * Process the provided socket with the given current status.
+         *
+         * @param socket The socket to process
+         * @param status The current socket status
+         *
+         * @return The state of the socket after processing
+         */
+        public SocketState process(SocketWrapperBase<S> socket,
+                SocketEvent status);
+
+
+        /**
          * Obtain the GlobalRequestProcessor associated with the handler.
+         *
+         * @return the GlobalRequestProcessor
          */
         public Object getGlobal();
+
+
+        /**
+         * Obtain the currently open sockets.
+         *
+         * @return The sockets for which the handler is tracking a currently
+         *         open connection
+         */
+        public Set<S> getOpenSockets();
+
+        /**
+         * Release any resources associated with the given SocketWrapper.
+         *
+         * @param socketWrapper The socketWrapper to release resources for
+         */
+        public void release(SocketWrapperBase<S> socketWrapper);
+
+
+        /**
+         * Inform the handler that the endpoint has stopped accepting any new
+         * connections. Typically, the endpoint will be stopped shortly
+         * afterwards but it is possible that the endpoint will be resumed so
+         * the handler should not assume that a stop will follow.
+         */
+        public void pause();
 
 
         /**
@@ -106,58 +144,7 @@ public abstract class AbstractEndpoint<S> {
     private static final int MAX_ERROR_DELAY = 1600;
 
 
-    /**
-     * Async timeout thread
-     */
-    protected class AsyncTimeout implements Runnable {
-
-        private volatile boolean asyncTimeoutRunning = true;
-
-        /**
-         * The background thread that checks async requests and fires the
-         * timeout if there has been no activity.
-         */
-        @Override
-        public void run() {
-
-            // Loop until we receive a shutdown command
-            while (asyncTimeoutRunning) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    // Ignore
-                }
-                long now = System.currentTimeMillis();
-                for (SocketWrapper<S> socket : waitingRequests) {
-                    long access = socket.getLastAccess();
-                    if (socket.getTimeout() > 0 && (now - access) > socket.getTimeout()) {
-                        // Prevent multiple timeouts
-                        socket.setTimeout(-1);
-                        processSocket(socket, SocketStatus.TIMEOUT, true);
-                    }
-                }
-
-                // Loop if endpoint is paused
-                while (paused && asyncTimeoutRunning) {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        // Ignore
-                    }
-                }
-
-            }
-        }
-
-
-        protected void stop() {
-            asyncTimeoutRunning = false;
-        }
-    }
-
-
     // ----------------------------------------------------------------- Fields
-
 
     /**
      * Running state of the endpoint.
@@ -194,8 +181,105 @@ public abstract class AbstractEndpoint<S> {
      */
     protected Acceptor[] acceptors;
 
+    /**
+     * Cache for SocketProcessor objects
+     */
+    protected SynchronizedStack<SocketProcessorBase<S>> processorCache;
 
     // ----------------------------------------------------------------- Properties
+
+    private String defaultSSLHostConfigName = SSLHostConfig.DEFAULT_SSL_HOST_NAME;
+    public String getDefaultSSLHostConfigName() {
+        return defaultSSLHostConfigName;
+    }
+    public void setDefaultSSLHostConfigName(String defaultSSLHostConfigName) {
+        this.defaultSSLHostConfigName = defaultSSLHostConfigName;
+    }
+
+
+    protected ConcurrentMap<String,SSLHostConfig> sslHostConfigs = new ConcurrentHashMap<>();
+    public void addSslHostConfig(SSLHostConfig sslHostConfig) throws IllegalArgumentException {
+        String key = sslHostConfig.getHostName();
+        if (key == null || key.length() == 0) {
+            throw new IllegalArgumentException(sm.getString("endpoint.noSslHostName"));
+        }
+        sslHostConfig.setConfigType(getSslConfigType());
+        if (bindState != BindState.UNBOUND) {
+            try {
+                createSSLContext(sslHostConfig);
+            } catch (Exception e) {
+                throw new IllegalArgumentException(e);
+            }
+        }
+        SSLHostConfig duplicate = sslHostConfigs.putIfAbsent(key, sslHostConfig);
+        if (duplicate != null) {
+            releaseSSLContext(sslHostConfig);
+            throw new IllegalArgumentException(sm.getString("endpoint.duplicateSslHostName", key));
+        }
+    }
+    public SSLHostConfig[] findSslHostConfigs() {
+        return sslHostConfigs.values().toArray(new SSLHostConfig[0]);
+    }
+
+    protected abstract SSLHostConfig.Type getSslConfigType();
+
+    /**
+     * Create the SSLContextfor the the given SSLHostConfig.
+     *
+     * @param sslHostConfig The SSLHostConfig for which the SSLContext should be
+     *                      created
+     * @throws Exception If the SSLContext cannot be created for the given
+     *                   SSLHostConfig
+     */
+    protected abstract void createSSLContext(SSLHostConfig sslHostConfig) throws Exception;
+
+    /**
+     * Release the SSLContext, if any, associated with the SSLHostConfig.
+     *
+     * @param sslHostConfig The SSLHostConfig for which the SSLContext should be
+     *                      released
+     */
+    protected abstract void releaseSSLContext(SSLHostConfig sslHostConfig);
+
+    protected SSLHostConfig getSSLHostConfig(String sniHostName) {
+        SSLHostConfig result = null;
+
+        if (sniHostName != null) {
+            // First choice - direct match
+            result = sslHostConfigs.get(sniHostName);
+            if (result != null) {
+                return result;
+            }
+            // Second choice, wildcard match
+            int indexOfDot = sniHostName.indexOf('.');
+            if (indexOfDot > -1) {
+                result = sslHostConfigs.get("*" + sniHostName.substring(indexOfDot));
+            }
+        }
+
+        // Fall-back. Use the default
+        if (result == null) {
+            result = sslHostConfigs.get(getDefaultSSLHostConfigName());
+        }
+        if (result == null) {
+            // Should never happen.
+            throw new IllegalStateException();
+        }
+        return result;
+    }
+
+
+    /**
+     * Has the user requested that send file be used where possible?
+     */
+    private boolean useSendfile = true;
+    public boolean getUseSendfile() {
+        return useSendfile;
+    }
+    public void setUseSendfile(boolean useSendfile) {
+        this.useSendfile = useSendfile;
+    }
+
 
     /**
      * Time to wait for the internal executor (if used) to terminate when the
@@ -216,7 +300,7 @@ public abstract class AbstractEndpoint<S> {
     /**
      * Acceptor thread count.
      */
-    protected int acceptorThreadCount = 0;
+    protected int acceptorThreadCount = 1;
 
     public void setAcceptorThreadCount(int acceptorThreadCount) {
         this.acceptorThreadCount = acceptorThreadCount;
@@ -319,7 +403,7 @@ public abstract class AbstractEndpoint<S> {
     private boolean bindOnInit = true;
     public boolean getBindOnInit() { return bindOnInit; }
     public void setBindOnInit(boolean b) { this.bindOnInit = b; }
-    private BindState bindState = BindState.UNBOUND;
+    private volatile BindState bindState = BindState.UNBOUND;
 
     /**
      * Keepalive timeout, if not set the soTimeout is used.
@@ -339,6 +423,9 @@ public abstract class AbstractEndpoint<S> {
 
     /**
      * Socket TCP no delay.
+     *
+     * @return The current TCP no delay setting for sockets created by this
+     *         endpoint
      */
     public boolean getTcpNoDelay() { return socketProperties.getTcpNoDelay();}
     public void setTcpNoDelay(boolean tcpNoDelay) { socketProperties.setTcpNoDelay(tcpNoDelay); }
@@ -346,6 +433,9 @@ public abstract class AbstractEndpoint<S> {
 
     /**
      * Socket linger.
+     *
+     * @return The current socket linger time for sockets created by this
+     *         endpoint
      */
     public int getSoLinger() { return socketProperties.getSoLingerTime(); }
     public void setSoLinger(int soLinger) {
@@ -356,6 +446,8 @@ public abstract class AbstractEndpoint<S> {
 
     /**
      * Socket timeout.
+     *
+     * @return The current socket timeout for sockets created by this endpoint
      */
     public int getSoTimeout() { return socketProperties.getSoTimeout(); }
     public void setSoTimeout(int soTimeout) { socketProperties.setSoTimeout(soTimeout); }
@@ -413,9 +505,6 @@ public abstract class AbstractEndpoint<S> {
         } else {
             return -1;
         }
-    }
-    protected int getMaxThreadsInternal() {
-        return maxThreads;
     }
 
 
@@ -479,12 +568,27 @@ public abstract class AbstractEndpoint<S> {
     protected abstract boolean getDeferAccept();
 
 
+    protected final List<String> negotiableProtocols = new ArrayList<>();
+    public void addNegotiatedProtocol(String negotiableProtocol) {
+        negotiableProtocols.add(negotiableProtocol);
+    }
+    public boolean hasNegotiableProtocols() {
+        return (negotiableProtocols.size() > 0);
+    }
+
+
+    /**
+     * Handling of accepted sockets.
+     */
+    private Handler<S> handler = null;
+    public void setHandler(Handler<S> handler ) { this.handler = handler; }
+    public Handler<S> getHandler() { return handler; }
+
+
     /**
      * Attributes provide a way for configuration to be passed to sub-components
      * without the {@link org.apache.coyote.ProtocolHandler} being aware of the
-     * properties available on those sub-components. One example of such a
-     * sub-component is the
-     * {@link org.apache.tomcat.util.net.ServerSocketFactory}.
+     * properties available on those sub-components.
      */
     protected HashMap<String, Object> attributes = new HashMap<>();
 
@@ -494,6 +598,9 @@ public abstract class AbstractEndpoint<S> {
      * {@link org.apache.coyote.ProtocolHandler} needs to be made available to
      * sub-components. The specific setter will call this method to populate the
      * attributes.
+     *
+     * @param name  Name of property to set
+     * @param value The value to set the property to
      */
     public void setAttribute(String name, Object value) {
         if (getLog().isTraceEnabled()) {
@@ -503,6 +610,11 @@ public abstract class AbstractEndpoint<S> {
     }
     /**
      * Used by sub-components to retrieve configuration information.
+     *
+     * @param key The name of the property for which the value should be
+     *            retrieved
+     *
+     * @return The value of the specified property
      */
     public Object getAttribute(String key) {
         Object value = attributes.get(key);
@@ -654,7 +766,6 @@ public abstract class AbstractEndpoint<S> {
                 if (getSocketProperties().getUnlockTimeout() > utmo)
                     utmo = getSocketProperties().getUnlockTimeout();
                 s.setSoTimeout(stmo);
-                // TODO Consider hard-coding to s.setSoLinger(true,0)
                 s.setSoLinger(getSocketProperties().getSoLingerOn(),getSocketProperties().getSoLingerTime());
                 if (getLog().isDebugEnabled()) {
                     getLog().debug("About to unlock socket for:"+saddr);
@@ -703,42 +814,47 @@ public abstract class AbstractEndpoint<S> {
      * selected the socket.
      *
      * @param socketWrapper The socket wrapper to process
-     * @param socketStatus  The input status to the processing
+     * @param event         The socket event to be processed
      * @param dispatch      Should the processing be performed on a new
      *                          container thread
+     *
+     * @return if processing was triggered successfully
      */
-    public abstract void processSocket(SocketWrapper<S> socketWrapper,
-            SocketStatus socketStatus, boolean dispatch);
-
-
-    public void executeNonBlockingDispatches(SocketWrapper<S> socketWrapper) {
-        /*
-         * This method is called when non-blocking IO is initiated by defining
-         * a read and/or write listener in a non-container thread. It is called
-         * once the non-container thread completes so that the first calls to
-         * onWritePossible() and/or onDataAvailable() as appropriate are made by
-         * the container.
-         *
-         * Processing the dispatches requires (for BIO and APR/native at least)
-         * that the socket has been added to the waitingRequests queue. This may
-         * not have occurred by the time that the non-container thread completes
-         * triggering the call to this method. Therefore, the coded syncs on the
-         * SocketWrapper as the container thread that initiated this
-         * non-container thread holds a lock on the SocketWrapper. The container
-         * thread will add the socket to the waitingRequests queue before
-         * releasing the lock on the socketWrapper. Therefore, by obtaining the
-         * lock on socketWrapper before processing the dispatches, we can be
-         * sure that the socket has been added to the waitingRequests queue.
-         */
-        synchronized (socketWrapper) {
-            Iterator<DispatchType> dispatches = socketWrapper.getIteratorAndClearDispatches();
-
-            while (dispatches != null && dispatches.hasNext()) {
-                DispatchType dispatchType = dispatches.next();
-                processSocket(socketWrapper, dispatchType.getSocketStatus(), false);
+    public boolean processSocket(SocketWrapperBase<S> socketWrapper,
+            SocketEvent event, boolean dispatch) {
+        try {
+            if (socketWrapper == null) {
+                return false;
             }
+            SocketProcessorBase<S> sc = processorCache.pop();
+            if (sc == null) {
+                sc = createSocketProcessor(socketWrapper, event);
+            } else {
+                sc.reset(socketWrapper, event);
+            }
+            Executor executor = getExecutor();
+            if (dispatch && executor != null) {
+                executor.execute(sc);
+            } else {
+                sc.run();
+            }
+        } catch (RejectedExecutionException ree) {
+            getLog().warn(sm.getString("endpoint.executor.fail", socketWrapper) , ree);
+            return false;
+        } catch (Throwable t) {
+            ExceptionUtils.handleThrowable(t);
+            // This means we got an OOM or similar creating a thread, or that
+            // the pool and its queue are full
+            getLog().error(sm.getString("endpoint.process.fail"), t);
+            return false;
         }
+        return true;
     }
+
+
+    protected abstract SocketProcessorBase<S> createSocketProcessor(
+            SocketWrapperBase<S> socketWrapper, SocketEvent event);
+
 
     // ------------------------------------------------------- Lifecycle methods
 
@@ -754,21 +870,13 @@ public abstract class AbstractEndpoint<S> {
     public abstract void startInternal() throws Exception;
     public abstract void stopInternal() throws Exception;
 
-    public final void init() throws Exception {
-        testServerCipherSuitesOrderSupport();
+    public void init() throws Exception {
         if (bindOnInit) {
             bind();
             bindState = BindState.BOUND_ON_INIT;
         }
     }
 
-    protected void testServerCipherSuitesOrderSupport() {
-        // Only test this feature if the user explicitly requested its use.
-        if(!"".equals(getUseServerCipherSuitesOrder().trim()) && !JreCompat.isJre8Available()) {
-            throw new UnsupportedOperationException(
-                    sm.getString("endpoint.jsse.cannotHonorServerCipherOrder"));
-        }
-    }
 
     public final void start() throws Exception {
         if (bindState == BindState.UNBOUND) {
@@ -796,6 +904,7 @@ public abstract class AbstractEndpoint<S> {
 
     /**
      * Hook to allow Endpoints to provide a specific Acceptor implementation.
+     * @return the acceptor
      */
     protected abstract Acceptor createAcceptor();
 
@@ -807,6 +916,7 @@ public abstract class AbstractEndpoint<S> {
         if (running && !paused) {
             paused = true;
             unlockAccept();
+            getHandler().pause();
         }
     }
 
@@ -836,13 +946,6 @@ public abstract class AbstractEndpoint<S> {
     }
 
     protected abstract Log getLog();
-    // Flags to indicate optional feature support
-    // Some of these are always hard-coded, some are hard-coded to false (i.e.
-    // the endpoint does not support them) and some are configurable.
-    public abstract boolean getUseSendfile();
-    public abstract boolean getUseComet();
-    public abstract boolean getUseCometTimeout();
-    public abstract boolean getUsePolling();
 
     protected LimitLatch initializeConnectionLatch() {
         if (maxConnections==-1) return null;
@@ -870,7 +973,7 @@ public abstract class AbstractEndpoint<S> {
         if (latch!=null) {
             long result = latch.countDown();
             if (result<0) {
-                getLog().warn("Incorrect connection count, multiple socket.close called on the same socket." );
+                getLog().warn(sm.getString("endpoint.warn.incorrectConnectionCount"));
             }
             return result;
         } else return -1;
@@ -905,182 +1008,6 @@ public abstract class AbstractEndpoint<S> {
         } else {
             return MAX_ERROR_DELAY;
         }
-
-    }
-
-    // --------------------  SSL related properties --------------------
-
-    private String algorithm = KeyManagerFactory.getDefaultAlgorithm();
-    public String getAlgorithm() { return algorithm;}
-    public void setAlgorithm(String s ) { this.algorithm = s;}
-
-    private String clientAuth = "false";
-    public String getClientAuth() { return clientAuth;}
-    public void setClientAuth(String s ) { this.clientAuth = s;}
-
-    private String keystoreFile = System.getProperty("user.home")+"/.keystore";
-    public String getKeystoreFile() { return keystoreFile;}
-    public void setKeystoreFile(String s ) { keystoreFile = s; }
-
-    private String keystorePass = null;
-    public String getKeystorePass() { return keystorePass;}
-    public void setKeystorePass(String s ) { this.keystorePass = s;}
-
-    private String keystoreType = "JKS";
-    public String getKeystoreType() { return keystoreType;}
-    public void setKeystoreType(String s ) { this.keystoreType = s;}
-
-    private String keystoreProvider = null;
-    public String getKeystoreProvider() { return keystoreProvider;}
-    public void setKeystoreProvider(String s ) { this.keystoreProvider = s;}
-
-    private String sslProtocol = Constants.SSL_PROTO_TLS;
-    public String getSslProtocol() { return sslProtocol;}
-    public void setSslProtocol(String s) { sslProtocol = s;}
-
-    private String ciphers = DEFAULT_CIPHERS;
-    public String getCiphers() { return ciphers;}
-    public void setCiphers(String s) {
-        ciphers = s;
-    }
-    /**
-     * @return  The ciphers in use by this Endpoint
-     */
-    public abstract String[] getCiphersUsed();
-
-    private String useServerCipherSuitesOrder = "";
-    public String getUseServerCipherSuitesOrder() { return useServerCipherSuitesOrder;}
-    public void setUseServerCipherSuitesOrder(String s) { this.useServerCipherSuitesOrder = s;}
-
-    private String keyAlias = null;
-    public String getKeyAlias() { return keyAlias;}
-    public void setKeyAlias(String s ) { keyAlias = s;}
-
-    private String keyPass = null;
-    public String getKeyPass() { return keyPass;}
-    public void setKeyPass(String s ) { this.keyPass = s;}
-
-    private String truststoreFile = System.getProperty("javax.net.ssl.trustStore");
-    public String getTruststoreFile() {return truststoreFile;}
-    public void setTruststoreFile(String s) { truststoreFile = s; }
-
-    private String truststorePass =
-        System.getProperty("javax.net.ssl.trustStorePassword");
-    public String getTruststorePass() {return truststorePass;}
-    public void setTruststorePass(String truststorePass) {
-        this.truststorePass = truststorePass;
-    }
-
-    private String truststoreType =
-        System.getProperty("javax.net.ssl.trustStoreType");
-    public String getTruststoreType() {return truststoreType;}
-    public void setTruststoreType(String truststoreType) {
-        this.truststoreType = truststoreType;
-    }
-
-    private String truststoreProvider = null;
-    public String getTruststoreProvider() {return truststoreProvider;}
-    public void setTruststoreProvider(String truststoreProvider) {
-        this.truststoreProvider = truststoreProvider;
-    }
-
-    private String truststoreAlgorithm = null;
-    public String getTruststoreAlgorithm() {return truststoreAlgorithm;}
-    public void setTruststoreAlgorithm(String truststoreAlgorithm) {
-        this.truststoreAlgorithm = truststoreAlgorithm;
-    }
-
-    private String trustManagerClassName = null;
-    public String getTrustManagerClassName() {return trustManagerClassName;}
-    public void setTrustManagerClassName(String trustManagerClassName) {
-        this.trustManagerClassName = trustManagerClassName;
-    }
-
-    private String crlFile = null;
-    public String getCrlFile() {return crlFile;}
-    public void setCrlFile(String crlFile) {
-        this.crlFile = crlFile;
-    }
-
-    private String trustMaxCertLength = null;
-    public String getTrustMaxCertLength() {return trustMaxCertLength;}
-    public void setTrustMaxCertLength(String trustMaxCertLength) {
-        this.trustMaxCertLength = trustMaxCertLength;
-    }
-
-    private String sessionCacheSize = null;
-    public String getSessionCacheSize() { return sessionCacheSize;}
-    public void setSessionCacheSize(String s) { sessionCacheSize = s;}
-
-    private String sessionTimeout = "86400";
-    public String getSessionTimeout() { return sessionTimeout;}
-    public void setSessionTimeout(String s) { sessionTimeout = s;}
-
-    private String allowUnsafeLegacyRenegotiation = null;
-    public String getAllowUnsafeLegacyRenegotiation() {
-        return allowUnsafeLegacyRenegotiation;
-    }
-    public void setAllowUnsafeLegacyRenegotiation(String s) {
-        allowUnsafeLegacyRenegotiation = s;
-    }
-
-
-    private String[] sslEnabledProtocolsarr = new String[0];
-    public String[] getSslEnabledProtocolsArray() {
-        return this.sslEnabledProtocolsarr;
-    }
-    public void setSslEnabledProtocols(String s) {
-        if (s == null) {
-            this.sslEnabledProtocolsarr = new String[0];
-        } else {
-            ArrayList<String> sslEnabledProtocols = new ArrayList<>();
-            StringTokenizer t = new StringTokenizer(s,",");
-            while (t.hasMoreTokens()) {
-                String p = t.nextToken().trim();
-                if (p.length() > 0) {
-                    sslEnabledProtocols.add(p);
-                }
-            }
-            sslEnabledProtocolsarr = sslEnabledProtocols.toArray(
-                    new String[sslEnabledProtocols.size()]);
-        }
-    }
-
-
-    protected final Set<SocketWrapper<S>> waitingRequests = Collections
-            .newSetFromMap(new ConcurrentHashMap<SocketWrapper<S>, Boolean>());
-    public void removeWaitingRequest(SocketWrapper<S> socketWrapper) {
-        waitingRequests.remove(socketWrapper);
-    }
-
-
-    /**
-     * Configures SSLEngine to honor cipher suites ordering based upon
-     * endpoint configuration.
-     */
-    protected void configureUseServerCipherSuitesOrder(SSLEngine engine) {
-        String useServerCipherSuitesOrderStr = this
-                .getUseServerCipherSuitesOrder().trim();
-
-        // Only use this feature if the user explicitly requested its use.
-        if(!"".equals(useServerCipherSuitesOrderStr)) {
-            boolean useServerCipherSuitesOrder =
-                    ("true".equalsIgnoreCase(useServerCipherSuitesOrderStr)
-                            || "yes".equalsIgnoreCase(useServerCipherSuitesOrderStr));
-            JreCompat.getInstance().setUseServerCipherSuitesOrder(engine,
-                    useServerCipherSuitesOrder);
-        }
-    }
-
-    /**
-     * The async timeout thread.
-     */
-    private AsyncTimeout asyncTimeout = null;
-    public AsyncTimeout getAsyncTimeout() {
-        return asyncTimeout;
-    }
-    public void setAsyncTimeout(AsyncTimeout asyncTimeout) {
-        this.asyncTimeout = asyncTimeout;
     }
 }
 

@@ -161,7 +161,7 @@ public class DelegatingPreparedStatement extends DelegatingStatement
     public void setAsciiStream(final int parameterIndex, final InputStream x, final int length) throws SQLException
     { checkOpen(); try { ((PreparedStatement)getDelegate()).setAsciiStream(parameterIndex,x,length); } catch (final SQLException e) { handleException(e); } }
 
-    /** @deprecated */
+    /** @deprecated Use setAsciiStream(), setCharacterStream() or setNCharacterStream() */
     @Deprecated
     @Override
     public void setUnicodeStream(final int parameterIndex, final InputStream x, final int length) throws SQLException

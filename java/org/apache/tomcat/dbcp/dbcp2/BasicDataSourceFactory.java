@@ -177,7 +177,8 @@ public class BasicDataSourceFactory implements ObjectFactory {
         PROP_ENABLE_AUTOCOMMIT_ON_RETURN,
         PROP_DEFAULT_QUERYTIMEOUT,
         PROP_FASTFAIL_VALIDATION,
-        PROP_DISCONNECTION_SQL_CODES
+        PROP_DISCONNECTION_SQL_CODES,
+        PROP_JMX_NAME
     };
 
     /**
@@ -331,6 +332,7 @@ public class BasicDataSourceFactory implements ObjectFactory {
      * given properties.
      *
      * @param properties the datasource configuration properties
+     * @return the data source instance
      * @throws Exception if an error occurs creating the data source
      */
     public static BasicDataSource createDataSource(final Properties properties) throws Exception {

@@ -67,14 +67,15 @@ public class ManagerSF extends StoreFactoryBase {
      *
      * @param smanager
      *            Manager to be tested
+     * @return <code>true</code> if this is an instance of the default manager
      */
     protected boolean isDefaultManager(StandardManager smanager) {
 
         if (!"SESSIONS.ser".equals(smanager.getPathname())
                 || (smanager.getMaxActiveSessions() != -1)) {
-            return (false);
+            return false;
         }
-        return (true);
+        return true;
 
     }
 
@@ -83,7 +84,7 @@ public class ManagerSF extends StoreFactoryBase {
             StoreDescription parentDesc) throws Exception {
         if (aManager instanceof Manager) {
             Manager manager = (Manager) aManager;
-            // Store nested <SessionIdGenerator> element
+            // Store nested <SessionIdGenerator> element;
             SessionIdGenerator sessionIdGenerator = manager.getSessionIdGenerator();
             if (sessionIdGenerator != null) {
                 storeElement(aWriter, indent, sessionIdGenerator);

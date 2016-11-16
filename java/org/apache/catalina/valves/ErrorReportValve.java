@@ -287,6 +287,8 @@ public class ErrorReportValve extends ValveBase {
     /**
      * Print out a partial servlet stack trace (truncating at the last
      * occurrence of javax.servlet.).
+     * @param t The stack trace to process
+     * @return the stack trace relative to the application layer
      */
     protected String getPartialServletStackTrace(Throwable t) {
         StringBuilder trace = new StringBuilder();
@@ -313,7 +315,7 @@ public class ErrorReportValve extends ValveBase {
     /**
      * Enables/Disables full error reports
      *
-     * @param showReport
+     * @param showReport <code>true</code> to show full error data
      */
     public void setShowReport(boolean showReport) {
         this.showReport = showReport;
@@ -326,7 +328,7 @@ public class ErrorReportValve extends ValveBase {
     /**
      * Enables/Disables server info on error pages
      *
-     * @param showServerInfo
+     * @param showServerInfo <code>true</code> to show server info
      */
     public void setShowServerInfo(boolean showServerInfo) {
         this.showServerInfo = showServerInfo;

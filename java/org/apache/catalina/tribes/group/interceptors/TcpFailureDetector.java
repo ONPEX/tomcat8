@@ -61,9 +61,8 @@ import org.apache.juli.logging.LogFactory;
  */
 public class TcpFailureDetector extends ChannelInterceptorBase {
 
-    private static final Log log = LogFactory.getLog( TcpFailureDetector.class );
-    protected static final StringManager sm =
-            StringManager.getManager(TcpFailureDetector.class.getPackage().getName());
+    private static final Log log = LogFactory.getLog(TcpFailureDetector.class);
+    protected static final StringManager sm = StringManager.getManager(TcpFailureDetector.class);
 
     protected static final byte[] TCP_FAIL_DETECT = new byte[] {
         79, -89, 115, 72, 121, -126, 67, -55, -97, 111, -119, -128, -95, 91, 7, 20,
@@ -322,7 +321,7 @@ public class TcpFailureDetector extends ChannelInterceptorBase {
         return memberAlive(mbr,TCP_FAIL_DETECT,performSendTest,performReadTest,readTestTimeout,connectTimeout,getOptionFlag());
     }
 
-    protected static boolean memberAlive(Member mbr, byte[] msgData,
+    protected boolean memberAlive(Member mbr, byte[] msgData,
                                          boolean sendTest, boolean readTest,
                                          long readTimeout, long conTimeout,
                                          int optionFlag) {
@@ -336,7 +335,7 @@ public class TcpFailureDetector extends ChannelInterceptorBase {
             socket.connect(addr, (int) conTimeout);
             if ( sendTest ) {
                 ChannelData data = new ChannelData(true);
-                data.setAddress(mbr);
+                data.setAddress(getLocalMember(false));
                 data.setMessage(new XByteBuffer(msgData,false));
                 data.setTimestamp(System.currentTimeMillis());
                 int options = optionFlag | Channel.SEND_OPTIONS_BYTE_MESSAGE;

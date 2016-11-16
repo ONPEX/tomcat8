@@ -27,8 +27,7 @@ import org.apache.catalina.tribes.transport.PooledSender;
 import org.apache.catalina.tribes.util.StringManager;
 
 public class PooledParallelSender extends PooledSender {
-    protected static final StringManager sm =
-            StringManager.getManager(PooledParallelSender.class.getPackage().getName());
+    protected static final StringManager sm = StringManager.getManager(PooledParallelSender.class);
 
     @Override
     public void sendMessage(Member[] destination, ChannelMessage message) throws ChannelException {

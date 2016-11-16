@@ -16,7 +16,6 @@
  */
 package org.apache.catalina.loader;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FilePermission;
 import java.io.IOException;
@@ -24,15 +23,12 @@ import java.io.InputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.charset.StandardCharsets;
 import java.security.AccessControlException;
 import java.security.AccessController;
 import java.security.CodeSource;
@@ -55,8 +51,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.ResourceBundle;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -74,11 +68,12 @@ import org.apache.catalina.WebResource;
 import org.apache.catalina.WebResourceRoot;
 import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory;
 import org.apache.juli.WebappProperties;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.InstrumentableClassLoader;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.IntrospectionUtils;
 import org.apache.tomcat.util.compat.JreCompat;
-import org.apache.tomcat.util.compat.JreVendor;
 import org.apache.tomcat.util.res.StringManager;
 import org.apache.tomcat.util.security.PermissionCheck;
 
@@ -128,8 +123,7 @@ import org.apache.tomcat.util.security.PermissionCheck;
 public abstract class WebappClassLoaderBase extends URLClassLoader
         implements Lifecycle, InstrumentableClassLoader, WebappProperties, PermissionCheck {
 
-    private static final org.apache.juli.logging.Log log =
-        org.apache.juli.logging.LogFactory.getLog(WebappClassLoaderBase.class);
+    private static final Log log = LogFactory.getLog(WebappClassLoaderBase.class);
 
     /**
      * List of ThreadGroup names to ignore when scanning for web application
@@ -140,7 +134,6 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
     private static final String JVM_THREAD_GROUP_SYSTEM = "system";
 
     private static final String CLASS_FILE_SUFFIX = ".class";
-    private static final String SERVICES_PREFIX = "/META-INF/services/";
 
     static {
         ClassLoader.registerAsParallelCapable();
@@ -148,20 +141,18 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
         JVM_THREAD_GROUP_NAMES.add("RMI Runtime");
     }
 
-    protected class PrivilegedFindResourceByName
-        implements PrivilegedAction<ResourceEntry> {
+    protected class PrivilegedFindClassByName
+        implements PrivilegedAction<Class<?>> {
 
         protected final String name;
-        protected final String path;
 
-        PrivilegedFindResourceByName(String name, String path) {
+        PrivilegedFindClassByName(String name) {
             this.name = name;
-            this.path = path;
         }
 
         @Override
-        public ResourceEntry run() {
-            return findResourceInternal(name, path);
+        public Class<?> run() {
+            return findClassInternal(name);
         }
     }
 
@@ -328,14 +319,10 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
 
     /**
-     * need conversion for properties files
-     */
-    protected boolean needConvert = false;
-
-
-    /**
      * All permission.
+     * @deprecated Unused. This will be removed in Tomcat 9.
      */
+    @Deprecated
     protected final Permission allPermission = new java.security.AllPermission();
 
 
@@ -345,20 +332,6 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
      * modularity checks are disabled.
      */
     private boolean clearReferencesRmiTargets = true;
-
-    /**
-     * Should Tomcat attempt to null out any static or final fields from loaded
-     * classes when a web application is stopped as a work around for apparent
-     * garbage collection bugs and application coding errors? There have been
-     * some issues reported with log4j when this option is true. Applications
-     * without memory leaks using recent JVMs should operate correctly with this
-     * option set to <code>false</code>. If not specified, the default value of
-     * <code>false</code> will be used.
-     *
-     * @deprecated This option will be removed in Tomcat 8.5
-     */
-    @Deprecated
-    private boolean clearReferencesStatic = false;
 
     /**
      * Should Tomcat attempt to terminate threads that have been started by the
@@ -426,7 +399,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
     // ------------------------------------------------------------- Properties
 
     /**
-     * Get associated resources.
+     * @return associated resources.
      */
     public WebResourceRoot getResources() {
         return this.resources;
@@ -435,6 +408,8 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
     /**
      * Set associated resources.
+     * @param resources the resources from which the classloader will
+     *     load the classes
      */
     public void setResources(WebResourceRoot resources) {
         this.resources = resources;
@@ -442,7 +417,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
 
     /**
-     * Return the context name for this class loader.
+     * @return the context name for this class loader.
      */
     public String getContextName() {
         if (resources == null) {
@@ -455,6 +430,8 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
     /**
      * Return the "delegate first" flag for this class loader.
+     * @return <code>true</code> if the class lookup will delegate to
+     *   the parent first. The default in Tomcat is <code>false</code>.
      */
     public boolean getDelegate() {
 
@@ -550,31 +527,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
 
     /**
-     * Return the clearReferencesStatic flag for this Context.
-     *
-     * @deprecated This option will be removed in Tomcat 8.5
-     */
-    @Deprecated
-    public boolean getClearReferencesStatic() {
-        return (this.clearReferencesStatic);
-    }
-
-
-    /**
-     * Set the clearReferencesStatic feature for this Context.
-     *
-     * @param clearReferencesStatic The new flag value
-     *
-     * @deprecated This option will be removed in Tomcat 8.5
-     */
-    @Deprecated
-    public void setClearReferencesStatic(boolean clearReferencesStatic) {
-        this.clearReferencesStatic = clearReferencesStatic;
-    }
-
-
-    /**
-     * Return the clearReferencesStopThreads flag for this Context.
+     * @return the clearReferencesStopThreads flag for this Context.
      */
     public boolean getClearReferencesStopThreads() {
         return (this.clearReferencesStopThreads);
@@ -593,7 +546,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
 
     /**
-     * Return the clearReferencesStopTimerThreads flag for this Context.
+     * @return the clearReferencesStopTimerThreads flag for this Context.
      */
     public boolean getClearReferencesStopTimerThreads() {
         return (this.clearReferencesStopTimerThreads);
@@ -612,7 +565,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
 
     /**
-     * Return the clearReferencesLogFactoryRelease flag for this Context.
+     * @return the clearReferencesLogFactoryRelease flag for this Context.
      */
     public boolean getClearReferencesLogFactoryRelease() {
         return (this.clearReferencesLogFactoryRelease);
@@ -632,7 +585,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
 
     /**
-     * Return the clearReferencesHttpClientKeepAliveThread flag for this
+     * @return the clearReferencesHttpClientKeepAliveThread flag for this
      * Context.
      */
     public boolean getClearReferencesHttpClientKeepAliveThread() {
@@ -709,8 +662,6 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
         base.resources = this.resources;
         base.delegate = this.delegate;
         base.state = LifecycleState.NEW;
-        base.needConvert = this.needConvert;
-        base.clearReferencesStatic = this.clearReferencesStatic;
         base.clearReferencesStopThreads = this.clearReferencesStopThreads;
         base.clearReferencesStopTimerThreads = this.clearReferencesStopTimerThreads;
         base.clearReferencesLogFactoryRelease = this.clearReferencesLogFactoryRelease;
@@ -723,6 +674,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
     /**
      * Have one or more classes or resources been modified so that a reload
      * is appropriate?
+     * @return <code>true</code> if there's been a modification
      */
     public boolean modified() {
 
@@ -779,9 +731,6 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
     }
 
 
-    /**
-     * Render a String representation of this object.
-     */
     @Override
     public String toString() {
 
@@ -809,9 +758,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
     // ---------------------------------------------------- ClassLoader Methods
 
 
-    /**
-     * Expose this method for use by the unit tests.
-     */
+    // Note: exposed for use by tests
     protected final Class<?> doDefineClass(String name, byte[] b, int off, int len,
             ProtectionDomain protectionDomain) {
         return super.defineClass(name, b, off, len, protectionDomain);
@@ -856,7 +803,13 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             if (log.isTraceEnabled())
                 log.trace("      findClassInternal(" + name + ")");
             try {
-                clazz = findClassInternal(name);
+                if (securityManager != null) {
+                    PrivilegedAction<Class<?>> dp =
+                        new PrivilegedFindClassByName(name);
+                    clazz = AccessController.doPrivileged(dp);
+                } else {
+                    clazz = findClassInternal(name);
+                }
             } catch(AccessControlException ace) {
                 log.warn("WebappClassLoader.findClassInternal(" + name
                         + ") security exception: " + ace.getMessage(), ace);
@@ -928,19 +881,10 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
         String path = nameToPath(name);
 
-        ResourceEntry entry = resourceEntries.get(path);
-        if (entry == null) {
-            if (securityManager != null) {
-                PrivilegedAction<ResourceEntry> dp =
-                    new PrivilegedFindResourceByName(name, path);
-                entry = AccessController.doPrivileged(dp);
-            } else {
-                entry = findResourceInternal(name, path);
-            }
-        }
-        if (entry != null) {
-            url = entry.source;
-            entry.webResource = null;
+        WebResource resource = resources.getClassLoaderResource(path);
+        if (resource.exists()) {
+            url = resource.getURL();
+            trackLastModified(path, resource);
         }
 
         if ((url == null) && hasExternalRepositories) {
@@ -954,7 +898,20 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                 log.debug("    --> Resource not found, returning null");
         }
         return url;
+    }
 
+
+    private void trackLastModified(String path, WebResource resource) {
+        if (resourceEntries.containsKey(path)) {
+            return;
+        }
+        ResourceEntry entry = new ResourceEntry();
+        entry.lastModified = resource.getLastModified();
+        synchronized(resourceEntries) {
+            if (!resourceEntries.containsKey(path)) {
+                resourceEntries.put(path, entry);
+            }
+        }
     }
 
 
@@ -1089,14 +1046,6 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
         InputStream stream = null;
 
-        // (0) Check for a cached copy of this resource
-        stream = findLoadedResource(name);
-        if (stream != null) {
-            if (log.isDebugEnabled())
-                log.debug("  --> Returning stream from cache");
-            return (stream);
-        }
-
         boolean delegateFirst = delegate || filter(name, false);
 
         // (1) Delegate to parent if requested
@@ -1105,30 +1054,35 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                 log.debug("  Delegating to parent classloader " + parent);
             stream = parent.getResourceAsStream(name);
             if (stream != null) {
-                // FIXME - cache???
                 if (log.isDebugEnabled())
                     log.debug("  --> Returning stream from parent");
-                return (stream);
+                return stream;
             }
         }
 
         // (2) Search local repositories
         if (log.isDebugEnabled())
             log.debug("  Searching local repositories");
-        URL url = findResource(name);
-        if (url != null) {
-            // FIXME - cache???
+        String path = nameToPath(name);
+        WebResource resource = resources.getClassLoaderResource(path);
+        if (resource.exists()) {
+            stream = resource.getInputStream();
+            trackLastModified(path, resource);
+        }
+        try {
+            if (hasExternalRepositories && stream == null) {
+                URL url = super.findResource(name);
+                if (url != null) {
+                    stream = url.openStream();
+                }
+            }
+        } catch (IOException e) {
+            // Ignore
+        }
+        if (stream != null) {
             if (log.isDebugEnabled())
                 log.debug("  --> Returning stream from local");
-            stream = findLoadedResource(name);
-            try {
-                if (hasExternalRepositories && (stream == null))
-                    stream = url.openStream();
-            } catch (IOException e) {
-                // Ignore
-            }
-            if (stream != null)
-                return (stream);
+            return stream;
         }
 
         // (3) Delegate to parent unconditionally
@@ -1137,18 +1091,16 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                 log.debug("  Delegating to parent classloader unconditionally " + parent);
             stream = parent.getResourceAsStream(name);
             if (stream != null) {
-                // FIXME - cache???
                 if (log.isDebugEnabled())
                     log.debug("  --> Returning stream from parent");
-                return (stream);
+                return stream;
             }
         }
 
         // (4) Resource was not found
         if (log.isDebugEnabled())
             log.debug("  --> Resource not found, returning null");
-        return (null);
-
+        return null;
     }
 
 
@@ -1506,18 +1458,6 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             }
         }
 
-        state = LifecycleState.STARTING;
-
-        String encoding = null;
-        try {
-            encoding = System.getProperty("file.encoding");
-        } catch (SecurityException e) {
-            return;
-        }
-        if (encoding.indexOf("EBCDIC")!=-1) {
-            needConvert = true;
-        }
-
         state = LifecycleState.STARTED;
     }
 
@@ -1595,12 +1535,6 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             clearReferencesRmiTargets();
         }
 
-        // Null out any static or final fields from loaded classes,
-        // as a workaround for apparent garbage collection bugs
-        if (clearReferencesStatic) {
-            clearReferencesStaticFinal();
-        }
-
          // Clear the IntrospectionUtils cache.
         IntrospectionUtils.clear();
 
@@ -1608,13 +1542,6 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
         if (clearReferencesLogFactoryRelease) {
             org.apache.juli.logging.LogFactory.release(this);
         }
-
-        // Clear the resource bundle cache
-        // This shouldn't be necessary, the cache uses weak references but
-        // it has caused leaks. Oddly, using the leak detection code in
-        // standard host allows the class loader to be GC'd. This has been seen
-        // on Sun but not IBM JREs. Maybe a bug in Sun's GC impl?
-        clearReferencesResourceBundles();
 
         // Clear the classloader reference in the VM's bean introspector
         java.beans.Introspector.flushCaches();
@@ -1681,131 +1608,6 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
     }
 
 
-    private final void clearReferencesStaticFinal() {
-
-        Collection<ResourceEntry> values = resourceEntries.values();
-        Iterator<ResourceEntry> loadedClasses = values.iterator();
-        //
-        // walk through all loaded class to trigger initialization for
-        //    any uninitialized classes, otherwise initialization of
-        //    one class may call a previously cleared class.
-        while(loadedClasses.hasNext()) {
-            ResourceEntry entry = loadedClasses.next();
-            if (entry.loadedClass != null) {
-                Class<?> clazz = entry.loadedClass;
-                try {
-                    Field[] fields = clazz.getDeclaredFields();
-                    for (int i = 0; i < fields.length; i++) {
-                        if(Modifier.isStatic(fields[i].getModifiers())) {
-                            fields[i].get(null);
-                            break;
-                        }
-                    }
-                } catch(Throwable t) {
-                    // Ignore
-                }
-            }
-        }
-        loadedClasses = values.iterator();
-        while (loadedClasses.hasNext()) {
-            ResourceEntry entry = loadedClasses.next();
-            if (entry.loadedClass != null) {
-                Class<?> clazz = entry.loadedClass;
-                try {
-                    Field[] fields = clazz.getDeclaredFields();
-                    for (int i = 0; i < fields.length; i++) {
-                        Field field = fields[i];
-                        int mods = field.getModifiers();
-                        if (field.getType().isPrimitive()
-                                || (field.getName().indexOf('$') != -1)) {
-                            continue;
-                        }
-                        if (Modifier.isStatic(mods)) {
-                            try {
-                                field.setAccessible(true);
-                                if (Modifier.isFinal(mods)) {
-                                    if (!((field.getType().getName().startsWith("java."))
-                                            || (field.getType().getName().startsWith("javax.")))) {
-                                        nullInstance(field.get(null));
-                                    }
-                                } else {
-                                    field.set(null, null);
-                                    if (log.isDebugEnabled()) {
-                                        log.debug("Set field " + field.getName()
-                                                + " to null in class " + clazz.getName());
-                                    }
-                                }
-                            } catch (Throwable t) {
-                                ExceptionUtils.handleThrowable(t);
-                                if (log.isDebugEnabled()) {
-                                    log.debug("Could not set field " + field.getName()
-                                            + " to null in class " + clazz.getName(), t);
-                                }
-                            }
-                        }
-                    }
-                } catch (Throwable t) {
-                    ExceptionUtils.handleThrowable(t);
-                    if (log.isDebugEnabled()) {
-                        log.debug("Could not clean fields for class " + clazz.getName(), t);
-                    }
-                }
-            }
-        }
-
-    }
-
-
-    private void nullInstance(Object instance) {
-        if (instance == null) {
-            return;
-        }
-        Field[] fields = instance.getClass().getDeclaredFields();
-        for (int i = 0; i < fields.length; i++) {
-            Field field = fields[i];
-            int mods = field.getModifiers();
-            if (field.getType().isPrimitive()
-                    || (field.getName().indexOf('$') != -1)) {
-                continue;
-            }
-            try {
-                field.setAccessible(true);
-                if (Modifier.isStatic(mods) && Modifier.isFinal(mods)) {
-                    // Doing something recursively is too risky
-                    continue;
-                }
-                Object value = field.get(instance);
-                if (null != value) {
-                    Class<? extends Object> valueClass = value.getClass();
-                    if (!loadedByThisOrChild(valueClass)) {
-                        if (log.isDebugEnabled()) {
-                            log.debug("Not setting field " + field.getName() +
-                                    " to null in object of class " +
-                                    instance.getClass().getName() +
-                                    " because the referenced object was of type " +
-                                    valueClass.getName() +
-                                    " which was not loaded by this web application class loader.");
-                        }
-                    } else {
-                        field.set(instance, null);
-                        if (log.isDebugEnabled()) {
-                            log.debug("Set field " + field.getName()
-                                    + " to null in class " + instance.getClass().getName());
-                        }
-                    }
-                }
-            } catch (Throwable t) {
-                ExceptionUtils.handleThrowable(t);
-                if (log.isDebugEnabled()) {
-                    log.debug("Could not set field " + field.getName()
-                            + " to null in object instance of class "
-                            + instance.getClass().getName(), t);
-                }
-            }
-        }
-    }
-
-
     @SuppressWarnings("deprecation") // thread.stop()
     private void clearReferencesThreads() {
         Thread[] threads = getThreads();
@@ -1825,15 +1627,12 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
                     // JVM controlled threads
                     ThreadGroup tg = thread.getThreadGroup();
-                    if (tg != null &&
-                            JVM_THREAD_GROUP_NAMES.contains(tg.getName())) {
-
+                    if (tg != null && JVM_THREAD_GROUP_NAMES.contains(tg.getName())) {
                         // HttpClient keep-alive threads
                         if (clearReferencesHttpClientKeepAliveThread &&
                                 threadName.equals("Keep-Alive-Timer")) {
                             thread.setContextClassLoader(parent);
-                            log.debug(sm.getString(
-                                    "webappClassLoader.checkThreadsHttpClient"));
+                            log.debug(sm.getString("webappClassLoader.checkThreadsHttpClient"));
                         }
 
                         // Don't warn about remaining JVM controlled threads
@@ -1878,11 +1677,9 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                         // "runnable" in IBM JDK
                         // "action" in Apache Harmony
                         Object target = null;
-                        for (String fieldName : new String[] { "target",
-                                "runnable", "action" }) {
+                        for (String fieldName : new String[] { "target", "runnable", "action" }) {
                             try {
-                                Field targetField = thread.getClass()
-                                        .getDeclaredField(fieldName);
+                                Field targetField = thread.getClass().getDeclaredField(fieldName);
                                 targetField.setAccessible(true);
                                 target = targetField.get(thread);
                                 break;
@@ -1893,12 +1690,10 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
                         // "java.util.concurrent" code is in public domain,
                         // so all implementations are similar
-                        if (target != null &&
-                                target.getClass().getCanonicalName() != null
-                                && target.getClass().getCanonicalName().equals(
+                        if (target != null && target.getClass().getCanonicalName() != null &&
+                                target.getClass().getCanonicalName().equals(
                                 "java.util.concurrent.ThreadPoolExecutor.Worker")) {
-                            Field executorField =
-                                target.getClass().getDeclaredField("this$0");
+                            Field executorField = target.getClass().getDeclaredField("this$0");
                             executorField.setAccessible(true);
                             Object executor = executorField.get(target);
                             if (executor instanceof ThreadPoolExecutor) {
@@ -1906,21 +1701,9 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                                 usingExecutor = true;
                             }
                         }
-                    } catch (SecurityException e) {
-                        log.warn(sm.getString(
-                                "webappClassLoader.stopThreadFail",
-                                thread.getName(), getContextName()), e);
-                    } catch (NoSuchFieldException e) {
-                        log.warn(sm.getString(
-                                "webappClassLoader.stopThreadFail",
-                                thread.getName(), getContextName()), e);
-                    } catch (IllegalArgumentException e) {
-                        log.warn(sm.getString(
-                                "webappClassLoader.stopThreadFail",
-                                thread.getName(), getContextName()), e);
-                    } catch (IllegalAccessException e) {
-                        log.warn(sm.getString(
-                                "webappClassLoader.stopThreadFail",
+                    } catch (SecurityException | NoSuchFieldException | IllegalArgumentException |
+                            IllegalAccessException e) {
+                        log.warn(sm.getString("webappClassLoader.stopThreadFail",
                                 thread.getName(), getContextName()), e);
                     }
 
@@ -2353,94 +2136,6 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
 
     /**
-     * Clear the {@link ResourceBundle} cache of any bundles loaded by this
-     * class loader or any class loader where this loader is a parent class
-     * loader. Whilst {@link ResourceBundle#clearCache()} could be used there
-     * are complications around the
-     * {@link org.apache.jasper.servlet.JasperLoader} that mean a reflection
-     * based approach is more likely to be complete.
-     *
-     * The ResourceBundle is using WeakReferences so it shouldn't be pinning the
-     * class loader in memory. However, it is. Therefore clear ou the
-     * references.
-     */
-    private void clearReferencesResourceBundles() {
-        // Get a reference to the cache
-        try {
-            Field cacheListField =
-                ResourceBundle.class.getDeclaredField("cacheList");
-            cacheListField.setAccessible(true);
-
-            // Java 6 uses ConcurrentMap
-            // Java 5 uses SoftCache extends Abstract Map
-            // So use Map and it *should* work with both
-            Map<?,?> cacheList = (Map<?,?>) cacheListField.get(null);
-
-            // Get the keys (loader references are in the key)
-            Set<?> keys = cacheList.keySet();
-
-            Field loaderRefField = null;
-
-            // Iterate over the keys looking at the loader instances
-            Iterator<?> keysIter = keys.iterator();
-
-            int countRemoved = 0;
-
-            while (keysIter.hasNext()) {
-                Object key = keysIter.next();
-
-                if (loaderRefField == null) {
-                    loaderRefField =
-                        key.getClass().getDeclaredField("loaderRef");
-                    loaderRefField.setAccessible(true);
-                }
-                WeakReference<?> loaderRef =
-                    (WeakReference<?>) loaderRefField.get(key);
-
-                ClassLoader loader = (ClassLoader) loaderRef.get();
-
-                while (loader != null && loader != this) {
-                    loader = loader.getParent();
-                }
-
-                if (loader != null) {
-                    keysIter.remove();
-                    countRemoved++;
-                }
-            }
-
-            if (countRemoved > 0 && log.isDebugEnabled()) {
-                log.debug(sm.getString(
-                        "webappClassLoader.clearReferencesResourceBundlesCount",
-                        Integer.valueOf(countRemoved), getContextName()));
-            }
-        } catch (SecurityException e) {
-            log.warn(sm.getString(
-                    "webappClassLoader.clearReferencesResourceBundlesFail",
-                    getContextName()), e);
-        } catch (NoSuchFieldException e) {
-            if (JreVendor.IS_ORACLE_JVM) {
-                log.warn(sm.getString(
-                        "webappClassLoader.clearReferencesResourceBundlesFail",
-                        getContextName()), e);
-            } else {
-                log.debug(sm.getString(
-                        "webappClassLoader.clearReferencesResourceBundlesFail",
-                        getContextName()), e);
-            }
-        } catch (IllegalArgumentException e) {
-            log.warn(sm.getString(
-                    "webappClassLoader.clearReferencesResourceBundlesFail",
-                    getContextName()), e);
-        } catch (IllegalAccessException e) {
-            log.warn(sm.getString(
-                    "webappClassLoader.clearReferencesResourceBundlesFail",
-                    getContextName()), e);
-        }
-    }
-
-
-    /**
      * Find specified class in local repositories.
      *
      * @param name The binary name of the class to be loaded
@@ -2449,20 +2144,38 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
      */
     protected Class<?> findClassInternal(String name) {
 
+        checkStateForResourceLoading(name);
+
+        if (name == null) {
+            return null;
+        }
         String path = binaryNameToPath(name, true);
 
-        ResourceEntry entry = null;
-
-        if (securityManager != null) {
-            PrivilegedAction<ResourceEntry> dp =
-                new PrivilegedFindResourceByName(name, path);
-            entry = AccessController.doPrivileged(dp);
-        } else {
-            entry = findResourceInternal(name, path);
-        }
+        ResourceEntry entry = resourceEntries.get(path);
+        WebResource resource = null;
 
         if (entry == null) {
-            return null;
+            resource = resources.getClassLoaderResource(path);
+
+            if (!resource.exists()) {
+                return null;
+            }
+
+            entry = new ResourceEntry();
+            entry.lastModified = resource.getLastModified();
+
+            // Add the entry in the local resource repository
+            synchronized (resourceEntries) {
+                // Ensures that all the threads which may be in a race to load
+                // a particular class all end up with the same ResourceEntry
+                // instance
+                ResourceEntry entry2 = resourceEntries.get(path);
+                if (entry2 == null) {
+                    resourceEntries.put(path, entry);
+                } else {
+                    entry = entry2;
+                }
+            }
         }
 
         Class<?> clazz = entry.loadedClass;
@@ -2474,21 +2187,18 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
             if (clazz != null)
                 return clazz;
 
-            WebResource webResource = entry.webResource;
-            if (webResource == null) {
-                webResource = resources.getClassLoaderResource(path);
-            } else {
-                entry.webResource = null;
+            if (resource == null) {
+                resource = resources.getClassLoaderResource(path);
             }
 
-            if (!webResource.exists()) {
+            if (!resource.exists()) {
                 return null;
             }
 
-            byte[] binaryContent = webResource.getContent();
-            Manifest manifest = webResource.getManifest();
-            URL codeBase = webResource.getCodeBase();
-            Certificate[] certificates = webResource.getCertificates();
+            byte[] binaryContent = resource.getContent();
+            Manifest manifest = resource.getManifest();
+            URL codeBase = resource.getCodeBase();
+            Certificate[] certificates = resource.getCertificates();
 
             if (transformers.size() > 0) {
                 // If the resource is a class just being loaded, decorate it
@@ -2563,11 +2273,7 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                         sm.getString("webappClassLoader.wrongVersion",
                                 name));
             }
-            // Now the class has been defined, clear the elements of the local
-            // resource cache that are no longer required.
             entry.loadedClass = clazz;
-            // Retain entry.source in case of a getResourceAsStream() call on
-            // the class file after the class has been defined.
         }
 
         return clazz;
@@ -2599,95 +2305,12 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
 
     /**
-     * Find specified resource in local repositories.
-     *
-     * @param name the resource name
-     * @param path the resource path
-     *
-     * @return the loaded resource, or null if the resource isn't found
-     */
-    protected ResourceEntry findResourceInternal(final String name, final String path) {
-
-        checkStateForResourceLoading(name);
-
-        if (name == null || path == null) {
-            return null;
-        }
-
-        WebResource resource = null;
-
-        ResourceEntry entry = resourceEntries.get(path);
-        if (entry != null) {
-            return entry;
-        }
-
-        resource = resources.getClassLoaderResource(path);
-
-        if (!resource.exists()) {
-            return null;
-        }
-
-        entry = new ResourceEntry();
-        entry.source = resource.getURL();
-        entry.lastModified = resource.getLastModified();
-        entry.webResource = resource;
-
-        boolean fileNeedConvert = false;
-        if (needConvert && path.endsWith(".properties")) {
-            fileNeedConvert = true;
-        }
-
-        /* Only cache the binary content if there is some content
-         * available one of the following is true:
-         * a) The file needs conversion to address encoding issues (see
-         *    below)
-         *    or
-         * b) The resource is a service provider configuration file located
-         *    under META=INF/services
-         *
-         * In all other cases do not cache the content to prevent
-         * excessive memory usage if large resources are present (see
-         * https://bz.apache.org/bugzilla/show_bug.cgi?id=53081).
-         */
-        if (path.startsWith(SERVICES_PREFIX) || fileNeedConvert) {
-            byte[] binaryContent = resource.getContent();
-            if (binaryContent != null) {
-                 if (fileNeedConvert) {
-                    // Workaround for certain files on platforms that use
-                    // EBCDIC encoding, when they are read through FileInputStream.
-                    // See commit message of rev.303915 for details
-                    // http://svn.apache.org/viewvc?view=revision&revision=303915
-                    String str = new String(binaryContent);
-                    try {
-                        binaryContent = str.getBytes(StandardCharsets.UTF_8);
-                    } catch (Exception e) {
-                        return null;
-                    }
-                }
-                entry.binaryContent = binaryContent;
-            }
-        }
-
-        // Add the entry in the local resource repository
-        synchronized (resourceEntries) {
-            // Ensures that all the threads which may be in a race to load
-            // a particular class all end up with the same ResourceEntry
-            // instance
-            ResourceEntry entry2 = resourceEntries.get(path);
-            if (entry2 == null) {
-                resourceEntries.put(path, entry);
-            } else {
-                entry = entry2;
-            }
-        }
-
-        return entry;
-    }
-
-
-    /**
      * Returns true if the specified package name is sealed according to the
      * given manifest.
+     *
+     * @param name Path name to check
+     * @param man Associated manifest
+     * @return <code>true</code> if the manifest associated says it is sealed
      */
     protected boolean isPackageSealed(String name, Manifest man) {
 
@@ -2708,39 +2331,12 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
 
 
     /**
-     * Finds the resource with the given name if it has previously been
-     * loaded and cached by this class loader, and return an input stream
-     * to the resource data.  If this resource has not been cached, return
-     * <code>null</code>.
-     *
-     * @param name Name of the resource to return
-     */
-    protected InputStream findLoadedResource(String name) {
-
-        String path = nameToPath(name);
-
-        ResourceEntry entry = resourceEntries.get(path);
-        if (entry != null) {
-            if (entry.binaryContent != null)
-                return new ByteArrayInputStream(entry.binaryContent);
-            else {
-                try {
-                    return entry.source.openStream();
-                } catch (IOException ioe) {
-                    // Ignore
-                }
-            }
-        }
-        return null;
-    }
-
-
-    /**
      * Finds the class with the given name if it has previously been
      * loaded and cached by this class loader, and return the Class object.
      * If this class has not been cached, return <code>null</code>.
      *
      * @param name The binary name of the resource to return
+     * @return a loaded class
      */
     protected Class<?> findLoadedClass0(String name) {
 
@@ -2800,7 +2396,8 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                 }
                 if (name.startsWith("el.", 6) ||
                     name.startsWith("servlet.", 6) ||
-                    name.startsWith("websocket.", 6)) {
+                    name.startsWith("websocket.", 6) ||
+                    name.startsWith("security.auth.message.", 6)) {
                     return true;
                 }
             } else if (!isClassName && ch == '/') {
@@ -2810,7 +2407,8 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
                 }
                 if (name.startsWith("el/", 6) ||
                     name.startsWith("servlet/", 6) ||
-                    name.startsWith("websocket/", 6)) {
+                    name.startsWith("websocket/", 6) ||
+                    name.startsWith("security/auth/message/", 6)) {
                     return true;
                 }
             }
@@ -2865,26 +2463,12 @@ public abstract class WebappClassLoaderBase extends URLClassLoader
      *
      * @param name class name
      * @return <code>true</code> if the class should be filtered
-     * @deprecated Use {@link #filter(String, boolean)}.
-     *             Unused. Will be removed in Tomcat 9 onwards.
+     * @deprecated Use {@link #filter(String, boolean)} This will be removed in
+     *             Tomcat 9
      */
     @Deprecated
     protected boolean filter(String name) {
         return filter(name, true) || filter(name, false);
-    }
-
-
-    /**
-     * Unused.
-     *
-     * @param name usused
-     * @return Always <code>true</code>
-     *
-     * @deprecated Unused. Will be removed in Tomcat 9 onwards.
-     */
-    @Deprecated
-    protected boolean validate(String name) {
-        return true;
     }
 
 

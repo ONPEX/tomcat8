@@ -24,7 +24,6 @@ import java.io.FilePermission;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLDecoder;
@@ -39,6 +38,8 @@ import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleState;
 import org.apache.catalina.Loader;
 import org.apache.catalina.util.LifecycleMBeanBase;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.modeler.Registry;
 import org.apache.tomcat.util.res.StringManager;
@@ -112,7 +113,7 @@ public class WebappLoader extends LifecycleMBeanBase
      * This class should extend WebappClassLoaderBase, otherwise, a different
      * loader implementation must be used.
      */
-    private String loaderClass = WebappClassLoader.class.getName();
+    private String loaderClass = ParallelWebappClassLoader.class.getName();
 
 
     /**
@@ -219,7 +220,7 @@ public class WebappLoader extends LifecycleMBeanBase
 
 
     /**
-     * Return the ClassLoader class name.
+     * @return the ClassLoader class name.
      */
     public String getLoaderClass() {
         return (this.loaderClass);
@@ -601,8 +602,7 @@ public class WebappLoader extends LifecycleMBeanBase
 
     private boolean buildClassPath(StringBuilder classpath, ClassLoader loader) {
         if (loader instanceof URLClassLoader) {
-            URL repositories[] =
-                    ((URLClassLoader) loader).getURLs();
+            URL repositories[] = ((URLClassLoader) loader).getURLs();
                 for (int i = 0; i < repositories.length; i++) {
                     String repository = repositories[i].toString();
                     if (repository.startsWith("file://"))
@@ -617,15 +617,19 @@ public class WebappLoader extends LifecycleMBeanBase
                         classpath.append(File.pathSeparator);
                     classpath.append(repository);
                 }
-        } else {
-            String cp = getClasspath(loader);
-            if (cp == null) {
-                log.info( "Unknown loader " + loader + " " + loader.getClass());
-            } else {
-                if (classpath.length() > 0)
+        } else if (loader == ClassLoader.getSystemClassLoader()){
+            // Java 9 onwards. The internal class loaders no longer extend
+            // URLCLassLoader
+            String cp = System.getProperty("java.class.path");
+            if (cp != null && cp.length() > 0) {
+                if (classpath.length() > 0) {
                     classpath.append(File.pathSeparator);
+                }
                 classpath.append(cp);
             }
+            return false;
+        } else {
+            log.info( "Unknown loader " + loader + " " + loader.getClass());
             return false;
         }
         return true;
@@ -641,30 +645,8 @@ public class WebappLoader extends LifecycleMBeanBase
         return result;
     }
 
-    // try to extract the classpath from a loader that is not URLClassLoader
-    private String getClasspath( ClassLoader loader ) {
-        try {
-            Method m=loader.getClass().getMethod("getClasspath", new Class[] {});
-            if( log.isTraceEnabled())
-                log.trace("getClasspath " + m );
-            Object o=m.invoke( loader, new Object[] {} );
-            if( log.isDebugEnabled() )
-                log.debug("gotClasspath " + o);
-            if( o instanceof String )
-                return (String)o;
-            return null;
-        } catch( Exception ex ) {
-            Throwable t = ExceptionUtils.unwrapInvocationTargetException(ex);
-            ExceptionUtils.handleThrowable(t);
-            if (log.isDebugEnabled())
-                log.debug("getClasspath ", ex);
-        }
-        return null;
-    }
 
-
-    private static final org.apache.juli.logging.Log log=
-        org.apache.juli.logging.LogFactory.getLog( WebappLoader.class );
+    private static final Log log = LogFactory.getLog(WebappLoader.class);
 
 
     @Override

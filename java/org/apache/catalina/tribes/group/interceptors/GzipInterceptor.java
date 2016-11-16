@@ -39,8 +39,7 @@ import org.apache.juli.logging.LogFactory;
 public class GzipInterceptor extends ChannelInterceptorBase {
 
     private static final Log log = LogFactory.getLog(GzipInterceptor.class);
-    protected static final StringManager sm =
-            StringManager.getManager(GzipInterceptor.class.getPackage().getName());
+    protected static final StringManager sm = StringManager.getManager(GzipInterceptor.class);
 
     public static final int DEFAULT_BUFFER_SIZE = 2048;
 
@@ -81,7 +80,7 @@ public class GzipInterceptor extends ChannelInterceptorBase {
     /**
      * @param data  Data to decompress
      * @return      Decompressed data
-     * @throws IOException
+     * @throws IOException Compression error
      */
     public static byte[] decompress(byte[] data) throws IOException {
         ByteArrayOutputStream bout =
