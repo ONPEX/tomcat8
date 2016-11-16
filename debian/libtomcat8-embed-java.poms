@@ -1,5 +1,4 @@
 debian/poms/tomcat-embed-core.pom         --java-lib --usj-name=tomcat8-embed-core         --artifact=output/embed/tomcat-embed-core.jar
 debian/poms/tomcat-embed-el.pom           --java-lib --usj-name=tomcat8-embed-el           --artifact=output/embed/tomcat-embed-el.jar
 debian/poms/tomcat-embed-jasper.pom       --java-lib --usj-name=tomcat8-embed-jasper       --artifact=output/embed/tomcat-embed-jasper.jar
-debian/poms/tomcat-embed-logging-juli.pom --java-lib --usj-name=tomcat8-embed-logging-juli --artifact=output/embed/tomcat-embed-logging-juli.jar
 debian/poms/tomcat-embed-websocket.pom    --java-lib --usj-name=tomcat8-embed-websocket    --artifact=output/embed/tomcat-embed-websocket.jar
