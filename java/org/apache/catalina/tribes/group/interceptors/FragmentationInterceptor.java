@@ -44,8 +44,8 @@ import org.apache.juli.logging.LogFactory;
  * @version 1.0
  */
 public class FragmentationInterceptor extends ChannelInterceptorBase {
-    private static final Log log = LogFactory.getLog(FragmentationInterceptor.class );
-    protected static final StringManager sm = StringManager.getManager(FragmentationInterceptor.class.getPackage().getName());
+    private static final Log log = LogFactory.getLog(FragmentationInterceptor.class);
+    protected static final StringManager sm = StringManager.getManager(FragmentationInterceptor.class);
 
     protected final HashMap<FragKey, FragCollection> fragpieces = new HashMap<>();
     private int maxSize = 1024*100;

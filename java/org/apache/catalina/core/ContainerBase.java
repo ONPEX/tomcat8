@@ -124,15 +124,12 @@ import org.apache.tomcat.util.res.StringManager;
  * Subclasses that fire additional events should document them in the
  * class comments of the implementation class.
  *
- * TODO: Review synchronisation around background processing. See bug 47024.
- *
  * @author Craig R. McClanahan
  */
 public abstract class ContainerBase extends LifecycleMBeanBase
         implements Container {
 
-    private static final org.apache.juli.logging.Log log=
-        org.apache.juli.logging.LogFactory.getLog( ContainerBase.class );
+    private static final Log log = LogFactory.getLog(ContainerBase.class);
 
     /**
      * Perform addChild with the permissions of this class.
@@ -516,6 +513,8 @@ public abstract class ContainerBase extends LifecycleMBeanBase
     /**
      * Return if children of this container will be started automatically when
      * they are added to this container.
+     *
+     * @return <code>true</code> if the children will be started
      */
     public boolean getStartChildren() {
 
@@ -779,9 +778,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
      */
     @Override
     public void addPropertyChangeListener(PropertyChangeListener listener) {
-
         support.addPropertyChangeListener(listener);
-
     }
 
 
@@ -793,13 +790,12 @@ public abstract class ContainerBase extends LifecycleMBeanBase
      */
     @Override
     public Container findChild(String name) {
-
-        if (name == null)
-            return (null);
+        if (name == null) {
+            return null;
+        }
         synchronized (children) {
             return children.get(name);
         }
-
     }
 
 
@@ -809,12 +805,10 @@ public abstract class ContainerBase extends LifecycleMBeanBase
      */
     @Override
     public Container[] findChildren() {
-
         synchronized (children) {
             Container results[] = new Container[children.size()];
             return children.values().toArray(results);
         }
-
     }
 
 
@@ -924,11 +918,13 @@ public abstract class ContainerBase extends LifecycleMBeanBase
         logger = null;
         getLogger();
         Cluster cluster = getClusterInternal();
-        if ((cluster != null) && (cluster instanceof Lifecycle))
+        if (cluster instanceof Lifecycle) {
             ((Lifecycle) cluster).start();
+        }
         Realm realm = getRealmInternal();
-        if ((realm != null) && (realm instanceof Lifecycle))
+        if (realm instanceof Lifecycle) {
             ((Lifecycle) realm).start();
+        }
 
         // Start our child containers, if any
         Container children[] = findChildren();
@@ -1009,11 +1005,11 @@ public abstract class ContainerBase extends LifecycleMBeanBase
 
         // Stop our subordinate components, if any
         Realm realm = getRealmInternal();
-        if ((realm != null) && (realm instanceof Lifecycle)) {
+        if (realm instanceof Lifecycle) {
             ((Lifecycle) realm).stop();
         }
         Cluster cluster = getClusterInternal();
-        if ((cluster != null) && (cluster instanceof Lifecycle)) {
+        if (cluster instanceof Lifecycle) {
             ((Lifecycle) cluster).stop();
         }
     }
@@ -1022,11 +1018,11 @@ public abstract class ContainerBase extends LifecycleMBeanBase
     protected void destroyInternal() throws LifecycleException {
 
         Realm realm = getRealmInternal();
-        if ((realm != null) && (realm instanceof Lifecycle)) {
+        if (realm instanceof Lifecycle) {
             ((Lifecycle) realm).destroy();
         }
         Cluster cluster = getClusterInternal();
-        if ((cluster != null) && (cluster instanceof Lifecycle)) {
+        if (cluster instanceof Lifecycle) {
             ((Lifecycle) cluster).destroy();
         }
 

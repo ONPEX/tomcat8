@@ -17,7 +17,6 @@
 
 package org.apache.jasper.compiler;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -483,6 +482,8 @@ class TagFileProcessor {
      * @param tagLibInfo
      *            the TagLibraryInfo object associated with this TagInfo
      * @return a TagInfo object assembled from the directives in the tag file.
+     *
+     * @throws JasperException If an error occurs during parsing
      */
     @SuppressWarnings("null") // page can't be null
     public static TagInfo parseTagFileDirectives(ParserController pc,
@@ -495,8 +496,6 @@ class TagFileProcessor {
         Node.Nodes page = null;
         try {
             page = pc.parseTagFileDirectives(path, jar);
-        } catch (FileNotFoundException e) {
-            err.jspError("jsp.error.file.not.found", path);
         } catch (IOException e) {
             err.jspError("jsp.error.file.not.found", path);
         }
@@ -660,16 +659,14 @@ class TagFileProcessor {
                                                   Long.valueOf(jar.getLastModified(tagFilePath.substring(1))));
                         } else {
                             pageInfo.addDependant(tagFilePath,
-                                                  compiler.getCompilationContext().getLastModified(
-                                                                                                   tagFilePath));
+                                                  compiler.getCompilationContext().getLastModified(tagFilePath));
                         }
                     } catch (IOException ioe) {
                         throw new JasperException(ioe);
                     }
                 } else {
                     pageInfo.addDependant(tagFilePath,
-                            compiler.getCompilationContext().getLastModified(
-                                    tagFilePath));
+                            compiler.getCompilationContext().getLastModified(tagFilePath));
                 }
                 Class<?> c = loadTagFile(compiler, tagFilePath, n.getTagInfo(),
                         pageInfo);
@@ -684,6 +681,11 @@ class TagFileProcessor {
      * tag files used in a JSP files. The directives in the tag files are
      * assumed to have been processed and encapsulated as TagFileInfo in the
      * CustomTag nodes.
+     *
+     * @param compiler Compiler to use to compile tag files
+     * @param page     The page from to scan for tag files to compile
+     *
+     * @throws JasperException If an error occurs during the scan or compilation
      */
     public void loadTagFiles(Compiler compiler, Node.Nodes page)
             throws JasperException {

@@ -53,9 +53,8 @@ import org.apache.juli.logging.LogFactory;
  */
 public class NioReplicationTask extends AbstractRxTask {
 
-    private static final Log log = LogFactory.getLog( NioReplicationTask.class );
-    protected static final StringManager sm =
-            StringManager.getManager(NioReplicationTask.class.getPackage().getName());
+    private static final Log log = LogFactory.getLog(NioReplicationTask.class);
+    protected static final StringManager sm = StringManager.getManager(NioReplicationTask.class);
 
     private ByteBuffer buffer = null;
     private SelectionKey key;
@@ -131,6 +130,7 @@ public class NioReplicationTask extends AbstractRxTask {
      * updated to remove OP_READ.  This will cause the selector
      * to ignore read-readiness for this channel while the
      * worker thread is servicing it.
+     * @param key The key to process
      */
     public synchronized void serviceChannel (SelectionKey key) {
         if ( log.isTraceEnabled() ) log.trace("About to service key:"+key);
@@ -148,9 +148,11 @@ public class NioReplicationTask extends AbstractRxTask {
      * interest in OP_READ.  When this method completes it
      * re-enables OP_READ and calls wakeup() on the selector
      * so the selector will resume watching this channel.
+     * @param key The key to process
+     * @param reader The reader
+     * @throws Exception IO error
      */
     protected void drainChannel (final SelectionKey key, ObjectReader reader) throws Exception {
-        reader.setLastAccess(System.currentTimeMillis());
         reader.access();
         ReadableByteChannel channel = (ReadableByteChannel) key.channel();
         int count=-1;
@@ -294,10 +296,12 @@ public class NioReplicationTask extends AbstractRxTask {
 
 
     /**
-     * send a reply-acknowledgement (6,2,3), sends it doing a busy write, the ACK is so small
-     * that it should always go to the buffer
-     * @param key
-     * @param channel
+     * Send a reply-acknowledgement (6,2,3), sends it doing a busy write, the ACK is so small
+     * that it should always go to the buffer.
+     * @param key The key to use
+     * @param channel The channel
+     * @param command The command to write
+     * @param udpaddr Target address
      */
     protected void sendAck(SelectionKey key, WritableByteChannel channel, byte[] command, SocketAddress udpaddr) {
         try {

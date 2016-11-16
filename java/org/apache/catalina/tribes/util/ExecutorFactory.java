@@ -27,7 +27,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class ExecutorFactory {
-    protected static final StringManager sm = StringManager.getManager(ExecutorFactory.class.getPackage().getName());
+    protected static final StringManager sm = StringManager.getManager(ExecutorFactory.class);
 
     public static ExecutorService newThreadPool(int minThreads, int maxThreads, long maxIdleTime, TimeUnit unit) {
         TaskQueue taskqueue = new TaskQueue();

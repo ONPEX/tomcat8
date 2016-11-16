@@ -97,6 +97,8 @@ public class TestLimitLatch {
             testThreads[i].start();
         }
 
+        // Should have 10 threads in stage 2 and 20 in stage 1
+
         for (int i = 0; i < 30; i++) {
             if (!waitForThreadToStart(testThreads[i])) {
                 Assert.fail("Test thread [" + i + "] did not start");

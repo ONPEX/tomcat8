@@ -43,19 +43,13 @@ import org.apache.juli.logging.LogFactory;
 public class ParallelNioSender extends AbstractSender implements MultiPointSender {
 
     private static final Log log = LogFactory.getLog(ParallelNioSender.class);
-    protected static final StringManager sm =
-            StringManager.getManager(ParallelNioSender.class.getPackage().getName());
+    protected static final StringManager sm = StringManager.getManager(ParallelNioSender.class);
     protected final long selectTimeout = 5000; //default 5 seconds, same as send timeout
     protected final Selector selector;
     protected final HashMap<Member, NioSender> nioSenders = new HashMap<>();
 
     public ParallelNioSender() throws IOException {
-        synchronized (Selector.class) {
-            // Selector.open() isn't thread safe
-            // http://bugs.sun.com/view_bug.do?bug_id=6427854
-            // Affects 1.6.0_29, fixed in 1.7.0_01
-            selector = Selector.open();
-        }
+        selector = Selector.open();
         setConnected(true);
     }
 

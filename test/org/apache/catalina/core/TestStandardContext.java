@@ -184,7 +184,6 @@ public class TestStandardContext extends TomcatBaseTest {
                         new ClassNotFoundException());
             }
         }
-
     }
 
     @Test

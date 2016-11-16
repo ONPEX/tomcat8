@@ -55,17 +55,22 @@
     the Tomcat process and provide that user with the minimum necessary
     permissions for the operating system. For example, it should not be possible
     to log on remotely using the Tomcat user.</p>
-    <p>File permissions should also be suitably restricted. Taking the Tomcat
-    instances at the ASF as an example (where auto-deployment is disabled and
-    web applications are deployed as exploded directories), the standard
-    configuration is to have all Tomcat files owned by root with group Tomcat
-    and whilst owner has read/write privileges, group only has read and world
-    has no permissions. The exceptions are the logs, temp and work directory
-    that are owned by the Tomcat user rather than root. This means that even if
-    an attacker compromises the Tomcat process, they can&apos;t change the
-    Tomcat configuration, deploy new web applications or modify existing web
-    applications. The Tomcat process runs with a umask of 007 to maintain these
-    permissions.</p>
+    <p>File permissions should also be suitably restricted. In the
+    <code>.tar.gz</code> distribution, files and directories are not world
+    readable and the group does not have write access. On Unix like operating
+    systems, Tomcat runs with a default umask of <code>0027</code> to maintain
+    these permissions for files created while Tomcat is running (e.g. log files,
+    expanded WARs, etc.).</p>
+    <p>Taking the Tomcat instances at the ASF as an example (where
+    auto-deployment is disabled and web applications are deployed as exploded
+    directories), the standard configuration is to have all Tomcat files owned
+    by root with group Tomcat and whilst owner has read/write privileges, group
+    only has read and world has no permissions. The exceptions are the logs,
+    temp and work directory that are owned by the Tomcat user rather than root.
+    This means that even if an attacker compromises the Tomcat process, they
+    can&apos;t change the Tomcat configuration, deploy new web applications or
+    modify existing web applications. The Tomcat process runs with a umask of
+    007 to maintain these permissions.</p>
     <p>At the network level, consider using a firewall to limit both incoming
     and outgoing connections to only those connections you  expect to be
     present.</p>
@@ -134,10 +139,11 @@
        <li>Do not remove the use of the <a
            href="config/realm.html#LockOut_Realm_-_org.apache.catalina.realm.LockOutRealm">LockOutRealm</a>
            which prevents brute force attacks against user passwords.</li>
-       <li>Uncomment the <a href="config/valve.html#Remote_Address_Filter">RemoteAddrValve</a>
-           in <code>/META-INF/context.xml</code> which limits access to
-           localhost. If remote access is required, limit it to specific IP
-           addresses using this valve.</li>
+       <li>Configure the <a href="config/valve.html#Remote_Address_Valve">RemoteAddrValve</a>
+           in the <a href="config/context.html">context.xml</a> file for the
+           management application which limits access to localhost by default.
+           If remote access is required, limit it to specific IP addresses using
+           this valve.</li>
      </ul>
    </subsection>
   </section>
@@ -293,15 +299,6 @@
       authorisation or if authentication should be delegated to the reverse
       proxy (the authenticated user name is passed to Tomcat as part of the AJP
       protocol) with the option for Tomcat to still perform authorization.</p>
-
-      <p>The <strong>allowUnsafeLegacyRenegotiation</strong> attribute provides
-      a workaround for
-      <a href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-3555">
-      CVE-2009-3555</a>, a TLS man in the middle attack. This workaround applies
-      to the BIO connector. It is only necessary if the underlying SSL
-      implementation is vulnerable to CVE-2009-3555. For more information on the
-      current state of this vulnerability and the work-arounds available see the
-      <security>Tomcat <version-major/> security page</security>.</p>
 
       <p>The <strong>requiredSecret</strong> attribute in AJP connectors
       configures shared secret between Tomcat and reverse proxy in front of

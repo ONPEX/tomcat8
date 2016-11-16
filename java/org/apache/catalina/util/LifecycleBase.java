@@ -17,7 +17,11 @@
 
 package org.apache.catalina.util;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import org.apache.catalina.Lifecycle;
+import org.apache.catalina.LifecycleEvent;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleListener;
 import org.apache.catalina.LifecycleState;
@@ -36,15 +40,13 @@ public abstract class LifecycleBase implements Lifecycle {
 
     private static final Log log = LogFactory.getLog(LifecycleBase.class);
 
-    private static final StringManager sm =
-        StringManager.getManager("org.apache.catalina.util");
+    private static final StringManager sm = StringManager.getManager(LifecycleBase.class);
 
 
     /**
-     * Used to handle firing lifecycle events.
-     * TODO: Consider merging LifecycleSupport into this class.
+     * The list of registered LifecycleListeners for event notifications.
      */
-    private final LifecycleSupport lifecycle = new LifecycleSupport(this);
+    private final List<LifecycleListener> lifecycleListeners = new CopyOnWriteArrayList<>();
 
 
     /**
@@ -58,7 +60,7 @@ public abstract class LifecycleBase implements Lifecycle {
      */
     @Override
     public void addLifecycleListener(LifecycleListener listener) {
-        lifecycle.addLifecycleListener(listener);
+        lifecycleListeners.add(listener);
     }
 
 
@@ -67,7 +69,7 @@ public abstract class LifecycleBase implements Lifecycle {
      */
     @Override
     public LifecycleListener[] findLifecycleListeners() {
-        return lifecycle.findLifecycleListeners();
+        return lifecycleListeners.toArray(new LifecycleListener[0]);
     }
 
 
@@ -76,7 +78,7 @@ public abstract class LifecycleBase implements Lifecycle {
      */
     @Override
     public void removeLifecycleListener(LifecycleListener listener) {
-        lifecycle.removeLifecycleListener(listener);
+        lifecycleListeners.remove(listener);
     }
 
 
@@ -87,7 +89,10 @@ public abstract class LifecycleBase implements Lifecycle {
      * @param data  Data associated with event.
      */
     protected void fireLifecycleEvent(String type, Object data) {
-        lifecycle.fireLifecycleEvent(type, data);
+        LifecycleEvent event = new LifecycleEvent(this, type, data);
+        for (LifecycleListener listener : lifecycleListeners) {
+            listener.lifecycleEvent(event);
+        }
     }
 
 
@@ -175,7 +180,7 @@ public abstract class LifecycleBase implements Lifecycle {
      * will be called on the failed component but the parent component will
      * continue to start normally.
      *
-     * @throws LifecycleException
+     * @throws LifecycleException Start error occurred
      */
     protected abstract void startInternal() throws LifecycleException;
 
@@ -246,7 +251,7 @@ public abstract class LifecycleBase implements Lifecycle {
      * {@link LifecycleState#STOPPING} during the execution of this method.
      * Changing state will trigger the {@link Lifecycle#STOP_EVENT} event.
      *
-     * @throws LifecycleException
+     * @throws LifecycleException Stop error occurred
      */
     protected abstract void stopInternal() throws LifecycleException;
 
@@ -327,6 +332,7 @@ public abstract class LifecycleBase implements Lifecycle {
      * transition is valid for a sub-class.
      *
      * @param state The new state for this component
+     * @throws LifecycleException when attempting to set an invalid state
      */
     protected synchronized void setState(LifecycleState state)
             throws LifecycleException {
@@ -342,6 +348,7 @@ public abstract class LifecycleBase implements Lifecycle {
      *
      * @param state The new state for this component
      * @param data  The data to pass to the associated {@link Lifecycle} event
+     * @throws LifecycleException when attempting to set an invalid state
      */
     protected synchronized void setState(LifecycleState state, Object data)
             throws LifecycleException {

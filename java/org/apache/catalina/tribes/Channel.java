@@ -246,13 +246,14 @@ public interface Channel {
 
     /**
      * Send a message to one or more members in the cluster
-     * @param destination Member[] - the destinations, can not be null or zero length, the reason for that
+     * @param destination Member[] - the destinations, cannot be null or zero length, the reason for that
      * is that a membership change can occur and at that time the application is uncertain what group the message
      * actually got sent to.
      * @param msg Serializable - the message to send, has to be serializable, or a <code>ByteMessage</code> to
      * send a pure byte array
      * @param options int - sender options, see class documentation for each interceptor that is configured in order to trigger interceptors
      * @return a unique Id that identifies the message that is sent
+     * @throws ChannelException if a serialization error happens.
      * @see ByteMessage
      * @see #SEND_OPTIONS_USE_ACK
      * @see #SEND_OPTIONS_ASYNCHRONOUS
@@ -356,5 +357,16 @@ public interface Channel {
      */
     public Member getMember(Member mbr);
 
+    /**
+     * Return the name of this channel.
+     * @return channel name
+     */
+    public String getName();
+
+    /**
+     * Set the name of this channel
+     * @param name The new channel name
+     */
+    public void setName(String name);
 
 }

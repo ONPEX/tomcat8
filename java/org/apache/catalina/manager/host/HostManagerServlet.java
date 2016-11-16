@@ -20,10 +20,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.StringTokenizer;
 
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 import javax.servlet.ServletException;
 import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServlet;
@@ -41,7 +45,6 @@ import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.startup.HostConfig;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.res.StringManager;
-
 
 /**
  * Servlet that enables remote management of the virtual hosts installed
@@ -218,6 +221,8 @@ public class HostManagerServlet
             start(writer, name, smClient);
         } else if (command.equals("/stop")) {
             stop(writer, name, smClient);
+        } else if (command.equals("/persist")) {
+            persist(writer, smClient);
         } else {
             writer.println(sm.getString("hostManagerServlet.unknownCommand",
                                         command));
@@ -229,7 +234,6 @@ public class HostManagerServlet
 
     }
 
-
     /**
      * Add host with the given parameters.
      *
@@ -237,7 +241,8 @@ public class HostManagerServlet
      * @param writer The output writer
      * @param name The host name
      * @param htmlMode Flag value
-     */
+     * @param smClient StringManager for the client's locale
+    */
     protected void add(HttpServletRequest request, PrintWriter writer,
             String name, boolean htmlMode, StringManager smClient) {
         String aliases = request.getParameter("aliases");
@@ -260,10 +265,11 @@ public class HostManagerServlet
 
     /**
      * Extract boolean value from checkbox with default.
-     * @param request
-     * @param parameter
-     * @param theDefault
-     * @param htmlMode
+     * @param request The Servlet request
+     * @param parameter The parameter name
+     * @param theDefault Default value
+     * @param htmlMode Flag value
+     * @return the boolean value for the parameter
      */
     protected boolean booleanParameter(HttpServletRequest request,
             String parameter, boolean theDefault, boolean htmlMode) {
@@ -287,9 +293,6 @@ public class HostManagerServlet
     }
 
 
-    /**
-     * Initialize this servlet.
-     */
     @Override
     public void init() throws ServletException {
 
@@ -322,6 +325,12 @@ public class HostManagerServlet
      * @param aliases comma separated alias list
      * @param appBase application base for the host
      * @param manager should the manager webapp be deployed to the new host ?
+     * @param autoDeploy Flag value
+     * @param deployOnStartup Flag value
+     * @param deployXML Flag value
+     * @param unpackWARs Flag value
+     * @param copyXML Flag value
+     * @param smClient StringManager for the client's locale
      */
     protected synchronized void add
         (PrintWriter writer, String name, String aliases, String appBase,
@@ -436,6 +445,7 @@ public class HostManagerServlet
      *
      * @param writer Writer to render results to
      * @param name host name
+     * @param smClient StringManager for the client's locale
      */
     protected synchronized void remove(PrintWriter writer, String name,
             StringManager smClient) {
@@ -494,6 +504,7 @@ public class HostManagerServlet
      * Render a list of the currently active Contexts in our virtual host.
      *
      * @param writer Writer to render to
+     * @param smClient StringManager for the client's locale
      */
     protected void list(PrintWriter writer, StringManager smClient) {
 
@@ -526,6 +537,7 @@ public class HostManagerServlet
      *
      * @param writer Writer to render to
      * @param name Host name
+     * @param smClient StringManager for the client's locale
      */
     protected void start(PrintWriter writer, String name,
             StringManager smClient) {
@@ -587,6 +599,7 @@ public class HostManagerServlet
      *
      * @param writer Writer to render to
      * @param name Host name
+     * @param smClient StringManager for the client's locale
      */
     protected void stop(PrintWriter writer, String name,
             StringManager smClient) {
@@ -643,11 +656,44 @@ public class HostManagerServlet
     }
 
 
-    // -------------------------------------------------------- Support Methods
+    /**
+     * Persist the current configuration to server.xml.
+     *
+     * @param writer Writer to render to
+     * @param smClient i18n resources localized for the client
+     */
+    protected void persist(PrintWriter writer, StringManager smClient) {
 
+        if (debug >= 1) {
+            log(sm.getString("hostManagerServlet.persist"));
+        }
+
+        try {
+            MBeanServer platformMBeanServer = ManagementFactory.getPlatformMBeanServer();
+            ObjectName oname = new ObjectName(engine.getDomain() + ":type=StoreConfig");
+            platformMBeanServer.invoke(oname, "storeConfig", null, null);
+            writer.println(smClient.getString("hostManagerServlet.persisted"));
+        } catch (Exception e) {
+            getServletContext().log(sm.getString("hostManagerServlet.persistFailed"), e);
+            writer.println(smClient.getString("hostManagerServlet.persistFailed"));
+            // catch InstanceNotFoundException when StoreConfig is not enabled instead of printing
+            // the failure message
+            if (e instanceof InstanceNotFoundException) {
+                writer.println("Please enable StoreConfig to use this feature.");
+            } else {
+                writer.println(smClient.getString("hostManagerServlet.exception", e.toString()));
+            }
+            return;
+        }
+    }
+
+
+    // -------------------------------------------------------- Support Methods
 
     /**
      * Get config base.
+     * @param hostName The host name
+     * @return the config base for the host
      */
     protected File getConfigBase(String hostName) {
         File configBase = new File(context.getCatalinaBase(), "conf");

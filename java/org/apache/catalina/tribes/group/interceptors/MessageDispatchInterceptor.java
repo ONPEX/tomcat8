@@ -27,7 +27,6 @@ import org.apache.catalina.tribes.ErrorHandler;
 import org.apache.catalina.tribes.Member;
 import org.apache.catalina.tribes.UniqueId;
 import org.apache.catalina.tribes.group.ChannelInterceptorBase;
-import org.apache.catalina.tribes.group.GroupChannel;
 import org.apache.catalina.tribes.group.InterceptorPayload;
 import org.apache.catalina.tribes.util.ExecutorFactory;
 import org.apache.catalina.tribes.util.StringManager;
@@ -41,26 +40,14 @@ import org.apache.juli.logging.LogFactory;
  * <code>Channel.SEND_OPTIONS_ASYNCHRONOUS</code> flag to be set, if it is, it
  * will queue the message for delivery and immediately return to the sender.
  */
-public class MessageDispatchInterceptor extends ChannelInterceptorBase implements Runnable {
+public class MessageDispatchInterceptor extends ChannelInterceptorBase {
 
     private static final Log log = LogFactory.getLog(MessageDispatchInterceptor.class);
     protected static final StringManager sm =
-            StringManager.getManager(MessageDispatchInterceptor.class.getPackage().getName());
+            StringManager.getManager(MessageDispatchInterceptor.class);
 
     protected long maxQueueSize = 1024*1024*64; //64MB
-    /**
-     * @deprecated Unused. Will be removed in Tomcat 8.5.x.
-     */
-    @Deprecated
-    // Use fully qualified name to avoid deprecation warning on import.
-    protected final org.apache.catalina.tribes.transport.bio.util.FastQueue queue =
-            new org.apache.catalina.tribes.transport.bio.util.FastQueue();
     protected volatile boolean run = false;
-    /**
-     * @deprecated Unused. Will be removed in Tomcat 8.5.x.
-     */
-    @Deprecated
-    protected Thread msgDispatchThread = null;
     protected boolean useDeepClone = true;
     protected boolean alwaysSend = true;
 
@@ -119,27 +106,12 @@ public class MessageDispatchInterceptor extends ChannelInterceptorBase implement
     }
 
 
-    /**
-     * @deprecated Not used. The thread pool contains its own queue. This will
-     *             be removed in Tomcat 8.5.x onwards.
-     *
-     * @return Always null
-     */
-    @Deprecated
-    public org.apache.catalina.tribes.transport.bio.util.LinkObject removeFromQueue() {
-        return null;
-    }
-
-
     public void startQueue() {
         if (run) {
             return;
         }
         String channelName = "";
-        if (getChannel() instanceof GroupChannel
-                && ((GroupChannel)getChannel()).getName() != null) {
-            channelName = "[" + ((GroupChannel)getChannel()).getName() + "]";
-        }
+        if (getChannel().getName() != null) channelName = "[" + getChannel().getName() + "]";
         executor = ExecutorFactory.newThreadPool(maxSpareThreads, maxThreads, keepAliveTime,
                 TimeUnit.MILLISECONDS,
                 new TcclThreadFactory("MessageDispatchInterceptor.MessageDispatchThread" + channelName));
@@ -265,27 +237,6 @@ public class MessageDispatchInterceptor extends ChannelInterceptorBase implement
         }
 
         super.stop(svc);
-    }
-
-
-    /**
-     * @deprecated Unused. Will be removed in 8.5.x
-     */
-    @Deprecated
-    @Override
-    public void run() {
-        // NO-OP since it is now unused.
-    }
-
-
-    /**
-     * @deprecated Unused. Will be removed in 8.5.x
-     */
-    @Deprecated
-    protected org.apache.catalina.tribes.transport.bio.util.LinkObject sendAsyncData(
-            org.apache.catalina.tribes.transport.bio.util.LinkObject link) {
-        sendAsyncData(link.data(), link.getDestination(), link.getPayload());
-        return link.next();
     }
 
 

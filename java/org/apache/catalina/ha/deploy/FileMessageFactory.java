@@ -47,8 +47,7 @@ import org.apache.tomcat.util.res.StringManager;
 public class FileMessageFactory {
     /*--Static Variables----------------------------------------*/
     private static final Log log = LogFactory.getLog(FileMessageFactory.class);
-    private static final StringManager sm =
-        StringManager.getManager(Constants.Package);
+    private static final StringManager sm = StringManager.getManager(FileMessageFactory.class);
 
     /**
      * The number of bytes that we read from file
@@ -67,7 +66,7 @@ public class FileMessageFactory {
     protected final boolean openForWrite;
 
     /**
-     * Once the factory is used, it can not be reused.
+     * Once the factory is used, it cannot be reused.
      */
     protected boolean closed = false;
 
@@ -334,9 +333,8 @@ public class FileMessageFactory {
      * asked to do. Invoked by readMessage/writeMessage before those methods
      * proceed.
      *
-     * @param openForWrite
-     *            boolean
-     * @throws IllegalArgumentException
+     * @param openForWrite The value to check
+     * @throws IllegalArgumentException if the state is not the expected one
      */
     protected void checkState(boolean openForWrite)
             throws IllegalArgumentException {
@@ -361,7 +359,7 @@ public class FileMessageFactory {
      * @param args
      *            String[], args[0] - read from filename, args[1] write to
      *            filename
-     * @throws Exception
+     * @throws Exception An error occurred
      */
     public static void main(String[] args) throws Exception {
 

@@ -37,9 +37,11 @@ import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.ServletOutputStream;
+import javax.servlet.ServletResponse;
 import javax.servlet.SessionTrackingMode;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.Globals;
@@ -131,7 +133,7 @@ public class Response implements HttpServletResponse {
     }
 
     /**
-     * Get the Coyote response.
+     * @return the Coyote response.
      */
     public org.apache.coyote.Response getCoyoteResponse() {
         return this.coyoteResponse;
@@ -139,7 +141,7 @@ public class Response implements HttpServletResponse {
 
 
     /**
-     * Return the Context within which this Request is being processed.
+     * @return the Context within which this Request is being processed.
      */
     public Context getContext() {
         return (request.getContext());
@@ -237,8 +239,16 @@ public class Response implements HttpServletResponse {
     protected final CharChunk redirectURLCC = new CharChunk();
 
 
-    // --------------------------------------------------------- Public Methods
+    /*
+     * Not strictly required but it makes generating HTTP/2 push requests a lot
+     * easier if these are retained until the response is recycled.
+     */
+    private final List<Cookie> cookies = new ArrayList<>();
 
+    private HttpServletResponse applicationResponse = null;
+
+
+    // --------------------------------------------------------- Public Methods
 
     /**
      * Release all object references, and initialize instance variables, in
@@ -246,6 +256,7 @@ public class Response implements HttpServletResponse {
      */
     public void recycle() {
 
+        cookies.clear();
         outputBuffer.recycle();
         usingOutputStream = false;
         usingWriter = false;
@@ -254,6 +265,7 @@ public class Response implements HttpServletResponse {
         errorState.set(0);
         isCharacterEncodingSet = false;
 
+        applicationResponse = null;
         if (Globals.IS_SECURITY_ENABLED || Connector.RECYCLE_FACADES) {
             if (facade != null) {
                 facade.clear();
@@ -274,19 +286,15 @@ public class Response implements HttpServletResponse {
     }
 
 
-    /**
-     * Clear cached encoders (to save memory for Comet requests).
-     */
-    public void clearEncoders() {
-        outputBuffer.clearEncoders();
+    public List<Cookie> getCookies() {
+        return cookies;
     }
 
 
     // ------------------------------------------------------- Response Methods
 
-
     /**
-     * Return the number of bytes the application has actually written to the
+     * @return the number of bytes the application has actually written to the
      * output stream. This excludes chunking, compression, etc. as well as
      * headers.
      */
@@ -296,8 +304,9 @@ public class Response implements HttpServletResponse {
 
 
     /**
-     * Return the number of bytes the actually written to the socket. This
+     * @return the number of bytes the actually written to the socket. This
      * includes chunking, compression, etc. but excludes headers.
+     * @param flush if <code>true</code> will perform a buffer flush first
      */
     public long getBytesWritten(boolean flush) {
         if (flush) {
@@ -322,6 +331,8 @@ public class Response implements HttpServletResponse {
 
     /**
      * Application commit flag accessor.
+     *
+     * @return <code>true</code> if the application has committed the response
      */
     public boolean isAppCommitted() {
         return (this.appCommitted || isCommitted() || isSuspended()
@@ -336,7 +347,7 @@ public class Response implements HttpServletResponse {
     protected Request request = null;
 
     /**
-     * Return the Request with which this Response is associated.
+     * @return the Request with which this Response is associated.
      */
     public org.apache.catalina.connector.Request getRequest() {
         return (this.request);
@@ -357,15 +368,41 @@ public class Response implements HttpServletResponse {
      */
     protected ResponseFacade facade = null;
 
+
     /**
-     * Return the <code>ServletResponse</code> for which this object
+     * @return the <code>ServletResponse</code> for which this object
      * is the facade.
      */
     public HttpServletResponse getResponse() {
         if (facade == null) {
             facade = new ResponseFacade(this);
         }
-        return (facade);
+        if (applicationResponse == null) {
+            applicationResponse = facade;
+        }
+        return applicationResponse;
+    }
+
+
+    /**
+     * Set a wrapped HttpServletResponse to pass to the application. Components
+     * wishing to wrap the response should obtain the response via
+     * {@link #getResponse()}, wrap it and then call this method with the
+     * wrapped response.
+     *
+     * @param applicationResponse The wrapped response to pass to the
+     *        application
+     */
+    public void setResponse(HttpServletResponse applicationResponse) {
+        // Check the wrapper wraps this request
+        ServletResponse r = applicationResponse;
+        while (r instanceof HttpServletResponseWrapper) {
+            r = ((HttpServletResponseWrapper) r).getResponse();
+        }
+        if (r != facade) {
+            throw new IllegalArgumentException(sm.getString("response.illegalWrap"));
+        }
+        this.applicationResponse = applicationResponse;
     }
 
 
@@ -381,6 +418,8 @@ public class Response implements HttpServletResponse {
 
     /**
      * Suspended flag accessor.
+     *
+     * @return <code>true</code> if the response is suspended
      */
     public boolean isSuspended() {
         return outputBuffer.isSuspended();
@@ -389,6 +428,8 @@ public class Response implements HttpServletResponse {
 
     /**
      * Closed flag accessor.
+     *
+     * @return <code>true</code> if the response has been closed
      */
     public boolean isClosed() {
         return outputBuffer.isClosed();
@@ -397,6 +438,8 @@ public class Response implements HttpServletResponse {
 
     /**
      * Set the error flag.
+     *
+     * @return <code>false</code> if the error flag was already set
      */
     public boolean setError() {
         boolean result = errorState.compareAndSet(0, 1);
@@ -412,6 +455,8 @@ public class Response implements HttpServletResponse {
 
     /**
      * Error flag accessor.
+     *
+     * @return <code>true</code> if the response has encountered an error
      */
     public boolean isError() {
         return errorState.get() > 0;
@@ -441,7 +486,7 @@ public class Response implements HttpServletResponse {
 
 
     /**
-     * Return the content length that was set or calculated for this Response.
+     * @return the content length that was set or calculated for this Response.
      */
     public int getContentLength() {
         return getCoyoteResponse().getContentLength();
@@ -449,7 +494,7 @@ public class Response implements HttpServletResponse {
 
 
     /**
-     * Return the content type that was set or calculated for this response,
+     * @return the content type that was set or calculated for this response,
      * or <code>null</code> if no content type was set.
      */
     @Override
@@ -498,7 +543,7 @@ public class Response implements HttpServletResponse {
 
 
     /**
-     * Return the actual buffer size used for this Response.
+     * @return the actual buffer size used for this Response.
      */
     @Override
     public int getBufferSize() {
@@ -507,7 +552,7 @@ public class Response implements HttpServletResponse {
 
 
     /**
-     * Return the character encoding used for this Response.
+     * @return the character encoding used for this Response.
      */
     @Override
     public String getCharacterEncoding() {
@@ -516,7 +561,7 @@ public class Response implements HttpServletResponse {
 
 
     /**
-     * Return the servlet output stream associated with this Response.
+     * @return the servlet output stream associated with this Response.
      *
      * @exception IllegalStateException if <code>getWriter</code> has
      *  already been called for this response
@@ -541,7 +586,7 @@ public class Response implements HttpServletResponse {
 
 
     /**
-     * Return the Locale assigned to this response.
+     * @return the Locale assigned to this response.
      */
     @Override
     public Locale getLocale() {
@@ -550,7 +595,7 @@ public class Response implements HttpServletResponse {
 
 
     /**
-     * Return the writer associated with this Response.
+     * @return the writer associated with this Response.
      *
      * @exception IllegalStateException if <code>getOutputStream</code> has
      *  already been called for this response
@@ -592,6 +637,8 @@ public class Response implements HttpServletResponse {
 
     /**
      * Has the output of this response already been committed?
+     *
+     * @return <code>true</code> if the response has been committed
      */
     @Override
     public boolean isCommitted() {
@@ -751,7 +798,7 @@ public class Response implements HttpServletResponse {
     }
 
 
-    /*
+    /**
      * Overrides the name of the character encoding used in the body
      * of the request. This method must be called prior to reading
      * request parameters or reading input using getReader().
@@ -855,7 +902,7 @@ public class Response implements HttpServletResponse {
 
 
     /**
-     * Return the error message that was set with <code>sendError()</code>
+     * @return the error message that was set with <code>sendError()</code>
      * for this Response.
      */
     public String getMessage() {
@@ -884,6 +931,8 @@ public class Response implements HttpServletResponse {
         if (included || isCommitted()) {
             return;
         }
+
+        cookies.add(cookie);
 
         String header = generateCookieString(cookie);
         //if we reached here, no exception, cookie is valid
@@ -1019,7 +1068,7 @@ public class Response implements HttpServletResponse {
      * visible to {@link org.apache.coyote.Response}
      *
      * Called from set/addHeader.
-     * Return true if the header is special, no need to set the header.
+     * @return <code>true</code> if the header is special, no need to set the header.
      */
     private boolean checkSpecialHeader(String name, String value) {
         if (name.equalsIgnoreCase("Content-Type")) {
@@ -1061,6 +1110,7 @@ public class Response implements HttpServletResponse {
      * Has the specified header been set already in this response?
      *
      * @param name Name of the header to check
+     * @return <code>true</code> if the header has been set
      */
     @Override
     public boolean containsHeader(String name) {
@@ -1087,6 +1137,7 @@ public class Response implements HttpServletResponse {
      * into the specified redirect URL, if necessary.
      *
      * @param url URL to be encoded
+     * @return <code>true</code> if the URL was encoded
      */
     @Override
     public String encodeRedirectURL(String url) {
@@ -1105,6 +1156,7 @@ public class Response implements HttpServletResponse {
      * into the specified redirect URL, if necessary.
      *
      * @param url URL to be encoded
+     * @return <code>true</code> if the URL was encoded
      *
      * @deprecated As of Version 2.1 of the Java Servlet API, use
      *  <code>encodeRedirectURL()</code> instead.
@@ -1121,6 +1173,7 @@ public class Response implements HttpServletResponse {
      * into the specified URL, if necessary.
      *
      * @param url URL to be encoded
+     * @return <code>true</code> if the URL was encoded
      */
     @Override
     public String encodeURL(String url) {
@@ -1153,6 +1206,7 @@ public class Response implements HttpServletResponse {
      * into the specified URL, if necessary.
      *
      * @param url URL to be encoded
+     * @return <code>true</code> if the URL was encoded
      *
      * @deprecated As of Version 2.1 of the Java Servlet API, use
      *  <code>encodeURL()</code> instead.
@@ -1256,6 +1310,10 @@ public class Response implements HttpServletResponse {
      * Internal method that allows a redirect to be sent with a status other
      * than {@link HttpServletResponse#SC_FOUND} (302). No attempt is made to
      * validate the status code.
+     *
+     * @param location Location URL to redirect to
+     * @param status HTTP status code that will be sent
+     * @throws IOException an IO exception occurred
      */
     public void sendRedirect(String location, int status) throws IOException {
         if (isCommitted()) {
@@ -1355,7 +1413,7 @@ public class Response implements HttpServletResponse {
         char cc=name.charAt(0);
         if (cc=='C' || cc=='c') {
             if (checkSpecialHeader(name, value))
-            return;
+                return;
         }
 
         getCoyoteResponse().setHeader(name, value);
@@ -1444,26 +1502,27 @@ public class Response implements HttpServletResponse {
      * </ul>
      *
      * @param location Absolute URL to be validated
+     * @return <code>true</code> if the URL should be encoded
      */
     protected boolean isEncodeable(final String location) {
 
         if (location == null) {
-            return (false);
+            return false;
         }
 
         // Is this an intra-document reference?
         if (location.startsWith("#")) {
-            return (false);
+            return false;
         }
 
         // Are we in a valid session that is not using cookies?
         final Request hreq = request;
         final Session session = hreq.getSessionInternal(false);
         if (session == null) {
-            return (false);
+            return false;
         }
         if (hreq.isRequestedSessionIdFromCookie()) {
-            return (false);
+            return false;
         }
 
         // Is URL encoding permitted
@@ -1493,15 +1552,15 @@ public class Response implements HttpServletResponse {
         try {
             url = new URL(location);
         } catch (MalformedURLException e) {
-            return (false);
+            return false;
         }
 
         // Does this URL match down to (and including) the context path?
         if (!hreq.getScheme().equalsIgnoreCase(url.getProtocol())) {
-            return (false);
+            return false;
         }
         if (!hreq.getServerName().equalsIgnoreCase(url.getHost())) {
-            return (false);
+            return false;
         }
         int serverPort = hreq.getServerPort();
         if (serverPort == -1) {
@@ -1520,25 +1579,25 @@ public class Response implements HttpServletResponse {
             }
         }
         if (serverPort != urlPort) {
-            return (false);
+            return false;
         }
 
         String contextPath = getContext().getPath();
         if (contextPath != null) {
             String file = url.getFile();
             if (!file.startsWith(contextPath)) {
-                return (false);
+                return false;
             }
             String tok = ";" +
                     SessionConfig.getSessionUriParamName(request.getContext()) +
                     "=" + session.getIdInternal();
             if( file.indexOf(tok, contextPath.length()) >= 0 ) {
-                return (false);
+                return false;
             }
         }
 
         // This URL belongs to our web application, so it is encodeable
-        return (true);
+        return true;
 
     }
 
@@ -1549,6 +1608,7 @@ public class Response implements HttpServletResponse {
      * already absolute, return it unchanged.
      *
      * @param location URL to be (possibly) converted and then returned
+     * @return the encoded URL
      *
      * @exception IllegalArgumentException if a MalformedURLException is
      *  thrown when converting the relative URL to an absolute one
@@ -1644,9 +1704,11 @@ public class Response implements HttpServletResponse {
 
     }
 
-    /*
+    /**
      * Removes /./ and /../ sequences from absolute URLs.
      * Code borrowed heavily from CoyoteAdapter.normalize()
+     *
+     * @param cc the char chunk containing the chars to normalize
      */
     private void normalize(CharChunk cc) {
         // Strip query string and/or fragment first as doing it this way makes
@@ -1739,7 +1801,10 @@ public class Response implements HttpServletResponse {
 
 
     /**
-     * Determine if an absolute URL has a path component
+     * Determine if an absolute URL has a path component.
+     *
+     * @param uri the URL that will be checked
+     * @return <code>true</code> if the URL has a path
      */
     private boolean hasPath(String uri) {
         int pos = uri.indexOf("://");
@@ -1753,13 +1818,13 @@ public class Response implements HttpServletResponse {
         return true;
     }
 
-
     /**
      * Return the specified URL with the specified session identifier
      * suitably encoded.
      *
      * @param url URL to be encoded with the session id
      * @param sessionId Session id to be included in the encoded URL
+     * @return the encoded URL
      */
     protected String toEncoded(String url, String sessionId) {
 

@@ -48,19 +48,8 @@ public class BasicAuthenticator extends AuthenticatorBase {
 
     // --------------------------------------------------------- Public Methods
 
-    /**
-     * Authenticate the user making this request, based on the specified
-     * login configuration.  Return <code>true</code> if any specified
-     * constraint has been satisfied, or <code>false</code> if we have
-     * created a response challenge already.
-     *
-     * @param request Request we are processing
-     * @param response Response we are creating
-     *
-     * @exception IOException if an input/output error occurs
-     */
     @Override
-    public boolean authenticate(Request request, HttpServletResponse response)
+    protected boolean doAuthenticate(Request request, HttpServletResponse response)
             throws IOException {
 
         if (checkForCachedAuthentication(request, response, true)) {
@@ -85,7 +74,7 @@ public class BasicAuthenticator extends AuthenticatorBase {
                 if (principal != null) {
                     register(request, response, principal,
                         HttpServletRequest.BASIC_AUTH, username, password);
-                    return (true);
+                    return true;
                 }
             }
             catch (IllegalArgumentException iae) {
@@ -102,7 +91,7 @@ public class BasicAuthenticator extends AuthenticatorBase {
         value.append('\"');
         response.setHeader(AUTH_HEADER_NAME, value.toString());
         response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-        return (false);
+        return false;
 
     }
 
@@ -117,7 +106,7 @@ public class BasicAuthenticator extends AuthenticatorBase {
      * as per RFC 2617 section 2, and the Base64 encoded credentials as
      * per RFC 2045 section 6.8.
      */
-    protected static class BasicCredentials {
+    public static class BasicCredentials {
 
         // the only authentication method supported by this parser
         // note: we include single white space as its delimiter

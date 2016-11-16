@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import org.apache.catalina.tribes.group.GroupChannel;
 import org.apache.catalina.tribes.io.ObjectReader;
 import org.apache.catalina.tribes.transport.AbstractRxTask;
 import org.apache.catalina.tribes.transport.ReceiverBase;
@@ -33,8 +32,7 @@ public class BioReceiver extends ReceiverBase implements Runnable {
 
     private static final Log log = LogFactory.getLog(BioReceiver.class);
 
-    protected static final StringManager sm =
-            StringManager.getManager(BioReceiver.class.getPackage().getName());
+    protected static final StringManager sm = StringManager.getManager(BioReceiver.class);
 
     protected ServerSocket serverSocket;
 
@@ -56,10 +54,7 @@ public class BioReceiver extends ReceiverBase implements Runnable {
             getBind();
             bind();
             String channelName = "";
-            if (getChannel() instanceof GroupChannel
-                    && ((GroupChannel)getChannel()).getName() != null) {
-                channelName = "[" + ((GroupChannel)getChannel()).getName() + "]";
-            }
+            if (getChannel().getName() != null) channelName = "[" + getChannel().getName() + "]";
             Thread t = new Thread(this, "BioReceiver" + channelName);
             t.setDaemon(true);
             t.start();

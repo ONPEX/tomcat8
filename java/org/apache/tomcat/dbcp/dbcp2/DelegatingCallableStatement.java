@@ -113,7 +113,7 @@ public class DelegatingCallableStatement extends DelegatingPreparedStatement
     public double getDouble(final int parameterIndex) throws SQLException
     { checkOpen(); try { return ((CallableStatement)getDelegate()).getDouble( parameterIndex); } catch (final SQLException e) { handleException(e); return 0; } }
 
-    /** @deprecated */
+    /** @deprecated Use {@link #getBigDecimal(int)} or {@link #getBigDecimal(String)} */
     @Override
     @Deprecated
     public BigDecimal getBigDecimal(final int parameterIndex, final int scale) throws SQLException

@@ -183,14 +183,16 @@ public abstract class ChannelInterceptorBase implements ChannelInterceptor {
      * Return the channel that is related to this interceptor
      * @return Channel
      */
+    @Override
     public Channel getChannel() {
         return channel;
     }
 
     /**
      * Set the channel that is related to this interceptor
-     * @param channel
+     * @param channel The channel
      */
+    @Override
     public void setChannel(Channel channel) {
         this.channel = channel;
     }

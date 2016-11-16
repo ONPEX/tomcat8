@@ -45,13 +45,11 @@ import javax.websocket.server.ServerEndpoint;
 import javax.websocket.server.ServerEndpointConfig;
 
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Test;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.servlets.DefaultServlet;
 import org.apache.catalina.startup.Tomcat;
-import org.apache.coyote.http11.Http11Protocol;
 import org.apache.tomcat.util.net.TesterSupport;
 import org.apache.tomcat.websocket.TesterMessageCountClient.BasicBinary;
 import org.apache.tomcat.websocket.TesterMessageCountClient.BasicHandler;
@@ -396,11 +394,6 @@ public class TestWsWebSocketContainer extends WebSocketBaseTest {
     private void doTestWriteTimeoutServer(boolean setTimeoutOnContainer)
             throws Exception {
 
-        // This will never work for BIO
-        Assume.assumeFalse(
-                "Skipping test. This feature will never work for BIO connector.",
-                getProtocol().equals(Http11Protocol.class.getName()));
-
         /*
          * Note: There are all sorts of horrible uses of statics in this test
          *       because the API uses classes and the tests really need access
@@ -567,15 +560,10 @@ public class TestWsWebSocketContainer extends WebSocketBaseTest {
                 session.getAsyncRemote().setSendTimeout(TIMEOUT_MS);
             }
 
-            // The close message is written with a blocking write. This is going
-            // to fail so reduce the timeout from the default so the test
-            // completes faster
-            session.getUserProperties().put(
-                    WsRemoteEndpointImplBase.BLOCKING_SEND_TIMEOUT_PROPERTY, Long.valueOf(5000));
+            long lastSend = 0;
 
             // Should send quickly until the network buffers fill up and then
             // block until the timeout kicks in
-            long lastSend = 0;
             try {
                 while (true) {
                     lastSend = System.currentTimeMillis();
@@ -846,7 +834,7 @@ public class TestWsWebSocketContainer extends WebSocketBaseTest {
         ClientEndpointConfig clientEndpointConfig =
                 ClientEndpointConfig.Builder.create().build();
         clientEndpointConfig.getUserProperties().put(
-                WsWebSocketContainer.SSL_TRUSTSTORE_PROPERTY,
+                org.apache.tomcat.websocket.Constants.SSL_TRUSTSTORE_PROPERTY,
                 "test/org/apache/tomcat/util/net/ca.jks");
         Session wsSession = wsContainer.connectToServer(
                 TesterProgrammaticEndpoint.class,

@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
  Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -15,7 +15,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project name="Tomcat 8.0" default="deploy" basedir=".">
+<project name="Tomcat 8.5" default="deploy" basedir=".">
 
   <!-- ===================== Initialize Property Values ==================== -->
 
@@ -48,6 +48,8 @@
   <property name="jsp.revision" value="FR" />
   <property name="el.revision" value="FR" />
   <property name="websocket.revision" value="FR" />
+  <!-- MR B but this was first 1.1 release so use FR -->
+  <property name="jaspic.revision" value="FR" />
 
   <!-- Release artifact base names -->
   <property name="final.name"            value="${project}-${version}" />
@@ -93,6 +95,7 @@
   <property name="jsp-api.jar" value="${tomcat.build}/lib/jsp-api.jar"/>
   <property name="el-api.jar" value="${tomcat.build}/lib/el-api.jar"/>
   <property name="websocket-api.jar" value="${tomcat.build}/lib/websocket-api.jar"/>
+  <property name="jaspic-api.jar" value="${tomcat.build}/lib/jaspic-api.jar"/>
   <property name="tomcat-websocket.jar" value="${tomcat.build}/lib/tomcat-websocket.jar"/>
   <property name="catalina.jar" value="${tomcat.build}/lib/catalina.jar"/>
   <property name="catalina-tribes.jar" value="${tomcat.build}/lib/catalina-tribes.jar"/>
@@ -118,6 +121,7 @@
   <property name="jsp-api-src.jar" value="${tomcat.src.jars}/jsp-api-src.jar"/>
   <property name="el-api-src.jar" value="${tomcat.src.jars}/el-api-src.jar"/>
   <property name="websocket-api-src.jar" value="${tomcat.src.jars}/websocket-api-src.jar"/>
+  <property name="jaspic-api-src.jar" value="${tomcat.src.jars}/jaspic-api-src.jar"/>
   <property name="tomcat-websocket-src.jar" value="${tomcat.src.jars}/tomcat-websocket-src.jar"/>
   <property name="catalina-src.jar" value="${tomcat.src.jars}/catalina-src.jar"/>
   <property name="catalina-tribes-src.jar" value="${tomcat.src.jars}/catalina-tribes-src.jar"/>
@@ -139,26 +143,18 @@
   <property name="tomcat-embed-jasper.jar" value="${tomcat.embed}/tomcat-embed-jasper.jar"/>
   <property name="tomcat-embed-el.jar" value="${tomcat.embed}/tomcat-embed-el.jar"/>
   <property name="tomcat-embed-websocket.jar" value="${tomcat.embed}/tomcat-embed-websocket.jar"/>
-  <property name="tomcat-embed-juli.jar" value="${tomcat.embed}/tomcat-embed-logging-juli.jar"/>
 
   <property name="tomcat-embed-core-sources.jar" value="${tomcat.embed.sources}/tomcat-embed-core-src.jar"/>
   <property name="tomcat-embed-jasper-sources.jar" value="${tomcat.embed.sources}/tomcat-embed-jasper-src.jar"/>
   <property name="tomcat-embed-el-sources.jar" value="${tomcat.embed.sources}/tomcat-embed-el-src.jar"/>
   <property name="tomcat-embed-websocket-sources.jar" value="${tomcat.embed.sources}/tomcat-embed-websocket-src.jar"/>
-  <property name="tomcat-embed-juli-sources.jar" value="${tomcat.embed.sources}/tomcat-embed-logging-juli-src.jar"/>
 
   <!-- Extras JARs & source JARs -->
-  <property name="tomcat-juli-extras.jar" value="${tomcat.extras}/tomcat-juli.jar"/>
-  <property name="tomcat-juli-adapters.jar" value="${tomcat.extras}/tomcat-juli-adapters.jar"/>
   <property name="catalina-ws.jar" value="${tomcat.extras}/catalina-ws.jar"/>
   <property name="catalina-jmx-remote.jar" value="${tomcat.extras}/catalina-jmx-remote.jar"/>
-  <property name="tomcat-embed-log4j.jar" value="${tomcat.embed}/tomcat-embed-logging-log4j.jar"/>
 
-  <property name="tomcat-juli-extras-src.jar" value="${tomcat.extras.sources}/tomcat-juli-src.jar"/>
-  <property name="tomcat-juli-adapters-src.jar" value="${tomcat.extras.sources}/tomcat-juli-adapters-src.jar"/>
   <property name="catalina-ws-src.jar" value="${tomcat.extras.sources}/catalina-ws-src.jar"/>
   <property name="catalina-jmx-remote-src.jar" value="${tomcat.extras.sources}/catalina-jmx-remote-src.jar"/>
-  <property name="tomcat-embed-log4j-src.jar" value="${tomcat.embed.sources}/tomcat-embed-logging-log4j-src.jar"/>
 
   <!-- jdbc-pool JARs & source JARs -->
   <property name="tomcat-jdbc.jar" value="${tomcat.pool}/tomcat-jdbc.jar"/>
@@ -321,6 +317,10 @@
     <include name="javax/websocket/**" />
   </patternset>
 
+  <patternset id="files.jaspic-api">
+    <include name="javax/security/auth/message/**" />
+  </patternset>
+
   <patternset id="files.tomcat-websocket">
     <include name="org/apache/tomcat/websocket/**" />
   </patternset>
@@ -358,6 +358,7 @@
   <patternset id="files.tomcat-util">
     <include name="org/apache/tomcat/util/buf/**" />
     <include name="org/apache/tomcat/util/codec/**" />
+    <include name="org/apache/tomcat/util/collections/**" />
     <include name="org/apache/tomcat/util/compat/**" />
     <include name="org/apache/tomcat/util/file/**" />
     <include name="org/apache/tomcat/util/res/**" />
@@ -365,7 +366,6 @@
     <include name="org/apache/tomcat/util/threads/**" />
     <include name="org/apache/tomcat/util/*" />
     <exclude name="org/apache/tomcat/util/bcel" />
-    <exclude name="org/apache/tomcat/util/collections" />
     <exclude name="org/apache/tomcat/util/descriptor" />
     <exclude name="org/apache/tomcat/util/digester" />
     <exclude name="org/apache/tomcat/util/http" />
@@ -417,7 +417,6 @@
     <include name="org/apache/coyote/**" />
     <!-- Remaining tomcat-util packages -->
     <include name="org/apache/tomcat/util/bcel/**" />
-    <include name="org/apache/tomcat/util/collections/**" />
     <include name="org/apache/tomcat/util/http/**" />
     <include name="org/apache/tomcat/util/log/**" />
     <include name="org/apache/tomcat/util/modeler/**" />
@@ -442,7 +441,9 @@
     <patternset refid="files.annotations-api" />
     <patternset refid="files.catalina" />
     <patternset refid="files.servlet-api" />
+    <patternset refid="files.jaspic-api" />
     <patternset refid="files.tomcat-api" />
+    <patternset refid="files.tomcat-juli" />
     <!-- These pattern sets conflict so include files directly
       <patternset refid="files.tomcat-coyote" />
       <patternset refid="files.tomcat-util" />
@@ -470,9 +471,6 @@
     <patternset refid="files.tomcat-websocket" />
   </patternset>
 
-  <!-- Pattern sets used directly -->
-    <!--<patternset refid="files.tomcat-juli" />-->
-
   <!-- Pattern sets not included in embedded -->
     <!-- Cluster support not included in embedded -->
     <!--<patternset refid="files.catalina-tribes" />-->
@@ -487,15 +485,6 @@
 
   <patternset id="files.tomcat-extras-jmxremote">
     <include name="org/apache/catalina/mbeans/JmxRemote*" />
-  </patternset>
-
-  <patternset id="files.tomcat-extras-juli-adapters">
-    <include name="org/apache/juli/logging/impl/**" />
-    <exclude name="org/apache/juli/logging/impl/WeakHashtable*" />
-    <exclude name="org/apache/juli/logging/impl/LogFactoryImpl*" />
-    <!-- Javadoc and i18n exclusions -->
-    <exclude name="**/package.html" />
-    <exclude name="**/LocalStrings_*" />
   </patternset>
 
   <!-- =========================== Build targets =========================== -->
@@ -660,7 +649,7 @@
       <compilerarg value="-Xlint:unchecked"/>
       -->
       <classpath refid="compile.classpath" />
-        <exclude name="org/apache/naming/factory/webservices/**" />
+      <exclude name="org/apache/naming/factory/webservices/**" />
     </javac>
     <!-- Copy static resource files -->
     <copy todir="${tomcat.classes}" encoding="ISO-8859-1">
@@ -687,6 +676,7 @@
     <filter token="jsp.revision" value="${jsp.revision}"/>
     <filter token="el.revision" value="${el.revision}"/>
     <filter token="websocket.revision" value="${websocket.revision}"/>
+    <filter token="jaspic.revision" value="${jaspic.revision}"/>
 
     <mkdir dir="${tomcat.manifests}" />
     <copy todir="${tomcat.manifests}" overwrite="yes" filtering="yes"
@@ -729,6 +719,12 @@
       filesDir="${tomcat.classes}"
       filesId="files.websocket-api"
       manifest="${tomcat.manifests}/websocket-api.jar.manifest" />
+
+    <!-- JASPIC 1.1 API JAR File -->
+    <jarIt jarfile="${jaspic-api.jar}"
+      filesDir="${tomcat.classes}"
+      filesId="files.jaspic-api"
+      manifest="${tomcat.manifests}/jaspic-api.jar.manifest" />
 
     <!-- WebSocket 1.1 implementation JAR File -->
     <jarIt jarfile="${tomcat-websocket.jar}"
@@ -1233,9 +1229,6 @@
            filesDir="${tomcat.classes}"
            filesId="files.tomcat-embed-websocket"
            meta-inf="${tomcat.manifests}/tomcat-websocket.jar"/>
-    <jarIt jarfile="${tomcat-embed-juli.jar}"
-           filesDir="${tomcat.classes}"
-           filesId="files.tomcat-juli"/>
 
   </target>
 
@@ -1259,9 +1252,6 @@
     <jarIt jarfile="${tomcat-embed-websocket-sources.jar}"
            filesDir="java"
            filesId="files.tomcat-embed-websocket"/>
-    <jarIt jarfile="${tomcat-embed-juli-sources.jar}"
-           filesDir="java"
-           filesId="files.tomcat-juli"/>
 
     <copy file="${tomcat-dbcp-src.jar}" todir="${tomcat.embed.sources}" />
 
@@ -1271,7 +1261,7 @@
 
   <target name="embed"
           description="Creates the experimental embedded release"
-          depends="embed-jars,embed-sources,embed-extras" >
+          depends="embed-jars,embed-sources" >
 
     <fixcrlf srcdir="${tomcat.embed}" eol="crlf"
         encoding="ISO-8859-1" fixlast="false" >
@@ -1337,7 +1327,7 @@
   <property name="junit.formatter.extension" value=".txt" />
 
   <target name="test" description="Runs the JUnit test cases"
-          depends="test-bio,test-nio,test-nio2,test-apr,cobertura-report" >
+          depends="test-nio,test-nio2,test-apr,cobertura-report" >
     <fileset id="test.result.skippedtests" dir="${test.reports}" includes="*.txt">
       <not>
         <contains text="Skipped: 0" />
@@ -1369,12 +1359,6 @@
 
     <fail if="test.result.error" message='Some tests completed with an Error. See ${tomcat.build}/logs for details, search for "ERROR".' />
     <fail if="test.result.failure" message='Some tests completed with a Failure. See ${tomcat.build}/logs for details, search for "FAILED".' />
-  </target>
-
-  <target name="test-bio" description="Runs the JUnit test cases for BIO. Does not stop on errors."
-          depends="test-compile,deploy,cobertura-instrument,test-openssl-exists" if="${execute.test.bio}">
-    <runtests protocol="org.apache.coyote.http11.Http11Protocol"
-              extension=".BIO" />
   </target>
 
   <target name="test-nio" description="Runs the JUnit test cases for NIO. Does not stop on errors."
@@ -1450,6 +1434,7 @@
         <sysproperty key="tomcat.test.reports" value="${test.reports}" />
         <sysproperty key="tomcat.test.openssl.path" value="${test.openssl.path}" />
         <sysproperty key="tomcat.test.relaxTiming" value="${test.relaxTiming}" />
+        <sysproperty key="tomcat.test.sslImplementation" value="${test.sslImplementation}" />
         <!-- File for Cobertura to write coverage results to -->
         <sysproperty key="net.sourceforge.cobertura.datafile" file="${cobertura.datafile}" />
 
@@ -1472,7 +1457,7 @@
             <!-- Exclude the tests known to fail -->
             <exclude name="org/apache/catalina/tribes/test/**" />
             <!-- Exclude the OpenSSL tests unless OpenSSL is available -->
-            <exclude name="org/apache/tomcat/util/net/jsse/openssl/**" unless="${test.openssl.exists}" />
+            <exclude name="org/apache/tomcat/util/net/openssl/ciphers/**" unless="${test.openssl.exists}" />
             <!-- Exclude performance tests. E.g. on systems with slow/inconsistent timing -->
             <exclude name="**/*Performance.java" if="${test.excludePerformance}" />
           </fileset>
@@ -1523,6 +1508,7 @@
         <exclude name="lib/**/jetty*.jar" />
         <exclude name="lib/**/servlet-api*.jar" />
       </fileset>
+      <pathelement path="res/cobertura"/>
     </path>
 
     <taskdef classpathref="cobertura.classpath" resource="tasks.properties" />
@@ -1554,7 +1540,7 @@
   </target>
 
   <target name="cobertura-report" if="${cobertura.enabled}"
-          depends="test-bio,test-nio,test-nio2,test-apr"
+          depends="test-nio,test-nio2,test-apr"
           description="Creates report from gathered Cobertura results">
 
     <cobertura-report srcdir="${basedir}/java" destdir="${cobertura.out}"
@@ -1593,147 +1579,7 @@
     <mkdir dir="${tomcat.extras.sources}"/>
     <mkdir dir="${tomcat.embed}"/>
     <mkdir dir="${tomcat.embed.sources}"/>
-    <mkdir dir="${tomcat.extras}/logging"/>
     <mkdir dir="${tomcat.extras}/webservices"/>
-  </target>
-
-  <target name="extras-commons-logging-prepare"
-          depends="extras-prepare"
-          description="Prepare to build web services extras package">
-
-    <antcall target="downloadfile-2">
-      <param name="sourcefile.1" value="${commons-logging-src.loc.1}"/>
-      <param name="sourcefile.2" value="${commons-logging-src.loc.2}"/>
-      <param name="destfile" value="${commons-logging-src.tar.gz}"/>
-      <param name="destdir" value="${commons-logging.home}"/>
-    </antcall>
-
-    <antcall target="downloadfile">
-      <param name="sourcefile" value="${avalon-framework.loc}"/>
-      <param name="destfile" value="${avalon-framework.jar}"/>
-      <param name="destdir" value="${avalon-framework.home}"/>
-    </antcall>
-
-    <antcall target="downloadfile">
-      <param name="sourcefile" value="${log4j.loc}"/>
-      <param name="destfile" value="${log4j.jar}"/>
-      <param name="destdir" value="${log4j.home}"/>
-    </antcall>
-
-    <antcall target="downloadfile">
-      <param name="sourcefile" value="${logkit.loc}"/>
-      <param name="destfile" value="${logkit.jar}"/>
-      <param name="destdir" value="${logkit.home}"/>
-    </antcall>
-
-    <antcall target="downloadfile">
-      <param name="sourcefile" value="${servletapi.loc}"/>
-      <param name="destfile" value="${servletapi.jar}"/>
-      <param name="destdir" value="${servletapi.home}"/>
-    </antcall>
-
-  </target>
-
-  <target name="extras-commons-logging"
-          depends="extras-commons-logging-prepare,compile,build-manifests"
-          description="Build JULI for log4j extras package">
-
-    <gunzip src="${commons-logging-src.tar.gz}"
-      dest="${tomcat.extras}/logging/commons-logging-src.tar"/>
-    <untar src="${tomcat.extras}/logging/commons-logging-src.tar"
-      dest="${tomcat.extras}/logging/"/>
-
-    <replace dir="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src/src/main/java/org/apache/commons"
-        encoding="ISO-8859-1">
-      <replacefilter token="org.apache.commons"
-            value="org.apache.juli" />
-    </replace>
-    <mkdir dir="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src/src/main/java/org/apache/juli" />
-    <move todir="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src/src/main/java/org/apache/juli">
-      <fileset dir="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src/src/main/java/org/apache/commons" />
-    </move>
-
-    <replace dir="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src"
-      encoding="ISO-8859-1">
-      <replacefilter token="org.apache.commons"
-        value="org.apache.juli" />
-      <replacefilter token="org/apache/commons/"
-        value="org/apache/juli/" />
-    </replace>
-    <copy tofile="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src/build2.xml"
-      file="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src/build.xml" />
-
-    <copy todir="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src">
-      <fileset file="${avalon-framework.jar}" />
-      <fileset file="${log4j.jar}" />
-      <fileset file="${logkit.jar}" />
-      <fileset file="${servletapi.jar}" />
-    </copy>
-
-    <ant antfile="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src/build2.xml"
-         dir="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src"
-         inheritAll="false" target="compile" />
-
-    <jar jarfile="${tomcat-juli-extras.jar}"
-         manifest="${tomcat.manifests}/default.manifest">
-      <fileset dir="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src/target/classes">
-        <include name="org/apache/juli/logging/*" />
-        <include name="org/apache/juli/logging/impl/LogFactoryImpl*.class" />
-        <include name="org/apache/juli/logging/impl/WeakHashtable*.class" />
-        <include name="org/apache/juli/logging/impl/SimpleLog*.class" />
-        <include name="org/apache/juli/logging/impl/NoOpLog*.class" />
-        <include name="org/apache/juli/logging/impl/Jdk14Logger.class" />
-        <!-- Javadoc and i18n exclusions -->
-        <exclude name="**/package.html" />
-        <exclude name="**/LocalStrings_*" />
-      </fileset>
-      <fileset dir="${tomcat.classes}">
-        <include name="org/apache/juli/*" />
-        <!-- Javadoc and i18n exclusions -->
-        <exclude name="**/package.html" />
-        <exclude name="**/LocalStrings_*" />
-      </fileset>
-      <zipfileset file="${tomcat.manifests}/default.notice"
-        fullpath="META-INF/NOTICE" />
-      <zipfileset file="${tomcat.manifests}/default.license"
-        fullpath="META-INF/LICENSE" />
-    </jar>
-    <hashAndSign file="${tomcat-juli-extras.jar}" />
-
-    <jarIt jarfile="${tomcat-juli-adapters.jar}"
-      filesDir="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src/target/classes"
-      filesId="files.tomcat-extras-juli-adapters" />
-    <hashAndSign file="${tomcat-juli-adapters.jar}" />
-
-    <!-- Source JARs -->
-    <jar jarfile="${tomcat-juli-extras-src.jar}"
-         manifest="${tomcat.manifests}/default.manifest">
-      <fileset dir="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src/src/main/java">
-        <include name="org/apache/juli/logging/*.java" />
-        <include name="org/apache/juli/logging/impl/LogFactoryImpl*.java" />
-        <include name="org/apache/juli/logging/impl/WeakHashtable*.java" />
-        <include name="org/apache/juli/logging/impl/SimpleLog*.java" />
-        <include name="org/apache/juli/logging/impl/NoOpLog*.java" />
-        <include name="org/apache/juli/logging/impl/Jdk14Logger.java" />
-        <!-- Javadoc and i18n exclusions -->
-        <exclude name="**/package.html" />
-        <exclude name="**/LocalStrings_*" />
-      </fileset>
-      <fileset dir="java">
-        <include name="org/apache/juli/*" />
-        <!-- Javadoc and i18n exclusions -->
-        <exclude name="**/package.html" />
-        <exclude name="**/LocalStrings_*" />
-      </fileset>
-      <zipfileset file="${tomcat.manifests}/default.notice"
-        fullpath="META-INF/NOTICE" />
-      <zipfileset file="${tomcat.manifests}/default.license"
-        fullpath="META-INF/LICENSE" />
-    </jar>
-    <jarIt jarfile="${tomcat-juli-adapters-src.jar}"
-      filesDir="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src/src/main/java"
-      filesId="files.tomcat-extras-juli-adapters" />
-
   </target>
 
   <target name="extras-webservices-prepare"
@@ -1802,55 +1648,8 @@
   </target>
 
   <target name="extras"
-          depends="extras-commons-logging,extras-webservices,extras-jmx-remote"
+          depends="extras-webservices,extras-jmx-remote"
           description="Build all extras packages">
-  </target>
-
-  <target name="embed-extras" depends="extras"
-          description="Embedded packaging for those extras that can use it">
-
-    <jar jarfile="${tomcat-embed-log4j.jar}"
-         manifest="${tomcat.manifests}/default.manifest">
-      <fileset dir="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src/target/classes">
-        <include name="org/apache/juli/logging/*" />
-        <include name="org/apache/juli/logging/impl/*" />
-        <!-- Javadoc and i18n exclusions -->
-        <exclude name="**/package.html" />
-        <exclude name="**/LocalStrings_*" />
-      </fileset>
-      <fileset dir="${tomcat.classes}">
-        <include name="org/apache/juli/*" />
-        <!-- Javadoc and i18n exclusions -->
-        <exclude name="**/package.html" />
-        <exclude name="**/LocalStrings_*" />
-      </fileset>
-      <zipfileset file="${tomcat.manifests}/default.notice"
-        fullpath="META-INF/NOTICE" />
-      <zipfileset file="${tomcat.manifests}/default.license"
-        fullpath="META-INF/LICENSE" />
-    </jar>
-
-    <jar jarfile="${tomcat-embed-log4j-src.jar}"
-         manifest="${tomcat.manifests}/default.manifest">
-      <fileset dir="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src/src/main/java">
-        <include name="org/apache/juli/logging/*.java" />
-        <include name="org/apache/juli/logging/impl/*.java" />
-        <!-- Javadoc and i18n exclusions -->
-        <exclude name="**/package.html" />
-        <exclude name="**/LocalStrings_*" />
-      </fileset>
-      <fileset dir="java">
-        <include name="org/apache/juli/*" />
-        <!-- Javadoc and i18n exclusions -->
-        <exclude name="**/package.html" />
-        <exclude name="**/LocalStrings_*" />
-      </fileset>
-      <zipfileset file="${tomcat.manifests}/default.notice"
-        fullpath="META-INF/NOTICE" />
-      <zipfileset file="${tomcat.manifests}/default.license"
-        fullpath="META-INF/LICENSE" />
-    </jar>
-
   </target>
 
   <target name="dist-prepare" depends="download-dist">
@@ -1947,7 +1746,8 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
       charset="UTF-8"
       additionalparam="-breakiterator -notimestamp"
       maxmemory="512m"
-      failonerror="true">
+      failonerror="true"
+      failonwarning="true">
       <classpath>
         <path refid="compile.classpath"/>
         <path refid="tomcat.webservices.classpath"/>
@@ -1967,7 +1767,8 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
       charset="UTF-8"
       additionalparam="-breakiterator -notimestamp"
       maxmemory="512m"
-      failonerror="true">
+      failonerror="true"
+      failonwarning="true">
       <classpath>
         <path refid="compile.classpath"/>
         <path refid="tomcat.webservices.classpath"/>
@@ -1987,7 +1788,8 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
       charset="UTF-8"
       additionalparam="-breakiterator -notimestamp"
       maxmemory="512m"
-      failonerror="true">
+      failonerror="true"
+      failonwarning="true">
       <classpath>
         <path refid="compile.classpath"/>
         <path refid="tomcat.webservices.classpath"/>
@@ -2007,7 +1809,8 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
       charset="UTF-8"
       additionalparam="-breakiterator -notimestamp"
       maxmemory="512m"
-      failonerror="true">
+      failonerror="true"
+      failonwarning="true">
       <classpath>
         <path refid="compile.classpath"/>
         <path refid="tomcat.webservices.classpath"/>
@@ -2026,7 +1829,8 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
       charset="UTF-8"
       additionalparam="-breakiterator -notimestamp"
       maxmemory="512m"
-      failonerror="true">
+      failonerror="true"
+      failonwarning="true">
       <classpath>
         <path refid="compile.classpath"/>
         <path refid="tomcat.webservices.classpath"/>
@@ -2039,11 +1843,12 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
       <link href="http://docs.oracle.com/javase/7/docs/api/"/>
       <link href="http://commons.apache.org/proper/commons-io/javadocs/api-release/"/>
       <link href="http://docs.oracle.com/javaee/7/api/"/>
-      <sourcepath>
-        <path location="${tomcat.dist}/src/java"/>
-        <!--jdbc-pool src files for javadoc-->
-        <path location="${tomcat.dist}/src/modules/jdbc-pool/src/main/java"/>
-      </sourcepath>
+      <packageset dir="${tomcat.dist}/src/java/">
+        <include name="org/**"/>
+        <exclude name="org/apache/el/parser/**"/>
+      </packageset>
+      <!--jdbc-pool src files for javadoc-->
+      <packageset dir="${tomcat.dist}/src/modules/jdbc-pool/src/main/java"/>
     </javadoc>
   </target>
 
@@ -2058,6 +1863,7 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
         <include name="jsp-api.jar"/>
         <include name="jasper.jar"/>
         <include name="jasper-el.jar"/>
+        <include name="jaspic-api.jar"/>
         <include name="servlet-api.jar"/>
         <include name="websocket-api.jar"/>
         <include name="tomcat-websocket.jar"/>
@@ -2254,7 +2060,7 @@ skip.installer property in build.properties" />
     </signcode>
   </target>
 
-  <target name="-installer" description="Builds Windows installer"
+  <target name="-installer" description="Builds the installer executable"
       unless="skip.installer" depends="-installer-sign-uninstaller">
     <exec dir="${tomcat.dist}" executable="${nsis.exe}" osfamily="windows">
       <arg value="/DNSISDIR=${nsis.home}" />
@@ -2271,7 +2077,8 @@ skip.installer property in build.properties" />
     <hashAndSign file="${tomcat.release}/v${version}/bin/${final.name}.exe" />
   </target>
 
-  <target name="installer-sign" depends="-installer" if="${do.codesigning}" >
+  <target name="installer-sign" description="Builds and signs the Windows installer"
+      depends="-installer" if="${do.codesigning}" >
     <taskdef name="signcode"
         classname="org.apache.tomcat.buildutil.SignCode"
         classpath="${tomcat.classes}" />
@@ -2466,26 +2273,10 @@ skip.installer property in build.properties" />
 
     <tar longfile="gnu" compression="gzip"
          tarfile="${tomcat.release}/v${version}/bin/${final.name}.tar.gz">
-      <tarfileset dir="${tomcat.dist}" mode="755" prefix="${final.name}">
-        <include name="bin/catalina.sh" />
-        <include name="bin/configtest.sh" />
-        <include name="bin/daemon.sh" />
-        <include name="bin/digest.sh" />
-        <include name="bin/jasper.sh" />
-        <include name="bin/jspc.sh" />
-        <include name="bin/setclasspath.sh" />
-        <include name="bin/startup.sh" />
-        <include name="bin/shutdown.sh" />
-        <include name="bin/tool-wrapper.sh" />
-        <include name="bin/tool-wrapper-using-launcher.sh" />
-        <include name="bin/shutdown-using-launcher.sh" />
-        <include name="bin/startup-using-launcher.sh" />
-        <include name="bin/version.sh" />
-      </tarfileset>
-      <tarfileset dir="${tomcat.dist}" mode="600" prefix="${final.name}">
+      <tarfileset dir="${tomcat.dist}" dirmode="700" filemode="600" prefix="${final.name}">
         <include name="conf/**" />
       </tarfileset>
-      <tarfileset dir="${tomcat.dist}" prefix="${final.name}">
+      <tarfileset dir="${tomcat.dist}" dirmode="750" filemode="640" prefix="${final.name}">
         <include name="bin/**" />
         <include name="lib/**" />
         <include name="logs/**" />
@@ -2518,6 +2309,24 @@ skip.installer property in build.properties" />
         <exclude name="bin/x64/"/>
         <exclude name="bin/*.exe"/>
         <exclude name="bin/*.dll"/>
+      </tarfileset>
+      <!-- These need to be added after the bin directory is added else the  -->
+      <!-- bin diretcory will pick up the wrong permissions.                 -->
+      <tarfileset dir="${tomcat.dist}" dirmode="750" filemode="750" prefix="${final.name}">
+        <include name="bin/catalina.sh" />
+        <include name="bin/configtest.sh" />
+        <include name="bin/daemon.sh" />
+        <include name="bin/digest.sh" />
+        <include name="bin/jasper.sh" />
+        <include name="bin/jspc.sh" />
+        <include name="bin/setclasspath.sh" />
+        <include name="bin/startup.sh" />
+        <include name="bin/shutdown.sh" />
+        <include name="bin/tool-wrapper.sh" />
+        <include name="bin/tool-wrapper-using-launcher.sh" />
+        <include name="bin/shutdown-using-launcher.sh" />
+        <include name="bin/startup-using-launcher.sh" />
+        <include name="bin/version.sh" />
       </tarfileset>
     </tar>
 
@@ -2649,6 +2458,14 @@ skip.installer property in build.properties" />
     <jarIt jarfile="${tomcat-websocket-src.jar}"
       filesDir="java"
       filesId="files.tomcat-websocket" />
+
+    <!-- JASPIC 1.1 API JAR File -->
+    <jarIt jarfile="${jaspic-api-src.jar}"
+      filesDir="java"
+      filesId="files.jaspic-api"
+      manifest="${tomcat.manifests}/jaspic-api.jar.manifest"
+      notice="${tomcat.manifests}/jaspic-api.jar.notice"
+      license="${tomcat.manifests}/jaspic-api.jar.license" />
 
     <!-- Bootstrap JAR File -->
     <jarIt jarfile="${bootstrap-src.jar}"

@@ -28,7 +28,6 @@ import javax.websocket.Session;
 import javax.websocket.WebSocketContainer;
 
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Test;
 
 import org.apache.catalina.Context;
@@ -40,7 +39,6 @@ import org.apache.tomcat.websocket.TesterMessageCountClient.SleepingText;
 import org.apache.tomcat.websocket.TesterMessageCountClient.TesterProgrammaticEndpoint;
 
 public class TestWebSocketFrameClientSSL extends WebSocketBaseTest {
-
 
     @Test
     public void testConnectToServerEndpoint() throws Exception {
@@ -60,7 +58,7 @@ public class TestWebSocketFrameClientSSL extends WebSocketBaseTest {
         ClientEndpointConfig clientEndpointConfig =
                 ClientEndpointConfig.Builder.create().build();
         clientEndpointConfig.getUserProperties().put(
-                WsWebSocketContainer.SSL_TRUSTSTORE_PROPERTY,
+                Constants.SSL_TRUSTSTORE_PROPERTY,
                 "test/org/apache/tomcat/util/net/ca.jks");
         Session wsSession = wsContainer.connectToServer(
                 TesterProgrammaticEndpoint.class,
@@ -91,13 +89,6 @@ public class TestWebSocketFrameClientSSL extends WebSocketBaseTest {
 
     @Test
     public void testBug56032() throws Exception {
-        // TODO Investigate options to get this test to pass with the HTTP BIO
-        //      connector.
-        Assume.assumeFalse(
-                "Skip this test on BIO. TODO: investigate options to make it pass with HTTP BIO connector",
-                getTomcatInstance().getConnector().getProtocol()
-                        .equals("org.apache.coyote.http11.Http11Protocol"));
-
         Tomcat tomcat = getTomcatInstance();
         // No file system docBase required
         Context ctx = tomcat.addContext("", null);
@@ -114,7 +105,7 @@ public class TestWebSocketFrameClientSSL extends WebSocketBaseTest {
         ClientEndpointConfig clientEndpointConfig =
                 ClientEndpointConfig.Builder.create().build();
         clientEndpointConfig.getUserProperties().put(
-                WsWebSocketContainer.SSL_TRUSTSTORE_PROPERTY,
+                Constants.SSL_TRUSTSTORE_PROPERTY,
                 "test/org/apache/tomcat/util/net/ca.jks");
         Session wsSession = wsContainer.connectToServer(
                 TesterProgrammaticEndpoint.class,

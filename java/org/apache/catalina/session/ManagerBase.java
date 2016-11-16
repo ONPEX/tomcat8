@@ -72,42 +72,9 @@ public abstract class ManagerBase extends LifecycleMBeanBase implements Manager 
 
 
     /**
-     * The distributable flag for Sessions created by this Manager.  If this
-     * flag is set to <code>true</code>, any user attributes added to a
-     * session controlled by this Manager must be Serializable.
-     *
-     * @deprecated Ignored. {@link Context#getDistributable()} always takes
-     *             precedence. Will be removed in Tomcat 8.5.x.
-     */
-    @Deprecated
-    protected boolean distributable;
-
-
-    /**
      * The descriptive name of this Manager implementation (for logging).
      */
     private static final String name = "ManagerBase";
-
-
-    /**
-     * The default maximum inactive interval for Sessions created by
-     * this Manager.
-     *
-     * @deprecated Ignored. {@link Context#getSessionTimeout()} always takes
-     *             precedence. Will be removed in Tomcat 8.5.x.
-     */
-    @Deprecated
-    protected int maxInactiveInterval = 30 * 60;
-
-
-    protected static final int SESSION_ID_LENGTH_UNSET = -1;
-
-    /**
-     * The session id length of Sessions created by this Manager.
-     * The length should be set directly on the SessionIdGenerator.
-     * Setting it here is deprecated.
-     */
-    protected int sessionIdLength = SESSION_ID_LENGTH_UNSET;
 
 
     /**
@@ -260,7 +227,20 @@ public abstract class ManagerBase extends LifecycleMBeanBase implements Manager 
     }
 
 
-    public void setSessionAttributeNameFilter(String sessionAttributeNameFilter) {
+    /**
+     * Set the regular expression to use to filter session attributes based on
+     * attribute name. The regular expression is anchored so it must match the
+     * entire name.
+     *
+     * @param sessionAttributeNameFilter The regular expression to use to filter
+     *        session attributes based on attribute name. Use {@code null} if no
+     *        filtering is required. If an empty string is specified then no
+     *        names will match the filter and all attributes will be blocked.
+     *
+     * @throws PatternSyntaxException If the expression is not valid
+     */
+    public void setSessionAttributeNameFilter(String sessionAttributeNameFilter)
+            throws PatternSyntaxException {
         if (sessionAttributeNameFilter == null || sessionAttributeNameFilter.length() == 0) {
             sessionAttributeNamePattern = null;
         } else {
@@ -269,6 +249,13 @@ public abstract class ManagerBase extends LifecycleMBeanBase implements Manager 
     }
 
 
+    /**
+     * Provides {@link #getSessionAttributeNameFilter()} as a pre-compiled
+     * regular expression pattern.
+     *
+     * @return The pre-compiled pattern used to filter session attributes based
+     *         on attribute name. {@code null} means no filter is applied.
+     */
     protected Pattern getSessionAttributeNamePattern() {
         return sessionAttributeNamePattern;
     }
@@ -356,25 +343,6 @@ public abstract class ManagerBase extends LifecycleMBeanBase implements Manager 
 
 
     @Override
-    @Deprecated
-    public Container getContainer() {
-        return getContext();
-    }
-
-
-    @Override
-    @Deprecated
-    public void setContainer(Container container) {
-
-        if (container instanceof Context || container == null) {
-            setContext((Context) container);
-        } else {
-            log.warn(sm.getString("managerBase.container.noop"));
-        }
-    }
-
-
-    @Override
     public Context getContext() {
         return context;
     }
@@ -391,7 +359,6 @@ public abstract class ManagerBase extends LifecycleMBeanBase implements Manager 
         }
         Context oldContext = this.context;
         this.context = context;
-        // TODO - delete the line below in Tomcat 9 onwards
         support.firePropertyChange("context", oldContext, this.context);
     }
 
@@ -404,87 +371,6 @@ public abstract class ManagerBase extends LifecycleMBeanBase implements Manager 
     }
 
 
-    @Deprecated
-    @Override
-    public boolean getDistributable() {
-        Context context = getContext();
-        if (context == null) {
-            return false;
-        }
-        return context.getDistributable();
-    }
-
-
-    @Deprecated
-    @Override
-    public void setDistributable(boolean distributable) {
-        // NO-OP
-    }
-
-
-    @Deprecated
-    @Override
-    public int getMaxInactiveInterval() {
-        Context context = getContext();
-        if (context == null) {
-            return -1;
-        }
-        return context.getSessionTimeout() * 60;
-    }
-
-
-    @Deprecated
-    @Override
-    public void setMaxInactiveInterval(int interval) {
-        log.warn(sm.getString("managerBase.setMaxInactiveIntervalUnused"));
-    }
-
-
-    /**
-     * Gets the session id length (in bytes) of Sessions created by
-     * this Manager.
-     *
-     * @deprecated Use {@link SessionIdGenerator#getSessionIdLength()}.
-     *             This method will be removed in Tomcat 9 onwards.
-     *
-     * @return The session id length
-     */
-    @Override
-    @Deprecated
-    public int getSessionIdLength() {
-
-        return (this.sessionIdLength);
-
-    }
-
-
-    /**
-     * Sets the session id length (in bytes) for Sessions created by this
-     * Manager.
-     *
-     * @deprecated Use {@link SessionIdGenerator#setSessionIdLength(int)}.
-     *             This method will be removed in Tomcat 9 onwards.
-     *
-     * @param idLength The session id length
-     */
-    @Override
-    @Deprecated
-    public void setSessionIdLength(int idLength) {
-
-        int oldSessionIdLength = this.sessionIdLength;
-        this.sessionIdLength = idLength;
-        support.firePropertyChange("sessionIdLength",
-                                   Integer.valueOf(oldSessionIdLength),
-                                   Integer.valueOf(this.sessionIdLength));
-
-    }
-
-
-    /**
-     * Gets the session id generator.
-     *
-     * @return The session id generator
-     */
     @Override
     public SessionIdGenerator getSessionIdGenerator() {
         if (sessionIdGenerator != null) {
@@ -704,9 +590,6 @@ public abstract class ManagerBase extends LifecycleMBeanBase implements Manager 
             setSessionIdGenerator(sessionIdGenerator);
         }
 
-        if (sessionIdLength != SESSION_ID_LENGTH_UNSET) {
-            sessionIdGenerator.setSessionIdLength(sessionIdLength);
-        }
         sessionIdGenerator.setJvmRoute(getJvmRoute());
         if (sessionIdGenerator instanceof SessionIdGeneratorBase) {
             SessionIdGeneratorBase sig = (SessionIdGeneratorBase)sessionIdGenerator;
@@ -922,6 +805,7 @@ public abstract class ManagerBase extends LifecycleMBeanBase implements Manager 
 
     /**
      * Get new session class to be used in the doLoad() method.
+     * @return a new session for use with this manager
      */
     protected StandardSession getNewSession() {
         return new StandardSession(this);
@@ -930,6 +814,7 @@ public abstract class ManagerBase extends LifecycleMBeanBase implements Manager 
 
     /**
      * Generate and return a new session identifier.
+     * @return a new session id
      */
     protected String generateSessionId() {
 
@@ -1131,37 +1016,13 @@ public abstract class ManagerBase extends LifecycleMBeanBase implements Manager 
      */
     @Override
     public int getSessionCreateRate() {
-        long now = System.currentTimeMillis();
         // Copy current stats
         List<SessionTiming> copy = new ArrayList<>();
         synchronized (sessionCreationTiming) {
             copy.addAll(sessionCreationTiming);
         }
 
-        // Init
-        long oldest = now;
-        int counter = 0;
-        int result = 0;
-        Iterator<SessionTiming> iter = copy.iterator();
-
-        // Calculate rate
-        while (iter.hasNext()) {
-            SessionTiming timing = iter.next();
-            if (timing != null) {
-                counter++;
-                if (timing.getTimestamp() < oldest) {
-                    oldest = timing.getTimestamp();
-                }
-            }
-        }
-        if (counter > 0) {
-            if (oldest < now) {
-                result = (1000*60*counter)/(int) (now - oldest);
-            } else {
-                result = Integer.MAX_VALUE;
-            }
-        }
-        return result;
+        return calculateRate(copy);
     }
 
 
@@ -1175,18 +1036,23 @@ public abstract class ManagerBase extends LifecycleMBeanBase implements Manager 
      */
     @Override
     public int getSessionExpireRate() {
-        long now = System.currentTimeMillis();
         // Copy current stats
         List<SessionTiming> copy = new ArrayList<>();
         synchronized (sessionExpirationTiming) {
             copy.addAll(sessionExpirationTiming);
         }
 
+        return calculateRate(copy);
+    }
+
+
+    private static int calculateRate(List<SessionTiming> sessionTiming) {
         // Init
+        long now = System.currentTimeMillis();
         long oldest = now;
         int counter = 0;
         int result = 0;
-        Iterator<SessionTiming> iter = copy.iterator();
+        Iterator<SessionTiming> iter = sessionTiming.iterator();
 
         // Calculate rate
         while (iter.hasNext()) {

@@ -105,10 +105,7 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
         return sw.toString();
     }
 
-    /**
-     * Constructor.
-     */
-    @SuppressWarnings("null")  // taglibXml can't be null
+
     public TagLibraryInfoImpl(JspCompilationContext ctxt, ParserController pc,
             PageInfo pi, String prefix, String uriIn,
             TldResourcePath tldResourcePath, ErrorDispatcher err)
@@ -185,7 +182,11 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
             }
 
             // Populate the TagLibraryInfo attributes
-            this.jspversion = taglibXml.getJspVersion();
+            // Never null. jspError always throws an Exception
+            // Slightly convoluted so the @SuppressWarnings has minimal scope
+            @SuppressWarnings("null")
+            String v = taglibXml.getJspVersion();
+            this.jspversion = v;
             this.tlibversion = taglibXml.getTlibVersion();
             this.shortname = taglibXml.getShortName();
             this.urn = taglibXml.getUri();

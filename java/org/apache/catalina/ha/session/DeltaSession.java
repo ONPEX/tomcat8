@@ -42,6 +42,8 @@ import org.apache.catalina.ha.ClusterSession;
 import org.apache.catalina.session.ManagerBase;
 import org.apache.catalina.session.StandardSession;
 import org.apache.catalina.tribes.tipis.ReplicatedMapEntry;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.res.StringManager;
 
 /**
@@ -51,12 +53,12 @@ import org.apache.tomcat.util.res.StringManager;
  */
 public class DeltaSession extends StandardSession implements Externalizable,ClusterSession,ReplicatedMapEntry {
 
-    public static final org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(DeltaSession.class);
+    public static final Log log = LogFactory.getLog(DeltaSession.class);
 
     /**
      * The string manager for this package.
      */
-    protected static final StringManager sm = StringManager.getManager(Constants.Package);
+    protected static final StringManager sm = StringManager.getManager(DeltaSession.class);
 
     // ----------------------------------------------------- Instance Variables
 
@@ -126,15 +128,15 @@ public class DeltaSession extends StandardSession implements Externalizable,Clus
 
     /**
      * Returns a diff and sets the dirty map to false
-     * @return byte[]
-     * @throws IOException
+     * @return a serialized view of the difference
+     * @throws IOException IO error serializing
      */
     @Override
     public byte[] getDiff() throws IOException {
         lock();
         try {
             return getDeltaRequest().serialize();
-        } finally {
+        } finally{
             unlock();
         }
     }
@@ -151,10 +153,10 @@ public class DeltaSession extends StandardSession implements Externalizable,Clus
 
     /**
      * Applies a diff to an existing object.
-     * @param diff byte[]
-     * @param offset int
-     * @param length int
-     * @throws IOException
+     * @param diff Serialized diff data
+     * @param offset Array offset
+     * @param length Array length
+     * @throws IOException IO error deserializing
      */
     @Override
     public void applyDiff(byte[] diff, int offset, int length) throws IOException, ClassNotFoundException {

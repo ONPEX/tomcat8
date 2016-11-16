@@ -768,22 +768,23 @@ class Generator {
         out.printin("public void ");
         out.print(serviceMethodName);
         out.println("(final javax.servlet.http.HttpServletRequest request, final javax.servlet.http.HttpServletResponse response)");
-        out.println("        throws java.io.IOException, javax.servlet.ServletException {");
-
         out.pushIndent();
+        out.pushIndent();
+        out.printil("throws java.io.IOException, javax.servlet.ServletException {");
+        out.popIndent();
         out.println();
 
         // Method check
         if (!pageInfo.isErrorPage()) {
-            out.println("final java.lang.String _jspx_method = request.getMethod();");
-            out.print("if (!\"GET\".equals(_jspx_method) && !\"POST\".equals(_jspx_method) && !\"HEAD\".equals(_jspx_method) && ");
+            out.printil("final java.lang.String _jspx_method = request.getMethod();");
+            out.printin("if (!\"GET\".equals(_jspx_method) && !\"POST\".equals(_jspx_method) && !\"HEAD\".equals(_jspx_method) && ");
             out.println("!javax.servlet.DispatcherType.ERROR.equals(request.getDispatcherType())) {");
             out.pushIndent();
-            out.print("response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, ");
+            out.printin("response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, ");
             out.println("\"" + Localizer.getMessage("jsp.error.servlet.invalid.method") + "\");");
-            out.println("return;");
+            out.printil("return;");
             out.popIndent();
-            out.println("}");
+            out.printil("}");
             out.println();
         }
 
@@ -930,9 +931,7 @@ class Generator {
 
         private HashMap<String,String> textMap;
 
-        /**
-         * Constructor.
-         */
+
         public GenerateVisitor(boolean isTagFile, ServletWriter out,
                 ArrayList<GenBuffer> methodsBuffered,
                 FragmentHelperClass fragmentHelperClass) {
@@ -3384,7 +3383,11 @@ class Generator {
          * Generate the code required to obtain the runtime value of the given
          * named attribute.
          *
+         * @param n The named attribute node whose value is required
+         *
          * @return The name of the temporary variable the result is stored in.
+         *
+         * @throws JasperException If an error
          */
         public String generateNamedAttributeValue(Node.NamedAttribute n)
                 throws JasperException {
@@ -3440,6 +3443,9 @@ class Generator {
          *            The variable the tag handler is stored in, so the fragment
          *            knows its parent tag.
          * @return The name of the temporary variable the fragment is stored in.
+         *
+         * @throws JasperException If an error occurs trying to generate the
+         *         fragment
          */
         public String generateNamedAttributeJspFragment(Node.NamedAttribute n,
                 String tagHandlerVar) throws JasperException {
@@ -3614,6 +3620,8 @@ class Generator {
      *            The compiler
      * @param page
      *            The input page
+     *
+     * @throws JasperException If something goes wrong during generation
      */
     public static void generate(ServletWriter out, Compiler compiler,
             Node.Nodes page) throws JasperException {
@@ -4116,23 +4124,14 @@ class Generator {
             }
         }
 
-        /**
-         * XXX
-         */
         public Method getSetterMethod(String attrName) {
             return methodMaps.get(attrName);
         }
 
-        /**
-         * XXX
-         */
         public Class<?> getPropertyEditorClass(String attrName) {
             return propertyEditorMaps.get(attrName);
         }
 
-        /**
-         * XXX
-         */
         public Class<?> getTagHandlerClass() {
             return tagHandlerClass;
         }
@@ -4185,6 +4184,9 @@ class Generator {
          * Adjust the Java Lines. This is necessary because the Java lines
          * stored with the nodes are relative the beginning of this buffer and
          * need to be adjusted when this buffer is inserted into the source.
+         *
+         * @param offset The offset to apply to the start line and end line of
+         *        and Java lines of nodes in this buffer
          */
         public void adjustJavaLines(final int offset) {
 

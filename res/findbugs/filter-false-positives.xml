@@ -400,6 +400,24 @@
     <Bug code="RCN"/>
   </Match>
   <Match>
+    <!-- Use of synchronisation is required to make a sequence of calls in   -->
+    <!-- one method appear to be atomic.                                     -->
+    <Class name="org.apache.coyote.AbstractProcessorLight"/>
+    <Or>
+      <Method name="addDispatch"/>
+      <Method name="getIteratorAndClearDispatches"/>
+      <Method name="clearDispatches"/>
+    </Or>
+    <Bug pattern="JLM_JSR166_UTILCONCURRENT_MONITORENTER" />
+  </Match>
+  <Match>
+    <!-- Correct behaviour does not assume sequential operations on concurrent
+         hash map are atomic. -->
+    <Class name="org.apache.coyote.AbstractProtocol$AbstractConnectionHandler" />
+    <Method name="process" />
+    <Bug pattern="AT_OPERATION_SEQUENCE_ON_CONCURRENT_ABSTRACTION" />
+  </Match>
+  <Match>
     <!-- Locks are always released. Non-standard pattern is required because -->
     <!-- of lock upgrade that is used. -->
     <Class name="org.apache.coyote.http11.upgrade.AprServletInputStream" />
@@ -415,8 +433,8 @@
   </Match>
   <Match>
     <!-- Fall-through expected -->
-    <Class name="org.apache.coyote.http11.AbstractHttp11Processor" />
-    <Method name="process"/>
+    <Class name="org.apache.coyote.http11.Http11Processor" />
+    <Method name="service"/>
     <Bug code="SF" />
   </Match>
   <Match>
@@ -432,6 +450,30 @@
     <Class name="org.apache.coyote.http11.InternalAprOutputBuffer" />
     <Method name="writeToSocket"/>
     <Bug code="UL" />
+  </Match>
+  <Match>
+    <!-- Number being tested is unsigned. -->
+    <Class name="org.apache.coyote.http2.Http2UpgradeHandler" />
+    <Method name="createRemoteStream" />
+    <Bug pattern="IM_BAD_CHECK_FOR_ODD" />
+  </Match>
+  <Match>
+    <!-- Loss of the occasional increment is acceptable. -->
+    <Class name="org.apache.coyote.http2.Http2UpgradeHandler" />
+    <Method name="pruneClosedStreams" />
+    <Bug pattern="VO_VOLATILE_INCREMENT" />
+  </Match>
+  <Match>
+    <!-- Notify is correct. Condition changed outside of this method. -->
+    <Class name="org.apache.coyote.http2.Http2UpgradeHandler" />
+    <Mehtod name="releaseBackLog" />
+    <Bug pattern="NN_NAKED_NOTIFY" />
+  </Match>
+  <Match>
+    <!-- Notify is correct. Condition changed outside of this method. -->
+    <Class name="org.apache.coyote.http2.Stream" />
+    <Mehtod name="incrementWindowSize" />
+    <Bug pattern="NN_NAKED_NOTIFY" />
   </Match>
   <Match>
     <!-- Returning null is required by the EL specification -->
@@ -681,8 +723,8 @@
   </Match>
   <Match>
     <!-- Fall-through expected -->
-    <Class name="org.apache.tomcat.util.http.Parameters" />
-    <Method name="processParameters"/>
+    <Class name="org.apache.tomcat.util.http.LegacyCookieProcessor" />
+    <Method name="processCookieHeader"/>
     <Bug code="SF" />
   </Match>
   <Match>
@@ -702,6 +744,15 @@
     <Class name="org.apache.tomcat.util.http.fileupload.util.Streams"/>
     <Method name="asString"/>
     <Bug code="Dm" />
+  </Match>
+  <Match>
+    <!-- Fall-through expected -->
+    <Class name="org.apache.tomcat.util.http.parser.Cookie" />
+    <Or>
+      <Method name="logInvalidHeader"/>
+      <Method name="logInvalidVersion"/>
+    </Or>
+    <Bug code="SF" />
   </Match>
   <Match>
     <!-- Hiding of field in superclass is deliberate -->
@@ -764,13 +815,16 @@
   <Match>
     <!-- Return value is ignored at this point but logic further up call     -->
     <!-- stack will ensure that a SocketTimeoutException is thrown           -->
-    <Class name="org.apache.tomcat.util.net.NioEndpoint$KeyAttachment"/>
+    <Class name="org.apache.tomcat.util.net.NioEndpoint$NioSocketWrapper"/>
     <Method name="awaitLatch"/>
     <Bug code="RV"/>
   </Match>
   <Match>
     <!-- Object is only ever set to null, sync therefore is still valid -->
-    <Class name="org.apache.tomcat.util.net.NioEndpoint$SocketProcessor"/>
+    <Or>
+      <Class name="org.apache.tomcat.util.net.NioEndpoint$SocketProcessor"/>
+      <Class name="org.apache.tomcat.util.net.Nio2Endpoint$SocketProcessor"/>
+    </Or>
     <Method name="run"/>
     <Bug code="ML"/>
   </Match>
@@ -780,15 +834,16 @@
     <Bug code="DE" />
   </Match>
   <Match>
-    <!-- Use of synchronisation is required to make a sequence of calls in   -->
-    <!-- one method appear to be atomic.                                     -->
-    <Class name="org.apache.tomcat.util.net.SocketWrapper"/>
-    <Or>
-      <Method name="addDispatch"/>
-      <Method name="getIteratorAndClearDispatches"/>
-      <Method name="clearDispatches"/>
-    </Or>
-    <Bug pattern="JLM_JSR166_UTILCONCURRENT_MONITORENTER" />
+    <!-- Fall-through expected -->
+    <Class name="org.apache.tomcat.util.net.SecureNioChannel" />
+    <Method name="processSNI"/>
+    <Bug code="SF" />
+  </Match>
+  <Match>
+    <!-- Fall-through expected -->
+    <Class name="org.apache.tomcat.util.net.SecureNio2Channel" />
+    <Method name="processSNI"/>
+    <Bug code="SF" />
   </Match>
   <Match>
     <!-- Yes the simple name is the same as the super class. Accept it. -->
@@ -800,6 +855,12 @@
     <Class name="org.apache.tomcat.websocket.WsWebSocketContainer" />
     <Method name="connectToServer" />
     <Bug code="DLS" />
+  </Match>
+  <Match>
+    <!-- Fall-through expected -->
+    <Class name="org.apache.tomcat.websocket.server.WsHttpUpgradeHandler" />
+    <Method name="upgradeDispatch"/>
+    <Bug code="SF" />
   </Match>
 
   <!-- Example code -->

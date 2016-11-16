@@ -18,7 +18,6 @@ package org.apache.jasper.servlet;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.JarURLConnection;
 import java.net.URL;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -48,7 +47,6 @@ import org.apache.tomcat.JarScannerCallback;
 import org.apache.tomcat.util.descriptor.tld.TaglibXml;
 import org.apache.tomcat.util.descriptor.tld.TldParser;
 import org.apache.tomcat.util.descriptor.tld.TldResourcePath;
-import org.apache.tomcat.util.scan.JarFactory;
 import org.xml.sax.SAXException;
 
 /**
@@ -153,6 +151,8 @@ public class TldScanner {
 
     /**
      * Scan for TLDs defined in &lt;jsp-config&gt;.
+     * @throws IOException Error reading resources
+     * @throws SAXException XML parsing error
      */
     protected void scanJspConfig() throws IOException, SAXException {
         JspConfigDescriptor jspConfigDescriptor = context.getJspConfigDescriptor();
@@ -292,12 +292,6 @@ public class TldScanner {
     class TldScannerCallback implements JarScannerCallback {
         private boolean foundJarWithoutTld = false;
         private boolean foundFileWithoutTld = false;
-
-        @Override
-        public void scan(JarURLConnection jarConn, String webappPath, boolean isWebapp)
-                throws IOException {
-            scan(JarFactory.newInstance(jarConn.getURL()), webappPath, isWebapp);
-        }
 
 
         @Override

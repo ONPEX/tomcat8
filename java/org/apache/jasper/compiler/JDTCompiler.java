@@ -471,8 +471,5 @@ public class JDTCompiler extends org.apache.jasper.compiler.Compiler {
         if (! options.isSmapSuppressed()) {
             SmapUtil.installSmap(smap);
         }
-
     }
-
-
 }

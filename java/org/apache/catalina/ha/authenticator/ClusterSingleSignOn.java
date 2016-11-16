@@ -54,8 +54,7 @@ import org.apache.tomcat.util.res.StringManager;
  */
 public class ClusterSingleSignOn extends SingleSignOn implements ClusterValve, MapOwner {
 
-    private static final StringManager sm =
-            StringManager.getManager(ClusterSingleSignOn.class.getPackage().getName());
+    private static final StringManager sm = StringManager.getManager(ClusterSingleSignOn.class);
 
     // -------------------------------------------------------------- Properties
 

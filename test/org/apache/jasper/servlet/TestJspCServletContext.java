@@ -113,6 +113,7 @@ public class TestJspCServletContext {
         Assert.assertEquals(1, context.getEffectiveMinorVersion());
     }
 
+
     @Test
     public void testWebresources() throws Exception {
         File appDir = new File("test/webresources/dir1");

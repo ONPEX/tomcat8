@@ -44,6 +44,8 @@ import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpUpgradeHandler;
 import javax.servlet.http.Part;
 
+import org.apache.catalina.core.ApplicationPushBuilder;
+
 public class TesterHttpServletRequest implements HttpServletRequest {
 
     private Map<String, Object> attributes = new HashMap<>();
@@ -66,19 +68,16 @@ public class TesterHttpServletRequest implements HttpServletRequest {
 
     @Override
     public String getCharacterEncoding() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public void setCharacterEncoding(String env)
             throws UnsupportedEncodingException {
-
     }
 
     @Override
     public int getContentLength() {
-
         throw new RuntimeException("Not implemented");
     }
 
@@ -93,37 +92,31 @@ public class TesterHttpServletRequest implements HttpServletRequest {
 
     @Override
     public ServletInputStream getInputStream() throws IOException {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public String getParameter(String name) {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public Enumeration<String> getParameterNames() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public String[] getParameterValues(String name) {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public Map<String,String[]> getParameterMap() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public String getProtocol() {
-
         throw new RuntimeException("Not implemented");
     }
 
@@ -157,19 +150,16 @@ public class TesterHttpServletRequest implements HttpServletRequest {
 
     @Override
     public BufferedReader getReader() throws IOException {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public String getRemoteAddr() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public String getRemoteHost() {
-
         throw new RuntimeException("Not implemented");
     }
 
@@ -185,37 +175,31 @@ public class TesterHttpServletRequest implements HttpServletRequest {
 
     @Override
     public Locale getLocale() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public Enumeration<Locale> getLocales() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public boolean isSecure() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public RequestDispatcher getRequestDispatcher(String path) {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public String getRealPath(String path) {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public int getRemotePort() {
-
         throw new RuntimeException("Not implemented");
     }
 
@@ -226,31 +210,26 @@ public class TesterHttpServletRequest implements HttpServletRequest {
 
     @Override
     public String getLocalAddr() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public int getLocalPort() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public String getAuthType() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public Cookie[] getCookies() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public long getDateHeader(String name) {
-
         throw new RuntimeException("Not implemented");
     }
 
@@ -272,7 +251,6 @@ public class TesterHttpServletRequest implements HttpServletRequest {
 
     @Override
     public Enumeration<String> getHeaders(String name) {
-
         throw new RuntimeException("Not implemented");
     }
 
@@ -283,7 +261,6 @@ public class TesterHttpServletRequest implements HttpServletRequest {
 
     @Override
     public int getIntHeader(String name) {
-
         throw new RuntimeException("Not implemented");
     }
 
@@ -298,103 +275,86 @@ public class TesterHttpServletRequest implements HttpServletRequest {
 
     @Override
     public String getPathInfo() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public String getPathTranslated() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public String getContextPath() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public String getQueryString() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public String getRemoteUser() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public boolean isUserInRole(String role) {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public Principal getUserPrincipal() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public String getRequestedSessionId() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public String getRequestURI() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public StringBuffer getRequestURL() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public String getServletPath() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public HttpSession getSession(boolean create) {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public HttpSession getSession() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public boolean isRequestedSessionIdValid() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public boolean isRequestedSessionIdFromCookie() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public boolean isRequestedSessionIdFromURL() {
-
         throw new RuntimeException("Not implemented");
     }
 
     @Override
     public boolean isRequestedSessionIdFromUrl() {
-
         throw new RuntimeException("Not implemented");
     }
 
@@ -477,4 +437,7 @@ public class TesterHttpServletRequest implements HttpServletRequest {
         throw new RuntimeException("Not implemented");
     }
 
+    public ApplicationPushBuilder getPushBuilder() {
+        throw new RuntimeException("Not implemented");
+    }
 }

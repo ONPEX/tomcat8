@@ -534,7 +534,7 @@
         <p>
         Not reading the additional data will free the request processing thread
         more quickly. Unfortunately most HTTP clients will not read the response
-        if they can not write the full request.</p>
+        if they cannot write the full request.</p>
         <p>The default is <code>true</code>, so additional data will be
         read.</p>
         <p>Note if an error occurs during the request processing that triggers
@@ -712,19 +712,6 @@
         when running on Java 9 and above. Applications without memory leaks
         should operate correctly with this attribute set to <code>false</code>.
         If not specified, the default value of <code>true</code> will be used.</p>
-      </attribute>
-
-      <attribute name="clearReferencesStatic" required="false">
-        <p>If <code>true</code>, Tomcat attempts to null out any static or final
-        fields from loaded classes when a web application is stopped as a work
-        around for apparent garbage collection bugs and application coding
-        errors. There have been some issues reported with log4j when this
-        is <code>true</code>. Applications without memory leaks using recent
-        JVMs should operate correctly with this attribute set to
-        <code>false</code>. If not specified, the default value of
-        <code>false</code> will be used.</p>
-        <p>This attribute has been deprecated and will be removed in Tomcat
-        8.5.</p>
       </attribute>
 
       <attribute name="clearReferencesStopThreads" required="false">

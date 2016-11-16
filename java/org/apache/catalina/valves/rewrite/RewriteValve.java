@@ -569,7 +569,6 @@ public class RewriteValve extends ValveBase {
                                 request.getCoyoteRequest(), response.getCoyoteResponse())) {
                             return;
                         }
-                        @SuppressWarnings("deprecation")
                         Pipeline pipeline = connector.getService().getContainer().getPipeline();
                         request.setAsyncSupported(pipeline.isAsyncSupported());
                         pipeline.getFirst().invoke(request, response);
@@ -589,7 +588,7 @@ public class RewriteValve extends ValveBase {
 
 
     /**
-     * Get config base.
+     * @return config base.
      */
     protected File getConfigBase() {
         File configBase =
@@ -605,8 +604,8 @@ public class RewriteValve extends ValveBase {
     /**
      * Find the configuration path where the rewrite configuration file
      * will be stored.
-     *
-     * @param resourceName
+     * @param resourceName The rewrite configuration file name
+     * @return the full rewrite configuration path
      */
     protected String getHostConfigPath(String resourceName) {
         StringBuffer result = new StringBuffer();
@@ -638,7 +637,6 @@ public class RewriteValve extends ValveBase {
      *  RewriteCond %{REMOTE_HOST}  ^host1.*  [OR]
      *
      * @param line A line from the rewrite configuration
-     *
      * @return The condition, rule or map resulting from parsing the line
      */
     public static Object parse(String line) {
@@ -715,9 +713,9 @@ public class RewriteValve extends ValveBase {
 
     /**
      * Parser for RewriteCond flags.
-     *
-     * @param condition
-     * @param flag
+     * @param line The configuration line being parsed
+     * @param condition The current condition
+     * @param flag The flag
      */
     protected static void parseCondFlag(String line, RewriteCond condition, String flag) {
         if (flag.equals("NC") || flag.equals("nocase")) {
@@ -732,9 +730,9 @@ public class RewriteValve extends ValveBase {
 
     /**
      * Parser for ReweriteRule flags.
-     *
-     * @param rule
-     * @param flag
+     * @param line The configuration line being parsed
+     * @param rule The current rule
+     * @param flag The flag
      */
     protected static void parseRuleFlag(String line, RewriteRule rule, String flag) {
         if (flag.equals("B")) {
@@ -836,16 +834,5 @@ public class RewriteValve extends ValveBase {
         } else {
             throw new IllegalArgumentException("Invalid flag in: " + line + " flag: " + flag);
         }
-    }
-
-
-    /**
-     * Determine if a URI string has a <code>scheme</code> component.
-     *
-     * @deprecated Unused. Will be removed in 8.5.x.
-     */
-    @Deprecated
-    protected static boolean hasScheme(StringBuffer uri) {
-        return UriUtil.hasScheme(uri);
     }
 }

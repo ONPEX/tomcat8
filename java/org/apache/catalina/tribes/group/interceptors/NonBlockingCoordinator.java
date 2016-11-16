@@ -16,6 +16,11 @@
  */
 package org.apache.catalina.tribes.group.interceptors;
 
+import java.net.ConnectException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.catalina.tribes.Channel;
@@ -97,7 +102,7 @@ import org.apache.juli.logging.LogFactory;
  * Lets assume that C1 arrives, C1 has lower priority than C, but higher priority than D.<br>
  * Lets also assume that C1 sees the following view {B,D,E}<br>
  * C1 waits for a token to arrive. When the token arrives, the same scenario as above will happen.<br>
- * In the scenario where C1 sees {D,E} and A,B,C can not see C1, no token will ever arrive.<br>
+ * In the scenario where C1 sees {D,E} and A,B,C cannot see C1, no token will ever arrive.<br>
  * In this case, C1 sends a Z{C1-ldr, C1-src, mbrs-C1,D,E} to D<br>
  * D receives Z{C1-ldr, C1-src, mbrs-C1,D,E} and sends Z{A-ldr, C1-src, mbrs-A,B,C,C1,D,E} to E<br>
  * E receives Z{A-ldr, C1-src, mbrs-A,B,C,C1,D,E} and sends it to A<br>
@@ -124,8 +129,7 @@ import org.apache.juli.logging.LogFactory;
 public class NonBlockingCoordinator extends ChannelInterceptorBase {
 
     private static final Log log = LogFactory.getLog(NonBlockingCoordinator.class);
-    protected static final StringManager sm =
-            StringManager.getManager(NonBlockingCoordinator.class.getPackage().getName());
+    protected static final StringManager sm = StringManager.getManager(NonBlockingCoordinator.class);
 
     /**
      * header for a coordination message
@@ -288,13 +292,26 @@ public class NonBlockingCoordinator extends ChannelInterceptorBase {
     }
 
     protected boolean alive(Member mbr) {
-        return TcpFailureDetector.memberAlive(mbr,
-                                              COORD_ALIVE,
-                                              false,
-                                              false,
-                                              waitForCoordMsgTimeout,
-                                              waitForCoordMsgTimeout,
-                                              getOptionFlag());
+        return memberAlive(mbr, waitForCoordMsgTimeout);
+    }
+
+    protected boolean memberAlive(Member mbr, long conTimeout) {
+        //could be a shutdown notification
+        if ( Arrays.equals(mbr.getCommand(),Member.SHUTDOWN_PAYLOAD) ) return false;
+
+        try (Socket socket = new Socket()) {
+            InetAddress ia = InetAddress.getByAddress(mbr.getHost());
+            InetSocketAddress addr = new InetSocketAddress(ia, mbr.getPort());
+            socket.connect(addr, (int) conTimeout);
+            return true;
+        } catch (SocketTimeoutException sx) {
+            //do nothing, we couldn't connect
+        } catch (ConnectException cx) {
+            //do nothing, we couldn't connect
+        } catch (Exception x) {
+            log.error(sm.getString("nonBlockingCoordinator.memberAlive.failed"),x);
+        }
+        return false;
     }
 
     protected Membership mergeOnArrive(CoordinationMessage msg) {

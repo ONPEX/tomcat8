@@ -46,7 +46,7 @@ public class SSLAuthenticator extends AuthenticatorBase {
      * @exception IOException if an input/output error occurs
      */
     @Override
-    public boolean authenticate(Request request, HttpServletResponse response)
+    protected boolean doAuthenticate(Request request, HttpServletResponse response)
             throws IOException {
 
         // NOTE: We don't try to reauthenticate using any existing SSO session,
@@ -85,13 +85,13 @@ public class SSLAuthenticator extends AuthenticatorBase {
             }
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
                                sm.getString("authenticator.unauthorized"));
-            return (false);
+            return false;
         }
 
         // Cache the principal (if requested) and record this authentication
         register(request, response, principal,
                 HttpServletRequest.CLIENT_CERT_AUTH, null, null);
-        return (true);
+        return true;
 
     }
 

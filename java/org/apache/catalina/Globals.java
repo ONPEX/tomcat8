@@ -16,8 +16,6 @@
  */
 package org.apache.catalina;
 
-import org.apache.tomcat.util.compat.JreVendor;
-
 /**
  * Global constants that are applicable to multiple packages within Catalina.
  *
@@ -134,41 +132,6 @@ public final class Globals {
 
     public static final String GSS_CREDENTIAL_ATTR =
         "org.apache.catalina.realm.GSS_CREDENTIAL";
-
-
-    /**
-     * The request attribute that is set to the value of {@code Boolean.TRUE}
-     * if connector processing this request supports Comet API.
-     * Duplicated here for neater code in the catalina packages.
-     */
-    public static final String COMET_SUPPORTED_ATTR =
-        org.apache.coyote.Constants.COMET_SUPPORTED_ATTR;
-
-
-    /**
-     * The request attribute that is set to the value of {@code Boolean.TRUE}
-     * if connector processing this request supports setting
-     * per-connection request timeout through Comet API.
-     *
-     * @see org.apache.catalina.comet.CometEvent#setTimeout(int)
-     *
-     * Duplicated here for neater code in the catalina packages.
-     */
-    public static final String COMET_TIMEOUT_SUPPORTED_ATTR =
-            org.apache.coyote.Constants.COMET_TIMEOUT_SUPPORTED_ATTR;
-
-
-    /**
-     * The request attribute that can be set to a value of type
-     * {@code java.lang.Integer} to specify per-connection request
-     * timeout for Comet API. The value is in milliseconds.
-     *
-     * @see org.apache.catalina.comet.CometEvent#setTimeout(int)
-     *
-     * Duplicated here for neater code in the catalina packages.
-     */
-    public static final String COMET_TIMEOUT_ATTR =
-        org.apache.coyote.Constants.COMET_TIMEOUT_ATTR;
 
 
     /**
@@ -308,12 +271,6 @@ public final class Globals {
      */
     public static final String JASPER_XML_BLOCK_EXTERNAL_INIT_PARAM =
             "org.apache.jasper.XML_BLOCK_EXTERNAL";
-
-    @Deprecated // Will be removed in Tomcat 8.5.x
-    public static final boolean IS_ORACLE_JVM = JreVendor.IS_ORACLE_JVM;
-
-    @Deprecated // Will be removed in Tomcat 8.5.x
-    public static final boolean IS_IBM_JVM = JreVendor.IS_IBM_JVM;
 
     /**
      * Name of the ServletContext attribute under which we store the context

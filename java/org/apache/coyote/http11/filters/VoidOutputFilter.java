@@ -18,6 +18,7 @@
 package org.apache.coyote.http11.filters;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import org.apache.coyote.OutputBuffer;
 import org.apache.coyote.Response;
@@ -35,18 +36,19 @@ public class VoidOutputFilter implements OutputFilter {
 
     // --------------------------------------------------- OutputBuffer Methods
 
-
     /**
-     * Write some bytes.
-     *
-     * @return number of bytes written by the filter
+     * @deprecated Unused. Will be removed in Tomcat 9. Use
+     *             {@link #doWrite(ByteBuffer)}
      */
     @Override
-    public int doWrite(ByteChunk chunk, Response res)
-        throws IOException {
-
+    public int doWrite(ByteChunk chunk) throws IOException {
         return chunk.getLength();
+    }
 
+
+    @Override
+    public int doWrite(ByteBuffer chunk) throws IOException {
+        return chunk.remaining();
     }
 
 

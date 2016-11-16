@@ -64,17 +64,25 @@ public interface SSLSupport {
 
     /**
      * The cipher suite being used on this connection.
+     *
+     * @return The name of the cipher suite as returned by the SSL/TLS
+     *        implementation
+     *
+     * @throws IOException If an error occurs trying to obtain the cipher suite
      */
     public String getCipherSuite() throws IOException;
 
     /**
      * The client certificate chain (if any).
      *
-     * @param force If <code>true</code>, then re-negotiate the connection and
-     *              request a client certificate if a client certificate has not
-     *              already been requested.
+     * @return The certificate chain presented by the client with the peer's
+     *         certificate first, followed by those of any certificate
+     *         authorities
+     *
+     * @throws IOException If an error occurs trying to obtain the certificate
+     *                     chain
      */
-    public X509Certificate[] getPeerCertificateChain(boolean force) throws IOException;
+    public X509Certificate[] getPeerCertificateChain() throws IOException;
 
     /**
      * Get the keysize.
@@ -89,18 +97,28 @@ public interface SSLSupport {
      * (d) The size of the signature key used by the server
      *
      * Unfortunately, all of these values are nonsensical.
-     **/
-    public Integer getKeySize()
-        throws IOException;
+     *
+     * @return The effective key size for the current cipher suite
+     *
+     * @throws IOException If an error occurs trying to obtain the key size
+     */
+    public Integer getKeySize() throws IOException;
 
     /**
      * The current session Id.
+     *
+     * @return The current SSL/TLS session ID
+     *
+     * @throws IOException If an error occurs trying to obtain the session ID
      */
     public String getSessionId() throws IOException;
 
     /**
      * @return the protocol String indicating how the SSL socket was created
      *  e.g. TLSv1 or TLSv1.2 etc.
+     *
+     * @throws IOException If an error occurs trying to obtain the protocol
+     *   information from the socket
      */
     public String getProtocol() throws IOException;
 }

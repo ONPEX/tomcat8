@@ -24,11 +24,9 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 
 import org.apache.tomcat.util.net.NioEndpoint.Poller;
-import org.apache.tomcat.util.net.SecureNioChannel.ApplicationBufferHandler;
 import org.apache.tomcat.util.res.StringManager;
 
 /**
- *
  * Base class for a SocketChannel wrapper used by the endpoint.
  * This way, logic for a SSL socket channel remains the same as for
  * a non SSL, making sure we don't need to code for any exception cases.
@@ -37,18 +35,18 @@ import org.apache.tomcat.util.res.StringManager;
  */
 public class NioChannel implements ByteChannel {
 
-    protected static final StringManager sm =
-            StringManager.getManager("org.apache.tomcat.util.net.res");
+    protected static final StringManager sm = StringManager.getManager(NioChannel.class);
 
-    protected static ByteBuffer emptyBuf = ByteBuffer.allocate(0);
+    protected static final ByteBuffer emptyBuf = ByteBuffer.allocate(0);
 
     protected SocketChannel sc = null;
+    protected SocketWrapperBase<NioChannel> socketWrapper = null;
 
-    protected ApplicationBufferHandler bufHandler;
+    protected final SocketBufferHandler bufHandler;
 
     protected Poller poller;
 
-    public NioChannel(SocketChannel channel, ApplicationBufferHandler bufHandler) {
+    public NioChannel(SocketChannel channel, SocketBufferHandler bufHandler) {
         this.sc = channel;
         this.bufHandler = bufHandler;
     }
@@ -59,16 +57,19 @@ public class NioChannel implements ByteChannel {
      * @throws IOException If a problem was encountered resetting the channel
      */
     public void reset() throws IOException {
-        bufHandler.getReadBuffer().clear();
-        bufHandler.getWriteBuffer().clear();
+        bufHandler.reset();
     }
 
-    public int getBufferSize() {
-        if ( bufHandler == null ) return 0;
-        int size = 0;
-        size += bufHandler.getReadBuffer()!=null?bufHandler.getReadBuffer().capacity():0;
-        size += bufHandler.getWriteBuffer()!=null?bufHandler.getWriteBuffer().capacity():0;
-        return size;
+
+    void setSocketWrapper(SocketWrapperBase<NioChannel> socketWrapper) {
+        this.socketWrapper = socketWrapper;
+    }
+
+    /**
+     * Free the channel memory
+     */
+    public void free() {
+        bufHandler.free();
     }
 
     /**
@@ -79,7 +80,8 @@ public class NioChannel implements ByteChannel {
      * @param timeout   Unused. May be used when overridden
      * @return Always returns <code>true</code> since there is no network buffer
      *         in the regular channel
-     * @throws IOException
+     *
+     * @throws IOException Never for non-secure channel
      */
     public boolean flush(boolean block, Selector s, long timeout)
             throws IOException {
@@ -98,9 +100,17 @@ public class NioChannel implements ByteChannel {
         getIOChannel().close();
     }
 
+    /**
+     * Close the connection.
+     *
+     * @param force Should the underlying socket be forcibly closed?
+     *
+     * @throws IOException If closing the secure channel fails.
+     */
     public void close(boolean force) throws IOException {
         if (isOpen() || force ) close();
     }
+
     /**
      * Tells whether or not this channel is open.
      *
@@ -145,7 +155,7 @@ public class NioChannel implements ByteChannel {
         return att;
     }
 
-    public ApplicationBufferHandler getBufHandler() {
+    public SocketBufferHandler getBufHandler() {
         return bufHandler;
     }
 
@@ -172,7 +182,7 @@ public class NioChannel implements ByteChannel {
      * @param read  Unused in non-secure implementation
      * @param write Unused in non-secure implementation
      * @return Always returns zero
-     * @throws IOException
+     * @throws IOException Never for non-secure channel
      */
     public int handshake(boolean read, boolean write) throws IOException {
         return 0;
@@ -196,8 +206,11 @@ public class NioChannel implements ByteChannel {
     }
 
     /**
-     * Return true if the buffer wrote data
-     * @throws IOException
+     * Return true if the buffer wrote data. NO-OP for non-secure channel.
+     *
+     * @return Always returns {@code false} for non-secure channel
+     *
+     * @throws IOException Never for non-secure channel
      */
     public boolean flushOutbound() throws IOException {
         return false;
@@ -212,10 +225,20 @@ public class NioChannel implements ByteChannel {
      * socket is removed from the poller without the socket being selected. This
      * results in a connection limit leak for NIO as the endpoint expects the
      * socket to be selected even in error conditions.
+     * @throws IOException If the current thread was interrupted
      */
     protected void checkInterruptStatus() throws IOException {
         if (Thread.interrupted()) {
             throw new IOException(sm.getString("channel.nio.interrupted"));
         }
+    }
+
+
+    private ApplicationBufferHandler appReadBufHandler;
+    public void setAppReadBufHandler(ApplicationBufferHandler handler) {
+        this.appReadBufHandler = handler;
+    }
+    protected ApplicationBufferHandler getAppReadBufHandler() {
+        return appReadBufHandler;
     }
 }

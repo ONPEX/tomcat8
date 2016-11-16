@@ -18,6 +18,7 @@
 package org.apache.coyote.http11.filters;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import org.apache.coyote.OutputBuffer;
 import org.apache.coyote.Response;
@@ -34,20 +35,8 @@ public class ChunkedOutputFilter implements OutputFilter {
 
 
     // -------------------------------------------------------------- Constants
-    /**
-     * End chunk.
-     */
-    protected static final ByteChunk END_CHUNK = new ByteChunk();
-
-
-    // ----------------------------------------------------- Static Initializer
-
-
-    static {
-        byte[] END_CHUNK_BYTES = {(byte) '0', (byte) '\r', (byte) '\n',
-                                  (byte) '\r', (byte) '\n'};
-        END_CHUNK.setBytes(END_CHUNK_BYTES, 0, END_CHUNK_BYTES.length);
-    }
+    private static final byte[] END_CHUNK_BYTES = {(byte) '0', (byte) '\r', (byte) '\n',
+            (byte) '\r', (byte) '\n'};
 
 
     // ------------------------------------------------------------ Constructor
@@ -57,8 +46,8 @@ public class ChunkedOutputFilter implements OutputFilter {
      * Default constructor.
      */
     public ChunkedOutputFilter() {
-        chunkLength[8] = (byte) '\r';
-        chunkLength[9] = (byte) '\n';
+        chunkHeader.put(8, (byte) '\r');
+        chunkHeader.put(9, (byte) '\n');
     }
 
 
@@ -72,15 +61,15 @@ public class ChunkedOutputFilter implements OutputFilter {
 
 
     /**
-     * Buffer used for chunk length conversion.
+     * Chunk header.
      */
-    protected final byte[] chunkLength = new byte[10];
+    protected final ByteBuffer chunkHeader = ByteBuffer.allocate(10);
 
 
     /**
-     * Chunk header.
+     * End chunk.
      */
-    protected final ByteChunk chunkHeader = new ByteChunk();
+    protected final ByteBuffer endChunk = ByteBuffer.wrap(END_CHUNK_BYTES);
 
 
     // ------------------------------------------------------------- Properties
@@ -88,15 +77,12 @@ public class ChunkedOutputFilter implements OutputFilter {
 
     // --------------------------------------------------- OutputBuffer Methods
 
-
     /**
-     * Write some bytes.
-     *
-     * @return number of bytes written by the filter
+     * @deprecated Unused. Will be removed in Tomcat 9. Use
+     *             {@link #doWrite(ByteBuffer)}
      */
     @Override
-    public int doWrite(ByteChunk chunk, Response res)
-        throws IOException {
+    public int doWrite(ByteChunk chunk) throws IOException {
 
         int result = chunk.getLength();
 
@@ -104,24 +90,55 @@ public class ChunkedOutputFilter implements OutputFilter {
             return 0;
         }
 
-        // Calculate chunk header
-        int pos = 7;
-        int current = result;
-        while (current > 0) {
-            int digit = current % 16;
-            current = current / 16;
-            chunkLength[pos--] = HexUtils.getHex(digit);
-        }
-        chunkHeader.setBytes(chunkLength, pos + 1, 9 - pos);
-        buffer.doWrite(chunkHeader, res);
+        int pos = calculateChunkHeader(result);
 
-        buffer.doWrite(chunk, res);
+        chunkHeader.position(pos + 1).limit(chunkHeader.position() + 9 - pos);
+        buffer.doWrite(chunkHeader);
 
-        chunkHeader.setBytes(chunkLength, 8, 2);
-        buffer.doWrite(chunkHeader, res);
+        buffer.doWrite(chunk);
+
+        chunkHeader.position(8).limit(10);
+        buffer.doWrite(chunkHeader);
 
         return result;
 
+    }
+
+
+    @Override
+    public int doWrite(ByteBuffer chunk) throws IOException {
+
+        int result = chunk.remaining();
+
+        if (result <= 0) {
+            return 0;
+        }
+
+        int pos = calculateChunkHeader(result);
+
+        chunkHeader.position(pos + 1).limit(chunkHeader.position() + 9 - pos);
+        buffer.doWrite(chunkHeader);
+
+        buffer.doWrite(chunk);
+
+        chunkHeader.position(8).limit(10);
+        buffer.doWrite(chunkHeader);
+
+        return result;
+
+    }
+
+
+    private int calculateChunkHeader(int len) {
+        // Calculate chunk header
+        int pos = 7;
+        int current = len;
+        while (current > 0) {
+            int digit = current % 16;
+            current = current / 16;
+            chunkHeader.put(pos--, HexUtils.getHex(digit));
+        }
+        return pos;
     }
 
 
@@ -163,7 +180,8 @@ public class ChunkedOutputFilter implements OutputFilter {
         throws IOException {
 
         // Write end chunk
-        buffer.doWrite(END_CHUNK, null);
+        buffer.doWrite(endChunk);
+        endChunk.position(0).limit(endChunk.capacity());
 
         return 0;
 

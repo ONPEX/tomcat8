@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 
 import org.apache.catalina.tribes.Member;
 
@@ -67,8 +66,7 @@ public class Membership implements Cloneable {
             @SuppressWarnings("unchecked")
             final HashMap<Member, MbrEntry> tmpclone = (HashMap<Member, MbrEntry>) map.clone();
             clone.map = tmpclone;
-            clone.members = new Member[members.length];
-            System.arraycopy(members, 0, clone.members, 0, members.length);
+            clone.members = members.clone();
             return clone;
         }
     }
@@ -138,8 +136,7 @@ public class Membership implements Cloneable {
                     updateMember.setCommand(member.getCommand());
                     // Re-order. Can't sort in place since a call to
                     // getMembers() may then receive an intermediate result.
-                    Member[] newMembers = new Member[members.length];
-                    System.arraycopy(members, 0, newMembers, 0, members.length);
+                    Member[] newMembers = members.clone();
                     Arrays.sort(newMembers, memberComparator);
                     members = newMembers;
                 }
@@ -274,20 +271,6 @@ public class Membership implements Cloneable {
         return members;
     }
 
-    /**
-     * Get a copy from all member entries.
-     *
-     * @deprecated Unused. Will be removed in Tomcat 8.5.x.
-     */
-    @Deprecated
-    protected synchronized MbrEntry[] getMemberEntries() {
-        MbrEntry[] result = new MbrEntry[map.size()];
-        Iterator<Map.Entry<Member,MbrEntry>> i = map.entrySet().iterator();
-        int pos = 0;
-        while ( i.hasNext() )
-            result[pos++] = i.next().getValue();
-        return result;
-    }
 
     // --------------------------------------------- Inner Class
 

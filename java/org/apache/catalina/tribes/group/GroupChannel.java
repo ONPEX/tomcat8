@@ -57,8 +57,7 @@ import org.apache.juli.logging.LogFactory;
  */
 public class GroupChannel extends ChannelInterceptorBase implements ManagedChannel {
     private static final Log log = LogFactory.getLog(GroupChannel.class);
-    protected static final StringManager sm =
-            StringManager.getManager(GroupChannel.class.getPackage().getName());
+    protected static final StringManager sm = StringManager.getManager(GroupChannel.class);
 
     /**
      * Flag to determine if the channel manages its own heartbeat
@@ -373,7 +372,7 @@ public class GroupChannel extends ChannelInterceptorBase implements ManagedChann
     /**
      * Sets up the default implementation interceptor stack
      * if no interceptors have been added
-     * @throws ChannelException
+     * @throws ChannelException Cluster error
      */
     protected synchronized void setupDefaultStack() throws ChannelException {
         if (getFirstInterceptor() != null &&
@@ -383,8 +382,7 @@ public class GroupChannel extends ChannelInterceptorBase implements ManagedChann
         Iterator<ChannelInterceptor> interceptors = getInterceptors();
         while (interceptors.hasNext()) {
             ChannelInterceptor channelInterceptor = interceptors.next();
-            if (channelInterceptor instanceof ChannelInterceptorBase)
-                ((ChannelInterceptorBase)channelInterceptor).setChannel(this);
+            channelInterceptor.setChannel(this);
         }
         coordinator.setChannel(this);
     }
@@ -392,7 +390,7 @@ public class GroupChannel extends ChannelInterceptorBase implements ManagedChann
     /**
      * Validates the option flags that each interceptor is using and reports
      * an error if two interceptor share the same flag.
-     * @throws ChannelException
+     * @throws ChannelException Error with option flag
      */
     protected void checkOptionFlags() throws ChannelException {
         StringBuilder conflicts = new StringBuilder();
@@ -425,9 +423,9 @@ public class GroupChannel extends ChannelInterceptorBase implements ManagedChann
     }
 
     /**
-     * Starts the channel
+     * Starts the channel.
      * @param svc int - what service to start
-     * @throws ChannelException
+     * @throws ChannelException Start error
      * @see org.apache.catalina.tribes.Channel#start(int)
      */
     @Override
@@ -442,9 +440,9 @@ public class GroupChannel extends ChannelInterceptorBase implements ManagedChann
     }
 
     /**
-     * Stops the channel
+     * Stops the channel.
      * @param svc int
-     * @throws ChannelException
+     * @throws ChannelException Stop error
      * @see org.apache.catalina.tribes.Channel#stop(int)
      */
     @Override
@@ -632,10 +630,12 @@ public class GroupChannel extends ChannelInterceptorBase implements ManagedChann
         return heartbeatSleeptime;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public void setName(String name) {
         this.name = name;
     }

@@ -70,6 +70,7 @@ public abstract class CookiesBaseTest extends TomcatBaseTest {
     public static void addServlets(Tomcat tomcat) {
         // No file system docBase required
         Context ctx = tomcat.addContext("", null);
+        ctx.setCookieProcessor(new LegacyCookieProcessor());
 
         Tomcat.addServlet(ctx, "invalid", new CookieServlet("na;me", "value"));
         ctx.addServletMappingDecoded("/invalid", "invalid");
@@ -81,7 +82,7 @@ public abstract class CookiesBaseTest extends TomcatBaseTest {
                 new CookieServlet("na/me", "value"));
         ctx.addServletMappingDecoded("/invalidFwd", "invalidFwd");
         Tomcat.addServlet(ctx, "invalidStrict",
-                new CookieServlet("na?me", "value"));
+                new CookieServlet("$name", "value"));
         ctx.addServletMappingDecoded("/invalidStrict", "invalidStrict");
         Tomcat.addServlet(ctx, "valid", new CookieServlet("name", "value"));
         ctx.addServletMappingDecoded("/valid", "valid");

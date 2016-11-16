@@ -128,8 +128,7 @@ public class AsyncStateMachine {
     /**
      * The string manager for this package.
      */
-    private static final StringManager sm =
-        StringManager.getManager(Constants.Package);
+    private static final StringManager sm = StringManager.getManager(AsyncStateMachine.class);
 
     private static enum AsyncState {
         DISPATCHED      (false, false, false, false),
@@ -177,12 +176,13 @@ public class AsyncStateMachine {
 
 
     private volatile AsyncState state = AsyncState.DISPATCHED;
+    private volatile long lastAsyncStart = 0;
     // Need this to fire listener on complete
     private AsyncContextCallback asyncCtxt = null;
-    private final Processor<?> processor;
+    private final AbstractProcessor processor;
 
 
-    public AsyncStateMachine(Processor<?> processor) {
+    public AsyncStateMachine(AbstractProcessor processor) {
         this.processor = processor;
     }
 
@@ -211,10 +211,22 @@ public class AsyncStateMachine {
         return state.isCompleting();
     }
 
+    /**
+     * Obtain the time that this connection last transitioned to async
+     * processing.
+     *
+     * @return The time (as returned by {@link System#currentTimeMillis()}) that
+     *         this connection last transitioned to async
+     */
+    public long getLastAsyncStart() {
+        return lastAsyncStart;
+    }
+
     public synchronized void asyncStart(AsyncContextCallback asyncCtxt) {
         if (state == AsyncState.DISPATCHED) {
             state = AsyncState.STARTING;
             this.asyncCtxt = asyncCtxt;
+            lastAsyncStart = System.currentTimeMillis();
         } else {
             throw new IllegalStateException(
                     sm.getString("asyncStateMachine.invalidAsyncState",
@@ -430,11 +442,18 @@ public class AsyncStateMachine {
 
 
     public synchronized void recycle() {
+        // Use lastAsyncStart to determine if this instance has been used since
+        // it was last recycled. If it hasn't there is no need to recycle again
+        // which saves the relatively expensive call to notifyAll()
+        if (lastAsyncStart == 0) {
+            return;
+        }
         // Ensure in case of error that any non-container threads that have been
         // paused are unpaused.
         notifyAll();
         asyncCtxt = null;
         state = AsyncState.DISPATCHED;
+        lastAsyncStart = 0;
     }
 
 

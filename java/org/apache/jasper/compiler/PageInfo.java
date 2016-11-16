@@ -57,7 +57,7 @@ class PageInfo {
     private String session;
     private boolean isSession = true;
     private String bufferValue;
-    private int buffer = 8*1024;    // XXX confirm
+    private int buffer = 8*1024;
     private String autoFlush;
     private boolean isAutoFlush = true;
     private String isThreadSafeValue;
@@ -126,8 +126,11 @@ class PageInfo {
     }
 
     /**
-     * Check if the plugin ID has been previously declared.  Make a not
+     * Check if the plugin ID has been previously declared.  Make a note
      * that this Id is now declared.
+     *
+     * @param id The plugin ID to check
+     *
      * @return true if Id has been declared.
      */
     public boolean isPluginDeclared(String id) {

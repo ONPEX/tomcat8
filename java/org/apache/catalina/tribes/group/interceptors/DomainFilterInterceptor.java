@@ -36,8 +36,7 @@ import org.apache.juli.logging.LogFactory;
  */
 public class DomainFilterInterceptor extends ChannelInterceptorBase {
     private static final Log log = LogFactory.getLog(DomainFilterInterceptor.class);
-    protected static final StringManager sm =
-            StringManager.getManager(DomainFilterInterceptor.class.getPackage().getName());
+    protected static final StringManager sm = StringManager.getManager(DomainFilterInterceptor.class);
     protected volatile Membership membership = null;
 
     protected byte[] domain = new byte[0];

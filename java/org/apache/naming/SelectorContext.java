@@ -28,6 +28,9 @@ import javax.naming.NameParser;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
+
 /**
  * Catalina JNDI Context implementation.
  *
@@ -57,14 +60,14 @@ public class SelectorContext implements Context {
     public static final String IC_PREFIX = "IC_";
 
 
-    private static final org.apache.juli.logging.Log log =
-        org.apache.juli.logging.LogFactory.getLog(SelectorContext.class);
+    private static final Log log = LogFactory.getLog(SelectorContext.class);
 
     // ----------------------------------------------------------- Constructors
 
 
     /**
      * Builds a Catalina selector context using the given environment.
+     * @param env The environment
      */
     public SelectorContext(Hashtable<String,Object> env) {
         this.env = env;
@@ -74,6 +77,9 @@ public class SelectorContext implements Context {
 
     /**
      * Builds a Catalina selector context using the given environment.
+     * @param env The environment
+     * @param initialContext <code>true</code> if this is the main
+     *  initial context
      */
     public SelectorContext(Hashtable<String,Object> env,
             boolean initialContext) {
@@ -94,7 +100,7 @@ public class SelectorContext implements Context {
     /**
      * The string manager for this package.
      */
-    protected static final StringManager sm = StringManager.getManager(Constants.Package);
+    protected static final StringManager sm = StringManager.getManager(SelectorContext.class);
 
 
     /**
@@ -701,6 +707,9 @@ public class SelectorContext implements Context {
 
     /**
      * Get the bound context.
+     * @return the Context bound with either the current thread or
+     *  the current classloader
+     * @throws NamingException Bindings exception
      */
     protected Context getBoundContext()
         throws NamingException {
@@ -733,7 +742,7 @@ public class SelectorContext implements Context {
 
     /**
      * Strips the URL header.
-     *
+     * @param name The name
      * @return the parsed name
      * @throws NamingException if there is no "java:" header or if no
      * naming context has been bound to this thread
@@ -757,7 +766,7 @@ public class SelectorContext implements Context {
 
     /**
      * Strips the URL header.
-     *
+     * @param name The name
      * @return the parsed name
      * @throws NamingException if there is no "java:" header or if no
      * naming context has been bound to this thread

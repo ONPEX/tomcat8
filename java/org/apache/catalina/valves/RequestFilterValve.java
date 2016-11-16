@@ -138,6 +138,7 @@ public abstract class RequestFilterValve extends ValveBase {
     /**
      * Return the regular expression used to test for allowed requests for this
      * Valve, if any; otherwise, return <code>null</code>.
+     * @return the regular expression
      */
     public String getAllow() {
         return allowValue;
@@ -171,6 +172,7 @@ public abstract class RequestFilterValve extends ValveBase {
     /**
      * Return the regular expression used to test for denied requests for this
      * Valve, if any; otherwise, return <code>null</code>.
+     * @return the regular expression
      */
     public String getDeny() {
         return denyValue;
@@ -205,6 +207,7 @@ public abstract class RequestFilterValve extends ValveBase {
      * Returns {@code false} if the last change to the {@code allow} pattern did
      * not apply successfully. E.g. if the pattern is syntactically
      * invalid.
+     * @return <code>false</code> if the current pattern is invalid
      */
     public final boolean isAllowValid() {
         return allowValid;
@@ -215,6 +218,7 @@ public abstract class RequestFilterValve extends ValveBase {
      * Returns {@code false} if the last change to the {@code deny} pattern did
      * not apply successfully. E.g. if the pattern is syntactically
      * invalid.
+     * @return <code>false</code> if the current pattern is invalid
      */
     public final boolean isDenyValid() {
         return denyValid;
@@ -222,7 +226,7 @@ public abstract class RequestFilterValve extends ValveBase {
 
 
     /**
-     * Return response status code that is used to reject denied request.
+     * @return response status code that is used to reject denied request.
      */
     public int getDenyStatus() {
         return denyStatus;
@@ -231,6 +235,7 @@ public abstract class RequestFilterValve extends ValveBase {
 
     /**
      * Set response status code that is used to reject denied request.
+     * @param denyStatus The status code
      */
     public void setDenyStatus(int denyStatus) {
         this.denyStatus = denyStatus;
@@ -238,7 +243,7 @@ public abstract class RequestFilterValve extends ValveBase {
 
 
     /**
-     * Return true if a deny is handled by setting an invalid auth header.
+     * @return <code>true</code> if a deny is handled by setting an invalid auth header.
      */
     public boolean getInvalidAuthenticationWhenDeny() {
         return invalidAuthenticationWhenDeny;
@@ -247,6 +252,7 @@ public abstract class RequestFilterValve extends ValveBase {
 
     /**
      * Set invalidAuthenticationWhenDeny property.
+     * @param value <code>true</code> to handle a deny by setting an invalid auth header
      */
     public void setInvalidAuthenticationWhenDeny(boolean value) {
         invalidAuthenticationWhenDeny = value;
@@ -360,8 +366,8 @@ public abstract class RequestFilterValve extends ValveBase {
      * called through JMX, e.g. to test whether certain IP address is allowed or
      * denied by the valve configuration.
      *
-     * @param property
-     *            The request property value on which to filter
+     * @param property The request property value on which to filter
+     * @return <code>true</code> if the request is allowed
      */
     public boolean isAllowed(String property) {
         // Use local copies for thread safety

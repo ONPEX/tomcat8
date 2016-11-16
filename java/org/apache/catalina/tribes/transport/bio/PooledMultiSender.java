@@ -27,8 +27,7 @@ import org.apache.catalina.tribes.util.StringManager;
 
 public class PooledMultiSender extends PooledSender {
 
-    protected static final StringManager sm =
-            StringManager.getManager(PooledMultiSender.class.getPackage().getName());
+    protected static final StringManager sm = StringManager.getManager(PooledMultiSender.class);
 
     public PooledMultiSender() {
         // NO-OP
@@ -54,18 +53,10 @@ public class PooledMultiSender extends PooledSender {
         }
     }
 
-    /**
-     * getNewDataSender
-     *
-     * @return DataSender
-     * TODO Implement this org.apache.catalina.tribes.transport.PooledSender
-     *   method
-     */
     @Override
     public DataSender getNewDataSender() {
         MultipointBioSender sender = new MultipointBioSender();
         AbstractSender.transferProperties(this,sender);
         return sender;
     }
-
 }

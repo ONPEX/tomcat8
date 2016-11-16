@@ -34,7 +34,6 @@ import javax.servlet.ServletInputStream;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpUpgradeHandler;
@@ -42,6 +41,9 @@ import javax.servlet.http.Part;
 
 import org.apache.catalina.Globals;
 import org.apache.catalina.security.SecurityUtil;
+import org.apache.catalina.servlet4preview.http.HttpServletRequest;
+import org.apache.catalina.servlet4preview.http.Mapping;
+import org.apache.catalina.servlet4preview.http.PushBuilder;
 import org.apache.tomcat.util.res.StringManager;
 
 /**
@@ -242,8 +244,7 @@ public class RequestFacade implements HttpServletRequest {
     /**
      * The string manager for this package.
      */
-    protected static final StringManager sm =
-        StringManager.getManager(Constants.Package);
+    protected static final StringManager sm = StringManager.getManager(RequestFacade.class);
 
 
     // --------------------------------------------------------- Public Methods
@@ -1112,5 +1113,41 @@ public class RequestFacade implements HttpServletRequest {
     public <T extends HttpUpgradeHandler> T upgrade(
             Class<T> httpUpgradeHandlerClass) throws java.io.IOException, ServletException {
         return request.upgrade(httpUpgradeHandlerClass);
+    }
+
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Pulled forward from Servlet 4.0. The method signature may be modified,
+     * removed or replaced at any time until Servlet 4.0 becomes final.
+     */
+    @Override
+    public Mapping getMapping() {
+        return request.getMapping();
+    }
+
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Pulled forward from Servlet 4.0. The method signature may be modified,
+     * removed or replaced at any time until Servlet 4.0 becomes final.
+     */
+    @Override
+    public boolean isPushSupported() {
+        return request.isPushSupported();
+    }
+
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Pulled forward from Servlet 4.0. The method signature may be modified,
+     * removed or replaced at any time until Servlet 4.0 becomes final.
+     */
+    @Override
+    public PushBuilder getPushBuilder() {
+        return request.getPushBuilder();
     }
 }

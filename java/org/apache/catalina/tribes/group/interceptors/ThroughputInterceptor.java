@@ -40,8 +40,7 @@ import org.apache.juli.logging.LogFactory;
  */
 public class ThroughputInterceptor extends ChannelInterceptorBase {
     private static final Log log = LogFactory.getLog(ThroughputInterceptor.class);
-    protected static final StringManager sm =
-            StringManager.getManager(ThroughputInterceptor.class.getPackage().getName());
+    protected static final StringManager sm = StringManager.getManager(ThroughputInterceptor.class);
 
     double mbTx = 0;
     double mbAppTx = 0;

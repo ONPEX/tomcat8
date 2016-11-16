@@ -57,6 +57,11 @@ removed or changed although it may be deprecated.
 Note: As Tomcat @VERSION_MAJOR@ matures, the above list will be added to. The list is not
       considered complete at this time.
 
+Note: A large number of deprecated methods, fields and configuration options
+      were removed in the transition from 8.0.x to 8.5.x. If any of those
+      removals triggers significant problems for the user community that the
+      deletion may be reverted in a later point release.
+
 The remaining classes are considered part of the Tomcat internals and may change
 without notice between point releases.
 
@@ -91,9 +96,9 @@ You can make additional APIs available to all of your web applications by
 putting unpacked classes into a "classes" directory (not created by default),
 or by placing them in JAR files in the "lib" directory.
 
-To override the XML parser implementation or interfaces, use the endorsed
-mechanism of the JVM. The default configuration defines JARs located in
-"endorsed" as endorsed.
+To override the XML parser implementation or interfaces, use the appropriate
+feature for your JVM. For Java <= 8 use the endorsed standards override
+feature. For Java 9+ use the upgradeable modules feature.
 
 
 ================================================================

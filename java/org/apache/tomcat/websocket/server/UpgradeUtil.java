@@ -225,7 +225,7 @@ public class UpgradeUtil {
                 ep = new PojoEndpointServer();
                 // Need to make path params available to POJO
                 perSessionServerEndpointConfig.getUserProperties().put(
-                        PojoEndpointServer.POJO_PATH_PARAM_KEY, pathParams);
+                        org.apache.tomcat.websocket.pojo.Constants.POJO_PATH_PARAM_KEY, pathParams);
             }
         } catch (InstantiationException e) {
             throw new ServletException(e);

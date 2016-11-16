@@ -28,7 +28,6 @@ import org.apache.catalina.tribes.group.AbsoluteOrder;
 import org.apache.catalina.tribes.group.ChannelInterceptorBase;
 import org.apache.catalina.tribes.io.ChannelData;
 import org.apache.catalina.tribes.io.XByteBuffer;
-import org.apache.catalina.tribes.membership.StaticMember;
 import org.apache.catalina.tribes.util.StringManager;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
@@ -37,7 +36,7 @@ public class StaticMembershipInterceptor extends ChannelInterceptorBase {
 
     private static final Log log = LogFactory.getLog(StaticMembershipInterceptor.class);
     protected static final StringManager sm =
-            StringManager.getManager(StaticMembershipInterceptor.class.getPackage().getName());
+            StringManager.getManager(StaticMembershipInterceptor.class);
 
     protected static final byte[] MEMBER_START = new byte[] {
         76, 111, 99, 97, 108, 32, 83, 116, 97, 116, 105, 99, 77, 101, 109, 98, 101, 114, 32, 78,
@@ -68,7 +67,7 @@ public class StaticMembershipInterceptor extends ChannelInterceptorBase {
 
     public void setLocalMember(Member member) {
         this.localMember = member;
-        ((StaticMember)localMember).setLocal(true);
+        localMember.setLocal(true);
     }
 
     @Override
@@ -81,7 +80,7 @@ public class StaticMembershipInterceptor extends ChannelInterceptorBase {
                 super.memberAdded(member);
             }
         } else if (msg.getMessage().getLength() == MEMBER_STOP.length &&
-                Arrays.equals(MEMBER_STOP, msg.getMessage().getBytes())) {
+                    Arrays.equals(MEMBER_STOP, msg.getMessage().getBytes())) {
             // receive member shutdown
             Member member = getMember(msg.getAddress());
             if (member != null) {
@@ -147,9 +146,9 @@ public class StaticMembershipInterceptor extends ChannelInterceptorBase {
     }
 
     /**
-     * Send notifications upwards
-     * @param svc int
-     * @throws ChannelException
+     * {@inheritDoc}
+     * <p>
+     * Sends notifications upwards.
      */
     @Override
     public void start(int svc) throws ChannelException {

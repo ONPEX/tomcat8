@@ -27,9 +27,9 @@ import org.apache.juli.logging.LogFactory;
  * @version 1.0
  */
 public class UUIDGenerator {
-    private static final Log log = LogFactory.getLog(UUIDGenerator.class.getPackage().getName());
+    private static final Log log = LogFactory.getLog(UUIDGenerator.class);
     protected static final StringManager sm =
-            StringManager.getManager("org.apache.catalina.tribes.util");
+        StringManager.getManager("org.apache.catalina.tribes.util");
 
     public static final int UUID_LENGTH = 16;
     public static final int UUID_VERSION = 4;

@@ -57,7 +57,7 @@ public class TestRestCsrfPreventionFilter2 extends TomcatBaseTest {
     private static final String METHOD_POST = "POST";
 
     private static final String HTTP_PREFIX = "http://localhost:";
-    private static final String CONTEXT_PATH_LOGIN = "";
+    private static final String CONTEXT_PATH_LOGIN = "/";
     private static final String URI_PROTECTED = "/services/*";
     private static final String URI_CSRF_PROTECTED = "/services/customers/*";
     private static final String LIST_CUSTOMERS = "/services/customers/";
@@ -78,7 +78,7 @@ public class TestRestCsrfPreventionFilter2 extends TomcatBaseTest {
     private static final String USER = "user";
     private static final String PWD = "pwd";
     private static final String ROLE = "role";
-    private static final String METHOD = "Basic";
+    private static final String METHOD = "BASIC";
     private static final BasicCredentials CREDENTIALS = new BasicCredentials(METHOD, USER, PWD);
 
     private static final String CLIENT_AUTH_HEADER = "authorization";
@@ -206,13 +206,13 @@ public class TestRestCsrfPreventionFilter2 extends TomcatBaseTest {
         Map<String, List<String>> reqHeaders = new HashMap<>();
         Map<String, List<String>> respHeaders = new HashMap<>();
 
-        addNonce(reqHeaders, nonce);
+        addNonce(reqHeaders, nonce, nonNullPredicate(String.class));
 
         if (useCookie) {
-            addCookies(reqHeaders);
+            addCookies(reqHeaders, notEmptyPredicate());
         }
 
-        addCredentials(reqHeaders, credentials);
+        addCredentials(reqHeaders, credentials, nonNullPredicate(BasicCredentials.class));
 
         ByteChunk bc = new ByteChunk();
         int rc;
@@ -227,7 +227,7 @@ public class TestRestCsrfPreventionFilter2 extends TomcatBaseTest {
         if (expectedRC == HttpServletResponse.SC_OK) {
             assertEquals(expectedResponse, bc.toString());
             List<String> newCookies = respHeaders.get(SERVER_COOKIE_HEADER);
-            saveCookies(newCookies);
+            saveCookies(newCookies, notEmptyPredicate());
         }
 
         if (!expectCsrfRH) {
@@ -235,7 +235,7 @@ public class TestRestCsrfPreventionFilter2 extends TomcatBaseTest {
         } else {
             List<String> respHeaderValue = respHeaders.get(Constants.CSRF_REST_NONCE_HEADER_NAME);
             assertNotNull(respHeaderValue);
-            if (expectedCsrfRHV != null) {
+            if (nonNull(expectedCsrfRHV)) {
                 assertTrue(respHeaderValue.contains(expectedCsrfRHV));
             } else {
                 validNonce = respHeaderValue.get(0);
@@ -243,16 +243,16 @@ public class TestRestCsrfPreventionFilter2 extends TomcatBaseTest {
         }
     }
 
-    private void saveCookies(List<String> newCookies) {
-        if (newCookies != null && newCookies.size() > 0) {
-            for (String header : newCookies) {
-                cookies.add(header.substring(0, header.indexOf(';')));
+    private void saveCookies(List<String> newCookies, Predicate<List<String>> tester) {
+        if (tester.test(newCookies)) {
+            for (String newCookie: newCookies) {
+                cookies.add(newCookie.substring(0, newCookie.indexOf(';')));
             }
         }
     }
 
-    private void addCookies(Map<String, List<String>> reqHeaders) {
-        if (cookies != null && cookies.size() > 0) {
+    private void addCookies(Map<String, List<String>> reqHeaders, Predicate<List<String>> tester) {
+        if (tester.test(cookies)) {
             StringBuilder cookieHeader = new StringBuilder();
             boolean first = true;
             for (String cookie : cookies) {
@@ -267,14 +267,16 @@ public class TestRestCsrfPreventionFilter2 extends TomcatBaseTest {
         }
     }
 
-    private void addNonce(Map<String, List<String>> reqHeaders, String nonce) {
-        if (nonce != null) {
+    private void addNonce(Map<String, List<String>> reqHeaders, String nonce,
+            Predicate<String> tester) {
+        if (tester.test(nonce)) {
             addRequestHeader(reqHeaders, Constants.CSRF_REST_NONCE_HEADER_NAME, nonce);
         }
     }
 
-    private void addCredentials(Map<String, List<String>> reqHeaders, BasicCredentials credentials) {
-        if (credentials != null) {
+    private void addCredentials(Map<String, List<String>> reqHeaders, BasicCredentials credentials,
+            Predicate<BasicCredentials> tester) {
+        if (tester.test(credentials)) {
             addRequestHeader(reqHeaders, CLIENT_AUTH_HEADER, credentials.getCredentials());
         }
     }
@@ -363,10 +365,44 @@ public class TestRestCsrfPreventionFilter2 extends TomcatBaseTest {
 
         private String getRequestedPath(HttpServletRequest request) {
             String path = request.getServletPath();
-            if (request.getPathInfo() != null) {
+            if (nonNull(request.getPathInfo())) {
                 path = path + request.getPathInfo();
             }
             return path;
         }
+    }
+
+    private interface Predicate<T> {
+        boolean test(T x);
+    }
+
+    private static boolean nonNull(Object o) {
+        return o != null;
+    }
+
+    /**
+     * @param clazz
+     *            class parameter to enable use of generics
+     * @return a Predicate to test for non null-ness
+     */
+    private static <T> Predicate<T> nonNullPredicate(Class<T> clazz) {
+        return new Predicate<T>() {
+            @Override
+            public boolean test(T x) {
+                return x != null;
+            }
+        };
+    }
+
+    /**
+     * @return a Predicate to check for non emptiness of a List of Strings
+     */
+    private static Predicate<List<String>> notEmptyPredicate() {
+        return new Predicate<List<String>>() {
+            @Override
+            public boolean test(List<String> x) {
+                return x != null && !x.isEmpty();
+            }
+        };
     }
 }

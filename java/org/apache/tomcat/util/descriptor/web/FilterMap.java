@@ -141,9 +141,10 @@ public class FilterMap extends XmlEncodingBase implements Serializable {
     }
 
     /**
-     *
      * This method will be used to set the current state of the FilterMap
      * representing the state of when filters should be applied.
+     * @param dispatcherString the dispatcher type which should
+     *  match this filter
      */
     public void setDispatcher(String dispatcherString) {
         String dispatcher = dispatcherString.toUpperCase(Locale.ENGLISH);

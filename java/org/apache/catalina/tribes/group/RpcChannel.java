@@ -37,8 +37,7 @@ import org.apache.juli.logging.LogFactory;
  */
 public class RpcChannel implements ChannelListener {
     private static final Log log = LogFactory.getLog(RpcChannel.class);
-    protected static final StringManager sm =
-            StringManager.getManager(RpcChannel.class.getPackage().getName());
+    protected static final StringManager sm = StringManager.getManager(RpcChannel.class);
 
     public static final int FIRST_REPLY = 1;
     public static final int MAJORITY_REPLY = 2;
@@ -75,7 +74,7 @@ public class RpcChannel implements ChannelListener {
      * @param channelOptions channel sender options
      * @param timeout long - timeout in milliseconds, if no reply is received within this time null is returned
      * @return Response[] - an array of response objects.
-     * @throws ChannelException
+     * @throws ChannelException Error sending message
      */
     public Response[] send(Member[] destination,
                            Serializable message,

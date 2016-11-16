@@ -39,7 +39,7 @@ public interface ContextBind {
      *         the thread context class loader in use when the method was
      *         called. If no change was made then this method returns null.
      */
-    public ClassLoader bind(boolean usePrivilegedAction, ClassLoader originalClassLoader);
+    ClassLoader bind(boolean usePrivilegedAction, ClassLoader originalClassLoader);
 
     /**
      * Restore the current thread context class loader to the original class
@@ -56,6 +56,5 @@ public interface ContextBind {
      * @param originalClassLoader
      *          The class loader to restore as the thread context class loader
      */
-    public void unbind(boolean usePrivilegedAction, ClassLoader originalClassLoader);
-
+    void unbind(boolean usePrivilegedAction, ClassLoader originalClassLoader);
 }

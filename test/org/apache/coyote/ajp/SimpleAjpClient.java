@@ -388,9 +388,8 @@ public class SimpleAjpClient {
         TesterAjpMessage message = new TesterAjpMessage(packetSize);
 
         byte[] buf = message.getBuffer();
-        int headerLength = message.getHeaderLength();
 
-        read(is, buf, 0, headerLength);
+        read(is, buf, 0, Constants.H_SIZE);
 
         int messageLength = message.processHeader(false);
         if (messageLength < 0) {
@@ -404,7 +403,7 @@ public class SimpleAjpClient {
                         "] for buffer length [" +
                         Integer.valueOf(buf.length) + "]");
             }
-            read(is, buf, headerLength, messageLength);
+            read(is, buf, Constants.H_SIZE, messageLength);
             return message;
         }
     }

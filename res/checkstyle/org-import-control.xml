@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
  Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -113,6 +113,7 @@
   <subpackage name="naming">
     <allow pkg="javax.mail"/>
     <allow pkg="javax.wsdl"/>
+    <allow pkg="org.apache.juli"/>
     <allow pkg="org.apache.naming"/>
     <allow class="org.apache.tomcat.util.buf.UDecoder"/>
     <allow class="org.apache.tomcat.util.buf.UEncoder"/>
@@ -170,6 +171,7 @@
       </subpackage>
       <subpackage name="server">
         <allow pkg="javax.servlet"/>
+        <allow pkg="org.apache.coyote.http11.upgrade"/>
         <allow pkg="org.apache.tomcat.websocket"/>
       </subpackage>
     </subpackage>

@@ -54,8 +54,7 @@ import org.apache.catalina.tribes.util.StringManager;
  * @version 1.1
  */
 public class OrderInterceptor extends ChannelInterceptorBase {
-    protected static final StringManager sm =
-            StringManager.getManager(OrderInterceptor.class.getPackage().getName());
+    protected static final StringManager sm = StringManager.getManager(OrderInterceptor.class);
     private final HashMap<Member, Counter> outcounter = new HashMap<>();
     private final HashMap<Member, Counter> incounter = new HashMap<>();
     private final HashMap<Member, MessageOrder> incoming = new HashMap<>();

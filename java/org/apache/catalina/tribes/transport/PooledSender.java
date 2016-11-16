@@ -27,7 +27,8 @@ import org.apache.juli.logging.LogFactory;
 public abstract class PooledSender extends AbstractSender implements MultiPointSender {
 
     private static final Log log = LogFactory.getLog(PooledSender.class);
-    protected static final StringManager sm = StringManager.getManager(Constants.Package);
+    protected static final StringManager sm =
+        StringManager.getManager(Constants.Package);
 
     private final SenderQueue queue;
     private int poolSize = 25;

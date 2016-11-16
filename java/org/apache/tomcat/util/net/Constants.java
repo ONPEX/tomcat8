@@ -24,13 +24,6 @@ public class Constants {
      */
     public static final String CATALINA_BASE_PROP = "catalina.base";
 
-
-    /**
-     * Has security been turned on?
-     */
-    public static final boolean IS_SECURITY_ENABLED =
-        (System.getSecurityManager() != null);
-
     /**
      * JSSE and OpenSSL protocol names
      */
@@ -43,4 +36,5 @@ public class Constants {
     public static final String SSL_PROTO_TLSv1      = "TLSv1";
     public static final String SSL_PROTO_SSLv3      = "SSLv3";
     public static final String SSL_PROTO_SSLv2      = "SSLv2";
+    public static final String SSL_PROTO_SSLv2Hello = "SSLv2Hello";
 }
