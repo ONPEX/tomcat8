@@ -4,6 +4,7 @@ tomcat8 (8.5.8-1) UNRELEASED; urgency=medium
   * New upstream release
     - Refreshed the patches
     - Tomcat no longer builds tomcat-embed-logging-juli.jar
+    - Updated the policy files
   * Adapted debian/orig-tar.sh to download the 8.5.x releases
 
  -- Emmanuel Bourg <ebourg@apache.org>  Wed, 16 Nov 2016 18:44:57 +0100

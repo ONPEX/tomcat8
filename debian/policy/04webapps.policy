@@ -3,8 +3,8 @@
 
 // These permissions are granted by default to all web applications
 // In addition, a web application will be given a read FilePermission
-// and JndiPermission for all files and directories in its document root.
-grant { 
+// for all files and directories in its document root.
+grant {
     // Required for JNDI lookup of named JDBC DataSource's and
     // javamail named MimePart DataSource used to send mail
     permission java.util.PropertyPermission "java.home", "read";
@@ -41,19 +41,56 @@ grant {
     // Allow read of JAXP compliant XML parser debug
     permission java.util.PropertyPermission "jaxp.debug", "read";
 
-    // Precompiled JSPs need access to this package.
-    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.jasper.runtime";
-    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.jasper.runtime.*";
+    // All JSPs need to be able to read this package
+    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.tomcat";
 
-    // Example JSPs need those to work properly
+    // Precompiled JSPs need access to these packages.
     permission java.lang.RuntimePermission "accessClassInPackage.org.apache.jasper.el";
-    permission java.lang.RuntimePermission "accessDeclaredMembers";
-    
-    // Precompiled JSPs need access to this system property.
-    permission java.util.PropertyPermission "org.apache.jasper.runtime.BodyContentImpl.LIMIT_BUFFER", "read";
+    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.jasper.runtime";
+    permission java.lang.RuntimePermission
+     "accessClassInPackage.org.apache.jasper.runtime.*";
 
-    // java.io.tmpdir should be usable as a temporary file directory
-    permission java.util.PropertyPermission "java.io.tmpdir", "read";
-    permission java.io.FilePermission "${java.io.tmpdir}/-", "read,write,delete";
+    // Precompiled JSPs need access to these system properties.
+    permission java.util.PropertyPermission
+     "org.apache.jasper.runtime.BodyContentImpl.LIMIT_BUFFER", "read";
+    permission java.util.PropertyPermission
+     "org.apache.el.parser.COERCE_TO_ZERO", "read";
 
+    // The cookie code needs these.
+    permission java.util.PropertyPermission
+     "org.apache.catalina.STRICT_SERVLET_COMPLIANCE", "read";
+    permission java.util.PropertyPermission
+     "org.apache.tomcat.util.http.ServerCookie.STRICT_NAMING", "read";
+    permission java.util.PropertyPermission
+     "org.apache.tomcat.util.http.ServerCookie.FWD_SLASH_IS_SEPARATOR", "read";
+
+    // Applications using WebSocket need to be able to access these packages
+    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.tomcat.websocket";
+    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.tomcat.websocket.server";
+
+    // Applications need to access these packages to use the Servlet 4.0 Preview
+    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.servlet4preview";
+    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.servlet4preview.http";
+};
+
+
+// The Manager application needs access to the following packages to support the
+// session display functionality. These settings support the following
+// configurations:
+// - default CATALINA_HOME == CATALINA_BASE
+// - CATALINA_HOME != CATALINA_BASE, per instance Manager in CATALINA_BASE
+// - CATALINA_HOME != CATALINA_BASE, shared Manager in CATALINA_HOME
+grant codeBase "file:${catalina.base}/../tomcat8-admin/manager/-" {
+    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina";
+    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.ha.session";
+    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.manager";
+    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.manager.util";
+    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.util";
+};
+grant codeBase "file:${catalina.home}/../tomcat8-admin/manager/-" {
+    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina";
+    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.ha.session";
+    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.manager";
+    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.manager.util";
+    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.util";
 };
