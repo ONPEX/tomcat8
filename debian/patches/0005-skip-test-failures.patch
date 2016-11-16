@@ -3,7 +3,7 @@ Author: Emmanuel Bourg <ebourg@apache.org>
 Forwarded: not-needed
 --- a/build.xml
 +++ b/build.xml
-@@ -1371,8 +1371,10 @@
+@@ -1361,8 +1361,10 @@
        </filterchain>
      </concat>
  
@@ -13,8 +13,8 @@ Forwarded: not-needed
 +    -->
    </target>
  
-   <target name="test-bio" description="Runs the JUnit test cases for BIO. Does not stop on errors."
-@@ -1431,7 +1433,7 @@
+   <target name="test-nio" description="Runs the JUnit test cases for NIO. Does not stop on errors."
+@@ -1415,7 +1417,7 @@
  
      <sequential>
        <mkdir dir="${test.reports}" />

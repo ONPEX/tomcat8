@@ -6,8 +6,5 @@
 0009-Use-java.security.policy-file-in-catalina.sh.patch
 0010-debianize-build-xml.patch
 0013-dont-look-for-build-properties-in-user-home.patch
-#0014-JDTCompiler.patch
-0015_disable_test_TestCometProcessor.patch
 0018-fix-manager-webapp.patch
 0019-add-distribution-to-error-page.patch
-#0020-disable-java8-support-with-jdtcompiler.patch

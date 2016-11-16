@@ -28,7 +28,7 @@ Last-Update: 2013-08-01
  </Context>]]></source>
 --- a/conf/catalina.policy
 +++ b/conf/catalina.policy
-@@ -201,14 +201,14 @@
+@@ -202,14 +202,14 @@
  // - default CATALINA_HOME == CATALINA_BASE
  // - CATALINA_HOME != CATALINA_BASE, per instance Manager in CATALINA_BASE
  // - CATALINA_HOME != CATALINA_BASE, shared Manager in CATALINA_HOME
