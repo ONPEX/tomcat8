@@ -1,4 +1,4 @@
-tomcat8 (8.0.14-1+deb8u4) UNRELEASED; urgency=medium
+tomcat8 (8.0.14-1+deb8u4) jessie-security; urgency=medium
 
   * Fixed CVE-2016-0762: The Realm implementations did not process the supplied
     password if the supplied user name did not exist. This made a timing attack
@@ -28,7 +28,7 @@ tomcat8 (8.0.14-1+deb8u4) UNRELEASED; urgency=medium
       Thanks to Paul Szabo for the report.
   * Hardened the init.d script, thanks to Paul Szabo (Closes: #840685)
 
- -- Emmanuel Bourg <ebourg@apache.org>  Sat, 12 Nov 2016 00:34:05 +0100
+ -- Emmanuel Bourg <ebourg@apache.org>  Thu, 17 Nov 2016 09:00:15 +0100
 
 tomcat8 (8.0.14-1+deb8u3) jessie-security; urgency=high
 
