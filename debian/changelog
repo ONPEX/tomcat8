@@ -7,6 +7,7 @@ tomcat8 (8.5.8-1) UNRELEASED; urgency=medium
     - Updated the policy files
   * Enabled the APR library loading by default (required for HTTP/2 support)
   * Promoted libtcnative-1 from suggested to recommended dependency
+  * Enabled the APR tests
   * Fixed the test failure with TestStandardContextAliases
   * Adapted debian/orig-tar.sh to download the 8.5.x releases
 

@@ -1,0 +1,13 @@
+Description: Don't check the IDEA cipher during the tests since it is disabled in Debian (see #327739)
+Author: Emmanuel Bourg <ebourg@apache.org>
+Forwarded: not-needed
+--- a/test/org/apache/tomcat/util/net/openssl/ciphers/TesterOpenSSL.java
++++ b/test/org/apache/tomcat/util/net/openssl/ciphers/TesterOpenSSL.java
+@@ -100,6 +100,7 @@
+         unimplemented.add(Cipher.SSL2_RC4_128_EXPORT40_WITH_MD5);
+         unimplemented.add(Cipher.SSL2_IDEA_128_CBC_WITH_MD5);
+         unimplemented.add(Cipher.SSL2_DES_192_EDE3_CBC_WITH_MD5);
++        unimplemented.add(Cipher.TLS_RSA_WITH_IDEA_CBC_SHA);
+ 
+         if (VERSION < 10002) {
+             // These were implemented in 1.0.2 so won't be available in any

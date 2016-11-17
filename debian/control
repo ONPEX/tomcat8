@@ -19,6 +19,7 @@ Build-Depends-Indep: javahelper,
                      libhamcrest-java (>= 1.3),
                      libtaglibs-standard-spec-java,
                      libtaglibs-standard-impl-java,
+                     libtcnative-1,
                      libobjenesis-java,
                      lsb-release,
                      maven-repo-helper
