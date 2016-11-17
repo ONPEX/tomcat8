@@ -4,6 +4,7 @@ Migrating from tomcat6 or tomcat7:
     and configuration chages:
     - http://tomcat.apache.org/migration-7.html
     - http://tomcat.apache.org/migration-8.html
+    - http://tomcat.apache.org/migration-85.html
 
   * The Debian packages for tomcat[678] each create a separate tomcatX user.
     You may need to recursively update your application directories to be
