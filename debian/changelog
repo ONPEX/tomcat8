@@ -5,6 +5,7 @@ tomcat8 (8.5.8-1) UNRELEASED; urgency=medium
     - Refreshed the patches
     - Tomcat no longer builds tomcat-embed-logging-juli.jar
     - Updated the policy files
+    - Added a NEWS file detailing the major changes in Tomcat 8.5.x
   * Enabled the APR library loading by default (required for HTTP/2 support)
   * Promoted libtcnative-1 from suggested to recommended dependency
   * Enabled the APR tests

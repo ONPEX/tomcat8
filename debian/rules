@@ -32,6 +32,10 @@ ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))
 	$(ANT) test -Dtest.apr.loc=/usr/lib/$(shell dpkg-architecture --query DEB_BUILD_MULTIARCH)
 endif
 
+override_dh_installchangelogs:
+	cp debian/tomcat8.NEWS debian/tomcat8-user.NEWS
+	dh_installchangelogs
+
 override_dh_install-indep:
 	dh_install -i --exclude=.bat --exclude=Thumbs.db
 	
@@ -59,7 +63,7 @@ override_dh_auto_clean:
 	rm -rf "output/"
 	rm -rf webapps/examples/WEB-INF/lib/*.jar
 	rm -f modules/jdbc-pool/output/resources/MANIFEST.MF
-	rm -rf debian/tomcat8.postrm debian/poms
+	rm -rf debian/tomcat8.postrm  debian/tomcat8-user.NEWS debian/poms
 	mh_clean
 
 get-orig-source:
