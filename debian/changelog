@@ -1,3 +1,14 @@
+tomcat8 (8.0.14-1+deb8u5) UNRELEASED; urgency=medium
+
+  * Fixed CVE-2016-6816: The code that parsed the HTTP request line permitted
+    invalid characters. This could be exploited, in conjunction with a proxy
+    that also permitted the invalid characters but with a different
+    interpretation, to inject data into the HTTP response. By manipulating the
+    HTTP response the attacker could poison a web-cache, perform an XSS attack
+    and/or obtain sensitive information from requests other then their own.
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Tue, 22 Nov 2016 23:21:56 +0100
+
 tomcat8 (8.0.14-1+deb8u4) jessie-security; urgency=medium
 
   * Fixed CVE-2016-0762: The Realm implementations did not process the supplied
