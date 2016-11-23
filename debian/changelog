@@ -20,6 +20,8 @@ tomcat8 (8.0.14-1+deb8u5) UNRELEASED; urgency=medium
     with recent JREs
   * Backported a fix disabling the broken SSLv3 tests
   * Refreshed the expired SSL certificates used by the tests
+  * Set the locale when running the tests to prevent locale sensitive tests
+    from failing
 
  -- Emmanuel Bourg <ebourg@apache.org>  Tue, 22 Nov 2016 23:21:56 +0100
 

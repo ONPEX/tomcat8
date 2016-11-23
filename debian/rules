@@ -61,7 +61,7 @@ ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))
 	# Refresh the test certificates
 	cp --backup debian/certificates/* test/org/apache/tomcat/util/net/
 
-	$(ANT_INVOKE) deploy test
+	LC_ALL=C $(ANT_INVOKE) deploy test
 else
 	$(ANT_INVOKE) deploy
 endif
