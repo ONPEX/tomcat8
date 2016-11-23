@@ -16,6 +16,8 @@ tomcat8 (8.0.14-1+deb8u5) UNRELEASED; urgency=medium
   * Backported the fix for upstream bug 57377: Remove the restriction that
     prevented the use of SSL when specifying a bind address for the JMX/RMI
     server. Enable SSL to be configured for the registry as well as the server.
+  * Backported a fix for a test failure in Test*NonLoginAndBasicAuthenticator
+    with recent JREs
 
  -- Emmanuel Bourg <ebourg@apache.org>  Tue, 22 Nov 2016 23:21:56 +0100
 

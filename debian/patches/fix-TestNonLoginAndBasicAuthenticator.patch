@@ -1,0 +1,65 @@
+Description: Don't add ":" to cookie name. It is illegal in newer JREs
+Origin: backport, https://svn.apache.org/r1715544
+                  https://svn.apache.org/r1715549
+--- a/test/org/apache/catalina/authenticator/TestNonLoginAndBasicAuthenticator.java
++++ b/test/org/apache/catalina/authenticator/TestNonLoginAndBasicAuthenticator.java
+@@ -357,7 +357,7 @@
+         Map<String,List<String>> respHeaders = new HashMap<>();
+ 
+         if (useCookie && (cookies != null)) {
+-            reqHeaders.put(CLIENT_COOKIE_HEADER + ":", cookies);
++            reqHeaders.put(CLIENT_COOKIE_HEADER, cookies);
+         }
+ 
+         ByteChunk bc = new ByteChunk();
+@@ -380,7 +380,7 @@
+         Map<String,List<String>> respHeaders = new HashMap<>();
+ 
+         if (useCookie && (cookies != null)) {
+-            reqHeaders.put(CLIENT_COOKIE_HEADER + ":", cookies);
++            reqHeaders.put(CLIENT_COOKIE_HEADER, cookies);
+         }
+         else {
+             if (credentials != null) {
+--- a/test/org/apache/catalina/authenticator/TestSSOnonLoginAndBasicAuthenticator.java
++++ b/test/org/apache/catalina/authenticator/TestSSOnonLoginAndBasicAuthenticator.java
+@@ -355,7 +355,7 @@
+         Map<String,List<String>> respHeaders = new HashMap<>();
+ 
+         if (useCookie && (cookies != null)) {
+-            reqHeaders.put(CLIENT_COOKIE_HEADER + ":", cookies);
++            reqHeaders.put(CLIENT_COOKIE_HEADER, cookies);
+         }
+ 
+         ByteChunk bc = new ByteChunk();
+@@ -379,7 +379,7 @@
+         Map<String,List<String>> respHeaders = new HashMap<>();
+ 
+         if (useCookie && (cookies != null)) {
+-            reqHeaders.put(CLIENT_COOKIE_HEADER + ":", cookies);
++            reqHeaders.put(CLIENT_COOKIE_HEADER, cookies);
+         }
+         else {
+             if (credentials != null) {
+@@ -565,7 +565,7 @@
+     protected void addCookies(Map<String,List<String>> reqHeaders) {
+ 
+         if ((cookies != null) && (cookies.size() > 0)) {
+-            reqHeaders.put(CLIENT_COOKIE_HEADER + ":", cookies);
++            reqHeaders.put(CLIENT_COOKIE_HEADER, cookies);
+         }
+     }
+ 
+--- a/test/org/apache/catalina/authenticator/TestSSOnonLoginAndDigestAuthenticator.java
++++ b/test/org/apache/catalina/authenticator/TestSSOnonLoginAndDigestAuthenticator.java
+@@ -479,7 +479,7 @@
+     protected void addCookies(Map<String,List<String>> reqHeaders) {
+ 
+         if ((cookies != null) && (cookies.size() > 0)) {
+-            reqHeaders.put(BROWSER_COOKIES + ":", cookies);
++            reqHeaders.put(BROWSER_COOKIES, cookies);
+         }
+     }
+-}
+\ No newline at end of file
++}
