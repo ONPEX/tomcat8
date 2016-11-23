@@ -6,6 +6,9 @@ tomcat8 (8.0.14-1+deb8u5) UNRELEASED; urgency=medium
     interpretation, to inject data into the HTTP response. By manipulating the
     HTTP response the attacker could poison a web-cache, perform an XSS attack
     and/or obtain sensitive information from requests other then their own.
+  * Backported the fix for upstream bug 57377: Remove the restriction that
+    prevented the use of SSL when specifying a bind address for the JMX/RMI
+    server. Enable SSL to be configured for the registry as well as the server.
 
  -- Emmanuel Bourg <ebourg@apache.org>  Tue, 22 Nov 2016 23:21:56 +0100
 
