@@ -18,6 +18,7 @@ tomcat8 (8.0.14-1+deb8u5) UNRELEASED; urgency=medium
     server. Enable SSL to be configured for the registry as well as the server.
   * Backported a fix for a test failure in Test*NonLoginAndBasicAuthenticator
     with recent JREs
+  * Refreshed the expired SSL certificates used by the tests
 
  -- Emmanuel Bourg <ebourg@apache.org>  Tue, 22 Nov 2016 23:21:56 +0100
 

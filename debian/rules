@@ -57,6 +57,10 @@ ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))
 	mkdir -p webapps/examples/WEB-INF/lib
 	cp /usr/share/java/jstl1.1.jar webapps/examples/WEB-INF/lib/jstl.jar
 	cp /usr/share/java/standard.jar webapps/examples/WEB-INF/lib/standard.jar
+
+	# Refresh the test certificates
+	cp --backup debian/certificates/* test/org/apache/tomcat/util/net/
+
 	$(ANT_INVOKE) deploy test
 else
 	$(ANT_INVOKE) deploy
@@ -75,6 +79,10 @@ clean:
 	rm -rf webapps/examples/WEB-INF/lib/*.jar
 	rm -f build-stamp modules/jdbc-pool/output/resources/MANIFEST.MF
 	rm -f debian/tomcat8.postrm
+	mv -f test/org/apache/tomcat/util/net/localhost-cert.pem~  test/org/apache/tomcat/util/net/localhost-cert.pem  2>/dev/null || true
+	mv -f test/org/apache/tomcat/util/net/localhost-copy1.jks~ test/org/apache/tomcat/util/net/localhost-copy1.jks 2>/dev/null || true
+	mv -f test/org/apache/tomcat/util/net/localhost.jks~       test/org/apache/tomcat/util/net/localhost.jks       2>/dev/null || true
+	mv -f test/org/apache/tomcat/util/net/user1.jks~           test/org/apache/tomcat/util/net/user1.jks           2>/dev/null || true
 	dh_clean
 	mh_clean
 
