@@ -1,0 +1,13 @@
+Description: Adds ASM to the test classpath (required by easymock)
+Author: Emmanuel Bourg <ebourg@apache.org>
+Forwarded: not-needed
+--- a/build.xml
++++ b/build.xml
+@@ -209,6 +209,7 @@
+     <pathelement location="${easymock.jar}"/>
+     <pathelement location="${cglib.jar}"/>
+     <pathelement location="${objenesis.jar}"/>
++    <pathelement location="/usr/share/java/asm4-all.jar"/>
+     <path refid="compile.classpath" />
+     <path refid="tomcat.classpath" />
+   </path>
