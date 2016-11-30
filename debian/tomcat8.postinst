@@ -48,7 +48,7 @@ case "$1" in
 	# configuration files should not be modifiable by tomcat8 user, as this can be a security issue
 	# (an attacker may insert code in a webapp and have access to all tomcat configuration)
 	# but those files should be readable by tomcat8, so we set the group to tomcat8
-	for i in tomcat-users.xml web.xml server.xml logging.properties context.xml catalina.properties;
+	for i in tomcat-users.xml web.xml server.xml logging.properties context.xml catalina.properties jaspic-providers.xml;
 	do
 		if [ -f "/etc/tomcat8/$i" ]; then
 			chown root:$TOMCAT8_GROUP /etc/tomcat8/$i
