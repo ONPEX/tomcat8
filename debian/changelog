@@ -2,6 +2,7 @@ tomcat8 (8.5.8-2) UNRELEASED; urgency=medium
 
   * Team upload.
   * Set the proper permissions for /etc/tomcat8/jaspic-providers.xml
+  * Install the Maven artifacts for tomcat-storeconfig
 
  -- Emmanuel Bourg <ebourg@apache.org>  Wed, 30 Nov 2016 16:35:02 +0100
 

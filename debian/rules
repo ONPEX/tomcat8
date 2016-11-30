@@ -2,7 +2,6 @@
 
 JAVA_HOME := /usr/lib/jvm/default-java
 
-BLDLIB    := output/build/lib
 VERSION   := $(shell dpkg-parsechangelog --show-field Version | sed 's/-[^-]*$$//' | sed 's/~/-/')
 DATE      := $(shell dpkg-parsechangelog --show-field Date)
 ANT       := ant -propertyfile debian/ant.properties \
@@ -44,11 +43,6 @@ override_dh_install-indep:
 	cp res/maven/*.pom debian/poms
 	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/$(VERSION)/' debian/poms/*.pom
 	mh_install
-	
-	# Install catalina-storeconfig.jar (no pom available)
-	mv $(BLDLIB)/catalina-storeconfig.jar $(BLDLIB)/tomcat8-catalina-storeconfig-$(VERSION).jar
-	dh_install -plibtomcat8-java $(BLDLIB)/tomcat8-catalina-storeconfig-$(VERSION).jar      usr/share/java
-	dh_link -plibtomcat8-java    usr/share/java/tomcat8-catalina-storeconfig-$(VERSION).jar usr/share/java/tomcat8-catalina-storeconfig.jar
 	
 	# update the checksum for the root webapp
 	unset rwmd5sum \
