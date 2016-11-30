@@ -12,7 +12,7 @@ ANT       := ant -propertyfile debian/ant.properties \
              -Ddistribution.name=$(shell lsb_release -si)
 
 %:
-	dh $@
+	dh $@ --with maven-repo-helper --with javahelper
 
 override_dh_auto_build:
 	$(ANT) extras-jmx-remote deploy embed-jars
@@ -22,6 +22,11 @@ override_dh_auto_build:
 		-sourcepath "java" -author -version -breakiterator -notimestamp \
 		-windowtitle "Tomcat API Documentation" -doctitle "Tomcat API" \
 		-bottom "Copyright &#169; 2000-2015 The Apache Software Foundation. All Rights Reserved."
+
+	# Prepare the Maven artifacts
+	mkdir -p debian/poms
+	cp res/maven/*.pom debian/poms
+	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/$(VERSION)/' debian/poms/*.pom
 
 override_dh_auto_test:
 ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))
@@ -37,28 +42,15 @@ override_dh_installchangelogs:
 
 override_dh_install-indep:
 	dh_install -i --exclude=.bat --exclude=Thumbs.db
-	
-	# Prepare and install the Maven artifacts
-	mkdir -p debian/poms
-	cp res/maven/*.pom debian/poms
-	perl -p -i -e 's/\@MAVEN.DEPLOY.VERSION\@/$(VERSION)/' debian/poms/*.pom
-	mh_install
-	
+
 	# update the checksum for the root webapp
 	unset rwmd5sum \
 		&& rwmd5sum=`cat debian/default_root/index.html debian/default_root/META-INF/context.xml | md5sum - 2>/dev/null | cut -d " " -f1` \
 		&& sed "s/\@ROOT_WEBAPP_MD5SUM\@/$$rwmd5sum/" debian/tomcat8.postrm.in > debian/tomcat8.postrm
-	
-	jh_manifest
 
 override_dh_auto_clean:
 	dh_auto_clean
 	-$(ANT) clean
-	rm -rf "output/"
-	rm -rf webapps/examples/WEB-INF/lib/*.jar
-	rm -f modules/jdbc-pool/output/resources/MANIFEST.MF
-	rm -rf debian/tomcat8.postrm  debian/tomcat8-user.NEWS debian/poms
-	mh_clean
 
 get-orig-source:
 	-uscan --force-download --rename
