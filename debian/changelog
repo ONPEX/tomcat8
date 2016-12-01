@@ -4,6 +4,7 @@ tomcat8 (8.5.8-2) UNRELEASED; urgency=medium
   * The tomcat8 user is no longer removed when the package is purged
     (Closes: #845385)
   * Set the proper permissions for /etc/tomcat8/jaspic-providers.xml
+  * Install the new library jaspic-api.jar
   * Install the Maven artifacts for tomcat-storeconfig
   * Simplified debian/rules
 

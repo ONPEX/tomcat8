@@ -16,6 +16,7 @@
 /usr/share/java/tomcat8-i18n-ja.jar              /usr/share/tomcat8/lib/tomcat-i18n-ja.jar
 /usr/share/java/tomcat8-jasper.jar               /usr/share/tomcat8/lib/jasper.jar
 /usr/share/java/tomcat8-jasper-el.jar            /usr/share/tomcat8/lib/jasper-el.jar
+/usr/share/java/tomcat8-jaspic-api.jar           /usr/share/tomcat8/lib/jaspic-api.jar
 /usr/share/java/tomcat8-jdbc.jar                 /usr/share/tomcat8/lib/tomcat-jdbc.jar
 /usr/share/java/tomcat8-jni.jar                  /usr/share/tomcat8/lib/tomcat-jni.jar
 /usr/share/java/tomcat8-jsp-api.jar              /usr/share/tomcat8/lib/jsp-api.jar

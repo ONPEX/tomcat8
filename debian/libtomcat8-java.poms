@@ -11,6 +11,7 @@ debian/poms/tomcat-i18n-fr.pom         --java-lib --usj-name=tomcat8-i18n-fr    
 debian/poms/tomcat-i18n-ja.pom         --java-lib --usj-name=tomcat8-i18n-ja         --artifact=output/build/lib/tomcat-i18n-ja.jar
 debian/poms/tomcat-jasper.pom          --java-lib --usj-name=tomcat8-jasper          --artifact=output/build/lib/jasper.jar
 debian/poms/tomcat-jasper-el.pom       --java-lib --usj-name=tomcat8-jasper-el       --artifact=output/build/lib/jasper-el.jar
+debian/poms/tomcat-jaspic-api.pom      --java-lib --usj-name=tomcat8-jaspic-api      --artifact=output/build/lib/jaspic-api.jar
 debian/poms/tomcat-jdbc.pom            --java-lib --usj-name=tomcat8-jdbc            --artifact=output/jdbc-pool/tomcat-jdbc.jar
 debian/poms/tomcat-jni.pom             --java-lib --usj-name=tomcat8-jni             --artifact=output/build/lib/tomcat-jni.jar
 debian/poms/tomcat-jsp-api.pom         --java-lib --usj-name=tomcat8-jsp-api         --artifact=output/build/lib/jsp-api.jar
