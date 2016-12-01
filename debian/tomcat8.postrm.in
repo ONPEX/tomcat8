@@ -64,15 +64,6 @@ case "$1" in
           /etc/tomcat8/Catalina/localhost /etc/tomcat8/Catalina /etc/tomcat8
         # clean up /etc/authbind after conffiles have been removed
         rmdir --ignore-fail-on-non-empty /etc/authbind/byuid /etc/authbind
-        # Put all files owned by group tomcat8 back into root group before deleting
-        # the tomcat8 user and group
-        chown -Rhf root:root /etc/tomcat8/ || true
-        # Remove user/group and log files (don't remove everything under
-        # /var/lib/tomcat8 because there might be user-installed webapps)
-        db_get tomcat8/username && TOMCAT8_USER="$RET" || TOMCAT8_USER="tomcat8"
-        db_get tomcat8/groupname && TOMCAT8_GROUP="$RET" || TOMCAT8_GROUP="tomcat8"
-        deluser $TOMCAT8_USER
-        delgroup $TOMCAT8_GROUP
 
         set -e
     ;;
