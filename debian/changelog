@@ -3,6 +3,8 @@ tomcat8 (8.5.8-2) UNRELEASED; urgency=medium
   * Team upload.
   * The tomcat8 user is no longer removed when the package is purged
     (Closes: #845385)
+  * Compress and remove the access log files with a .txt extension
+    (Closes: #845661)
   * Added the delaycompress option to the logrotate configuration
     of catalina.out (Closes: #843135)
   * Set the proper permissions for /etc/tomcat8/jaspic-providers.xml

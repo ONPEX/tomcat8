@@ -2,7 +2,7 @@
 
 NAME=tomcat8
 DEFAULT=/etc/default/$NAME
-LOGEXT=log
+LOGEXT="log txt"
 
 # The following variables can be overwritten in $DEFAULT
 
@@ -19,12 +19,16 @@ if [ -f "$DEFAULT" ]; then
 fi
 
 if [ -d /var/log/$NAME ]; then
-	if [ $LOGFILE_COMPRESS = 1 ]; then
-		find /var/log/$NAME/ -name \*.$LOGEXT -daystart -mtime +0 -print0 \
-			| xargs --no-run-if-empty -0 gzip -9
-		LOGEXT=log.gz
-	fi
+	for EXT in $LOGEXT; do
+		# Compress the log files
+		if [ $LOGFILE_COMPRESS = 1 ]; then
+			find /var/log/$NAME/ -name \*.$EXT -daystart -mtime +0 -print0 \
+				| xargs --no-run-if-empty -0 gzip -9
+			EXT=$EXT.gz
+		fi
 
-	find /var/log/$NAME/ -name \*.$LOGEXT -mtime +$LOGFILE_DAYS -print0 \
-		| xargs --no-run-if-empty -0 rm --
+		# Remove the log files older than LOGFILE_DAYS
+		find /var/log/$NAME/ -name \*.$EXT -mtime +$LOGFILE_DAYS -print0 \
+			| xargs --no-run-if-empty -0 rm --
+	done
 fi
