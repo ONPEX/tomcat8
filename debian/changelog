@@ -1,6 +1,8 @@
 tomcat8 (8.5.8-2) UNRELEASED; urgency=medium
 
   * Team upload.
+  * No longer make /etc/tomcat8/Catalina/localhost writable by the tomcat8 user
+    in the postinst script (Closes: #845393)
   * The tomcat8 user is no longer removed when the package is purged
     (Closes: #845385)
   * Compress and remove the access log files with a .txt extension
