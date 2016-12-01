@@ -194,6 +194,9 @@ case "$1" in
 		exit 1
 	fi
 
+	# Change the home directory to /var/lib/tomcat8 for older installations (to be removed in tomcat9)
+	usermod --home /var/lib/tomcat8 $TOMCAT8_USER > /dev/null 2>&1 || true
+
 	log_daemon_msg "Starting $DESC" "$NAME"
 	if start-stop-daemon --test --start --pidfile "$CATALINA_PID" \
 		--user $TOMCAT8_USER --exec "$JAVA_HOME/bin/java" \

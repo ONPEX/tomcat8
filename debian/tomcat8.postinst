@@ -31,7 +31,7 @@ case "$1" in
 	    addgroup --system "$TOMCAT8_GROUP" --quiet
 	fi
 	if ! id $TOMCAT8_USER > /dev/null 2>&1 ; then
-	    adduser --system --home /usr/share/tomcat8 --no-create-home \
+	    adduser --system --home /var/lib/tomcat8 --no-create-home \
 		--ingroup "$TOMCAT8_GROUP" --disabled-password --shell /bin/false \
 		"$TOMCAT8_USER"
 	fi
