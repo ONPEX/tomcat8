@@ -11,7 +11,7 @@ tomcat8 (8.5.8-2) UNRELEASED; urgency=medium
     of catalina.out (Closes: #843135)
   * Changed the home directory for the tomcat8 user from /usr/share/tomcat8
     to /var/lib/tomcat8 (Closes: #833261)
-  * Use AsyncFileHandler instead of FileHandler for the log files
+  * Aligned the logging configuration with the upstream one
   * Set the proper permissions for /etc/tomcat8/jaspic-providers.xml
   * Install the new library jaspic-api.jar
   * Install the Maven artifacts for tomcat-storeconfig
