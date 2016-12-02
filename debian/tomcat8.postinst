@@ -69,7 +69,7 @@ case "$1" in
 
 	chown -Rh $TOMCAT8_USER:$TOMCAT8_GROUP /var/lib/tomcat8/webapps /var/lib/tomcat8/lib
 	chmod 775 /var/lib/tomcat8/webapps
-	chmod 775 /etc/tomcat8/Catalina /etc/tomcat8/Catalina/localhost
+	chmod 775 /etc/tomcat8/Catalina
 
 	# Authorize user tomcat8 to open privileged ports via authbind.
 	TOMCAT_UID="`id -u $TOMCAT8_USER`"
