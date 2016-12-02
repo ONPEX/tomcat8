@@ -25,8 +25,10 @@ tomcat8 (8.0.14-1+deb8u5) UNRELEASED; urgency=medium
   * Added asm-all.jar to the test classpath to fix TestWebappServiceLoader
   * Fixed a test failure in the new TestNamingContext test added with the fix
     for CVE-2016-6797
-  * Fixed a privilege escalation when the package is upgraded.
+  * Fixed a potential privilege escalation when the tomcat8 package is upgraded.
     Thanks to Paul Szabo for the report (Closes: #845393)
+  * Fixed a potential privilege escalation when the tomcat8 package is purged.
+    Thanks to Paul Szabo for the report (Closes: #845385)
   * Test failures are no longer ignored and now stop the build
 
  -- Emmanuel Bourg <ebourg@apache.org>  Tue, 22 Nov 2016 23:21:56 +0100
