@@ -44,7 +44,228 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues do not "pop up" wrt. others).
 -->
-<section name="Tomcat 8.5.8">
+<section name="Tomcat 8.5.9">
+  <subsection name="Catalina">
+    <changelog>
+      <update>
+        <bug>60202</bug>: Add an available flag to realms, to indicate the
+        state, or the realm backend. Update lockout realm to only register
+        auth failures if the realm is available. (remm)
+      </update>
+      <fix>
+        <bug>60340</bug>: Readability improvements for CSS used in
+        DefaultServlet and ErrorReportValve. Patch provided by Michael
+        Osipov. (violetagg)
+      </fix>
+      <fix>
+        <bug>60351</bug>: Delay creating <code>META-INF/war-tracker</code> file
+        until after the WAR has been expanded to address the case where the
+        Tomcat process terminates during the expansion. (markt)
+      </fix>
+      <fix>
+        Correctly generate URLs for resources located inside JARs that are
+        themselves located inside a packed WAR file. (markt)
+      </fix>
+      <fix>
+        Correctly handle the <code>configClass</code> attribute of a Host when
+        embedding Tomcat. (markt)
+      </fix>
+      <fix>
+        <bug>60368</bug>: Restore egde case for embedded allowing the connector
+        to be removed. (remm)
+      </fix>
+      <fix>
+        <bug>60379</bug>: Dispose of the GSS credential once it is no longer
+        required. Patch provided by Michael Osipov. (markt)
+      </fix>
+      <fix>
+        <bug>60380</bug>: Ensure that a call to
+        <code>HttpServletRequest#logout()</code> triggers a call to
+        <code>TomcatPrincipal#logout()</code>. Based on a patch by Michael
+        Osipov. (markt)
+      </fix>
+      <fix>
+        <bug>60387</bug>: Correct the javadoc for
+        <code>o.a.catalina.AccessLog.setRequestAttributesEnabled</code>.
+        The default value is different for the different implementations.
+        (violetagg)
+      </fix>
+      <scode>
+        <bug>60393</bug>: Use consistent parameter naming in implementations of
+        <code>Realm#authenticate(GSSContext, boolean)</code>. (markt)
+      </scode>
+      <fix>
+        <bug>60395</bug>: Log when an <code>Authenticator</code> passes an
+        incomplete <code>GSSContext</code> to a Realm since it indicates a bug
+        in the <code>Authenticator</code>. Patch provided by Michael Osipov.
+        (markt)
+      </fix>
+      <fix>
+        <bug>60400</bug>: When expanding the buffer used for reading the
+        request body, ensure the read position will be restored to the
+        original one. (violetagg)
+      </fix>
+      <fix>
+        <bug>60410</bug>: Ensure that multiple calls to
+        <code>JarInputStreamWrapper#close()</code> do not incorrectly trigger
+        the closure of the underlying JAR or WAR file. (markt)
+      </fix>
+      <fix>
+        <bug>60411</bug>: Implement support in the <code>RewriteValve</code> for
+        symbolic names to specify the redirect code to use when returning a
+        redirect response to the user agent. Patch provided by Michael Osipov.
+        (markt)
+      </fix>
+      <fix>
+        <bug>60413</bug>: In the <code>RewriteValve</code> write empty capture
+        groups as the empty string rather than as <code>&quot;null&quot;</code>
+        when generating the re-written URL. Based on a patch by Michael Osipov.
+        (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        <bug>60372</bug>: Ensure the response headers' buffer limit is reset to
+        the capacity of this buffer when IOException occurs while writing the
+        headers to the socket. (violetagg)
+      </fix>
+      <fix>
+        Ensure that the availability of configured upgrade protocols that
+        require ALPN is correctly reported during Tomcat start. (markt)
+      </fix>
+      <fix>
+        <bug>60386</bug>: Implement a more sophisticated pruning algorithm for
+        removing closed streams from the priority tree to ensure that the tree
+        does not grow too large. (markt)
+      </fix>
+      <fix>
+        <bug>60409</bug>: When unable to complete sendfile request, ensure the
+        Processor will be added to the cache only once. (markt/violetagg)
+      </fix>
+      <fix>
+        Ensure that the endpoint is able to unlock the acceptor thread during
+        shutdown if the endpoint is configured to listen to any local address
+        of a specific type such as <code>0.0.0.0</code> or <code>::</code>.
+        (markt)
+      </fix>
+      <add>
+        Add a new configuration option, <code>ipv6v6only</code> to the APR
+        connectors that allows them to be configure to only accept IPv6
+        connections when configured with an IPv6 address rather than the
+        default which is to accept IPv4 connections as well if the operating
+        system uses a dual network stack. (markt)
+      </add>
+      <fix>
+        Improve the logic that unlocks the acceptor thread so a better choice is
+        made for the address to connect to when a connector is configured for
+        any local port. This reduces the likelihood of the unlock failing.
+        (markt)
+      </fix>
+      <fix>
+        <bug>60436</bug>: Avoid a potential NPE when processing async timeouts.
+        (markt)
+      </fix>
+      <fix>
+        Reduce the window in which an async request that has just started
+        processing on a container thread remains eligible for an async timeout.
+        (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        <bug>60431</bug>: Improve handling of varargs in UEL expressions. Based
+        on a patch by Ben. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <fix>
+        Correct a typo in Host Configuration Reference.
+        Issue reported via comments.apache.org. (violetagg)
+      </fix>
+      <fix>
+        <bug>60412</bug>: Add information on the comment syntax for the
+        <code>RewriteValve</code> configuration. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Tribes">
+    <changelog>
+      <fix>
+        Reduce the warning logs for a message received from a different domain
+        in order to avoid excessive log outputs. (kfujino)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="WebSocket">
+    <changelog>
+      <fix>
+        <bug>60437</bug>: Avoid possible handshake overflows in the websocket
+        client. (remm)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="jdbc-pool">
+    <changelog>
+      <add>
+        <bug>58816</bug>: Implement the statistics of jdbc-pool. The stats infos
+        are <code>borrowedCount</code>, <code>returnedCount</code>,
+        <code>createdCount</code>, <code>releasedCount</code>,
+        <code>reconnectedCount</code>, <code>releasedIdleCount</code> and
+        <code>removeAbandonedCount</code>. (kfujino)
+      </add>
+      <fix>
+        <bug>60194</bug>: If <code>validationQuery</code> is not specified,
+        connection validation is done by calling the <code>isValid()</code>
+        method. (kfujino)
+      </fix>
+      <fix>
+        <bug>60398</bug>: Fix testcase of <code>TestSlowQueryReport</code>.
+        (kfujino)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <fix>
+        Allow customization of service.bat, such as heap memory size, service
+        startup mode and JVM args. Patch provided by isapir via Github.
+        (violetagg)
+      </fix>
+      <fix>
+        <bug>60366</bug>: Change <code>catalina.bat</code> to use directly
+        <code>LOGGING_MANAGER</code> and <code>LOGGING_CONFIG</code> variables
+        in order to configure logging, instead of modifying
+        <code>JAVA_OPTS</code>. Patch provided by Petter Isberg. (violetagg)
+      </fix>
+      <fix>
+        <bug>60383</bug>: JASPIC API is added as a dependency to the
+        <code>org.apache.tomcat:tomcat-catalina</code> maven artifact.
+        (violetagg)
+      </fix>
+      <fix>
+        Update the comments associated with the TLS Connector examples in
+        <code>server.xml</code>. (markt)
+      </fix>
+      <add>
+        New property is added <code>test.verbose</code> in order to control
+        whether the output of the tests is displayed on the console or not.
+        Patch provided by Emmanuel Bourg. (violetagg)
+      </add>
+      <scode>
+        <code>TestOpenSSLCipherConfigurationParser.testSpecification</code>
+        - if there are test failures, provide more detailed information. Patch
+        provided by Emmanuel Bourg. (violetagg)
+      </scode>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.5.8 (markt)" rtext="2016-11-08">
   <subsection name="Coyote">
     <changelog>
       <fix>
@@ -54,7 +275,7 @@
     </changelog>
   </subsection>
 </section>
-<section name="Tomcat 8.5.7" rtext="not released">
+<section name="Tomcat 8.5.7 (markt)" rtext="not released">
   <subsection name="Catalina">
     <changelog>
       <fix>
@@ -215,7 +436,7 @@
     </changelog>
   </subsection>
 </section>
-<section name="Tomcat 8.5.6" rtext="2016-10-10">
+<section name="Tomcat 8.5.6 (markt)" rtext="2016-10-10">
   <subsection name="Catalina">
     <changelog>
       <add>
@@ -407,7 +628,7 @@
     </changelog>
   </subsection>
 </section>
-<section name="Tomcat 8.5.5" rtext="2016-09-05">
+<section name="Tomcat 8.5.5 (markt)" rtext="2016-09-05">
   <subsection name="Catalina">
     <changelog>
       <fix>
@@ -611,7 +832,7 @@
         Refactor the JSSE client certificate validation so that the
         effectiveness of the <code>certificateVerificationDepth</code>
         configuration attribute does not depend on the presence of a certificate
-        revokation list. (markt)
+        revocation list. (markt)
       </fix>
       <add>
         Log a warning at start up if a JSSE TLS connector is configured with
@@ -755,7 +976,7 @@
     </changelog>
   </subsection>
 </section>
-<section name="Tomcat 8.5.4" rtext="2016-07-12">
+<section name="Tomcat 8.5.4 (markt)" rtext="2016-07-12">
   <subsection name="Catalina">
     <changelog>
       <fix>
@@ -944,7 +1165,7 @@
     </changelog>
   </subsection>
 </section>
-<section name="Tomcat 8.5.3" rtext="2016-06-13">
+<section name="Tomcat 8.5.3 (markt)" rtext="2016-06-13">
   <subsection name="Catalina">
     <changelog>
       <fix>
@@ -1094,7 +1315,7 @@
     </changelog>
   </subsection>
 </section>
-<section name="Tomcat 8.5.2" rtext="2016-05-16">
+<section name="Tomcat 8.5.2 (markt)" rtext="2016-05-16">
   <subsection name="Catalina">
     <changelog>
       <fix>
@@ -1104,7 +1325,7 @@
     </changelog>
   </subsection>
 </section>
-<section name="Tomcat 8.5.1" rtext="not released">
+<section name="Tomcat 8.5.1 (markt)" rtext="not released">
   <subsection name="Catalina">
     <changelog>
       <fix>
@@ -1490,7 +1711,7 @@
     </changelog>
   </subsection>
 </section>
-<section name="Tomcat 8.5.0" rtext="2016-03-24">
+<section name="Tomcat 8.5.0 (markt)" rtext="2016-03-24">
   <subsection name="General">
     <changelog>
       <update>

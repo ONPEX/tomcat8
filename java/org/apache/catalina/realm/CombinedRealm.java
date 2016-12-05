@@ -52,7 +52,9 @@ public class CombinedRealm extends RealmBase {
 
     /**
      * Descriptive information about this Realm implementation.
+     * @deprecated This will be removed in Tomcat 9 onwards.
      */
+    @Deprecated
     protected static final String name = "CombinedRealm";
 
     /**
@@ -392,6 +394,7 @@ public class CombinedRealm extends RealmBase {
     }
 
     @Override
+    @Deprecated
     protected String getName() {
         return name;
     }
@@ -416,6 +419,17 @@ public class CombinedRealm extends RealmBase {
                     sm.getString("combinedRealm.getPrincipal"));
         log.error(sm.getString("combinedRealm.unexpectedMethod"), uoe);
         throw uoe;
+    }
+
+
+    @Override
+    public boolean isAvailable() {
+        for (Realm realm : realms) {
+            if (!realm.isAvailable()) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }
