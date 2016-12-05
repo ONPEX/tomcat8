@@ -1,4 +1,4 @@
-Description: Ignore the failing tests and print only the summary
+Description: Ignore the failing tests
 Author: Emmanuel Bourg <ebourg@apache.org>
 Forwarded: not-needed
 --- a/build.xml
@@ -14,12 +14,3 @@ Forwarded: not-needed
    </target>
  
    <target name="test-nio" description="Runs the JUnit test cases for NIO. Does not stop on errors."
-@@ -1415,7 +1417,7 @@
- 
-     <sequential>
-       <mkdir dir="${test.reports}" />
--      <junit printsummary="yes" fork="yes" dir="." showoutput="yes"
-+      <junit printsummary="yes" fork="yes" dir="." showoutput="no"
-         errorproperty="test.result.error"
-         failureproperty="test.result.failure"
-         haltonfailure="${test.haltonfailure}"

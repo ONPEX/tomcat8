@@ -33,7 +33,7 @@ ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))
 	mkdir -p webapps/examples/WEB-INF/lib
 	cp /usr/share/java/taglibs-standard-spec.jar webapps/examples/WEB-INF/lib/taglibs-standard-spec-1.2.5.jar
 	cp /usr/share/java/taglibs-standard-impl.jar webapps/examples/WEB-INF/lib/taglibs-standard-impl-1.2.5.jar
-	$(ANT) test -Dtest.apr.loc=/usr/lib/$(shell dpkg-architecture --query DEB_BUILD_MULTIARCH)
+	$(ANT) test -Dtest.apr.loc=/usr/lib/$(shell dpkg-architecture --query DEB_BUILD_MULTIARCH) -Dtest.verbose=false
 endif
 
 override_dh_installchangelogs:
