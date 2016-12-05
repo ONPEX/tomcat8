@@ -138,6 +138,7 @@ public class Tomcat {
     protected int port = 8080;
     protected String hostname = "localhost";
     protected String basedir;
+    protected boolean defaultConnectorCreated = false;
 
     private final Map<String, String> userPass = new HashMap<>();
     private final Map<String, List<String>> userRoles = new HashMap<>();
@@ -408,6 +409,9 @@ public class Tomcat {
             return service.findConnectors()[0];
         }
 
+        if (defaultConnectorCreated) {
+            return null;
+        }
         // The same as in standard Tomcat configuration.
         // This creates an APR HTTP connector if AprLifecycleListener has been
         // configured (created) and Tomcat Native library is available.
@@ -415,10 +419,12 @@ public class Tomcat {
         Connector connector = new Connector("HTTP/1.1");
         connector.setPort(port);
         service.addConnector(connector);
+        defaultConnectorCreated = true;
         return connector;
     }
 
     public void setConnector(Connector connector) {
+        defaultConnectorCreated = true;
         Service service = getService();
         boolean found = false;
         for (Connector serviceConnector : service.findConnectors()) {
@@ -561,7 +567,17 @@ public class Tomcat {
      * @see #addWebapp(String, String)
      */
     public Context addWebapp(Host host, String contextPath, String docBase) {
-        return addWebapp(host,  contextPath, docBase, new ContextConfig());
+        LifecycleListener listener = null;
+        try {
+            Class<?> clazz = Class.forName(getHost().getConfigClass());
+            listener = (LifecycleListener) clazz.newInstance();
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+            // Wrap in IAE since we can't easily change the method signature to
+            // to throw the specific checked exceptions
+            throw new IllegalArgumentException(e);
+        }
+
+        return addWebapp(host,  contextPath, docBase, listener);
     }
 
     /**
@@ -572,8 +588,27 @@ public class Tomcat {
      * @param config Custom context configurator helper
      * @return the deployed context
      * @see #addWebapp(String, String)
+     *
+     * @deprecated Use {@link
+     *             #addWebapp(Host, String, String, LifecycleListener)} instead
      */
+    @Deprecated
     public Context addWebapp(Host host, String contextPath, String docBase, ContextConfig config) {
+        return addWebapp(host, contextPath, docBase, (LifecycleListener) config);
+    }
+
+
+    /**
+     * @param host The host in which the context will be deployed
+     * @param contextPath The context mapping to use, "" for root context.
+     * @param docBase Base directory for the context, for static files.
+     *  Must exist, relative to the server home
+     * @param config Custom context configurator helper
+     * @return the deployed context
+     * @see #addWebapp(String, String)
+     */
+    public Context addWebapp(Host host, String contextPath, String docBase,
+            LifecycleListener config) {
 
         silence(host, contextPath);
 
@@ -585,8 +620,10 @@ public class Tomcat {
 
         ctx.addLifecycleListener(config);
 
-        // prevent it from looking ( if it finds one - it'll have dup error )
-        config.setDefaultWebXml(noDefaultWebXmlPath());
+        if (config instanceof ContextConfig) {
+            // prevent it from looking ( if it finds one - it'll have dup error )
+            ((ContextConfig) config).setDefaultWebXml(noDefaultWebXmlPath());
+        }
 
         if (host == null) {
             getHost().addChild(ctx);
@@ -630,6 +667,7 @@ public class Tomcat {
     protected Realm createDefaultRealm() {
         return new RealmBase() {
             @Override
+            @Deprecated
             protected String getName() {
                 return "Simple";
             }

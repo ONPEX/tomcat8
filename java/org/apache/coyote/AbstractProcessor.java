@@ -19,6 +19,7 @@ package org.apache.coyote;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.nio.ByteBuffer;
+import java.util.Iterator;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -58,22 +59,12 @@ public abstract class AbstractProcessor extends AbstractProcessorLight implement
     private ErrorState errorState = ErrorState.NONE;
 
 
-    /**
-     * Used by HTTP/2.
-     * @param coyoteRequest The request
-     * @param coyoteResponse The response
-     */
-    protected AbstractProcessor(Request coyoteRequest, Response coyoteResponse) {
-        this(null, coyoteRequest, coyoteResponse);
-    }
-
-
     public AbstractProcessor(AbstractEndpoint<?> endpoint) {
         this(endpoint, new Request(), new Response());
     }
 
 
-    private AbstractProcessor(AbstractEndpoint<?> endpoint, Request coyoteRequest,
+    protected AbstractProcessor(AbstractEndpoint<?> endpoint, Request coyoteRequest,
             Response coyoteResponse) {
         this.endpoint = endpoint;
         asyncStateMachine = new AsyncStateMachine(this);
@@ -106,7 +97,7 @@ public abstract class AbstractProcessor extends AbstractProcessorLight implement
             // Set the request attribute so that the async onError() event is
             // fired when the error event is processed
             request.setAttribute(RequestDispatcher.ERROR_EXCEPTION, t);
-            socketWrapper.processSocket(SocketEvent.ERROR, true);
+            processSocketEvent(SocketEvent.ERROR, true);
         }
     }
 
@@ -380,13 +371,13 @@ public abstract class AbstractProcessor extends AbstractProcessorLight implement
         case ASYNC_COMPLETE: {
             clearDispatches();
             if (asyncStateMachine.asyncComplete()) {
-                socketWrapper.processSocket(SocketEvent.OPEN_READ, true);
+                processSocketEvent(SocketEvent.OPEN_READ, true);
             }
             break;
         }
         case ASYNC_DISPATCH: {
             if (asyncStateMachine.asyncDispatch()) {
-                socketWrapper.processSocket(SocketEvent.OPEN_READ, true);
+                processSocketEvent(SocketEvent.OPEN_READ, true);
             }
             break;
         }
@@ -470,10 +461,7 @@ public abstract class AbstractProcessor extends AbstractProcessorLight implement
             break;
         }
         case DISPATCH_EXECUTE: {
-            SocketWrapperBase<?> wrapper = socketWrapper;
-            if (wrapper != null) {
-                executeDispatches(wrapper);
-            }
+            executeDispatches();
             break;
         }
 
@@ -525,7 +513,7 @@ public abstract class AbstractProcessor extends AbstractProcessorLight implement
     private void doTimeoutAsync() {
         // Avoid multiple timeouts
         setAsyncTimeout(-1);
-        socketWrapper.processSocket(SocketEvent.TIMEOUT, true);
+        processSocketEvent(SocketEvent.TIMEOUT, true);
     }
 
 
@@ -639,6 +627,14 @@ public abstract class AbstractProcessor extends AbstractProcessorLight implement
     }
 
 
+    protected void processSocketEvent(SocketEvent event, boolean dispatch) {
+        SocketWrapperBase<?> socketWrapper = getSocketWrapper();
+        if (socketWrapper != null) {
+            socketWrapper.processSocket(event, dispatch);
+        }
+    }
+
+
     protected abstract boolean isRequestBodyFullyRead();
 
 
@@ -648,7 +644,36 @@ public abstract class AbstractProcessor extends AbstractProcessorLight implement
     protected abstract boolean isReady();
 
 
-    protected abstract void executeDispatches(SocketWrapperBase<?> wrapper);
+    protected void executeDispatches() {
+        SocketWrapperBase<?> socketWrapper = getSocketWrapper();
+        Iterator<DispatchType> dispatches = getIteratorAndClearDispatches();
+        if (socketWrapper != null) {
+            synchronized (socketWrapper) {
+                /*
+                 * This method is called when non-blocking IO is initiated by defining
+                 * a read and/or write listener in a non-container thread. It is called
+                 * once the non-container thread completes so that the first calls to
+                 * onWritePossible() and/or onDataAvailable() as appropriate are made by
+                 * the container.
+                 *
+                 * Processing the dispatches requires (for APR/native at least)
+                 * that the socket has been added to the waitingRequests queue. This may
+                 * not have occurred by the time that the non-container thread completes
+                 * triggering the call to this method. Therefore, the coded syncs on the
+                 * SocketWrapper as the container thread that initiated this
+                 * non-container thread holds a lock on the SocketWrapper. The container
+                 * thread will add the socket to the waitingRequests queue before
+                 * releasing the lock on the socketWrapper. Therefore, by obtaining the
+                 * lock on socketWrapper before processing the dispatches, we can be
+                 * sure that the socket has been added to the waitingRequests queue.
+                 */
+                while (dispatches != null && dispatches.hasNext()) {
+                    DispatchType dispatchType = dispatches.next();
+                    socketWrapper.processSocket(dispatchType.getSocketStatus(), false);
+                }
+            }
+        }
+    }
 
 
     /**

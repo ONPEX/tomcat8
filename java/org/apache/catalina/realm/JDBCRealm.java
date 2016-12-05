@@ -93,7 +93,9 @@ public class JDBCRealm
 
     /**
      * Descriptive information about this Realm implementation.
+     * @deprecated This will be removed in Tomcat 9 onwards.
      */
+    @Deprecated
     protected static final String name = "JDBCRealm";
 
 
@@ -414,6 +416,12 @@ public class JDBCRealm
     }
 
 
+    @Override
+    public boolean isAvailable() {
+        return (dbConnection != null);
+    }
+
+
     /**
      * Close the specified database connection.
      *
@@ -494,14 +502,10 @@ public class JDBCRealm
     }
 
 
-    /**
-     * @return a short name for this Realm implementation.
-     */
     @Override
+    @Deprecated
     protected String getName() {
-
-        return (name);
-
+        return name;
     }
 
 

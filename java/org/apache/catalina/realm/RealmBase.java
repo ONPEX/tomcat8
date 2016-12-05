@@ -475,7 +475,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
      * {@inheritDoc}
      */
     @Override
-    public Principal authenticate(GSSContext gssContext, boolean storeCred) {
+    public Principal authenticate(GSSContext gssContext, boolean storeCreds) {
         if (gssContext.isEstablished()) {
             GSSName gssName = null;
             try {
@@ -495,7 +495,7 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
                     }
                 }
                 GSSCredential gssCredential = null;
-                if (storeCred && gssContext.getCredDelegState()) {
+                if (storeCreds && gssContext.getCredDelegState()) {
                     try {
                         gssCredential = gssContext.getDelegCred();
                     } catch (GSSException e) {
@@ -508,6 +508,8 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
                 }
                 return getPrincipal(name, gssCredential);
             }
+        } else {
+            log.error(sm.getString("realmBase.gssContextNotEstablished"));
         }
 
         // Fail in all other cases
@@ -1052,6 +1054,11 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
 
 
     @Override
+    public boolean isAvailable() {
+        return true;
+    }
+
+    @Override
     protected void initInternal() throws LifecycleException {
 
         super.initInternal();
@@ -1168,7 +1175,11 @@ public abstract class RealmBase extends LifecycleMBeanBase implements Realm {
     /**
      * @return a short name for this Realm implementation, for use in
      * log messages.
+     *
+     * @deprecated This will be removed in Tomcat 9 onwards. Use
+     *             {@link Class#getSimpleName()} instead.
      */
+    @Deprecated
     protected abstract String getName();
 
 

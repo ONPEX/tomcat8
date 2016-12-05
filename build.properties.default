@@ -25,7 +25,7 @@
 # ----- Version Control Flags -----
 version.major=8
 version.minor=5
-version.build=8
+version.build=9
 version.patch=0
 version.suffix=
 
@@ -40,6 +40,8 @@ execute.test.apr=true
 test.haltonfailure=false
 # Activate AccessLog during testing
 test.accesslog=false
+# Display the tests output on the console
+test.verbose=true
 
 # Number of parallel threads to use for testing. The recommended value is one
 # thread per core.
@@ -65,7 +67,7 @@ do.codesigning=false
 codesigning.user=request-via-pmc
 codesigning.pwd=request-via-pmc
 codesigning.partnercode=request-via-pmc
-codesigning.service=Microsoft Signing
+codesigning.service=Microsoft Windows Signing
 
 # ----- Settings to use when downloading files -----
 trydownload.httpusecaches=true

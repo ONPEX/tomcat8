@@ -128,6 +128,17 @@ public class ConnectionPool {
 
     private AtomicLong poolVersion = new AtomicLong(Long.MIN_VALUE);
 
+    /**
+     * The counters for statistics of the pool.
+     */
+    private final AtomicLong borrowedCount = new AtomicLong(0);
+    private final AtomicLong returnedCount = new AtomicLong(0);
+    private final AtomicLong createdCount = new AtomicLong(0);
+    private final AtomicLong releasedCount = new AtomicLong(0);
+    private final AtomicLong reconnectedCount = new AtomicLong(0);
+    private final AtomicLong removeAbandonedCount = new AtomicLong(0);
+    private final AtomicLong releasedIdleCount = new AtomicLong(0);
+
     //===============================================================================
     //         PUBLIC METHODS
     //===============================================================================
@@ -550,6 +561,7 @@ public class ConnectionPool {
                 jmxPool.notify(org.apache.tomcat.jdbc.pool.jmx.ConnectionPool.NOTIFY_ABANDON, trace);
             }
             //release the connection
+            removeAbandonedCount.incrementAndGet();
             release(con);
         } finally {
             con.unlock();
@@ -598,6 +610,7 @@ public class ConnectionPool {
                 size.addAndGet(-1);
                 con.setHandler(null);
             }
+            releasedCount.incrementAndGet();
         } finally {
             con.unlock();
         }
@@ -633,6 +646,7 @@ public class ConnectionPool {
             if (con!=null) {
                 //configure the connection and return it
                 PooledConnection result = borrowConnection(now, con, username, password);
+                borrowedCount.incrementAndGet();
                 if (result!=null) return result;
             }
 
@@ -725,6 +739,7 @@ public class ConnectionPool {
                 if (!busy.offer(con)) {
                     log.debug("Connection doesn't fit into busy array, connection will not be traceable.");
                 }
+                createdCount.incrementAndGet();
                 return con;
             } else {
                 //validation failed, make sure we disconnect
@@ -801,6 +816,7 @@ public class ConnectionPool {
             //the connection shouldn't have to poll again.
             try {
                 con.reconnect();
+                reconnectedCount.incrementAndGet();
                 int validationMode = getPoolProperties().isTestOnConnect() || getPoolProperties().getInitSQL()!=null ?
                     PooledConnection.VALIDATE_INIT :
                     PooledConnection.VALIDATE_BORROW;
@@ -896,6 +912,7 @@ public class ConnectionPool {
 
         if (con != null) {
             try {
+                returnedCount.incrementAndGet();
                 con.lock();
                 if (con.isSuspect()) {
                     if (poolProperties.isLogAbandoned() && log.isInfoEnabled()) {
@@ -1015,6 +1032,7 @@ public class ConnectionPool {
                         continue;
                     long time = con.getTimestamp();
                     if (shouldReleaseIdle(now, con, time)) {
+                        releasedIdleCount.incrementAndGet();
                         release(con);
                         idle.remove(con);
                         setToNull = true;
@@ -1174,6 +1192,62 @@ public class ConnectionPool {
         } catch (Exception x) {
             log.warn("Unable to start JMX integration for connection pool. Instance["+getName()+"] can't be monitored.",x);
         }
+    }
+
+    /**
+     * The total number of connections borrowed from this pool.
+     * @return the borrowed connection count
+     */
+    public long getBorrowedCount() {
+        return borrowedCount.get();
+    }
+
+    /**
+     * The total number of connections returned to this pool.
+     * @return the returned connection count
+     */
+    public long getReturnedCount() {
+        return returnedCount.get();
+    }
+
+    /**
+     * The total number of connections created by this pool.
+     * @return the created connection count
+     */
+    public long getCreatedCount() {
+        return createdCount.get();
+    }
+
+    /**
+     * The total number of connections released from this pool.
+     * @return the released connection count
+     */
+    public long getReleasedCount() {
+        return releasedCount.get();
+    }
+
+    /**
+     * The total number of connections reconnected by this pool.
+     * @return the reconnected connection count
+     */
+    public long getReconnectedCount() {
+        return reconnectedCount.get();
+    }
+
+    /**
+     * The total number of connections released by remove abandoned.
+     * @return the PoolCleaner removed abandoned connection count
+     */
+    public long getRemoveAbandonedCount() {
+        return removeAbandonedCount.get();
+    }
+
+    /**
+     * The total number of connections released by eviction.
+     * @return the PoolCleaner evicted idle connection count
+     */
+    public long getReleasedIdleCount() {
+        return releasedIdleCount.get();
     }
 
     /**

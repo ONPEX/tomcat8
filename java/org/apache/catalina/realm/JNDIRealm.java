@@ -236,7 +236,9 @@ public class JNDIRealm extends RealmBase {
 
     /**
      * Descriptive information about this Realm implementation.
+     * @deprecated This will be removed in Tomcat 9 onwards.
      */
+    @Deprecated
     protected static final String name = "JNDIRealm";
 
 
@@ -2167,14 +2169,10 @@ public class JNDIRealm extends RealmBase {
     }
 
 
-    /**
-     * @return a short name for this Realm implementation.
-     */
     @Override
+    @Deprecated
     protected String getName() {
-
         return name;
-
     }
 
 
@@ -2377,6 +2375,12 @@ public class JNDIRealm extends RealmBase {
 
         return context;
 
+    }
+
+    @Override
+    public boolean isAvailable() {
+        // Simple best effort check
+        return (context != null);
     }
 
     private DirContext createDirContext(Hashtable<String, String> env) throws NamingException {

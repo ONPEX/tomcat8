@@ -110,19 +110,37 @@ public class Stream extends AbstractStream implements HeaderEmitter {
         // Check if new parent is a descendant of this stream
         if (isDescendant(parent)) {
             parent.detachFromParent();
-            getParentStream().addChild(parent);
+            // Cast is always safe since any descendant of this stream must be
+            // an instance of Stream
+            getParentStream().addChild((Stream) parent);
         }
 
         if (exclusive) {
             // Need to move children of the new parent to be children of this
             // stream. Slightly convoluted to avoid concurrent modification.
-            Iterator<AbstractStream> parentsChildren = parent.getChildStreams().iterator();
+            Iterator<Stream> parentsChildren = parent.getChildStreams().iterator();
             while (parentsChildren.hasNext()) {
-                AbstractStream parentsChild = parentsChildren.next();
+                Stream parentsChild = parentsChildren.next();
                 parentsChildren.remove();
                 this.addChild(parentsChild);
             }
         }
+        parent.addChild(this);
+        this.weight = weight;
+    }
+
+
+    /*
+     * Used when removing closed streams from the tree and we know there is no
+     * need to check for circular references.
+     */
+    final void rePrioritise(AbstractStream parent, int weight) {
+        if (log.isDebugEnabled()) {
+            log.debug(sm.getString("stream.reprioritisation.debug",
+                    getConnectionId(), getIdentifier(), Boolean.FALSE,
+                    parent.getIdentifier(), Integer.toString(weight)));
+        }
+
         parent.addChild(this);
         this.weight = weight;
     }
@@ -343,7 +361,7 @@ public class Stream extends AbstractStream implements HeaderEmitter {
 
     @Override
     protected final String getConnectionId() {
-        return getParentStream().getConnectionId();
+        return handler.getConnectionId();
     }
 
 
@@ -544,6 +562,7 @@ public class Stream extends AbstractStream implements HeaderEmitter {
          * @deprecated Unused. Will be removed in Tomcat 9. Use
          *             {@link #doWrite(ByteBuffer)}
          */
+        @Deprecated
         @Override
         public synchronized int doWrite(ByteChunk chunk) throws IOException {
             if (closed) {
@@ -719,6 +738,7 @@ public class Stream extends AbstractStream implements HeaderEmitter {
          * @deprecated Unused. Will be removed in Tomcat 9. Use
          *             {@link #doRead(ApplicationBufferHandler)}
          */
+        @Deprecated
         @Override
         public int doRead(ByteChunk chunk) throws IOException {
 
