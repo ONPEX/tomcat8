@@ -19,10 +19,11 @@ case "$1" in
 
 	tmpfile=`mktemp /tmp/tomcat8.XXXXXXXXXX`
 	chmod 644 $tmpfile
+	DELIM=$(printf '\001')
 	cat $TEMPLATE \
 		| sed "s%^TOMCAT8_USER=.*$%TOMCAT8_USER=$TOMCAT8_USER%" \
 		| sed "s%^TOMCAT8_GROUP=.*$%TOMCAT8_GROUP=$TOMCAT8_GROUP%" \
-		| sed "s%^JAVA_OPTS=.*$%JAVA_OPTS=\"$JAVA_OPTS\"%" \
+		| sed "s${DELIM}^JAVA_OPTS=.*\$${DELIM}JAVA_OPTS=\"$JAVA_OPTS\"${DELIM}" \
 		>> $tmpfile
 	ucf --debconf-ok --sum-file /usr/share/tomcat8/defaults.md5sum $tmpfile $CONFFILE
 	rm -f $tmpfile
