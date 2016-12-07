@@ -1,6 +1,8 @@
-From: Debian Java Maintainers <pkg-java-maintainers@lists.alioth.debian.org>
-Date: Mon, 28 Jun 2010 21:32:57 +0200
-Subject: [PATCH] add JARs below /var to class loader
+Description: Restores the classloading from the common, server and shared
+ directories under the CATALINA_HOME and CATALINA_BASE directories to ease
+ the migration from older versions of Tomcat.
+Author: Miguel Landaeta <nomadium@debian.org>
+Forwarded: not-needed
 --- a/conf/catalina.properties
 +++ b/conf/catalina.properties
 @@ -50,7 +50,7 @@
@@ -8,7 +10,7 @@ Subject: [PATCH] add JARs below /var to class loader
  #       Because double quotes are used for quoting, the double quote character
  #       may not appear in a path.
 -common.loader="${catalina.base}/lib","${catalina.base}/lib/*.jar","${catalina.home}/lib","${catalina.home}/lib/*.jar"
-+common.loader="${catalina.base}/lib","${catalina.base}/lib/*.jar","${catalina.home}/lib","${catalina.home}/lib/*.jar","${catalina.home}/common/classes","${catalina.home}/common/*.jar"
++common.loader="${catalina.base}/lib","${catalina.base}/lib/*.jar","${catalina.home}/lib","${catalina.home}/lib/*.jar","${catalina.base}/common/classes","${catalina.base}/common/*.jar","${catalina.home}/common/classes","${catalina.home}/common/*.jar"
  
  #
  # List of comma-separated paths defining the contents of the "server"
@@ -17,7 +19,7 @@ Subject: [PATCH] add JARs below /var to class loader
  #       Because double quotes are used for quoting, the double quote character
  #       may not appear in a path.
 -server.loader=
-+server.loader=${catalina.home}/server/classes,${catalina.home}/server/*.jar
++server.loader="${catalina.base}/server/classes","${catalina.base}/server/*.jar","${catalina.home}/server/classes","${catalina.home}/server/*.jar"
  
  #
  # List of comma-separated paths defining the contents of the "shared"
@@ -26,7 +28,7 @@ Subject: [PATCH] add JARs below /var to class loader
  #       Because double quotes are used for quoting, the double quote character
  #       may not appear in a path.
 -shared.loader=
-+shared.loader=${catalina.home}/shared/classes,${catalina.home}/shared/*.jar
++shared.loader="${catalina.base}/shared/classes","${catalina.base}/shared/*.jar","${catalina.home}/shared/classes","${catalina.home}/shared/*.jar"
  
  # Default list of JAR files that should not be scanned using the JarScanner
  # functionality. This is typically used to scan JARs for configuration

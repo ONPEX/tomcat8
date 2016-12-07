@@ -3,6 +3,8 @@ tomcat8 (8.5.9-1) UNRELEASED; urgency=medium
   * Team upload.
   * New upstream release
     - Refreshed the patches
+  * Restored the classloading from the common, server and shared directories
+    under CATALINA_BASE (Closes: #847137)
 
  -- Emmanuel Bourg <ebourg@apache.org>  Mon, 05 Dec 2016 22:47:09 +0100
 
