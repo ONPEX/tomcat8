@@ -1,4 +1,4 @@
-tomcat8 (8.5.9-1) UNRELEASED; urgency=medium
+tomcat8 (8.5.9-1) unstable; urgency=medium
 
   * Team upload.
   * New upstream release
@@ -8,7 +8,7 @@ tomcat8 (8.5.9-1) UNRELEASED; urgency=medium
   * Fixed the installation error when JAVA_OPTS in /etc/default/tomcat8
     contains the '%' character (Closes: #770911)
 
- -- Emmanuel Bourg <ebourg@apache.org>  Mon, 05 Dec 2016 22:47:09 +0100
+ -- Emmanuel Bourg <ebourg@apache.org>  Thu, 08 Dec 2016 22:26:36 +0100
 
 tomcat8 (8.5.8-2) unstable; urgency=medium
 
