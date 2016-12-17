@@ -20,6 +20,7 @@ tomcat8 (8.0.14-1+deb8u5) UNRELEASED; urgency=medium
     a ClassNotFoundException when the security manager is enabled (see #846298)
   * CVE-2016-6797 follow-up: Fixed a regression preventing some applications
     from accessing the global resources (see #845425)
+  * CVE-2015-5345 follow-up: Applied a missing modification to DefaultServlet
   * Backported a fix for a test failure in Test*NonLoginAndBasicAuthenticator
     with recent JREs
   * Backported a fix disabling the broken SSLv3 tests
