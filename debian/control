@@ -30,7 +30,7 @@ Homepage: http://tomcat.apache.org
 
 Package: tomcat8-common
 Architecture: all
-Depends: default-jre-headless | java7-runtime-headless | java7-runtime,
+Depends: default-jre-headless | java8-runtime-headless | java8-runtime,
          libtomcat8-java (>= ${source:Version}),
          ${misc:Depends}
 Description: Apache Tomcat 8 - Servlet and JSP engine -- common files
