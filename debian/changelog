@@ -1,9 +1,9 @@
-tomcat8 (8.5.9-2) UNRELEASED; urgency=medium
+tomcat8 (8.5.9-2) unstable; urgency=medium
 
   * Team upload.
   * Require Java 8 or higher (Closes: #848612)
 
- -- Emmanuel Bourg <ebourg@apache.org>  Sun, 18 Dec 2016 23:52:21 +0100
+ -- Emmanuel Bourg <ebourg@apache.org>  Mon, 19 Dec 2016 15:35:19 +0100
 
 tomcat8 (8.5.9-1) unstable; urgency=medium
 
