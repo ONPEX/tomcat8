@@ -1,3 +1,10 @@
+tomcat8 (8.5.9-3) UNRELEASED; urgency=medium
+
+  * Team upload.
+  * Recommend Java 8 in /etc/default/tomcat8
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Tue, 20 Dec 2016 19:29:17 +0100
+
 tomcat8 (8.5.9-2) unstable; urgency=medium
 
   * Team upload.
