@@ -1,3 +1,14 @@
+tomcat8 (8.0.14-1+deb8u6) jessie-security; urgency=high
+
+  * Fixed CVE-2016-8745: A bug in the error handling of the send file code for
+    the NIO HTTP connector resulted in the current Processor object being added
+    to the Processor cache multiple times. This in turn meant that the same
+    Processor could be used for concurrent requests. Sharing a Processor can
+    result in information leakage between requests including, not not limited
+    to, session ID and the response body.
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Thu, 05 Jan 2017 17:10:29 +0100
+
 tomcat8 (8.0.14-1+deb8u5) jessie-security; urgency=high
 
   * Fixed CVE-2016-9774: Potential privilege escalation when the tomcat8
