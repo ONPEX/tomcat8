@@ -1,6 +1,8 @@
-tomcat8 (8.5.9-3) UNRELEASED; urgency=medium
+tomcat8 (8.5.10-1) UNRELEASED; urgency=medium
 
   * Team upload.
+  * New upstream release
+    - Refreshed the patches
   * Recommend Java 8 in /etc/default/tomcat8
 
  -- Emmanuel Bourg <ebourg@apache.org>  Tue, 20 Dec 2016 19:29:17 +0100
