@@ -546,6 +546,7 @@
         <exclude name="output/**"/>
         <exclude name="modules/**"/>
         <exclude name="**/*.mdl"/>
+        <exclude name="**/*.svg"/>
         <exclude name="**/*_2.xml"/>
         <exclude name="res/checkstyle/header-al2.txt"/>
         <!-- Exclude auto-generated files -->
@@ -559,6 +560,8 @@
         <exclude name="test/webapp/bug53257/**/*.txt"/>
         <exclude name="test/webapp-fragments/WEB-INF/classes/*.txt"/>
         <exclude name="test/webresources/**"/>
+        <!-- Exclude test files with unusual encodings -->
+        <exclude name="test/webapp/jsp/encoding/**"/>
       </fileset>
       <fileset dir="modules/jdbc-pool" >
         <exclude name=".*/**"/>
@@ -613,6 +616,10 @@
         <exclude name="nbproject/**"/>
         <exclude name="output/**"/>
         <exclude name="modules/**"/>
+        <!-- Exclude these since some svn clients do not seem able to handle
+             UTF-16 line-ending conversion -->
+        <exclude name="test/webapp/jsp/encoding/bom-utf16*"/>
+        <exclude name="test/webapp/jsp/encoding/bom-none-prolog-utf16*"/>
       </fileset>
       <fileset dir="modules/jdbc-pool" >
         <patternset refid="text.files" />
@@ -1912,8 +1919,9 @@ Apache Tomcat ${version} native binaries for Win64 AMD64/EMT64 platform.
     <!-- Copy deployer documentation -->
     <copy todir="${tomcat.deployer}">
       <fileset dir="${tomcat.build}/webapps/docs">
-        <include name="images/asf-logo.gif" />
-        <include name="images/tomcat.gif" />
+        <include name="images/asf-logo.svg" />
+        <include name="images/tomcat.png" />
+        <include name="images/docs-stylesheet.css" />
       </fileset>
     </copy>
     <copy tofile="${tomcat.deployer}/deployer-howto.html"

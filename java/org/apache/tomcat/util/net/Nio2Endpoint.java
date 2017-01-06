@@ -390,12 +390,10 @@ public class Nio2Endpoint extends AbstractJsseEndpoint<Nio2Channel> {
 
 
     // --------------------------------------------------- Acceptor Inner Class
-
     /**
      * With NIO2, the main acceptor thread only initiates the initial accept
      * but periodically checks that the connector is still accepting (if not
-     * it will attempt to start again). It is also responsible for periodic
-     * checks of async timeouts, rather than use a dedicated thread for that.
+     * it will attempt to start again).
      */
     protected class Acceptor extends AbstractEndpoint.Acceptor {
 
@@ -432,6 +430,7 @@ public class Nio2Endpoint extends AbstractJsseEndpoint<Nio2Channel> {
                         // socket
                         socket = serverSock.accept().get();
                     } catch (Exception e) {
+                        // We didn't get a socket
                         countDownConnection();
                         if (running) {
                             // Introduce delay if necessary
@@ -447,27 +446,13 @@ public class Nio2Endpoint extends AbstractJsseEndpoint<Nio2Channel> {
 
                     // Configure the socket
                     if (running && !paused) {
-                        // Hand this socket off to an appropriate processor
+                        // setSocketOptions() will hand the socket off to
+                        // an appropriate processor if successful
                         if (!setSocketOptions(socket)) {
-                            countDownConnection();
-                            try {
-                                socket.close();
-                            } catch (IOException ioe) {
-                                if (log.isDebugEnabled()) {
-                                    log.debug("", ioe);
-                                }
-                            }
+                            closeSocket(socket);
                        }
                     } else {
-                        countDownConnection();
-                        // Close socket right away
-                        try {
-                            socket.close();
-                        } catch (IOException ioe) {
-                            if (log.isDebugEnabled()) {
-                                log.debug("", ioe);
-                            }
-                        }
+                        closeSocket(socket);
                     }
                 } catch (Throwable t) {
                     ExceptionUtils.handleThrowable(t);
@@ -477,6 +462,17 @@ public class Nio2Endpoint extends AbstractJsseEndpoint<Nio2Channel> {
             state = AcceptorState.ENDED;
         }
 
+
+        private void closeSocket(AsynchronousSocketChannel socket) {
+            countDownConnection();
+            try {
+                socket.close();
+            } catch (IOException ioe) {
+                if (log.isDebugEnabled()) {
+                    log.debug(sm.getString("endpoint.err.close"), ioe);
+                }
+            }
+        }
     }
 
 
