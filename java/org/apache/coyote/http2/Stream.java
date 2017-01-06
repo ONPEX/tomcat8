@@ -97,6 +97,9 @@ public class Stream extends AbstractStream implements HeaderEmitter {
         this.coyoteResponse.setOutputBuffer(outputBuffer);
         this.coyoteRequest.setResponse(coyoteResponse);
         this.coyoteRequest.protocol().setString("HTTP/2.0");
+        if (this.coyoteRequest.getStartTime() < 0) {
+            this.coyoteRequest.setStartTime(System.currentTimeMillis());
+        }
     }
 
 
@@ -274,7 +277,7 @@ public class Stream extends AbstractStream implements HeaderEmitter {
                 String query = value.substring(queryStart + 1);
                 coyoteRequest.requestURI().setString(uri);
                 coyoteRequest.decodedURI().setString(coyoteRequest.getURLDecoder().convert(uri, false));
-                coyoteRequest.queryString().setString(coyoteRequest.getURLDecoder().convert(query, true));
+                coyoteRequest.queryString().setString(query);
             }
             break;
         }

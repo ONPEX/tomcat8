@@ -209,7 +209,6 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
         InetSocketAddress addr = (getAddress()!=null?new InetSocketAddress(getAddress(),getPort()):new InetSocketAddress(getPort()));
         serverSock.socket().bind(addr,getBacklog());
         serverSock.configureBlocking(true); //mimic APR behavior
-        serverSock.socket().setSoTimeout(getSocketProperties().getSoTimeout());
 
         // Initialize thread count defaults for acceptor, poller
         if (acceptorThreadCount == 0) {
@@ -443,32 +442,29 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                         // socket
                         socket = serverSock.accept();
                     } catch (IOException ioe) {
-                        //we didn't get a socket
+                        // We didn't get a socket
                         countDownConnection();
-                        // Introduce delay if necessary
-                        errorDelay = handleExceptionWithDelay(errorDelay);
-                        // re-throw
-                        throw ioe;
+                        if (running) {
+                            // Introduce delay if necessary
+                            errorDelay = handleExceptionWithDelay(errorDelay);
+                            // re-throw
+                            throw ioe;
+                        } else {
+                            break;
+                        }
                     }
                     // Successful accept, reset the error delay
                     errorDelay = 0;
 
-                    // setSocketOptions() will add channel to the poller
-                    // if successful
+                    // Configure the socket
                     if (running && !paused) {
+                        // setSocketOptions() will hand the socket off to
+                        // an appropriate processor if successful
                         if (!setSocketOptions(socket)) {
-                            countDownConnection();
                             closeSocket(socket);
                         }
                     } else {
-                        countDownConnection();
                         closeSocket(socket);
-                    }
-                } catch (SocketTimeoutException sx) {
-                    // Ignore: Normal condition
-                } catch (IOException x) {
-                    if (running) {
-                        log.error(sm.getString("endpoint.accept.fail"), x);
                     }
                 } catch (Throwable t) {
                     ExceptionUtils.handleThrowable(t);
@@ -476,6 +472,25 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                 }
             }
             state = AcceptorState.ENDED;
+        }
+
+
+        private void closeSocket(SocketChannel socket) {
+            countDownConnection();
+            try {
+                socket.socket().close();
+            } catch (IOException ioe)  {
+                if (log.isDebugEnabled()) {
+                    log.debug(sm.getString("endpoint.err.close"), ioe);
+                }
+            }
+            try {
+                socket.close();
+            } catch (IOException ioe) {
+                if (log.isDebugEnabled()) {
+                    log.debug(sm.getString("endpoint.err.close"), ioe);
+                }
+            }
         }
     }
 
@@ -506,24 +521,6 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
             log.error("",x);
         }
     }
-
-    private void closeSocket(SocketChannel socket) {
-        try {
-            socket.socket().close();
-        } catch (IOException ioe)  {
-            if (log.isDebugEnabled()) {
-                log.debug("", ioe);
-            }
-        }
-        try {
-            socket.close();
-        } catch (IOException ioe) {
-            if (log.isDebugEnabled()) {
-                log.debug("", ioe);
-            }
-        }
-    }
-
 
     // ----------------------------------------------------- Poller Inner Classes
 

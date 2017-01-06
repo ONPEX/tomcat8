@@ -44,7 +44,127 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues do not "pop up" wrt. others).
 -->
-<section name="Tomcat 8.5.9">
+<section name="Tomcat 8.5.10 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <add>
+        <bug>53602</bug>: Add HTTP status code 451 (RFC 7725) to the list of
+        HTTP status codes recognised by the ErrorReportValve. (markt)
+      </add>
+      <fix>
+        <bug>60446</bug>: Handle the case where the stored user credential uses
+        a different key length than the length currently configured for the
+        <code>CredentialHandler</code>. Based on a patch by Niklas Holm. (markt)
+      </fix>
+      <update>
+        Update the warnings that reference required options for running on Java
+        9 to use the latest syntax for those options. (markt)
+      </update>
+      <fix>
+        <bug>60513</bug>: Fix thread safety issue with RMI cleanup code. (remm)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        Expand the search process for a server certificate when OpenSSL is used
+        with a JSSE connector and an explicit alias has not been configured.
+        (markt)
+      </fix>
+      <fix>
+        <bug>60450</bug>: Improve the selection algorithm for the default trust
+        store type for a TLS Virtual Host. In particular, don't use
+        <code>PKCS12</code> as a default trust store type. Better document how
+        the default trust store type is selected for a TLS virtual host. (markt)
+      </fix>
+      <fix>
+        <bug>60451</bug>: Correctly handle HTTP/2 header values that contain
+        characters with unicode code points in the range 128 to 255. Reject
+        with a clear error message HTTP/2 header values that contain characters
+        with unicode code points above 255. (markt)
+      </fix>
+      <fix>
+        Improve the logic that selects an address to use to unlock the Acceptor
+        to take account of platforms what do not listen on all local addresses
+        when configured with an address of <code>0.0.0.0</code> or
+        <code>::</code>. (markt)
+      </fix>
+      <fix>
+        Correct a regression in the refactoring to make wider use of
+        <code>ByteBuffer</code> that caused an intermittent failure in the unit
+        tests. (markt)
+      </fix>
+      <fix>
+        <bug>60482</bug>: HTTP/2 shouldn't do URL decoding on the query string.
+        (remm)
+      </fix>
+      <fix>
+        Fix an HTTP/2 compression error. Once a new size has been agreed for the
+        dynamic HPACK table, the next header block must begin with a dynamic
+        table update. (markt)
+      </fix>
+      <fix>
+        <bug>60508</bug>: Set request start time for HTTP/2. (remm)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <update>
+        Implement a simpler JSP file encoding detector that delegates XML prolog
+        encoding detection to the JRE rather than using a custom XML parser.
+        (markt)
+      </update>
+      <fix>
+        <bug>60497</bug>: Restore previous tag reuse behavior following the use
+        of try/finally. (remm)
+      </fix>
+      <fix>
+        Improve the error handling for simple tags to ensure that the tag is
+        released and destroyed once used. (remm)
+      </fix>
+    </changelog>
+  </subsection>
+  <subseciton name="WebSocket">
+    <changelog>
+      <fix>
+        Correctly handle blocking WebSocket writes when the write times out just
+        before the write is attempted. (markt)
+      </fix>
+    </changelog>
+  </subseciton>
+  <subsection name="Web Applications">
+    <changelog>
+      <add>
+        In the documentation web application, be explicit that clustering
+        requires a secure network for all of the cluster network traffic.
+        (markt)
+      </add>
+      <update>
+        Update the ASF logos to the new versions.
+      </update>
+      <fix>
+        <bug>60344</bug>: Add a note to BUILDING.txt regarding using the source
+        bundle with the correct line endings. (markt)
+      </fix>
+      <fix>
+        <bug>60468</bug>: Correct the format of the sample ISO-8601 date used
+        to report the build date for the documentation. Patch provided by
+        Michael Osipov. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <update>
+        Update the ASF logos used in the Apache Tomcat installer for Windows to
+        use the new versions.
+      </update>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.5.9 (markt)" rtext="2016-12-08">
   <subsection name="Catalina">
     <changelog>
       <update>
@@ -178,7 +298,7 @@
     <changelog>
       <fix>
         <bug>60431</bug>: Improve handling of varargs in UEL expressions. Based
-        on a patch by Ben. (markt)
+        on a patch by Ben Wolfe. (markt)
       </fix>
     </changelog>
   </subsection>
@@ -191,6 +311,10 @@
       <fix>
         <bug>60412</bug>: Add information on the comment syntax for the
         <code>RewriteValve</code> configuration. (markt)
+      </fix>
+      <fix>
+        <bug>60467</bug>: remove problematic characters from XML documentation.
+        Based upon a patch by Michael Osipov. (schultz)
       </fix>
     </changelog>
   </subsection>
