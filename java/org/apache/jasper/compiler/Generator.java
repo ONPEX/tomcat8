@@ -1390,7 +1390,7 @@ class Generator {
                 }
             }
 
-            // JSP.5.1, Sematics, para 1 - lock not required for request or
+            // JSP.5.1, Semantics, para 1 - lock not required for request or
             // page scope
             String scopename = "javax.servlet.jsp.PageContext.PAGE_SCOPE"; // Default to page
             String lock = null;
@@ -2396,7 +2396,7 @@ class Generator {
                 out.print(tagHandlerClassName);
                 out.println(".class);");
                 out.printin("boolean ");
-                out.print(n.getTagHandlerPoolName());
+                out.print(tagHandlerVar);
                 out.println("_reused = false;");
             } else {
                 writeNewInstance(tagHandlerVar, tagHandlerClassName);
@@ -2609,7 +2609,7 @@ class Generator {
                 out.print(".reuse(");
                 out.print(tagHandlerVar);
                 out.println(");");
-                out.printin(n.getTagHandlerPoolName());
+                out.printin(tagHandlerVar);
                 out.println("_reused = true;");
             }
 
@@ -2619,7 +2619,7 @@ class Generator {
             out.pushIndent();
             if (isPoolingEnabled && !(n.implementsJspIdConsumer())) {
                 out.printin("if (!");
-                out.print(n.getTagHandlerPoolName());
+                out.print(tagHandlerVar);
                 out.println("_reused) {");
                 out.pushIndent();
             }
@@ -2658,9 +2658,6 @@ class Generator {
 
             String tagHandlerClassName = tagHandlerClass.getCanonicalName();
             writeNewInstance(tagHandlerVar, tagHandlerClassName);
-
-            out.printil("try {");
-            out.pushIndent();
 
             generateSetters(n, tagHandlerVar, handlerInfo, true);
 
@@ -2713,15 +2710,8 @@ class Generator {
             declareScriptingVars(n, VariableInfo.AT_END);
             syncScriptingVars(n, VariableInfo.AT_END);
 
-            out.popIndent();
-            out.printil("} finally {");
-            out.pushIndent();
-
             // Resource injection
             writeDestroyInstance(tagHandlerVar);
-
-            out.popIndent();
-            out.printil("}");
 
             n.setEndJavaLine(out.getJavaLine());
         }
