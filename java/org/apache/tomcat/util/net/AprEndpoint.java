@@ -635,7 +635,6 @@ public class AprEndpoint extends AbstractEndpoint<Long> implements SNICallBack {
             for (SocketWrapperBase<Long> socketWrapper : connections.values()) {
                 try {
                     socketWrapper.close();
-                    getHandler().release(socketWrapper);
                 } catch (IOException e) {
                     // Ignore
                 }
@@ -2443,14 +2442,6 @@ public class AprEndpoint extends AbstractEndpoint<Long> implements SNICallBack {
                 return result;
             } else if (result == 0 || -result == Status.EAGAIN) {
                 return 0;
-            } else if (-result == Status.APR_EGENERAL && isSecure()) {
-                // Not entirely sure why this is necessary. Testing to date has not
-                // identified any issues with this but log it so it can be tracked
-                // if it is suspected of causing issues in the future.
-                if (log.isDebugEnabled()) {
-                    log.debug(sm.getString("socket.apr.read.sslGeneralError", getSocket(), this));
-                }
-                return 0;
             } else if ((-result) == Status.ETIMEDOUT || (-result) == Status.TIMEUP) {
                 if (block) {
                     throw new SocketTimeoutException(sm.getString("iib.readtimeout"));
@@ -2493,6 +2484,7 @@ public class AprEndpoint extends AbstractEndpoint<Long> implements SNICallBack {
 
         @Override
         public void close() {
+            getEndpoint().getHandler().release(this);
             synchronized (closedLock) {
                 // APR typically crashes if the same socket is closed twice so
                 // make sure that doesn't happen.
