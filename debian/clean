@@ -1,5 +1,3 @@
-output/
 webapps/examples/WEB-INF/lib/*.jar
 debian/tomcat8.postrm
 debian/tomcat8-user.NEWS
-debian/poms/
