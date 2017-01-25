@@ -51,6 +51,7 @@ override_dh_install-indep:
 override_dh_auto_clean:
 	dh_auto_clean
 	-$(ANT) clean
+	rm -Rf output debian/poms
 
 get-orig-source:
 	-uscan --force-download --rename
