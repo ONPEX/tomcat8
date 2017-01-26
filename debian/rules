@@ -2,13 +2,8 @@
 
 export JAVA_HOME := /usr/lib/jvm/java-7-openjdk-$(shell dpkg-architecture -qDEB_BUILD_ARCH)
 
-VERSION   := $(shell dpkg-parsechangelog --show-field Version | sed 's/-[^-]*$$//' | sed 's/~/-/')
-DATE      := $(shell dpkg-parsechangelog --show-field Date)
+VERSION := $(shell dpkg-parsechangelog | egrep '^Version:' | cut -f 2 -d ' ' | sed 's/-.*//')
 ANT       := ant -propertyfile debian/ant.properties \
-             -Dyear=$(shell date --date='$(DATE)' --utc +'%Y') \
-             -Dtoday='$(shell LC_ALL=C date --date='$(DATE)' --utc +'%b %-d %Y')' \
-             -Dtoday-iso-8601=$(shell date --date='$(DATE)' --utc +'%F') \
-             -Dtstamp=$(shell date --date='$(DATE)' --utc +%H:%M:%S) \
              -Ddistribution.name=$(shell lsb_release -si)
 
 %:
