@@ -17,8 +17,6 @@ Build-Depends-Indep: javahelper,
                      libeasymock-java,
                      libecj-java (>= 3.11.0),
                      libhamcrest-java (>= 1.2),
-                     libtaglibs-standard-spec-java,
-                     libtaglibs-standard-impl-java,
                      libtcnative-1,
                      libobjenesis-java,
                      lsb-release,
@@ -47,7 +45,6 @@ Depends: adduser, tomcat8-common (>= ${source:Version}), ucf, ${misc:Depends}
 Recommends: authbind, libtcnative-1 (>= 1.2.6~)
 Suggests: tomcat8-admin (>= ${source:Version}),
           tomcat8-docs (>= ${source:Version}),
-          tomcat8-examples (>= ${source:Version}),
           tomcat8-user (>= ${source:Version})
 Description: Apache Tomcat 8 - Servlet and JSP engine
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
@@ -66,8 +63,7 @@ Architecture: all
 Depends: netcat, tomcat8-common (>= ${source:Version}), ${misc:Depends}
 Suggests: tomcat8 (>= ${source:Version}),
           tomcat8-admin (>= ${source:Version}),
-          tomcat8-docs (>= ${source:Version}),
-          tomcat8-examples (>= ${source:Version})
+          tomcat8-docs (>= ${source:Version})
 Description: Apache Tomcat 8 - Servlet and JSP engine -- tools to create user instances
  Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
  specifications from Oracle, and provides a "pure Java" HTTP web
@@ -132,19 +128,6 @@ Description: Apache Tomcat 8 - Servlet and JSP engine -- admin web applications
  server environment for Java code to run.
  .
  This package contains the administrative web interfaces.
-
-Package: tomcat8-examples
-Architecture: all
-Depends: libtaglibs-standard-spec-java,
-         libtaglibs-standard-impl-java,
-         tomcat8-common (>= ${source:Version}),
-         ${misc:Depends}
-Description: Apache Tomcat 8 - Servlet and JSP engine -- example web applications
- Apache Tomcat implements the Java Servlet and the JavaServer Pages (JSP)
- specifications from Oracle, and provides a "pure Java" HTTP web
- server environment for Java code to run.
- .
- This package contains the default Tomcat example webapps.
 
 Package: tomcat8-docs
 Section: doc
