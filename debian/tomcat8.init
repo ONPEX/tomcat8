@@ -58,7 +58,7 @@ TOMCAT8_GROUP=tomcat8
 # this function sets the variable JDK_DIRS
 find_jdks()
 {
-    for java_version in 9 8
+    for java_version in 9 8 7
     do
         for jvmdir in /usr/lib/jvm/java-${java_version}-openjdk-* \
                       /usr/lib/jvm/jdk-${java_version}-oracle-* \
@@ -71,6 +71,9 @@ find_jdks()
             fi
         done
     done
+
+    # Add the paths for the JVMs packaged by the older versions of java-package (<< 0.52 as in Wheezy and Trusty)
+    JDK_DIRS="${JDK_DIRS} /usr/lib/jvm/j2re1.7-oracle /usr/lib/jvm/j2sdk1.7-oracle"
 }
 
 # The first existing directory is used for JAVA_HOME (if JAVA_HOME is not

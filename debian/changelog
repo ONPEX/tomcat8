@@ -1,3 +1,9 @@
+tomcat8 (8.5.11-1~bpo8+2) jessie-backports; urgency=medium
+
+  * Restored the detection of the Java 7 runtimes
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Mon, 30 Jan 2017 15:22:00 +0100
+
 tomcat8 (8.5.11-1~bpo8+1) jessie-backports; urgency=medium
 
   * Rebuild for jessie-backports.
