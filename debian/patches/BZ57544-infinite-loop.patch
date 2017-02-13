@@ -1,0 +1,48 @@
+From: Markus Koschany <apo@debian.org>
+Date: Fri, 10 Feb 2017 01:06:54 +0100
+Subject: BZ57544 infinite loop
+
+Bug-Upstream: https://bz.apache.org/bugzilla/show_bug.cgi?id=60578
+Bug-Debian: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=851304
+Origin: https://github.com/apache/tomcat80/commit/614e7f78aecc429d8740bb59900c2f9fbc86a788
+---
+ java/org/apache/coyote/http11/AbstractInputBuffer.java | 16 ++++------------
+ 1 file changed, 4 insertions(+), 12 deletions(-)
+
+diff --git a/java/org/apache/coyote/http11/AbstractInputBuffer.java b/java/org/apache/coyote/http11/AbstractInputBuffer.java
+index 33d4b3b..2aef369 100644
+--- a/java/org/apache/coyote/http11/AbstractInputBuffer.java
++++ b/java/org/apache/coyote/http11/AbstractInputBuffer.java
+@@ -235,15 +235,10 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
+         request.recycle();
+ 
+         // Copy leftover bytes to the beginning of the buffer
+-        if (lastValid - pos > 0) {
+-            int npos = 0;
+-            int opos = pos;
+-            while (lastValid - opos > opos - npos) {
+-                System.arraycopy(buf, opos, buf, npos, opos - npos);
+-                npos += pos;
+-                opos += pos;
+-            }
+-            System.arraycopy(buf, opos, buf, npos, lastValid - opos);
++        if (lastValid - pos > 0 && pos > 0) {
++            System.arraycopy(buf, pos, buf, 0, lastValid - pos);
++            lastValid = lastValid - pos;
++            pos = 0;
+         }
+ 
+         // Recycle filters
+@@ -252,12 +247,9 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
+         }
+ 
+         // Reset pointers
+-        lastValid = lastValid - pos;
+-        pos = 0;
+         lastActiveFilter = -1;
+         parsingHeader = true;
+         swallowInput = true;
+-
+     }
+ 
+ 

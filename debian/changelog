@@ -1,3 +1,12 @@
+tomcat8 (8.0.14-1+deb8u7) jessie-security; urgency=high
+
+  * Team upload.
+  * Add BZ57544-infinite-loop.patch: It was found that https GET requests could
+    trigger an infinite loop and thus cause a denial-of-service.
+    (Closes: #851304)
+
+ -- Markus Koschany <apo@debian.org>  Mon, 13 Feb 2017 10:34:43 +0100
+
 tomcat8 (8.0.14-1+deb8u6) jessie-security; urgency=high
 
   * Fixed CVE-2016-8745: A bug in the error handling of the send file code for
