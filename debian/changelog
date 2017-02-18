@@ -1,3 +1,12 @@
+tomcat8 (8.0.14-1+deb8u8) jessie-security; urgency=high
+
+  * Team upload.
+  * Add BZ57544-infinite-loop-part2.patch.
+    Fix regression (400 HTTP errors) due to an incomplete fix for
+    CVE-2017-6056. See #854551 for further information.
+
+ -- Markus Koschany <apo@debian.org>  Sat, 18 Feb 2017 18:44:25 +0100
+
 tomcat8 (8.0.14-1+deb8u7) jessie-security; urgency=high
 
   * Team upload.

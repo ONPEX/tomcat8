@@ -2,6 +2,10 @@ From: Markus Koschany <apo@debian.org>
 Date: Sat, 18 Feb 2017 18:39:09 +0100
 Subject: BZ57544-infinite-loop-part2
 
+Fix 400 HTTP errors due to an incomplete fix for CVE-2017-6056.
+
+Bug-Debian: https://bugs.debian.org/854551
+Origin: https://github.com/apache/tomcat80/commit/534d62075f8c03cc3e77f301e53be53acdefd1c9
 ---
  java/org/apache/coyote/http11/AbstractInputBuffer.java | 5 +++--
  1 file changed, 3 insertions(+), 2 deletions(-)
