@@ -1,0 +1,25 @@
+From: Markus Koschany <apo@debian.org>
+Date: Sat, 18 Feb 2017 18:39:09 +0100
+Subject: BZ57544-infinite-loop-part2
+
+---
+ java/org/apache/coyote/http11/AbstractInputBuffer.java | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/java/org/apache/coyote/http11/AbstractInputBuffer.java b/java/org/apache/coyote/http11/AbstractInputBuffer.java
+index 2aef369..1fbeb27 100644
+--- a/java/org/apache/coyote/http11/AbstractInputBuffer.java
++++ b/java/org/apache/coyote/http11/AbstractInputBuffer.java
+@@ -237,9 +237,10 @@ public abstract class AbstractInputBuffer<S> implements InputBuffer{
+         // Copy leftover bytes to the beginning of the buffer
+         if (lastValid - pos > 0 && pos > 0) {
+             System.arraycopy(buf, pos, buf, 0, lastValid - pos);
+-            lastValid = lastValid - pos;
+-            pos = 0;
+         }
++        // Always reset pos to zero
++        lastValid = lastValid - pos;
++        pos = 0;
+ 
+         // Recycle filters
+         for (int i = 0; i <= lastActiveFilter; i++) {
