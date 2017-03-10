@@ -471,7 +471,7 @@ public class Stream extends AbstractStream implements HeaderEmitter {
                 StreamException se = (StreamException) http2Exception;
                 if (log.isDebugEnabled()) {
                     log.debug(sm.getString("stream.reset.send", getConnectionId(), getIdentifier(),
-                            Long.toString(se.getError().getCode())));
+                            se.getError()));
                 }
                 state.sendReset();
                 handler.sendStreamReset(se);
@@ -492,9 +492,9 @@ public class Stream extends AbstractStream implements HeaderEmitter {
     }
 
 
-    boolean push(Request request) throws IOException {
+    final void push(Request request) throws IOException {
         if (!isPushSupported()) {
-            return false;
+            return;
         }
         // Set the special HTTP/2 headers
         request.getMimeHeaders().addValue(":method").duplicate(request.method());
@@ -517,8 +517,6 @@ public class Stream extends AbstractStream implements HeaderEmitter {
         }
 
         push(handler, request, this);
-
-        return true;
     }
 
 
@@ -751,7 +749,8 @@ public class Stream extends AbstractStream implements HeaderEmitter {
 
             // Ensure that only one thread accesses inBuffer at a time
             synchronized (inBuffer) {
-                while (inBuffer.position() == 0 && !isInputFinished()) {
+                boolean canRead = isActive() && !isInputFinished();
+                while (inBuffer.position() == 0 && canRead) {
                     // Need to block until some data is written
                     try {
                         if (log.isDebugEnabled()) {
@@ -781,7 +780,7 @@ public class Stream extends AbstractStream implements HeaderEmitter {
                     }
                     inBuffer.get(outBuffer, 0, written);
                     inBuffer.clear();
-                } else if (isInputFinished()) {
+                } else if (!canRead) {
                     return -1;
                 } else {
                     // Should never happen
@@ -807,7 +806,8 @@ public class Stream extends AbstractStream implements HeaderEmitter {
 
             // Ensure that only one thread accesses inBuffer at a time
             synchronized (inBuffer) {
-                while (inBuffer.position() == 0 && !isInputFinished()) {
+                boolean canRead = isActive() && !isInputFinished();
+                while (inBuffer.position() == 0 && canRead) {
                     // Need to block until some data is written
                     try {
                         if (log.isDebugEnabled()) {
@@ -837,7 +837,7 @@ public class Stream extends AbstractStream implements HeaderEmitter {
                     }
                     inBuffer.get(outBuffer, 0, written);
                     inBuffer.clear();
-                } else if (isInputFinished()) {
+                } else if (!canRead) {
                     return -1;
                 } else {
                     // Should never happen

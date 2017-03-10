@@ -21,6 +21,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -38,16 +39,26 @@ import org.apache.catalina.connector.Request;
 import org.apache.catalina.servlet4preview.http.PushBuilder;
 import org.apache.catalina.util.SessionConfig;
 import org.apache.coyote.ActionCode;
-import org.apache.coyote.PushToken;
 import org.apache.tomcat.util.buf.B2CConverter;
 import org.apache.tomcat.util.buf.HexUtils;
 import org.apache.tomcat.util.collections.CaseInsensitiveKeyMap;
 import org.apache.tomcat.util.http.CookieProcessor;
+import org.apache.tomcat.util.http.parser.HttpParser;
 import org.apache.tomcat.util.res.StringManager;
 
 public class ApplicationPushBuilder implements PushBuilder {
 
     private static final StringManager sm = StringManager.getManager(ApplicationPushBuilder.class);
+    private static final Set<String> DISALLOWED_METHODS = new HashSet<>();
+
+    static {
+        DISALLOWED_METHODS.add("POST");
+        DISALLOWED_METHODS.add("PUT");
+        DISALLOWED_METHODS.add("DELETE");
+        DISALLOWED_METHODS.add("CONNECT");
+        DISALLOWED_METHODS.add("OPTIONS");
+        DISALLOWED_METHODS.add("TRACE");
+    }
 
     private final HttpServletRequest baseRequest;
     private final Request catalinaRequest;
@@ -61,7 +72,7 @@ public class ApplicationPushBuilder implements PushBuilder {
     private final List<Cookie> cookies = new ArrayList<>();
     private String method = "GET";
     private String path;
-    private String etag;
+    private String eTag;
     private String lastModified;
     private String queryString;
     private String sessionId;
@@ -193,6 +204,18 @@ public class ApplicationPushBuilder implements PushBuilder {
 
     @Override
     public ApplicationPushBuilder method(String method) {
+        String upperMethod = method.trim().toUpperCase();
+        if (DISALLOWED_METHODS.contains(upperMethod)) {
+            throw new IllegalArgumentException(
+                    sm.getString("applicationPushBuilder.methodInvalid", upperMethod));
+        }
+        // Check a token was supplied
+        for (char c : upperMethod.toCharArray()) {
+            if (!HttpParser.isToken(c)) {
+                throw new IllegalArgumentException(
+                        sm.getString("applicationPushBuilder.methodNotToken", upperMethod));
+            }
+        }
         this.method = method;
         return this;
     }
@@ -205,15 +228,15 @@ public class ApplicationPushBuilder implements PushBuilder {
 
 
     @Override
-    public ApplicationPushBuilder etag(String etag) {
-        this.etag = etag;
+    public ApplicationPushBuilder eTag(String eTag) {
+        this.eTag = eTag;
         return this;
     }
 
 
     @Override
-    public String getEtag() {
-        return etag;
+    public String getETag() {
+        return eTag;
     }
 
 
@@ -323,7 +346,7 @@ public class ApplicationPushBuilder implements PushBuilder {
 
 
     @Override
-    public boolean push() {
+    public void push() {
         if (path == null) {
             throw new IllegalStateException(sm.getString("pushBuilder.noPath"));
         }
@@ -382,8 +405,8 @@ public class ApplicationPushBuilder implements PushBuilder {
         }
 
         if (conditional) {
-            if (etag != null) {
-                setHeader("if-none-match", etag);
+            if (eTag != null) {
+                setHeader("if-none-match", eTag);
             } else if (lastModified != null) {
                 setHeader("if-modified-since", lastModified);
             }
@@ -393,18 +416,15 @@ public class ApplicationPushBuilder implements PushBuilder {
         setHeader("cookie", generateCookieHeader(cookies,
                 catalinaRequest.getContext().getCookieProcessor()));
 
-        PushToken pushToken = new PushToken(pushTarget);
-        coyoteRequest.action(ActionCode.PUSH_REQUEST, pushToken);
+        coyoteRequest.action(ActionCode.PUSH_REQUEST, pushTarget);
 
         // Reset for next call to this method
         pushTarget = null;
         path = null;
-        etag = null;
+        eTag = null;
         lastModified = null;
         headers.remove("if-none-match");
         headers.remove("if-modified-since");
-
-        return pushToken.getResult();
     }
 
 

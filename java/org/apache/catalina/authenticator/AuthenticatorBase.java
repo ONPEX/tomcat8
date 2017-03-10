@@ -26,11 +26,13 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.security.auth.Subject;
+import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.message.AuthException;
 import javax.security.auth.message.AuthStatus;
 import javax.security.auth.message.MessageInfo;
 import javax.security.auth.message.config.AuthConfigFactory;
 import javax.security.auth.message.config.AuthConfigProvider;
+import javax.security.auth.message.config.ClientAuthConfig;
 import javax.security.auth.message.config.RegistrationListener;
 import javax.security.auth.message.config.ServerAuthConfig;
 import javax.security.auth.message.config.ServerAuthContext;
@@ -87,7 +89,7 @@ import org.apache.tomcat.util.res.StringManager;
  * @author Craig R. McClanahan
  */
 public abstract class AuthenticatorBase extends ValveBase
-        implements Authenticator, RegistrationListener {
+implements Authenticator, RegistrationListener {
 
     private static final Log log = LogFactory.getLog(AuthenticatorBase.class);
 
@@ -96,6 +98,8 @@ public abstract class AuthenticatorBase extends ValveBase
      */
     private static final String DATE_ONE =
             (new SimpleDateFormat(FastHttpDateFormat.RFC1123_DATE, Locale.US)).format(new Date(1));
+
+    private static final AuthConfigProvider NO_PROVIDER_AVAILABLE = new NoOpAuthConfigProvider();
 
     /**
      * The string manager for this package.
@@ -555,7 +559,7 @@ public abstract class AuthenticatorBase extends ValveBase
 
             if (jaspicProvider == null && !doAuthenticate(request, response) ||
                     jaspicProvider != null &&
-                            !authenticateJaspic(request, response, jaspicState, false)) {
+                    !authenticateJaspic(request, response, jaspicState, false)) {
                 if (log.isDebugEnabled()) {
                     log.debug(" Failed authenticate() test");
                 }
@@ -1188,27 +1192,57 @@ public abstract class AuthenticatorBase extends ValveBase
     private AuthConfigProvider getJaspicProvider() {
         AuthConfigProvider provider = jaspicProvider;
         if (provider == null) {
-            AuthConfigFactory factory = AuthConfigFactory.getFactory();
-            provider = factory.getConfigProvider("HttpServlet", jaspicAppContextID, this);
-            if (provider != null) {
-                jaspicProvider = provider;
-            }
+            provider = findJaspicProvider();
         }
+        if (provider == NO_PROVIDER_AVAILABLE) {
+            return null;
+        }
+        return provider;
+    }
+
+
+    private AuthConfigProvider findJaspicProvider() {
+        AuthConfigFactory factory = AuthConfigFactory.getFactory();
+        AuthConfigProvider provider = null;
+        if (factory != null) {
+            provider = factory.getConfigProvider("HttpServlet", jaspicAppContextID, this);
+        }
+        if (provider == null) {
+            provider = NO_PROVIDER_AVAILABLE;
+        }
+        jaspicProvider = provider;
         return provider;
     }
 
 
     @Override
     public void notify(String layer, String appContext) {
-        AuthConfigFactory factory = AuthConfigFactory.getFactory();
-        AuthConfigProvider provider = factory.getConfigProvider("HttpServlet", jaspicAppContextID,
-                this);
-        jaspicProvider = provider;
+        findJaspicProvider();
     }
 
 
     private static class JaspicState {
         public MessageInfo messageInfo = null;
         public ServerAuthContext serverAuthContext = null;
+    }
+
+
+    private static class NoOpAuthConfigProvider implements AuthConfigProvider {
+
+        @Override
+        public ClientAuthConfig getClientAuthConfig(String layer, String appContext, CallbackHandler handler)
+                throws AuthException {
+            return null;
+        }
+
+        @Override
+        public ServerAuthConfig getServerAuthConfig(String layer, String appContext, CallbackHandler handler)
+                throws AuthException {
+            return null;
+        }
+
+        @Override
+        public void refresh() {
+        }
     }
 }

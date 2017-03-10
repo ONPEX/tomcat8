@@ -80,8 +80,8 @@ import org.apache.catalina.core.ApplicationPushBuilder;
 import org.apache.catalina.core.ApplicationSessionCookieConfig;
 import org.apache.catalina.core.AsyncContextImpl;
 import org.apache.catalina.mapper.MappingData;
-import org.apache.catalina.servlet4preview.http.Mapping;
 import org.apache.catalina.servlet4preview.http.PushBuilder;
+import org.apache.catalina.servlet4preview.http.ServletMapping;
 import org.apache.catalina.util.ParameterMap;
 import org.apache.catalina.util.URLEncoder;
 import org.apache.coyote.ActionCode;
@@ -994,7 +994,14 @@ public class Request implements org.apache.catalina.servlet4preview.http.HttpSer
      */
     @Override
     public String getCharacterEncoding() {
-      return coyoteRequest.getCharacterEncoding();
+        String result = coyoteRequest.getCharacterEncoding();
+        if (result == null) {
+            Context context = getContext();
+            if (context != null) {
+                result =  context.getRequestCharacterEncoding();
+            }
+        }
+        return result;
     }
 
 
@@ -1884,24 +1891,35 @@ public class Request implements org.apache.catalina.servlet4preview.http.HttpSer
      *
      * @param principal The user Principal
      */
-    public void setUserPrincipal(Principal principal) {
-
-        if (Globals.IS_SECURITY_ENABLED){
-            HttpSession session = getSession(false);
-            if ( (subject != null) &&
-                 (!subject.getPrincipals().contains(principal)) ){
+    public void setUserPrincipal(final Principal principal) {
+        if (Globals.IS_SECURITY_ENABLED) {
+            if (subject == null) {
+                final HttpSession session = getSession(false);
+                if (session == null) {
+                    // Cache the subject in the request
+                    subject = newSubject(principal);
+                } else {
+                    // Cache the subject in the request and the session
+                    subject = (Subject) session.getAttribute(Globals.SUBJECT_ATTR);
+                    if (subject == null) {
+                        subject = newSubject(principal);
+                        session.setAttribute(Globals.SUBJECT_ATTR, subject);
+                    } else {
+                        subject.getPrincipals().add(principal);
+                    }
+                }
+            } else {
                 subject.getPrincipals().add(principal);
-            } else if (session != null &&
-                        session.getAttribute(Globals.SUBJECT_ATTR) == null) {
-                subject = new Subject();
-                subject.getPrincipals().add(principal);
-            }
-            if (session != null){
-                session.setAttribute(Globals.SUBJECT_ATTR, subject);
             }
         }
+        userPrincipal = principal;
+    }
 
-        this.userPrincipal = principal;
+
+    private Subject newSubject(final Principal principal) {
+        final Subject result = new Subject();
+        result.getPrincipals().add(principal);
+        return result;
     }
 
 
@@ -1911,26 +1929,19 @@ public class Request implements org.apache.catalina.servlet4preview.http.HttpSer
      * Pulled forward from Servlet 4.0. The method signature may be modified,
      * removed or replaced at any time until Servlet 4.0 becomes final.
      *
-     * @return {@code true} If this request supports server push
-     */
-    @Override
-    public boolean isPushSupported() {
-        AtomicBoolean result = new AtomicBoolean();
-        coyoteRequest.action(ActionCode.IS_PUSH_SUPPORTED, result);
-        return result.get();
-    }
-
-
-    /**
-     * Pulled forward from Servlet 4.0. The method signature may be modified,
-     * removed or replaced at any time until Servlet 4.0 becomes final.
-     *
      * @return A builder to use to construct the push request
      */
     @Override
     public PushBuilder getPushBuilder() {
-        return new ApplicationPushBuilder(this);
+        AtomicBoolean result = new AtomicBoolean();
+        coyoteRequest.action(ActionCode.IS_PUSH_SUPPORTED, result);
+        if (result.get()) {
+            return new ApplicationPushBuilder(this);
+        } else {
+            return null;
+        }
     }
+
 
     /**
      * {@inheritDoc}
@@ -2195,8 +2206,8 @@ public class Request implements org.apache.catalina.servlet4preview.http.HttpSer
 
 
     @Override
-    public Mapping getMapping() {
-        return applicationMapping.getMapping();
+    public ServletMapping getServletMapping() {
+        return applicationMapping.getServletMapping();
     }
 
 

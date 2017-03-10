@@ -138,12 +138,14 @@ public class Cookie {
 
         ByteBuffer value = readCookieValue(bb);
         if (value != null && value.remaining() == 1) {
-            if (value.get() == (byte) 49) {
+            int version = value.get() - '0';
+            if (version == 1 || version == 0) {
                 // $Version=1 -> RFC2109
+                // $Version=0 -> RFC2109
                 skipLWS(bb);
                 byte b = bb.get();
                 if (b == SEMICOLON_BYTE || b == COMMA_BYTE) {
-                    parseCookieRfc2109(bb, serverCookies);
+                    parseCookieRfc2109(bb, serverCookies, version);
                 }
                 return;
             } else {
@@ -242,7 +244,8 @@ public class Cookie {
     }
 
 
-    private static void parseCookieRfc2109(ByteBuffer bb, ServerCookies serverCookies) {
+    private static void parseCookieRfc2109(ByteBuffer bb, ServerCookies serverCookies,
+            int version) {
 
         boolean moreToProcess = true;
 
@@ -345,7 +348,7 @@ public class Cookie {
 
             if (name.hasRemaining() && value != null && value.hasRemaining()) {
                 ServerCookie sc = serverCookies.addCookie();
-                sc.setVersion(1);
+                sc.setVersion(version);
                 sc.getName().setBytes(name.array(), name.position(), name.remaining());
                 sc.getValue().setBytes(value.array(), value.position(), value.remaining());
                 if (domain != null) {

@@ -47,6 +47,7 @@ import javax.servlet.ServletContextAttributeListener;
 import javax.servlet.ServletContextListener;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
+import javax.servlet.ServletRegistration.Dynamic;
 import javax.servlet.ServletRequestAttributeListener;
 import javax.servlet.ServletRequestListener;
 import javax.servlet.SessionCookieConfig;
@@ -66,7 +67,7 @@ import org.apache.catalina.WebResourceRoot;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.mapper.MappingData;
-import org.apache.catalina.servlet4preview.http.Mapping;
+import org.apache.catalina.servlet4preview.http.ServletMapping;
 import org.apache.catalina.util.ServerInfo;
 import org.apache.catalina.util.URLEncoder;
 import org.apache.tomcat.util.ExceptionUtils;
@@ -85,7 +86,7 @@ import org.apache.tomcat.util.res.StringManager;
  * @author Craig R. McClanahan
  * @author Remy Maucherat
  */
-public class ApplicationContext implements ServletContext {
+public class ApplicationContext implements org.apache.catalina.servlet4preview.ServletContext {
 
     protected static final boolean STRICT_SERVLET_COMPLIANCE;
 
@@ -482,7 +483,7 @@ public class ApplicationContext implements ServletContext {
         Wrapper wrapper = mappingData.wrapper;
         String wrapperPath = mappingData.wrapperPath.toString();
         String pathInfo = mappingData.pathInfo.toString();
-        Mapping mapping = (new ApplicationMapping(mappingData)).getMapping();
+        ServletMapping mapping = (new ApplicationMapping(mappingData)).getServletMapping();
 
         mappingData.recycle();
 
@@ -830,25 +831,61 @@ public class ApplicationContext implements ServletContext {
 
     @Override
     public ServletRegistration.Dynamic addServlet(String servletName, String className) {
-        return addServlet(servletName, className, null);
+        return addServlet(servletName, className, null, null);
     }
 
 
     @Override
     public ServletRegistration.Dynamic addServlet(String servletName, Servlet servlet) {
-        return addServlet(servletName, null, servlet);
+        return addServlet(servletName, null, servlet, null);
     }
 
 
     @Override
     public ServletRegistration.Dynamic addServlet(String servletName,
             Class<? extends Servlet> servletClass) {
-        return addServlet(servletName, servletClass.getName(), null);
+        return addServlet(servletName, servletClass.getName(), null, null);
     }
 
 
-    private ServletRegistration.Dynamic addServlet(String servletName,
-            String servletClass, Servlet servlet) throws IllegalStateException {
+    @Override
+    public Dynamic addJspFile(String jspName, String jspFile) {
+
+        // jspName is validated in addServlet()
+        if (jspFile == null || !jspFile.startsWith("/")) {
+            throw new IllegalArgumentException(
+                    sm.getString("applicationContext.addJspFile.iae", jspFile));
+        }
+
+        String jspServletClassName = null;
+        Map<String,String> jspFileInitParams = new HashMap<>();
+
+        Wrapper jspServlet = (Wrapper) context.findChild("jsp");
+
+        if (jspServlet == null) {
+            // No JSP servlet currently defined.
+            // Use default JSP Servlet class name
+            jspServletClassName = Constants.JSP_SERVLET_CLASS;
+        } else {
+            // JSP Servlet defined.
+            // Use same JSP Servlet class name
+            jspServletClassName = jspServlet.getServletClass();
+            // Use same init parameters
+            String[] params = jspServlet.findInitParameters();
+            for (String param : params) {
+                jspFileInitParams.put(param, jspServlet.findInitParameter(param));
+            }
+        }
+
+        // Add init parameter to specify JSP file
+        jspFileInitParams.put("jspFile", jspFile);
+
+        return addServlet(jspName, jspServletClassName, null, jspFileInitParams);
+    }
+
+
+    private ServletRegistration.Dynamic addServlet(String servletName, String servletClass,
+            Servlet servlet, Map<String,String> initParams) throws IllegalStateException {
 
         if (servletName == null || servletName.equals("")) {
             throw new IllegalArgumentException(sm.getString(
@@ -886,6 +923,12 @@ public class ApplicationContext implements ServletContext {
         } else {
             wrapper.setServletClass(servlet.getClass().getName());
             wrapper.setServlet(servlet);
+        }
+
+        if (initParams != null) {
+            for (Map.Entry<String, String> initParam: initParams.entrySet()) {
+                wrapper.addInitParameter(initParam.getKey(), initParam.getValue());
+            }
         }
 
         return context.dynamicServletAdded(wrapper);
@@ -1225,6 +1268,60 @@ public class ApplicationContext implements ServletContext {
         Container host = context.getParent();
         Container engine = host.getParent();
         return engine.getName() + "/" + host.getName();
+    }
+
+
+    @Override
+    public int getSessionTimeout() {
+        return context.getSessionTimeout();
+    }
+
+
+    @Override
+    public void setSessionTimeout(int sessionTimeout) {
+        if (!context.getState().equals(LifecycleState.STARTING_PREP)) {
+            throw new IllegalStateException(
+                    sm.getString("applicationContext.setSessionTimeout.ise",
+                            getContextPath()));
+        }
+
+        context.setSessionTimeout(sessionTimeout);
+    }
+
+
+    @Override
+    public String getRequestCharacterEncoding() {
+        return context.getRequestCharacterEncoding();
+    }
+
+
+    @Override
+    public void setRequestCharacterEncoding(String encoding) {
+        if (!context.getState().equals(LifecycleState.STARTING_PREP)) {
+            throw new IllegalStateException(
+                    sm.getString("applicationContext.setRequestEncoding.ise",
+                            getContextPath()));
+        }
+
+        context.setRequestCharacterEncoding(encoding);
+    }
+
+
+    @Override
+    public String getResponseCharacterEncoding() {
+        return context.getResponseCharacterEncoding();
+    }
+
+
+    @Override
+    public void setResponseCharacterEncoding(String encoding) {
+        if (!context.getState().equals(LifecycleState.STARTING_PREP)) {
+            throw new IllegalStateException(
+                    sm.getString("applicationContext.setResponseEncoding.ise",
+                            getContextPath()));
+        }
+
+        context.setResponseCharacterEncoding(encoding);
     }
 
 

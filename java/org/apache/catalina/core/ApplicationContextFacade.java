@@ -41,6 +41,7 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
+import javax.servlet.ServletRegistration.Dynamic;
 import javax.servlet.SessionCookieConfig;
 import javax.servlet.SessionTrackingMode;
 import javax.servlet.descriptor.JspConfigDescriptor;
@@ -56,7 +57,7 @@ import org.apache.tomcat.util.ExceptionUtils;
  *
  * @author Remy Maucherat
  */
-public class ApplicationContextFacade implements ServletContext {
+public class ApplicationContextFacade implements org.apache.catalina.servlet4preview.ServletContext {
 
     // ---------------------------------------------------------- Attributes
     /**
@@ -538,6 +539,17 @@ public class ApplicationContextFacade implements ServletContext {
 
 
     @Override
+    public Dynamic addJspFile(String jspName, String jspFile) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            return (ServletRegistration.Dynamic) doPrivileged("addJspFile",
+                    new Object[]{jspName, jspFile});
+        } else {
+            return context.addJspFile(jspName, jspFile);
+        }
+    }
+
+
+    @Override
     @SuppressWarnings("unchecked") // doPrivileged() returns the correct type
     public <T extends Servlet> T createServlet(Class<T> c)
     throws ServletException {
@@ -765,6 +777,66 @@ public class ApplicationContextFacade implements ServletContext {
             return (String) doPrivileged("getVirtualServerName", null);
         } else  {
             return context.getVirtualServerName();
+        }
+    }
+
+
+    @Override
+    public int getSessionTimeout() {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            return ((Integer) doPrivileged("getSessionTimeout", null)).intValue();
+        } else  {
+            return context.getSessionTimeout();
+        }
+    }
+
+
+    @Override
+    public void setSessionTimeout(int sessionTimeout) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            doPrivileged("getSessionTimeout", new Object[] { Integer.valueOf(sessionTimeout) });
+        } else  {
+            context.setSessionTimeout(sessionTimeout);
+        }
+    }
+
+
+    @Override
+    public String getRequestCharacterEncoding() {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            return (String) doPrivileged("getRequestCharacterEncoding", null);
+        } else  {
+            return context.getRequestCharacterEncoding();
+        }
+    }
+
+
+    @Override
+    public void setRequestCharacterEncoding(String encoding) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            doPrivileged("setRequestCharacterEncoding", new Object[] { encoding });
+        } else  {
+            context.setRequestCharacterEncoding(encoding);
+        }
+    }
+
+
+    @Override
+    public String getResponseCharacterEncoding() {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            return (String) doPrivileged("getResponseCharacterEncoding", null);
+        } else  {
+            return context.getResponseCharacterEncoding();
+        }
+    }
+
+
+    @Override
+    public void setResponseCharacterEncoding(String encoding) {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            doPrivileged("setResponseCharacterEncoding", new Object[] { encoding });
+        } else  {
+            context.setResponseCharacterEncoding(encoding);
         }
     }
 
