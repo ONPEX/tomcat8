@@ -8,3 +8,7 @@
 0018-fix-manager-webapp.patch
 0019-add-distribution-to-error-page.patch
 0021-dont-test-unsupported-ciphers.patch
+CVE-2017-5647.patch
+CVE-2017-5648.patch
+CVE-2017-5650.patch
+CVE-2017-5651.patch
