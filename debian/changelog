@@ -1,3 +1,37 @@
+tomcat8 (8.5.11-2) unstable; urgency=medium
+
+  * Team upload.
+  * Fix the following security vulnerabilities:
+   - CVE-2017-5647:
+     A bug in the handling of the pipelined requests when send file was used
+     resulted in the pipelined request being lost when send file processing of
+     the previous request completed. This could result in responses appearing
+     to be sent for the wrong request. For example, a user agent that sent
+     requests A, B and C could see the correct response for request A, the
+     response for request C for request B and no response for request C.
+   - CVE-2017-5648:
+     It was noticed that some calls to application listeners did not use the
+     appropriate facade object. When running an untrusted application under a
+     SecurityManager, it was therefore possible for that untrusted application
+     to retain a reference to the request or response object and thereby access
+     and/or modify information associated with another web application.
+   - CVE-2017-5650:
+     The handling of an HTTP/2 GOAWAY frame for a connection did not close
+     streams associated with that connection that were currently waiting for a
+     WINDOW_UPDATE before allowing the application to write more data. These
+     waiting streams each consumed a thread. A malicious client could therefore
+     construct a series of HTTP/2 requests that would consume all available
+     processing threads.
+   - CVE-2017-5651:
+     The refactoring of the HTTP connectors for 8.5.x onwards, introduced a
+     regression in the send file processing. If the send file processing
+     completed quickly, it was possible for the Processor to be added to the
+     processor cache twice. This could result in the same Processor being used
+     for multiple requests which in turn could lead to unexpected errors and/or
+     response mix-up.
+
+ -- Markus Koschany <apo@debian.org>  Wed, 12 Apr 2017 09:58:46 +0200
+
 tomcat8 (8.5.11-1) unstable; urgency=medium
 
   * Team upload.
