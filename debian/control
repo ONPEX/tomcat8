@@ -43,7 +43,7 @@ Description: Apache Tomcat 8 - Servlet and JSP engine -- common files
 
 Package: tomcat8
 Architecture: all
-Depends: adduser, tomcat8-common (>= ${source:Version}), ucf, ${misc:Depends}
+Depends: adduser, lsb-base (>= 3.0-6), tomcat8-common (>= ${source:Version}), ucf, ${misc:Depends}
 Recommends: authbind, libtcnative-1 (>= 1.2.6~)
 Suggests: tomcat8-admin (>= ${source:Version}),
           tomcat8-docs (>= ${source:Version}),
