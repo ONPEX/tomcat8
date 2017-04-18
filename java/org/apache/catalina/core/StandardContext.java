@@ -809,8 +809,35 @@ public class StandardContext extends ContainerBase
 
     private boolean dispatchersUseEncodedPaths = true;
 
+    private String requestEncoding = null;
+
+    private String responseEncoding = null;
 
     // ----------------------------------------------------- Context Properties
+
+    @Override
+    public String getRequestCharacterEncoding() {
+        return requestEncoding;
+    }
+
+
+    @Override
+    public void setRequestCharacterEncoding(String requestEncoding) {
+        this.requestEncoding = requestEncoding;
+    }
+
+
+    @Override
+    public String getResponseCharacterEncoding() {
+        return responseEncoding;
+    }
+
+
+    @Override
+    public void setResponseCharacterEncoding(String responseEncoding) {
+        this.responseEncoding = responseEncoding;
+    }
+
 
     @Override
     public void setDispatchersUseEncodedPaths(boolean dispatchersUseEncodedPaths) {
@@ -5568,6 +5595,16 @@ public class StandardContext extends ContainerBase
                         resources), e);
             }
         }
+        InstanceManager instanceManager = getInstanceManager();
+        if (instanceManager instanceof DefaultInstanceManager) {
+            try {
+                ((DefaultInstanceManager)instanceManager).backgroundProcess();
+            } catch (Exception e) {
+                log.warn(sm.getString(
+                        "standardContext.backgroundProcess.instanceManager",
+                        resources), e);
+            }
+        }
         super.backgroundProcess();
     }
 
@@ -6392,7 +6429,7 @@ public class StandardContext extends ContainerBase
 
 
     private static class NoPluggabilityServletContext
-            implements ServletContext {
+            implements org.apache.catalina.servlet4preview.ServletContext {
 
         private final ServletContext sc;
 
@@ -6567,6 +6604,12 @@ public class StandardContext extends ContainerBase
         }
 
         @Override
+        public Dynamic addJspFile(String jspName, String jspFile) {
+            throw new UnsupportedOperationException(
+                    sm.getString("noPluggabilityServletContext.notAllowed"));
+        }
+
+        @Override
         public <T extends Servlet> T createServlet(Class<T> c)
                 throws ServletException {
             throw new UnsupportedOperationException(
@@ -6696,6 +6739,42 @@ public class StandardContext extends ContainerBase
         @Override
         public String getVirtualServerName() {
             return sc.getVirtualServerName();
+        }
+
+        @Override
+        public int getSessionTimeout() {
+            throw new UnsupportedOperationException(
+                    sm.getString("noPluggabilityServletContext.notAllowed"));
+        }
+
+        @Override
+        public void setSessionTimeout(int sessionTimeout) {
+            throw new UnsupportedOperationException(
+                    sm.getString("noPluggabilityServletContext.notAllowed"));
+        }
+
+        @Override
+        public String getRequestCharacterEncoding() {
+            throw new UnsupportedOperationException(
+                    sm.getString("noPluggabilityServletContext.notAllowed"));
+        }
+
+        @Override
+        public void setRequestCharacterEncoding(String encoding) {
+            throw new UnsupportedOperationException(
+                    sm.getString("noPluggabilityServletContext.notAllowed"));
+        }
+
+        @Override
+        public String getResponseCharacterEncoding() {
+            throw new UnsupportedOperationException(
+                    sm.getString("noPluggabilityServletContext.notAllowed"));
+        }
+
+        @Override
+        public void setResponseCharacterEncoding(String encoding) {
+            throw new UnsupportedOperationException(
+                    sm.getString("noPluggabilityServletContext.notAllowed"));
         }
     }
 }

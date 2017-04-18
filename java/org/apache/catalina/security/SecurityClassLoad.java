@@ -166,7 +166,6 @@ public final class SecurityClassLoad {
     private static final void loadCoyotePackage(ClassLoader loader)
             throws Exception {
         final String basePackage = "org.apache.coyote.";
-        loader.loadClass(basePackage + "PushToken");
         loader.loadClass(basePackage + "http11.Constants");
         // Make sure system property is read at this point
         Class<?> clazz = loader.loadClass(basePackage + "Constants");
@@ -271,7 +270,9 @@ public final class SecurityClassLoad {
             throws Exception {
         final String basePackage = "org.apache.tomcat.";
         // buf
+        loader.loadClass(basePackage + "util.buf.B2CConverter");
         loader.loadClass(basePackage + "util.buf.ByteBufferUtils");
+        loader.loadClass(basePackage + "util.buf.C2BConverter");
         loader.loadClass(basePackage + "util.buf.HexUtils");
         loader.loadClass(basePackage + "util.buf.StringCache");
         loader.loadClass(basePackage + "util.buf.StringCache$ByteEntry");

@@ -102,7 +102,7 @@ public final class Response {
      */
     String contentType = null;
     String contentLanguage = null;
-    String characterEncoding = Constants.DEFAULT_CHARACTER_ENCODING;
+    String characterEncoding = null;
     long contentLength = -1;
     private Locale locale = DEFAULT_LOCALE;
 
@@ -499,6 +499,7 @@ public final class Response {
      * @deprecated Unused. Will be removed in Tomcat 9. Use
      *             {@link #doWrite(ByteBuffer)}
      */
+    @Deprecated
     public void doWrite(ByteChunk chunk) throws IOException {
         outputBuffer.doWrite(chunk);
         contentWritten+=chunk.getLength();
@@ -525,7 +526,7 @@ public final class Response {
         contentType = null;
         contentLanguage = null;
         locale = DEFAULT_LOCALE;
-        characterEncoding = Constants.DEFAULT_CHARACTER_ENCODING;
+        characterEncoding = null;
         charsetSet = false;
         contentLength = -1;
         status = 200;

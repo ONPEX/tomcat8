@@ -84,19 +84,19 @@ public abstract class AbstractProcessor extends AbstractProcessorLight implement
     protected void setErrorState(ErrorState errorState, Throwable t) {
         boolean blockIo = this.errorState.isIoAllowed() && !errorState.isIoAllowed();
         this.errorState = this.errorState.getMostSevere(errorState);
+        if (response.getStatus() < 400) {
+            response.setStatus(500);
+        }
+        if (t != null) {
+            request.setAttribute(RequestDispatcher.ERROR_EXCEPTION, t);
+        }
         if (blockIo && !ContainerThreadMarker.isContainerThread() && isAsync()) {
             // The error occurred on a non-container thread during async
             // processing which means not all of the necessary clean-up will
             // have been completed. Dispatch to a container thread to do the
             // clean-up. Need to do it this way to ensure that all the necessary
             // clean-up is performed.
-            if (response.getStatus() < 400) {
-                response.setStatus(500);
-            }
             getLog().info(sm.getString("abstractProcessor.nonContainerThreadError"), t);
-            // Set the request attribute so that the async onError() event is
-            // fired when the error event is processed
-            request.setAttribute(RequestDispatcher.ERROR_EXCEPTION, t);
             processSocketEvent(SocketEvent.ERROR, true);
         }
     }
@@ -478,7 +478,7 @@ public abstract class AbstractProcessor extends AbstractProcessorLight implement
             break;
         }
         case PUSH_REQUEST: {
-            doPush((PushToken) param);
+            doPush((Request) param);
             break;
         }
         }
@@ -743,13 +743,13 @@ public abstract class AbstractProcessor extends AbstractProcessorLight implement
      * Process a push. Processors that support push should override this method
      * and process the provided token.
      *
-     * @param pushToken Contains all the information necessary for the Processor
-     *                  to process the push request
+     * @param pushTarget Contains all the information necessary for the Processor
+     *                   to process the push request
      *
      * @throws UnsupportedOperationException if the protocol does not support
      *         push
      */
-    protected void doPush(PushToken pushToken) {
+    protected void doPush(Request pushTarget) {
         throw new UnsupportedOperationException(
                 sm.getString("abstractProcessor.pushrequest.notsupported"));
     }

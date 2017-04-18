@@ -44,7 +44,7 @@ import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.RequestFacade;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.connector.ResponseFacade;
-import org.apache.catalina.servlet4preview.http.Mapping;
+import org.apache.catalina.servlet4preview.http.ServletMapping;
 import org.apache.tomcat.util.ExceptionUtils;
 import org.apache.tomcat.util.res.StringManager;
 
@@ -206,7 +206,7 @@ final class ApplicationDispatcher implements AsyncDispatcher, RequestDispatcher 
      */
     public ApplicationDispatcher
         (Wrapper wrapper, String requestURI, String servletPath,
-         String pathInfo, String queryString, Mapping mapping, String name) {
+         String pathInfo, String queryString, ServletMapping mapping, String name) {
 
         super();
 
@@ -263,7 +263,7 @@ final class ApplicationDispatcher implements AsyncDispatcher, RequestDispatcher 
     /**
      * The mapping for this RequestDispatcher.
      */
-    private final Mapping mapping;
+    private final ServletMapping mapping;
 
 
     /**
@@ -354,9 +354,7 @@ final class ApplicationDispatcher implements AsyncDispatcher, RequestDispatcher 
         // Handle an HTTP path-based forward
         else {
 
-            ApplicationHttpRequest wrequest =
-                (ApplicationHttpRequest) wrapRequest(state);
-            String contextPath = context.getPath();
+            ApplicationHttpRequest wrequest = (ApplicationHttpRequest) wrapRequest(state);
             HttpServletRequest hrequest = state.hrequest;
             if (hrequest.getAttribute(RequestDispatcher.FORWARD_REQUEST_URI) == null) {
                 wrequest.setAttribute(RequestDispatcher.FORWARD_REQUEST_URI,
@@ -369,19 +367,19 @@ final class ApplicationDispatcher implements AsyncDispatcher, RequestDispatcher 
                                       hrequest.getPathInfo());
                 wrequest.setAttribute(RequestDispatcher.FORWARD_QUERY_STRING,
                                       hrequest.getQueryString());
-                Mapping mapping;
+                ServletMapping mapping;
                 if (hrequest instanceof org.apache.catalina.servlet4preview.http.HttpServletRequest) {
                     mapping = ((org.apache.catalina.servlet4preview.http.HttpServletRequest)
-                            hrequest).getMapping();
+                            hrequest).getServletMapping();
                 } else {
-                    mapping = (new ApplicationMapping(null)).getMapping();
+                    mapping = (new ApplicationMapping(null)).getServletMapping();
                 }
                 wrequest.setAttribute(
                         org.apache.catalina.servlet4preview.RequestDispatcher.FORWARD_MAPPING,
                         mapping);
             }
 
-            wrequest.setContextPath(contextPath);
+            wrequest.setContextPath(context.getPath());
             wrequest.setRequestURI(requestURI);
             wrequest.setServletPath(servletPath);
             wrequest.setPathInfo(pathInfo);
@@ -623,17 +621,20 @@ final class ApplicationDispatcher implements AsyncDispatcher, RequestDispatcher 
         // Create a wrapped response to use for this request
         wrapResponse(state);
 
-        ApplicationHttpRequest wrequest =
-            (ApplicationHttpRequest) wrapRequest(state);
+        ApplicationHttpRequest wrequest = (ApplicationHttpRequest) wrapRequest(state);
+        HttpServletRequest hrequest = state.hrequest;
 
-        if (queryString != null) {
-            wrequest.setQueryParams(queryString);
+        wrequest.setAttribute(Globals.DISPATCHER_TYPE_ATTR, DispatcherType.ASYNC);
+        wrequest.setAttribute(Globals.DISPATCHER_REQUEST_PATH_ATTR, getCombinedPath());
+        ServletMapping mapping;
+        if (hrequest instanceof org.apache.catalina.servlet4preview.http.HttpServletRequest) {
+            mapping = ((org.apache.catalina.servlet4preview.http.HttpServletRequest)
+                    hrequest).getServletMapping();
+        } else {
+            mapping = (new ApplicationMapping(null)).getServletMapping();
         }
-
-        wrequest.setAttribute(Globals.DISPATCHER_TYPE_ATTR,
-                DispatcherType.ASYNC);
-        wrequest.setAttribute(Globals.DISPATCHER_REQUEST_PATH_ATTR,
-                getCombinedPath());
+        wrequest.setAttribute(
+                org.apache.catalina.servlet4preview.AsyncContext.ASYNC_MAPPING, mapping);
 
         wrequest.setContextPath(context.getPath());
         wrequest.setRequestURI(requestURI);
@@ -643,6 +644,7 @@ final class ApplicationDispatcher implements AsyncDispatcher, RequestDispatcher 
             wrequest.setQueryString(queryString);
             wrequest.setQueryParams(queryString);
         }
+        wrequest.setMapping(this.mapping);
 
         invoke(state.outerRequest, state.outerResponse, state);
     }
