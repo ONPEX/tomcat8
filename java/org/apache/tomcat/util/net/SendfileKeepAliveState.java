@@ -14,28 +14,26 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.apache.coyote.http2;
+package org.apache.tomcat.util.net;
 
-public abstract class Http2Exception extends Exception {
+public enum SendfileKeepAliveState {
 
-    private static final long serialVersionUID = 1L;
+    /**
+     * Keep-alive is not in use. The socket can be closed when the response has
+     * been written.
+     */
+    NONE,
 
-    private final Http2Error error;
+    /**
+     * Keep-alive is in use and there is pipelined data in the input buffer to
+     * be read as soon as the current response has been written.
+     */
+    PIPELINED,
 
-
-    Http2Exception(String msg, Http2Error error) {
-        super(msg);
-        this.error = error;
-    }
-
-
-    Http2Exception(String msg, Http2Error error, Throwable cause) {
-        super(msg, cause);
-        this.error = error;
-    }
-
-
-    Http2Error getError() {
-        return error;
-    }
+    /**
+     * Keep-alive is in use. The socket should be added to the poller (or
+     * equivalent) to await more data as soon as the current response has been
+     * written.
+     */
+    OPEN
 }

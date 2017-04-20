@@ -131,7 +131,6 @@ public class Http2UpgradeHandler extends AbstractStream implements InternalHttpU
 
     private final Map<Integer,Stream> streams = new HashMap<>();
     private final AtomicInteger activeRemoteStreamCount = new AtomicInteger(0);
-    private volatile int maxRemoteStreamId = 0;
     // Start at -1 so the 'add 2' logic in closeIdleStreams() works
     private volatile int maxActiveRemoteStreamId = -1;
     private volatile int maxProcessedStreamId;
@@ -171,7 +170,6 @@ public class Http2UpgradeHandler extends AbstractStream implements InternalHttpU
             Integer key = Integer.valueOf(1);
             Stream stream = new Stream(key, this, coyoteRequest);
             streams.put(key, stream);
-            maxRemoteStreamId = 1;
             maxActiveRemoteStreamId = 1;
             activeRemoteStreamCount.set(1);
             maxProcessedStreamId = 1;
@@ -353,7 +351,9 @@ public class Http2UpgradeHandler extends AbstractStream implements InternalHttpU
                     break;
                 }
 
-                result = SocketState.UPGRADED;
+                if (connectionState.get() != ConnectionState.CLOSED) {
+                    result = SocketState.UPGRADED;
+                }
                 break;
 
             case OPEN_WRITE:
@@ -955,16 +955,10 @@ public class Http2UpgradeHandler extends AbstractStream implements InternalHttpU
                     sm.getString("upgradeHandler.stream.even", key), Http2Error.PROTOCOL_ERROR);
         }
 
-        if (streamId <= maxRemoteStreamId) {
-            throw new ConnectionException(sm.getString("upgradeHandler.stream.old", key,
-                    Integer.valueOf(maxRemoteStreamId)), Http2Error.PROTOCOL_ERROR);
-        }
-
         pruneClosedStreams();
 
         Stream result = new Stream(key, this);
         streams.put(key, result);
-        maxRemoteStreamId = streamId;
         return result;
     }
 
@@ -976,13 +970,17 @@ public class Http2UpgradeHandler extends AbstractStream implements InternalHttpU
 
         Stream result = new Stream(key, this, request);
         streams.put(key, result);
-        maxRemoteStreamId = streamId;
         return result;
     }
 
 
     private void close() {
         connectionState.set(ConnectionState.CLOSED);
+        for (Stream stream : streams.values()) {
+            // The connection is closing. Close the associated streams as no
+            // longer required.
+            stream.receiveReset(Http2Error.CANCEL.getCode());
+        }
         try {
             socketWrapper.close();
         } catch (IOException ioe) {
@@ -1259,6 +1257,11 @@ public class Http2UpgradeHandler extends AbstractStream implements InternalHttpU
     }
 
 
+    public void setInitiatePingDisabled(boolean initiatePingDisabled) {
+        pingManager.initiateDisabled = initiatePingDisabled;
+    }
+
+
     // ----------------------------------------------- Http2Parser.Input methods
 
     @Override
@@ -1329,6 +1332,7 @@ public class Http2UpgradeHandler extends AbstractStream implements InternalHttpU
     public ByteBuffer startRequestBodyFrame(int streamId, int payloadSize) throws Http2Exception {
         Stream stream = getStream(streamId, true);
         stream.checkState(FrameType.DATA);
+        stream.receivedData(payloadSize);
         return stream.getInputByteBuffer();
     }
 
@@ -1369,6 +1373,11 @@ public class Http2UpgradeHandler extends AbstractStream implements InternalHttpU
             if (stream == null) {
                 stream = createRemoteStream(streamId);
             }
+            if (streamId < maxActiveRemoteStreamId) {
+                throw new ConnectionException(sm.getString("upgradeHandler.stream.old",
+                        Integer.valueOf(streamId), Integer.valueOf(maxActiveRemoteStreamId)),
+                        Http2Error.PROTOCOL_ERROR);
+            }
             stream.checkState(FrameType.HEADERS);
             stream.receivedStartOfHeaders(headersEndStream);
             closeIdleStreams(streamId);
@@ -1404,6 +1413,10 @@ public class Http2UpgradeHandler extends AbstractStream implements InternalHttpU
     @Override
     public void reprioritise(int streamId, int parentStreamId,
             boolean exclusive, int weight) throws Http2Exception {
+        if (streamId == parentStreamId) {
+            throw new ConnectionException(sm.getString("upgradeHandler.dependency.invalid",
+                    getConnectionId(), Integer.valueOf(streamId)), Http2Error.PROTOCOL_ERROR);
+        }
         Stream stream = getStream(streamId, false);
         if (stream == null) {
             stream = createRemoteStream(streamId);
@@ -1497,6 +1510,7 @@ public class Http2UpgradeHandler extends AbstractStream implements InternalHttpU
             log.debug(sm.getString("upgradeHandler.goaway.debug", connectionId,
                     Integer.toString(lastStreamId), Long.toHexString(errorCode), debugData));
         }
+        close();
     }
 
 
@@ -1521,6 +1535,8 @@ public class Http2UpgradeHandler extends AbstractStream implements InternalHttpU
 
     private class PingManager {
 
+        protected boolean initiateDisabled = false;
+
         // 10 seconds
         private final long pingIntervalNano = 10000000000L;
 
@@ -1538,6 +1554,9 @@ public class Http2UpgradeHandler extends AbstractStream implements InternalHttpU
          * @throws IOException If an I/O issue prevents the ping from being sent
          */
         public void sendPing(boolean force) throws IOException {
+            if (initiateDisabled) {
+                return;
+            }
             long now = System.nanoTime();
             if (force || now - lastPingNanoTime > pingIntervalNano) {
                 lastPingNanoTime = now;

@@ -1695,14 +1695,20 @@ public class AprEndpoint extends AbstractEndpoint<Long> implements SNICallBack {
                             pollerSpace[i] += rv;
                             connectionCount.addAndGet(-rv);
                             for (int n = 0; n < rv; n++) {
-                                long timeout = timeouts.remove(desc[n*2+1]);
-                                AprSocketWrapper wrapper = connections.get(
-                                        Long.valueOf(desc[n*2+1]));
                                 if (getLog().isDebugEnabled()) {
                                     log.debug(sm.getString(
                                             "endpoint.debug.pollerProcess",
                                             Long.valueOf(desc[n*2+1]),
                                             Long.valueOf(desc[n*2])));
+                                }
+                                long timeout = timeouts.remove(desc[n*2+1]);
+                                AprSocketWrapper wrapper = connections.get(
+                                        Long.valueOf(desc[n*2+1]));
+                                if (wrapper == null) {
+                                    // Socket was closed in another thread while still in
+                                    // the Poller but wasn't removed from the Poller before
+                                    // new data arrived.
+                                    continue;
                                 }
                                 wrapper.pollerFlags = wrapper.pollerFlags & ~((int) desc[n*2]);
                                 // Check for failed sockets and hand this socket off to a worker
@@ -2138,20 +2144,33 @@ public class AprEndpoint extends AbstractEndpoint<Long> implements SNICallBack {
                             state.length -= nw;
                             if (state.length == 0) {
                                 remove(state);
-                                if (state.keepAlive) {
+                                switch (state.keepAliveState) {
+                                case NONE: {
+                                    // Close the socket since this is
+                                    // the end of the not keep-alive request.
+                                    closeSocket(state.socket);
+                                    break;
+                                }
+                                case PIPELINED: {
                                     // Destroy file descriptor pool, which should close the file
                                     Pool.destroy(state.fdpool);
-                                    Socket.timeoutSet(state.socket,
-                                            getSoTimeout() * 1000);
-                                    // If all done put the socket back in the
-                                    // poller for processing of further requests
-                                    getPoller().add(
-                                            state.socket, getKeepAliveTimeout(),
+                                    Socket.timeoutSet(state.socket, getSoTimeout() * 1000);
+                                    // Process the pipelined request data
+                                    if (!processSocket(state.socket, SocketEvent.OPEN_READ)) {
+                                        closeSocket(state.socket);
+                                    }
+                                    break;
+                                }
+                                case OPEN: {
+                                    // Destroy file descriptor pool, which should close the file
+                                    Pool.destroy(state.fdpool);
+                                    Socket.timeoutSet(state.socket, getSoTimeout() * 1000);
+                                    // Put the socket back in the poller for
+                                    // processing of further requests
+                                    getPoller().add(state.socket, getKeepAliveTimeout(),
                                             Poll.APR_POLLIN);
-                                } else {
-                                    // Close the socket since this is
-                                    // the end of not keep-alive request.
-                                    closeSocket(state.socket);
+                                    break;
+                                }
                                 }
                             }
                         }
