@@ -36,6 +36,7 @@ import org.apache.coyote.UpgradeToken;
 import org.apache.coyote.http11.upgrade.InternalHttpUpgradeHandler;
 import org.apache.coyote.http11.upgrade.UpgradeProcessorExternal;
 import org.apache.coyote.http11.upgrade.UpgradeProcessorInternal;
+import org.apache.tomcat.util.buf.StringUtils;
 import org.apache.tomcat.util.net.AbstractEndpoint;
 import org.apache.tomcat.util.net.SSLHostConfig;
 import org.apache.tomcat.util.net.SocketWrapperBase;
@@ -142,20 +143,44 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     }
 
 
-    private String compressableMimeType = "text/html,text/xml,text/plain,text/css,text/javascript,application/javascript";
-    private String[] compressableMimeTypes = null;
-    public String getCompressableMimeType() { return compressableMimeType; }
-    public void setCompressableMimeType(String valueS) {
-        compressableMimeType = valueS;
-        compressableMimeTypes = null;
+    /**
+     * @return See {@link #getCompressibleMimeType()}
+     * @deprecated Use {@link #getCompressibleMimeType()}
+     */
+    @Deprecated
+    public String getCompressableMimeType() {
+        return getCompressibleMimeType();
     }
+    /**
+     * @param valueS See {@link #setCompressibleMimeType(String)}
+     * @deprecated Use {@link #setCompressibleMimeType(String)}
+     */
+    @Deprecated
+    public void setCompressableMimeType(String valueS) {
+        setCompressibleMimeType(valueS);
+    }
+    /**
+     * @return See {@link #getCompressibleMimeTypes()}
+     * @deprecated Use {@link #getCompressibleMimeTypes()}
+     */
+    @Deprecated
     public String[] getCompressableMimeTypes() {
-        String[] result = compressableMimeTypes;
+        return getCompressibleMimeTypes();
+    }
+    private String compressibleMimeType = "text/html,text/xml,text/plain,text/css,text/javascript,application/javascript";
+    private String[] compressibleMimeTypes = null;
+    public String getCompressibleMimeType() { return compressibleMimeType; }
+    public void setCompressibleMimeType(String valueS) {
+        compressibleMimeType = valueS;
+        compressibleMimeTypes = null;
+    }
+    public String[] getCompressibleMimeTypes() {
+        String[] result = compressibleMimeTypes;
         if (result != null) {
             return result;
         }
         List<String> values = new ArrayList<>();
-        StringTokenizer tokens = new StringTokenizer(compressableMimeType, ",");
+        StringTokenizer tokens = new StringTokenizer(compressibleMimeType, ",");
         while (tokens.hasMoreTokens()) {
             String token = tokens.nextToken().trim();
             if (token.length() > 0) {
@@ -163,7 +188,7 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
             }
         }
         result = values.toArray(new String[values.size()]);
-        compressableMimeTypes = result;
+        compressibleMimeTypes = result;
         return result;
     }
 
@@ -274,17 +299,7 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
         // sync is unnecessary.
         List<String> copy = new ArrayList<>(allowedTrailerHeaders.size());
         copy.addAll(allowedTrailerHeaders);
-        StringBuilder result = new StringBuilder();
-        boolean first = true;
-        for (String header : copy) {
-            if (first) {
-                first = false;
-            } else {
-                result.append(',');
-            }
-            result.append(header);
-        }
-        return result.toString();
+        return StringUtils.join(copy);
     }
     public void addAllowedTrailerHeader(String header) {
         if (header != null) {
@@ -426,12 +441,20 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     }
 
 
-    // TODO: All of these SSL setters can be removed once it is no longer
-    // necessary to support the old configuration attributes (Tomcat 10?).
+    // TODO: All of these SSL getters and setters can be removed once it is no
+    // longer necessary to support the old configuration attributes (Tomcat 10?)
 
+    public String getSslEnabledProtocols() {
+        registerDefaultSSLHostConfig();
+        return StringUtils.join(defaultSSLHostConfig.getEnabledProtocols());
+    }
     public void setSslEnabledProtocols(String enabledProtocols) {
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setProtocols(enabledProtocols);
+    }
+    public String getSSLProtocol() {
+        registerDefaultSSLHostConfig();
+        return StringUtils.join(defaultSSLHostConfig.getEnabledProtocols());
     }
     public void setSSLProtocol(String sslProtocol) {
         registerDefaultSSLHostConfig();
@@ -439,17 +462,33 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     }
 
 
+    public String getKeystoreFile() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getCertificateKeystoreFile();
+    }
     public void setKeystoreFile(String keystoreFile) {
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setCertificateKeystoreFile(keystoreFile);
+    }
+    public String getSSLCertificateChainFile() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getCertificateChainFile();
     }
     public void setSSLCertificateChainFile(String certificateChainFile) {
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setCertificateChainFile(certificateChainFile);
     }
+    public String getSSLCertificateFile() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getCertificateFile();
+    }
     public void setSSLCertificateFile(String certificateFile) {
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setCertificateFile(certificateFile);
+    }
+    public String getSSLCertificateKeyFile() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getCertificateKeyFile();
     }
     public void setSSLCertificateKeyFile(String certificateKeyFile) {
         registerDefaultSSLHostConfig();
@@ -457,27 +496,47 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     }
 
 
+    public String getAlgorithm() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getKeyManagerAlgorithm();
+    }
     public void setAlgorithm(String keyManagerAlgorithm) {
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setKeyManagerAlgorithm(keyManagerAlgorithm);
     }
 
 
+    public String getClientAuth() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getCertificateVerification().toString();
+    }
     public void setClientAuth(String certificateVerification) {
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setCertificateVerification(certificateVerification);
     }
 
 
+    public String getSSLVerifyClient() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getCertificateVerification().toString();
+    }
     public void setSSLVerifyClient(String certificateVerification) {
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setCertificateVerification(certificateVerification);
     }
 
 
+    public int getTrustMaxCertLength(){
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getCertificateVerificationDepth();
+    }
     public void setTrustMaxCertLength(int certificateVerificationDepth){
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setCertificateVerificationDepth(certificateVerificationDepth);
+    }
+    public int getSSLVerifyDepth() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getCertificateVerificationDepth();
     }
     public void setSSLVerifyDepth(int certificateVerificationDepth) {
         registerDefaultSSLHostConfig();
@@ -485,9 +544,17 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     }
 
 
+    public String getUseServerCipherSuitesOrder() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getHonorCipherOrder();
+    }
     public void setUseServerCipherSuitesOrder(String honorCipherOrder) {
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setHonorCipherOrder(honorCipherOrder);
+    }
+    public String getSSLHonorCipherOrder() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getHonorCipherOrder();
     }
     public void setSSLHonorCipherOrder(String honorCipherOrder) {
         registerDefaultSSLHostConfig();
@@ -495,23 +562,45 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     }
 
 
+    public String getCiphers() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getCiphers();
+    }
     public void setCiphers(String ciphers) {
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setCiphers(ciphers);
+    }
+    public String getSSLCipherSuite() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getCiphers();
     }
     public void setSSLCipherSuite(String ciphers) {
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setCiphers(ciphers);
     }
 
+
+    public String getKeystorePass() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getCertificateKeystorePassword();
+    }
     public void setKeystorePass(String certificateKeystorePassword) {
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setCertificateKeystorePassword(certificateKeystorePassword);
     }
 
+
+    public String getKeyPass() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getCertificateKeyPassword();
+    }
     public void setKeyPass(String certificateKeyPassword) {
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setCertificateKeyPassword(certificateKeyPassword);
+    }
+    public String getSSLPassword() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getCertificateKeyPassword();
     }
     public void setSSLPassword(String certificateKeyPassword) {
         registerDefaultSSLHostConfig();
@@ -519,13 +608,25 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     }
 
 
+    public String getCrlFile(){
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getCertificateRevocationListFile();
+    }
     public void setCrlFile(String certificateRevocationListFile){
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setCertificateRevocationListFile(certificateRevocationListFile);
     }
+    public String getSSLCARevocationFile() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getCertificateRevocationListFile();
+    }
     public void setSSLCARevocationFile(String certificateRevocationListFile) {
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setCertificateRevocationListFile(certificateRevocationListFile);
+    }
+    public String getSSLCARevocationPath() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getCertificateRevocationListPath();
     }
     public void setSSLCARevocationPath(String certificateRevocationListPath) {
         registerDefaultSSLHostConfig();
@@ -533,96 +634,160 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     }
 
 
+    public String getKeystoreType() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getCertificateKeystoreType();
+    }
     public void setKeystoreType(String certificateKeystoreType) {
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setCertificateKeystoreType(certificateKeystoreType);
     }
 
 
+    public String getKeystoreProvider() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getCertificateKeystoreProvider();
+    }
     public void setKeystoreProvider(String certificateKeystoreProvider) {
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setCertificateKeystoreProvider(certificateKeystoreProvider);
     }
 
 
+    public String getKeyAlias() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getCertificateKeyAlias();
+    }
     public void setKeyAlias(String certificateKeyAlias) {
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setCertificateKeyAlias(certificateKeyAlias);
     }
 
 
+    public String getTruststoreAlgorithm(){
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getTruststoreAlgorithm();
+    }
     public void setTruststoreAlgorithm(String truststoreAlgorithm){
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setTruststoreAlgorithm(truststoreAlgorithm);
     }
 
 
+    public String getTruststoreFile(){
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getTruststoreFile();
+    }
     public void setTruststoreFile(String truststoreFile){
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setTruststoreFile(truststoreFile);
     }
 
 
+    public String getTruststorePass(){
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getTruststorePassword();
+    }
     public void setTruststorePass(String truststorePassword){
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setTruststorePassword(truststorePassword);
     }
 
 
+    public String getTruststoreType(){
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getTruststoreType();
+    }
     public void setTruststoreType(String truststoreType){
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setTruststoreType(truststoreType);
     }
 
 
+    public String getTruststoreProvider(){
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getTruststoreProvider();
+    }
     public void setTruststoreProvider(String truststoreProvider){
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setTruststoreProvider(truststoreProvider);
     }
 
 
+    public String getSslProtocol() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getSslProtocol();
+    }
     public void setSslProtocol(String sslProtocol) {
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setSslProtocol(sslProtocol);
     }
 
 
+    public int getSessionCacheSize(){
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getSessionCacheSize();
+    }
     public void setSessionCacheSize(int sessionCacheSize){
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setSessionCacheSize(sessionCacheSize);
     }
 
 
+    public int getSessionTimeout(){
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getSessionTimeout();
+    }
     public void setSessionTimeout(int sessionTimeout){
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setSessionTimeout(sessionTimeout);
     }
 
 
+    public String getSSLCACertificatePath() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getCaCertificatePath();
+    }
     public void setSSLCACertificatePath(String caCertificatePath) {
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setCaCertificatePath(caCertificatePath);
     }
 
 
+    public String getSSLCACertificateFile() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getCaCertificateFile();
+    }
     public void setSSLCACertificateFile(String caCertificateFile) {
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setCaCertificateFile(caCertificateFile);
     }
 
 
+    public boolean getSSLDisableCompression() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getDisableCompression();
+    }
     public void setSSLDisableCompression(boolean disableCompression) {
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setDisableCompression(disableCompression);
     }
 
 
+    public boolean getSSLDisableSessionTickets() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getDisableSessionTickets();
+    }
     public void setSSLDisableSessionTickets(boolean disableSessionTickets) {
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setDisableSessionTickets(disableSessionTickets);
     }
 
 
+    public String getTrustManagerClassName() {
+        registerDefaultSSLHostConfig();
+        return defaultSSLHostConfig.getTrustManagerClassName();
+    }
     public void setTrustManagerClassName(String trustManagerClassName) {
         registerDefaultSSLHostConfig();
         defaultSSLHostConfig.setTrustManagerClassName(trustManagerClassName);
@@ -631,11 +796,12 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
 
     // ------------------------------------------------------------- Common code
 
+    @SuppressWarnings("deprecation")
     @Override
     protected Processor createProcessor() {
         Http11Processor processor = new Http11Processor(getMaxHttpHeaderSize(), getEndpoint(),
                 getMaxTrailerSize(), allowedTrailerHeaders, getMaxExtensionSize(),
-                getMaxSwallowSize(), httpUpgradeProtocols);
+                getMaxSwallowSize(), httpUpgradeProtocols, getSendReasonPhrase());
         processor.setAdapter(getAdapter());
         processor.setMaxKeepAliveRequests(getMaxKeepAliveRequests());
         processor.setConnectionUploadTimeout(getConnectionUploadTimeout());
@@ -643,7 +809,7 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
         processor.setCompressionMinSize(getCompressionMinSize());
         processor.setCompression(getCompression());
         processor.setNoCompressionUserAgents(getNoCompressionUserAgents());
-        processor.setCompressableMimeTypes(getCompressableMimeTypes());
+        processor.setCompressibleMimeTypes(getCompressibleMimeTypes());
         processor.setRestrictedUserAgents(getRestrictedUserAgents());
         processor.setMaxSavePostSize(getMaxSavePostSize());
         processor.setServer(getServer());

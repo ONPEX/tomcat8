@@ -44,7 +44,131 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues do not "pop up" wrt. others).
 -->
-<section name="Tomcat 8.5.12 (markt)">
+<section name="Tomcat 8.5.13 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <add>
+        <bug>54618</bug>: Add support to the
+        <code>HttpHeaderSecurityFilter</code> for the HSTS preload parameter.
+        (markt)
+      </add>
+      <fix>
+        <bug>60853</bug>: Expose the <code>SSLHostConfig</code> and
+        <code>SSLHostConfigCertificate</code> objects via JMX. (markt)
+      </fix>
+      <fix>
+        <bug>60876</bug>: Ensure that <code>Set-Cookie</code> headers generated
+        by the <code>Rfc6265CookieProcessor</code> are aligned with the
+        specification. Patch provided by Jim Griswold. (markt)
+      </fix>
+      <fix>
+        <bug>60882</bug>: Fix a <code>NullPointerException</code> when obtaining
+        a <code>RequestDispatcher</code> for a request that will not have any
+        pathInfo associated with it. This was a regression in the changes in
+        8.5.12 for the Servlet 4.0 API early preview changes. (markt)
+      </fix>
+      <update>
+        Align <code>PushBuilder</code> API with changes from Servlet expert
+        group. (markt)
+      </update>
+      <scode>
+        Refactor the various implementations of X to comma separated list to a
+        single utility class and update the code to use the new utility class.
+        (markt)
+      </scode>
+      <fix>
+        <bug>60911</bug>: Ensure NPE will not be thrown when looking for SSL
+        session ID. Based on a patch by Didier Gutacker. (violetagg)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <add>
+        <bug>60362</bug>: Add a new Connector configuration
+        <code>sendReasonPhrase</code>. When this attribute is set to
+        <code>true</code>, a reason phrase will be sent with the response.
+        By default a reason phrase will not be sent. This option is deprecated
+        and is not available in Tomcat 9. (violetagg)
+      </add>
+      <fix>
+        Fix HTTP/2 incorrect input unblocking on EOF. (remm)
+      </fix>
+      <fix>
+        Close the connection sooner if an event occurs for a current connection
+        that is not consistent with the current state of that connection.
+        (markt)
+      </fix>
+      <fix>
+        Speed up shutdown when using multiple acceptor threads by ensuring that
+        the code that unlocks the acceptor threads correctly handles the case
+        where there are multiple threads. (markt)
+      </fix>
+      <fix>
+        <bug>60852</bug>: Correctly spell compressible when used in
+        configuration attributes and internal code. Based on a patch by Michael
+        Osipov. (markt)
+      </fix>
+      <fix>
+        <bug>60900</bug>: Avoid a <code>NullPointerException</code> in the APR
+        Poller if a connection is closed at the same time as new data arrives on
+        that connection. (markt)
+      </fix>
+      <fix>
+        Improve HPACK specification compliance by fixing some test failures
+        reported by the h2spec tool written by Moto Ishizawa. (markt)
+      </fix>
+      <fix>
+        Improve HTTP/2 specification compliance by fixing some test failures
+        reported by the h2spec tool written by Moto Ishizawa. (markt)
+      </fix>
+      <fix>
+        <bug>60918</bug>: Fix sendfile processing error that could lead to
+        subsequent requests experiencing an <code>IllegalStateException</code>.
+        (markt)
+      </fix>
+      <fix>
+        Improve sendfile handling when requests are pipelined. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        Improve the error handling for simple tags to ensure that the tag is
+        released and destroyed once used. (remm, violetagg)
+      </fix>
+      <fix>
+        <bug>60844</bug>: Correctly handle the error when fewer parameter values
+        than required by the method are used to invoke an EL method expression.
+        Patch provided by Daniel Gray. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="jdbc-pool">
+    <changelog>
+      <fix>
+        <bug>60764</bug>: Implement <code>equals()</code> and
+        <code>hashCode()</code> in the <code>StatementFacade</code> in order to
+        enable these methods to be called on the closed statements if any
+        statement proxy is set. This behavior can be changed with
+        <code>useStatementFacade</code> attribute. (kfujino)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <fix>
+        Refactor the build script and the NSIS installer script so that either
+        NSIS 2.x or NSIS 3.x can be used to build the installer. This is
+        primarily to re-enable building the installer on the Linux based CI
+        system where the combination of NSIS 3.x and wine leads to failed
+        installer builds. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.5.12 (markt)" rtext="2017-03-13">
   <subsection name="Catalina">
     <changelog>
       <fix>
@@ -77,7 +201,7 @@
       </scode>
       <fix>
         <bug>60683</bug>: Security manager failure causing NPEs when doing IO
-        on some JVMs. (coty)
+        on some JVMs. (csutherl)
       </fix>
       <fix>
         <bug>60688</bug>: Update the internal fork of Apache Commons BCEL to
@@ -115,7 +239,7 @@
       </scode>
       <fix>
         When HTTP TRACE requests are disabled on the Connector, ensure that the
-        HTTP OPTIONS response from custom the WebDAV servlet does not include
+        HTTP OPTIONS response from the WebDAV servlet does not include
         TRACE in the returned Allow header. (markt)
       </fix>
       <fix>
@@ -180,12 +304,6 @@
         <strong>Connector</strong>. (markt)
       </fix>
       <fix>
-        <bug>60627</bug>: Modify the <code>Rfc6265CookieProcessor</code> so that
-        in addition to cookie headers that start with an explicit RFC 2109
-        <code>$Version=1</code>, cookies that start with <code>$Version=0</code>
-        are also parsed as RFC 2109 cookies. (markt)
-      </fix>
-      <fix>
         Include the value of <code>SslHostConfig.truststoreAlgorithm</code> when
         warning that the algorithm does not support the
         <code>certificateVerificationDepth</code> configuration option. (markt)
@@ -200,6 +318,12 @@
         <code>tomcat.util.http.parser.HttpParser.requestTargetAllow</code>.
         (csutherl)
       </add>
+      <fix>
+        <bug>60627</bug>: Modify the <code>Rfc6265CookieProcessor</code> so that
+        in addition to cookie headers that start with an explicit RFC 2109
+        <code>$Version=1</code>, cookies that start with <code>$Version=0</code>
+        are also parsed as RFC 2109 cookies. (markt)
+      </fix>
       <fix>
         <bug>60716</bug>: Add a new JSSE specific attribute,
         <code>revocationEnabled</code>, to <code>SSLHostConfig</code> to permit

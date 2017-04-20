@@ -33,6 +33,7 @@ import org.apache.coyote.UpgradeProtocol;
 import org.apache.coyote.UpgradeToken;
 import org.apache.coyote.http11.upgrade.InternalHttpUpgradeHandler;
 import org.apache.coyote.http11.upgrade.UpgradeProcessorInternal;
+import org.apache.tomcat.util.buf.StringUtils;
 import org.apache.tomcat.util.net.SocketWrapperBase;
 
 public class Http2Protocol implements UpgradeProtocol {
@@ -68,7 +69,7 @@ public class Http2Protocol implements UpgradeProtocol {
     private int maxHeaderSize = Constants.DEFAULT_MAX_HEADER_SIZE;
     private int maxTrailerCount = Constants.DEFAULT_MAX_TRAILER_COUNT;
     private int maxTrailerSize = Constants.DEFAULT_MAX_TRAILER_SIZE;
-
+    private boolean initiatePingDisabled = false;
 
     @Override
     public String getHttpUpgradeName(boolean isSSLEnabled) {
@@ -113,6 +114,7 @@ public class Http2Protocol implements UpgradeProtocol {
         result.setMaxHeaderSize(getMaxHeaderSize());
         result.setMaxTrailerCount(getMaxTrailerCount());
         result.setMaxTrailerSize(getMaxTrailerSize());
+        result.setInitiatePingDisabled(initiatePingDisabled);
         return result;
     }
 
@@ -224,17 +226,7 @@ public class Http2Protocol implements UpgradeProtocol {
         // sync is unnecessary.
         List<String> copy = new ArrayList<>(allowedTrailerHeaders.size());
         copy.addAll(allowedTrailerHeaders);
-        StringBuilder result = new StringBuilder();
-        boolean first = true;
-        for (String header : copy) {
-            if (first) {
-                first = false;
-            } else {
-                result.append(',');
-            }
-            result.append(header);
-        }
-        return result.toString();
+        return StringUtils.join(copy);
     }
 
 
@@ -275,5 +267,10 @@ public class Http2Protocol implements UpgradeProtocol {
 
     public int getMaxTrailerSize() {
         return maxTrailerSize;
+    }
+
+
+    public void setInitiatePingDisabled(boolean initiatePingDisabled) {
+        this.initiatePingDisabled = initiatePingDisabled;
     }
 }
