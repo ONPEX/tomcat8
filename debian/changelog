@@ -1,10 +1,10 @@
-tomcat8 (8.5.13-1) UNRELEASED; urgency=medium
+tomcat8 (8.5.14-1) unstable; urgency=medium
 
   * Team upload.
   * New upstream release
     - Removed the CVE patches (fixed in this release)
 
- -- Emmanuel Bourg <ebourg@apache.org>  Fri, 21 Apr 2017 00:48:06 +0200
+ -- Emmanuel Bourg <ebourg@apache.org>  Mon, 08 May 2017 00:17:52 +0200
 
 tomcat8 (8.5.12-1) unstable; urgency=medium
 
