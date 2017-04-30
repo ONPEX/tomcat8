@@ -1,3 +1,23 @@
+tomcat8 (8.0.14-1+deb8u9) jessie-security; urgency=high
+
+  * Team upload.
+  * Fix the following security vulnerabilities:
+   - CVE-2017-5647:
+     A bug in the handling of the pipelined requests when send file was used
+     resulted in the pipelined request being lost when send file processing of
+     the previous request completed. This could result in responses appearing
+     to be sent for the wrong request. For example, a user agent that sent
+     requests A, B and C could see the correct response for request A, the
+     response for request C for request B and no response for request C.
+   - CVE-2017-5648:
+     It was noticed that some calls to application listeners did not use the
+     appropriate facade object. When running an untrusted application under a
+     SecurityManager, it was therefore possible for that untrusted application
+     to retain a reference to the request or response object and thereby access
+     and/or modify information associated with another web application.
+
+ -- Markus Koschany <apo@debian.org>  Sun, 30 Apr 2017 21:38:43 +0200
+
 tomcat8 (8.0.14-1+deb8u8) jessie-security; urgency=high
 
   * Team upload.

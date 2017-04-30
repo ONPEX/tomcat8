@@ -35,3 +35,5 @@ CVE-2016-8735.patch
 CVE-2016-8745.patch
 BZ57544-infinite-loop.patch
 BZ57544-infinite-loop-part2.patch
+CVE-2017-5647.patch
+CVE-2017-5648.patch
