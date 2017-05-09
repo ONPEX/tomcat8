@@ -22,6 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -487,7 +488,7 @@ public class ApplicationContext implements org.apache.catalina.servlet4preview.S
 
         mappingData.recycle();
 
-        String encodedUri = URLEncoder.DEFAULT.encode(uriCC.toString(), "UTF-8");
+        String encodedUri = URLEncoder.DEFAULT.encode(uriCC.toString(), StandardCharsets.UTF_8);
 
         // Construct a RequestDispatcher to process this request
         return new ApplicationDispatcher(wrapper, encodedUri, wrapperPath, pathInfo,
@@ -813,7 +814,7 @@ public class ApplicationContext implements org.apache.catalina.servlet4preview.S
             ExceptionUtils.handleThrowable(e.getCause());
             throw new ServletException(e);
         } catch (IllegalAccessException | NamingException | InstantiationException |
-                ClassNotFoundException e) {
+                ClassNotFoundException | NoSuchMethodException e) {
             throw new ServletException(e);
         }
     }
@@ -947,7 +948,7 @@ public class ApplicationContext implements org.apache.catalina.servlet4preview.S
             ExceptionUtils.handleThrowable(e.getCause());
             throw new ServletException(e);
         } catch (IllegalAccessException | NamingException | InstantiationException |
-                ClassNotFoundException e) {
+                ClassNotFoundException | NoSuchMethodException e) {
             throw new ServletException(e);
         }
     }
@@ -1088,7 +1089,7 @@ public class ApplicationContext implements org.apache.catalina.servlet4preview.S
                     "applicationContext.addListener.iae.cnfe", className),
                     e);
         } catch (IllegalAccessException | NamingException | InstantiationException |
-                ClassNotFoundException e) {
+                ClassNotFoundException | NoSuchMethodException e) {
             throw new IllegalArgumentException(sm.getString(
                     "applicationContext.addListener.iae.cnfe", className),
                     e);
@@ -1160,7 +1161,8 @@ public class ApplicationContext implements org.apache.catalina.servlet4preview.S
         } catch (InvocationTargetException e) {
             ExceptionUtils.handleThrowable(e.getCause());
             throw new ServletException(e);
-        } catch (IllegalAccessException | NamingException | InstantiationException e) {
+        } catch (IllegalAccessException | NamingException | InstantiationException |
+                NoSuchMethodException e) {
             throw new ServletException(e);
         }
     }

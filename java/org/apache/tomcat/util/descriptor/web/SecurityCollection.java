@@ -17,6 +17,7 @@
 package org.apache.tomcat.util.descriptor.web;
 
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.tomcat.util.buf.UDecoder;
 
@@ -34,28 +35,9 @@ import org.apache.tomcat.util.buf.UDecoder;
  *
  * @author Craig R. McClanahan
  */
-public class SecurityCollection implements Serializable {
+public class SecurityCollection extends XmlEncodingBase implements Serializable {
 
     private static final long serialVersionUID = 1L;
-
-    private String encoding = null;
-    public void setEncoding(String encoding) {
-        this.encoding = encoding;
-    }
-    /**
-     * Obtain the encoding of the XML source that was used to populated this
-     * object.
-     *
-     * @return The encoding of the associated XML source or <code>UTF-8</code>
-     *         if the encoding could not be determined
-     */
-    public String getEncoding() {
-        if (encoding == null || encoding.length() == 0) {
-            return "UTF-8";
-        }
-        return encoding;
-    }
-
 
     // ----------------------------------------------------------- Constructors
 
@@ -228,7 +210,7 @@ public class SecurityCollection implements Serializable {
      * @param pattern The pattern
      */
     public void addPattern(String pattern) {
-        addPatternDecoded(UDecoder.URLDecode(pattern, "UTF-8"));
+        addPatternDecoded(UDecoder.URLDecode(pattern, StandardCharsets.UTF_8));
     }
     public void addPatternDecoded(String pattern) {
 

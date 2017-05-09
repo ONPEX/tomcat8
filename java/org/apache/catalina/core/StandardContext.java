@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
@@ -1353,7 +1354,7 @@ public class StandardContext extends ContainerBase
         if (this.charsetMapper == null) {
             try {
                 Class<?> clazz = Class.forName(charsetMapperClass);
-                this.charsetMapper = (CharsetMapper) clazz.newInstance();
+                this.charsetMapper = (CharsetMapper) clazz.getConstructor().newInstance();
             } catch (Throwable t) {
                 ExceptionUtils.handleThrowable(t);
                 this.charsetMapper = new CharsetMapper();
@@ -2068,7 +2069,7 @@ public class StandardContext extends ContainerBase
             log.warn(sm.getString(
                     "standardContext.pathInvalid", path, this.path));
         }
-        encodedPath = URLEncoder.DEFAULT.encode(this.path, "UTF-8");
+        encodedPath = URLEncoder.DEFAULT.encode(this.path, StandardCharsets.UTF_8);
         if (getName() == null) {
             setName(this.path);
         }
@@ -3274,11 +3275,11 @@ public class StandardContext extends ContainerBase
         Wrapper wrapper = null;
         if (wrapperClass != null) {
             try {
-                wrapper = (Wrapper) wrapperClass.newInstance();
+                wrapper = (Wrapper) wrapperClass.getConstructor().newInstance();
             } catch (Throwable t) {
                 ExceptionUtils.handleThrowable(t);
                 log.error("createWrapper", t);
-                return (null);
+                return null;
             }
         } else {
             wrapper = new StandardWrapper();
@@ -3289,12 +3290,12 @@ public class StandardContext extends ContainerBase
                 try {
                     Class<?> clazz = Class.forName(wrapperLifecycles[i]);
                     LifecycleListener listener =
-                        (LifecycleListener) clazz.newInstance();
+                        (LifecycleListener) clazz.getConstructor().newInstance();
                     wrapper.addLifecycleListener(listener);
                 } catch (Throwable t) {
                     ExceptionUtils.handleThrowable(t);
                     log.error("createWrapper", t);
-                    return (null);
+                    return null;
                 }
             }
         }
@@ -3304,18 +3305,17 @@ public class StandardContext extends ContainerBase
                 try {
                     Class<?> clazz = Class.forName(wrapperListeners[i]);
                     ContainerListener listener =
-                      (ContainerListener) clazz.newInstance();
+                            (ContainerListener) clazz.getConstructor().newInstance();
                     wrapper.addContainerListener(listener);
                 } catch (Throwable t) {
                     ExceptionUtils.handleThrowable(t);
                     log.error("createWrapper", t);
-                    return (null);
+                    return null;
                 }
             }
         }
 
-        return (wrapper);
-
+        return wrapper;
     }
 
 

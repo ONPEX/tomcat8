@@ -543,29 +543,36 @@ public class OutputBuffer extends Writer {
     }
 
 
+    /**
+     * @param s     New encoding value
+     *
+     * @deprecated This method will be removed in Tomcat 9.0.x
+     */
+    @Deprecated
     public void setEncoding(String s) {
         enc = s;
     }
 
 
     public void checkConverter() throws IOException {
-        if (conv == null) {
-            setConverter();
+        if (conv != null) {
+            return;
         }
-    }
 
-
-    private void setConverter() throws IOException {
+        Charset charset = null;
 
         if (coyoteResponse != null) {
-            enc = coyoteResponse.getCharacterEncoding();
+            charset = coyoteResponse.getCharset();
         }
 
-        if (enc == null) {
-            enc = org.apache.coyote.Constants.DEFAULT_CHARACTER_ENCODING;
+        if (charset == null) {
+            if (enc == null) {
+                charset = org.apache.coyote.Constants.DEFAULT_BODY_CHARSET;
+            } else {
+                charset = getCharset(enc);
+            }
         }
 
-        final Charset charset = getCharset(enc);
         conv = encoders.get(charset);
 
         if (conv == null) {

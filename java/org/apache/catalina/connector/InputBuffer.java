@@ -387,6 +387,12 @@ public class InputBuffer extends Reader
     // ------------------------------------------------- Chars Handling Methods
 
 
+    /**
+     * @param s     New encoding value
+     *
+     * @deprecated This method will be removed in Tomcat 9.0.x
+     */
+    @Deprecated
     public void setEncoding(String s) {
         enc = s;
     }
@@ -556,22 +562,24 @@ public class InputBuffer extends Reader
 
 
     public void checkConverter() throws IOException {
-        if (conv == null) {
-            setConverter();
+        if (conv != null) {
+            return;
         }
-    }
 
+        Charset charset = null;
 
-    private void setConverter() throws IOException {
         if (coyoteRequest != null) {
-            enc = coyoteRequest.getCharacterEncoding();
+            charset = coyoteRequest.getCharset();
         }
 
-        if (enc == null) {
-            enc = org.apache.coyote.Constants.DEFAULT_CHARACTER_ENCODING;
+        if (charset == null) {
+            if (enc == null) {
+                charset = org.apache.coyote.Constants.DEFAULT_BODY_CHARSET;
+            } else {
+                charset = B2CConverter.getCharset(enc);
+            }
         }
 
-        Charset charset = B2CConverter.getCharset(enc);
         SynchronizedStack<B2CConverter> stack = encoders.get(charset);
         if (stack == null) {
             stack = new SynchronizedStack<>();
