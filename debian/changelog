@@ -1,3 +1,11 @@
+tomcat8 (8.5.14-1+deb9u1) stretch-security; urgency=high
+
+  * Team upload.
+  * Fixed CVE-2017-5664: Static error pages can be overwritten if the
+    DefaultServlet is configured to permit writes (Closes: #864447)
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Wed, 21 Jun 2017 13:36:46 +0200
+
 tomcat8 (8.5.14-1) unstable; urgency=medium
 
   * Team upload.
