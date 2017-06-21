@@ -1,10 +1,10 @@
-tomcat8 (8.5.15-1) UNRELEASED; urgency=medium
+tomcat8 (8.5.15-1) unstable; urgency=medium
 
   * Team upload.
   * New upstream release
     - Refreshed the patches
 
- -- Emmanuel Bourg <ebourg@apache.org>  Wed, 21 Jun 2017 13:00:15 +0200
+ -- Emmanuel Bourg <ebourg@apache.org>  Wed, 21 Jun 2017 13:00:44 +0200
 
 tomcat8 (8.5.14-2) unstable; urgency=high
 
