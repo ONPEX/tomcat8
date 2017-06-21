@@ -44,7 +44,145 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues do not "pop up" wrt. others).
 -->
-<section name="Tomcat 8.5.14 (markt)">
+<section name="Tomcat 8.5.15 (markt)">
+  <subsection name="General">
+    <changelog>
+      <add>
+        Allow to exclude JUnit test classes using the build property
+        <code>test.exclude</code> and document the property in
+        BUILDING.txt. (rjung)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        Review those places where Tomcat re-encodes a URI or URI component and
+        ensure that that correct encoding (path differs from query string) is
+        applied and that the encoding is applied consistently. (markt)
+      </fix>
+      <fix>
+        Avoid a <code>NullPointerException</code> when reading attributes for a
+        initialised HTTP connector where TLS is enabled. (markt)
+      </fix>
+      <fix>
+        Always quote the <code>hostName</code> of an <code>SSLHostConfig</code>
+        element when using it as part of the JMX object name to avoid errors that
+        prevent the associated TLS connector from starting if a wild card
+        <code>hostName</code> is configured (because <code>*</code> is a
+        reserved character for JMX object names). (markt)
+      </fix>
+      <scode>
+        Start to switch to using <code>Charset</code> rather than
+        <code>String</code> to store encoding configuration settings to reduce
+        the number of places the associated <code>Charset</code> needs to be
+        looked up. (markt)
+      </scode>
+      <fix>
+        Use a more reliable mechanism for the <code>DefaultServlet</code> when
+        determining if the current request is for custom error page or not.
+        (markt)
+      </fix>
+      <fix>
+        Ensure that when the Default or WebDAV servlets process an error
+        dispatch that the error resource is processed via the
+        <code>doGet()</code> method irrespective of the method used for the
+        original request that triggered the error. (markt)
+      </fix>
+      <fix>
+        If a static custom error page is specified that does not exist or cannot
+        be read, ensure that the intended error status is returned rather than a
+        404 or 403. (markt)
+      </fix>
+      <fix>
+        When the WebDAV servlet is configured and an error dispatch is made to a
+        custom error page located below <code>WEB-INF</code>, ensure that the
+        target error page is displayed rather than a 404 response. (markt)
+      </fix>
+      <add>
+        <bug>61047</bug>: Add MIME mapping for woff2 fonts in the default
+        web.xml. Patch provided by Justin Williamson. (violetagg)
+      </add>
+      <fix>
+        Correct the logic that selects the encoding to use to decode the query
+        string in the <code>SSIServletExternalResolver</code> so that the
+        <code>useBodyEncodingForURI</code> attribute of the
+        <code>Connector</code> is correctly taken into account. (markt)
+      </fix>
+      <fix>
+        Within the Expires filter, make the content type value specified with the
+        <code>ExpiresByType</code> parameter, case insensitive. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        When a <code>TrustManager</code> is configured that does not support
+        <code>certificateVerificationDepth</code> only log a warning about that
+        lack of support when <code>certificateVerificationDepth</code> has been
+        explicitly set. (markt)
+      </fix>
+      <fix>
+        <bug>60970</bug>: Extend the fix for large headers to push requests.
+        (markt)
+      </fix>
+      <fix>
+        Do not include a <code>Date</code> header in HTTP/2 responses with
+        status codes less than 200. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        When no BOM is present and an encoding is detected, do not skip the
+        bytes used to detect the encoding since they are not part of a BOM.
+        (markt)
+      </fix>
+      <update>
+        <bug>61057</bug>: Update to Eclipse JDT Compiler 4.6.3. (violetagg)
+      </update>
+      <fix>
+        <bug>61065</bug>: Ensure that once the class is resolved by
+        <code>javax.el.ImportHandler#resolveClass</code> it will be cached with
+        the proper name. (violetagg)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="WebSocket">
+    <changelog>
+      <fix>
+        <bug>61003</bug>: Ensure the flags for reading/writing in
+        <code>o.a.t.websocket.AsyncChannelWrapperSecure</code> are correctly
+        reset even if some exceptions occurred during processing. (markt/violetagg)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web Applications">
+    <changelog>
+      <add>
+        Add documents for <code>maxIdleTime</code> attribute to Channel Receiver
+        docs. (kfujino)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <add>
+        Modify the Ant build script used to publish to a Maven repository so
+        that it no longer requires artifacts to be GPG signed. This is make it
+        possible for the CI system to upload snapshot builds to the ASF Maven
+        repository. (markt)
+      </add>
+      <scode>
+        Review i18n property files, remove unnecessary escaping and consistently
+        use <code>[...]</code> to delimit inserted values. (markt)
+      </scode>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.5.14 (markt)" rtext="release in progress">
   <subsection name="Catalina">
     <changelog>
       <fix>
@@ -869,6 +1007,9 @@
   </subsection>
   <subsection name="Web applications">
     <changelog>
+      <fix>
+        Fix JDK version number documented in BUILDING.txt. (rjung)
+      </fix>
       <fix>
         Correct a typo in Host Configuration Reference.
         Issue reported via comments.apache.org. (violetagg)

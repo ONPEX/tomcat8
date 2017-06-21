@@ -17,8 +17,8 @@
 package org.apache.catalina.connector;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -318,7 +318,7 @@ public class CoyoteAdapter implements Adapter {
             res.setNote(ADAPTER_NOTES, response);
 
             // Set query string encoding
-            req.getParameters().setQueryStringEncoding(connector.getURIEncoding());
+            req.getParameters().setQueryStringCharset(connector.getURICharset());
         }
 
         if (connector.getXpoweredBy()) {
@@ -447,8 +447,7 @@ public class CoyoteAdapter implements Adapter {
             res.setNote(ADAPTER_NOTES, response);
 
             // Set query string encoding
-            req.getParameters().setQueryStringEncoding
-                (connector.getURIEncoding());
+            req.getParameters().setQueryStringCharset(connector.getURICharset());
         }
 
         try {
@@ -772,7 +771,8 @@ public class CoyoteAdapter implements Adapter {
         // Possible redirect
         MessageBytes redirectPathMB = request.getMappingData().redirectPath;
         if (!redirectPathMB.isNull()) {
-            String redirectPath = URLEncoder.DEFAULT.encode(redirectPathMB.toString(), "UTF-8");
+            String redirectPath = URLEncoder.DEFAULT.encode(
+                    redirectPathMB.toString(), StandardCharsets.UTF_8);
             String query = request.getQueryString();
             if (request.isRequestedSessionIdFromURL()) {
                 // This is not optimal, but as this is not very common, it
@@ -892,24 +892,14 @@ public class CoyoteAdapter implements Adapter {
 
         // What encoding to use? Some platforms, eg z/os, use a default
         // encoding that doesn't give the expected result so be explicit
-        String enc = connector.getURIEncodingLower();
-        if (enc == null) {
-            enc = "iso-8859-1";
-        }
-        Charset charset = null;
-        try {
-            charset = B2CConverter.getCharsetLower(enc);
-        } catch (UnsupportedEncodingException e1) {
-            log.warn(sm.getString("coyoteAdapter.parsePathParam",
-                    enc));
-        }
+        Charset charset = connector.getURICharset();
 
         if (log.isDebugEnabled()) {
             log.debug(sm.getString("coyoteAdapter.debug", "uriBC",
                     uriBC.toString()));
             log.debug(sm.getString("coyoteAdapter.debug", "semicolon",
                     String.valueOf(semicolon)));
-            log.debug(sm.getString("coyoteAdapter.debug", "enc", enc));
+            log.debug(sm.getString("coyoteAdapter.debug", "enc", charset.name()));
         }
 
         while (semicolon > -1) {

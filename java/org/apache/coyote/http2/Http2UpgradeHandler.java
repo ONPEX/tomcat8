@@ -594,8 +594,10 @@ public class Http2UpgradeHandler extends AbstractStream implements InternalHttpU
             }
         }
 
-        // Add date header unless the application has already set one
-        if (headers.getValue("date") == null) {
+
+        // Add date header unless it is an informational response or the
+        // application has already set one
+        if (statusCode >= 200 && headers.getValue("date") == null) {
             headers.addValue("date").setString(FastHttpDateFormat.getCurrentDate());
         }
     }
@@ -607,35 +609,47 @@ public class Http2UpgradeHandler extends AbstractStream implements InternalHttpU
             log.debug(sm.getString("upgradeHandler.writePushHeaders", connectionId,
                     stream.getIdentifier(), Integer.toString(pushedStreamId)));
         }
+
+        byte[] header = new byte[9];
+        ByteBuffer target = ByteBuffer.allocate(payloadSize);
+        boolean first = true;
+        State state = null;
+        byte[] pushedStreamIdBytes = new byte[4];
+        ByteUtil.set31Bits(pushedStreamIdBytes, 0, pushedStreamId);
         // This ensures the Stream processing thread has control of the socket.
         synchronized (socketWrapper) {
-            byte[] header = new byte[9];
-            ByteBuffer target = ByteBuffer.allocate(payloadSize);
-            boolean first = true;
-            State state = null;
-            byte[] pushedStreamIdBytes = new byte[4];
-            ByteUtil.set31Bits(pushedStreamIdBytes, 0, pushedStreamId);
             target.put(pushedStreamIdBytes);
             while (state != State.COMPLETE) {
                 state = getHpackEncoder().encode(coyoteRequest.getMimeHeaders(), target);
                 target.flip();
-                ByteUtil.setThreeBytes(header, 0, target.limit());
-                if (first) {
-                    first = false;
-                    header[3] = FrameType.PUSH_PROMISE.getIdByte();
+                if (state == State.COMPLETE || target.limit() > 0) {
+                    ByteUtil.setThreeBytes(header, 0, target.limit());
+                    if (first) {
+                        first = false;
+                        header[3] = FrameType.PUSH_PROMISE.getIdByte();
+                    } else {
+                        header[3] = FrameType.CONTINUATION.getIdByte();
+                    }
+                    if (state == State.COMPLETE) {
+                        header[4] += FLAG_END_OF_HEADERS;
+                    }
+                    if (log.isDebugEnabled()) {
+                        log.debug(target.limit() + " bytes");
+                    }
+                    ByteUtil.set31Bits(header, 5, stream.getIdentifier().intValue());
+                    try {
+                        socketWrapper.write(true, header, 0, header.length);
+                        socketWrapper.write(true, target);
+                        socketWrapper.flush(true);
+                    } catch (IOException ioe) {
+                        handleAppInitiatedIOException(ioe);
+                    }
+                }
+                if (state == State.UNDERFLOW && target.limit() == 0) {
+                    target = ByteBuffer.allocate(target.capacity() * 2);
                 } else {
-                    header[3] = FrameType.CONTINUATION.getIdByte();
+                    target.clear();
                 }
-                if (state == State.COMPLETE) {
-                    header[4] += FLAG_END_OF_HEADERS;
-                }
-                if (log.isDebugEnabled()) {
-                    log.debug(target.limit() + " bytes");
-                }
-                ByteUtil.set31Bits(header, 5, stream.getIdentifier().intValue());
-                socketWrapper.write(true, header, 0, header.length);
-                socketWrapper.write(true, target);
-                socketWrapper.flush(true);
             }
         }
     }
