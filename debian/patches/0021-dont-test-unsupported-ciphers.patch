@@ -3,7 +3,7 @@ Author: Emmanuel Bourg <ebourg@apache.org>
 Forwarded: not-needed
 --- a/test/org/apache/tomcat/util/net/openssl/ciphers/TesterOpenSSL.java
 +++ b/test/org/apache/tomcat/util/net/openssl/ciphers/TesterOpenSSL.java
-@@ -100,6 +100,7 @@
+@@ -104,6 +104,7 @@
          unimplemented.add(Cipher.SSL2_RC4_128_EXPORT40_WITH_MD5);
          unimplemented.add(Cipher.SSL2_IDEA_128_CBC_WITH_MD5);
          unimplemented.add(Cipher.SSL2_DES_192_EDE3_CBC_WITH_MD5);
