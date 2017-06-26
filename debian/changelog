@@ -3,6 +3,7 @@ tomcat8 (8.5.16-1) UNRELEASED; urgency=medium
   * Team upload.
   * New upstream release
     - Refreshed the patches
+  * Standards-Version updated to 4.0.0
 
  -- Emmanuel Bourg <ebourg@apache.org>  Mon, 26 Jun 2017 14:56:03 +0200
 
