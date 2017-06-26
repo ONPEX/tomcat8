@@ -28,7 +28,7 @@ Last-Update: 2013-08-01
  </Context>]]></source>
 --- a/conf/catalina.policy
 +++ b/conf/catalina.policy
-@@ -202,14 +202,14 @@
+@@ -203,7 +203,7 @@
  // - default CATALINA_HOME == CATALINA_BASE
  // - CATALINA_HOME != CATALINA_BASE, per instance Manager in CATALINA_BASE
  // - CATALINA_HOME != CATALINA_BASE, shared Manager in CATALINA_HOME
@@ -37,11 +37,32 @@ Last-Update: 2013-08-01
      permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina";
      permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.ha.session";
      permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.manager";
-     permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.manager.util";
+@@ -211,7 +211,7 @@
      permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.util";
+     permission org.apache.catalina.security.DeployXmlPermission "manager";
  };
 -grant codeBase "file:${catalina.home}/webapps/manager/-" {
 +grant codeBase "file:${catalina.home}/../tomcat8-admin/manager/-" {
      permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina";
      permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.ha.session";
      permission java.lang.RuntimePermission "accessClassInPackage.org.apache.catalina.manager";
+@@ -226,10 +226,10 @@
+ // - default CATALINA_HOME == CATALINA_BASE
+ // - CATALINA_HOME != CATALINA_BASE, per instance Host Manager in CATALINA_BASE
+ // - CATALINA_HOME != CATALINA_BASE, shared Host Manager in CATALINA_HOME
+-grant codeBase "file:${catalina.base}/webapps/host-manager/-" {
++grant codeBase "file:${catalina.base}/../tomcat8-admin/host-manager/-" {
+     permission org.apache.catalina.security.DeployXmlPermission "host-manager";
+ };
+-grant codeBase "file:${catalina.home}/webapps/host-manager/-" {
++grant codeBase "file:${catalina.home}/../tomcat8-admin/host-manager/-" {
+     permission org.apache.catalina.security.DeployXmlPermission "host-manager";
+ };
+ 
+@@ -275,4 +275,4 @@
+ //
+ // The permissions granted to a specific JAR
+ // grant codeBase "war:file:${catalina.base}/webapps/examples.war*/WEB-INF/lib/foo.jar" {
+-// };
+\ No newline at end of file
++// };
