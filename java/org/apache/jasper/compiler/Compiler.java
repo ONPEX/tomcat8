@@ -69,6 +69,7 @@ public abstract class Compiler {
 
     protected Node.Nodes pageNodes;
 
+
     // ------------------------------------------------------------ Constructor
 
     public void init(JspCompilationContext ctxt, JspServletWrapper jsw) {
@@ -90,6 +91,7 @@ public abstract class Compiler {
     public Node.Nodes getPageNodes() {
         return this.pageNodes;
     }
+
 
     /**
      * Compile the jsp file into equivalent servlet in .java file

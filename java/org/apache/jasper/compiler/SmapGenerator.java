@@ -63,6 +63,17 @@ public class SmapGenerator {
         outputFileName = x;
     }
 
+
+    /**
+     * Sets the default and only stratum for the smap.
+     *
+     * @param stratum the SmapStratum object to add
+     */
+    public synchronized void setStratum(SmapStratum stratum) {
+        addStratum(stratum, true);
+    }
+
+
     /**
      * Adds the given SmapStratum object, representing a Stratum with
      * logically associated FileSection and LineSection blocks, to
@@ -74,7 +85,10 @@ public class SmapGenerator {
      * @param defaultStratum if <tt>true</tt>, this SmapStratum is considered
      *                to represent the default SMAP stratum unless
      *                overwritten
+     *
+     * @deprecated Use {@link #setStratum(SmapStratum)}
      */
+    @Deprecated
     public synchronized void addStratum(SmapStratum stratum,
                                         boolean defaultStratum) {
         strata.add(stratum);
@@ -88,7 +102,10 @@ public class SmapGenerator {
      * @param smap the SMAP to embed
      * @param stratumName the name of the stratum output by the compilation
      *                    that produced the <tt>smap</tt> to be embedded
+     *
+     * @deprecated Unused. This will be removed in Tomcat 9.0.x
      */
+    @Deprecated
     public synchronized void addSmap(String smap, String stratumName) {
         embedded.add("*O " + stratumName + "\n"
                    + smap
@@ -100,7 +117,10 @@ public class SmapGenerator {
      * SMAPs or not.  Intended for situations without an SMAP resolver.
      *
      * @param status If <tt>false</tt>, ignore any embedded SMAPs.
+     *
+     * @deprecated Unused. Will be removed in Tomcat 9.0.x
      */
+    @Deprecated
     public void setDoEmbedded(boolean status) {
         doEmbedded = status;
     }
@@ -146,10 +166,11 @@ public class SmapGenerator {
     //*********************************************************************
     // For testing (and as an example of use)...
 
+    @SuppressWarnings("deprecation")
     public static void main(String args[]) {
         SmapGenerator g = new SmapGenerator();
         g.setOutputFileName("foo.java");
-        SmapStratum s = new SmapStratum("JSP");
+        SmapStratum s = new SmapStratum();
         s.addFile("foo.jsp");
         s.addFile("bar.jsp", "/foo/foo/bar.jsp");
         s.addLineData(1, "foo.jsp", 1, 1, 1);

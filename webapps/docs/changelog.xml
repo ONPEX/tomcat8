@@ -44,7 +44,220 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues do not "pop up" wrt. others).
 -->
-<section name="Tomcat 8.5.15 (markt)">
+<section name="Tomcat 8.5.16 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        <bug>61072</bug>: Respect the documentation statements that allow
+        using the platform default secure random for session id generation.
+        (remm)
+      </fix>
+      <fix>
+        Correct the javadoc for
+        <code>o.a.c.connector.CoyoteAdapter#parseSessionCookiesId</code>.
+        Patch provided by John Andrew (XUZHOUWANG) via Github. (violetagg)
+      </fix>
+      <fix>
+        <bug>61101</bug>: CORS filter should set Vary header in response.
+        Submitted by Rick Riemer. (remm)
+      </fix>
+      <add>
+        <bug>61105</bug>: Add a new JULI FileHandler configuration for
+        specifying the maximum number of days to keep the log files.
+        (violetagg)
+      </add>
+      <fix>
+        <bug>61125</bug>: Ensure that <code>WarURLConnection</code> returns the
+        correct value for calls to <code>getLastModified()</code> as this is
+        required for the correct detection of JSP modifications when the JSP is
+        packaged in a WAR file. (markt)
+      </fix>
+      <fix>
+        Improve the <code>SSLValve</code> so it is able to handle client
+        certificate headers from Nginx. Based on a patch by Lucas Ventura Carro.
+        (markt)
+      </fix>
+      <fix>
+        <bug>61134</bug>: Do not use '[' and ']' symbols around substituted
+        text fragments when generating the default error pages. Patch provided
+        by Katya Todorova. (violetagg)
+      </fix>
+      <fix>
+        <bug>61154</bug>: Allow the Manager and Host Manager web applications to
+        start by default when running under a security manager. This was
+        accomplished by adding a custom permission,
+        <code>org.apache.catalina.security.DeployXmlPermission</code>, that
+        permits an application to use a <code>META-INF/context.xml</code> file
+        and then granting that permission to the Manager and Host Manager.
+        (markt)
+      </fix>
+      <fix>
+        <bug>61173</bug>: Polish the javadoc for
+        <code>o.a.catalina.startup.Tomcat</code>. Patch provided by
+        peterhansson_se. (violetagg)
+      </fix>
+      <add>
+        A new configuration property <code>crawlerIps</code> is added to the
+        <code>o.a.catalina.valves.CrawlerSessionManagerValve</code>. Using this
+        property one can specify a regular expression that will be used to
+        identify crawlers based on their IP address. Based on a patch provided
+        by Tetradeus. (violetagg)
+      </add>
+      <fix>
+        <bug>61180</bug>: Log a warning message rather than an information
+        message if it takes more than 100ms to initialised a
+        <code>SecureRandom</code> instance for a web application to use to
+        generate session identifiers. Patch provided by Piotr Chlebda. (markt)
+      </fix>
+      <fix>
+        <bug>61185</bug>: When an asynchronous request is dispatched via
+        <code>AsyncContext.dispatch()</code> ensure that
+        <code>getRequestURI()</code> for the dispatched request matches that of
+        the original request. (markt)
+      </fix>
+      <fix>
+        <bug>61197</bug>: Ensure that the charset name used in the
+        <code>Content-Type</code> header has exactly the same form as that
+        provided by the application. This reverts a behavioural change in
+        9.0.0.M21 that caused problems for some clients. (markt)
+      </fix>
+      <fix>
+        <bug>61201</bug>: Ensure that the <code>SCRIPT_NAME</code> environment
+        variable for CGI executables is populated in a consistent way regardless
+        of how the CGI servlet is mapped to a request. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        <bug>61086</bug>: Explicitly signal an empty request body for HTTP 205
+        responses. (markt)
+      </fix>
+      <fix>
+        <bug>61120</bug>: Do not ignore path parameters when processing HTTP/2
+        requests. (markt)
+      </fix>
+      <fix>
+        Revert a change introduced in the fix for bug <bug>60718</bug> that
+        changed the status code recorded in the access log when the client
+        dropped the connection from 200 to 500. (markt)
+      </fix>
+      <fix>
+        Add additional syncs to the SSL session object provided by the OpenSSL
+        engine so that a concurrent destruction cannot cause a JVM crash.
+        (remm)
+      </fix>
+      <fix>
+        <bug>61195</bug>: Backport, with deprecation where appropriate, the
+        endpoint and protocol property changes from 9.0.x to ease migration from
+        8.5.x to 9.0.x. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        <bug>44787</bug>: Improve error message when JSP compiler configuration
+        options are not valid. (markt)
+      </fix>
+      <fix>
+        <bug>61137</bug>: <code>j.s.jsp.tagext.TagLibraryInfo#uri</code> and
+        <code>j.s.jsp.tagext.TagLibraryInfo#prefix</code> fields should not be
+        final. Patch provided by Katya Todorova. (violetagg)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="WebSocket">
+    <changelog>
+      <fix>
+        Correct the log message when a <code>MessageHandler</code> for
+        <code>PongMessage</code> does not implement
+        <code>MessageHandler.Whole</code>. (rjung)
+      </fix>
+      <add>
+        Introduce new API <code>o.a.tomcat.websocket.WsSession#suspend</code>/
+        <code>o.a.tomcat.websocket.WsSession#resume</code> that can be used to
+        suspend/resume reading of the incoming messages. (violetagg)
+      </add>
+      <fix>
+        Improve thread-safety of <code>Future</code>s used to report the result
+        of sending WebSocket messages. (markt)
+      </fix>
+      <fix>
+        <bug>61183</bug>: Correct a regression in the previous fix for
+        <bug>58624</bug> that could trigger a deadlock depending on the locking
+        strategy employed by the client code. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <fix>
+        Better document the meaning of the trimSpaces option for Jasper. (markt)
+      </fix>
+      <fix>
+        <bug>61150</bug>: Configure the Manager and Host-Manager web
+        applications to permit serialization and deserialization of
+        CRSFPreventionFilter related session objects to avoid warning messages
+        and/or stack traces on web application stop and/or start when running
+        under a security manager. (markt)
+      </fix>
+      <fix>
+        Correct the TLS configuration documentation to remove SSLv2 and SSLv3
+        from the list of supported protocols. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Tribes">
+    <changelog>
+      <add>
+        Add JMX support for Tribes components. (kfujino)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <add>
+        <bug>45832</bug>: Add HTTP DIGEST authentication support to the Catalina
+        Ant tasks used to communicate with the Manager application. (markt)
+      </add>
+      <fix>
+        <bug>45879</bug>: Add the <code>RELEASE-NOTES</code> file to the root of
+        the installation created by the Tomcat installer for Windows to make it
+        easier for users to identify the installed Tomcat version. (markt)
+      </fix>
+      <fix>
+        <bug>61055</bug>: Clarify the code comments in the rewrite valve to make
+        clear that there are no plans to provide proxy support for this valve
+        since Tomcat does not have proxy capabilities. (markt)
+      </fix>
+      <fix>
+        <bug>61076</bug>: Document the <code>altDDName</code> attribute for the
+        <code>Context</code> element. (markt)
+      </fix>
+      <fix>
+        Correct typo in Jar Scan Filter Configuration Reference.
+        Issue reported via comments.apache.org. (violetagg)
+      </fix>
+      <fix>
+        <bug>61145</bug>: Add missing <code>@Documented</code> annotation to
+        annotations in the annotations API. Patch provided by Katya Todorova.
+        (markt)
+      </fix>
+      <fix>
+        <bug>61146</bug>: Add missing <code>lookup()</code> method to
+        <code>@EJB</code> annotation in the annotations API. Patch provided by
+        Katya Todorova. (markt)
+      </fix>
+      <fix>
+        Correct typo in Context Container Configuration Reference.
+        Patch provided by Katya Todorova. (violetagg)
+      </fix>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.5.15 (markt)" rtext="2017-05-10">
   <subsection name="General">
     <changelog>
       <add>
@@ -73,10 +286,10 @@
         reserved character for JMX object names). (markt)
       </fix>
       <scode>
-        Start to switch to using <code>Charset</code> rather than
-        <code>String</code> to store encoding configuration settings to reduce
-        the number of places the associated <code>Charset</code> needs to be
-        looked up. (markt)
+        Switch to using <code>Charset</code> rather than <code>String</code> to
+        store encoding settings (including for configuration and for the
+        <code>Content-Type header</code>) to reduce the number of places the
+        associated <code>Charset</code> needs to be looked up. (markt)
       </scode>
       <fix>
         Use a more reliable mechanism for the <code>DefaultServlet</code> when
@@ -182,7 +395,7 @@
     </changelog>
   </subsection>
 </section>
-<section name="Tomcat 8.5.14 (markt)" rtext="release in progress">
+<section name="Tomcat 8.5.14 (markt)" rtext="2017-04-18">
   <subsection name="Catalina">
     <changelog>
       <fix>
@@ -2357,7 +2570,7 @@
         (markt)
       </fix>
       <fix>
-        Work around <a herf="https://github.com/openssl/openssl/issues/188">a
+        Work around <a href="https://github.com/openssl/openssl/issues/188">a
         known issue in OpenSSL</a> that does not permit the TLS handshake to be
         failed if the ALPN negotiation fails. (markt)
       </fix>
