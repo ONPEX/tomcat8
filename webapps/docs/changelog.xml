@@ -44,7 +44,84 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues do not "pop up" wrt. others).
 -->
-<section name="Tomcat 8.5.16 (markt)">
+<section name="Tomcat 8.5.17 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        <bug>49464</bug>: Improve the Default Servlet's handling of static files
+        when the file encoding is not compatible with the required response
+        encoding. (markt)
+      </fix>
+      <fix>
+        <bug>61214</bug>: Remove deleted attribute <code>servlets</code> from
+        the Context MBean description. Patch provided by Alexis Hassler. (markt)
+      </fix>
+      <fix>
+        <bug>61215</bug>: Correctly define <code>addConnectorPort</code> and
+        <code>invalidAuthenticationWhenDeny</code> in the
+        <code>mbean-descriptors.xml</code> file for the
+        <code>org.apache.catalina.valves</code> package so that the attributes
+        are accessible via JMX. (markt)
+      </fix>
+      <fix>
+        Make asynchronous error handling more robust. In particular ensure that
+        <code>onError()</code> is called for any registered
+        <code>AsyncListener</code>s after an I/O error on a non-container
+        thread. (markt)
+      </fix>
+      <fix>
+        Additional permission for deleting files is granted to JULI as it is
+        required by FileHandler when running under a Security Manager. The
+        thread that cleans the log files is marked as daemon thread.
+        (violetagg)
+      </fix>
+      <fix>
+        <bug>61229</bug>: Correct a regression in 8.5.15 that broke WebDAV
+        handling for resources with names that included a <code>&amp;</code>
+        character. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        Restore the ability to configure support for SSLv3. Enabling this
+        protocol will trigger a warning in the logs since it is known to be
+        insecure. (markt)
+      </fix>
+      <fix>
+        Do not log a warning when a <code>null</code> session is returned for an
+        OpenSSL based TLS session since this is expected when session tickets
+        are enabled. (markt)
+      </fix>
+      <fix>
+        When the access log valve logs a TLS related request attribute and the
+        NIO2 connector is used with OpenSSL, ensure that the TLS attributes are
+        available to the access log valve when the connection is closing.
+        (markt)
+      </fix>
+      <fix>
+        <bug>60461</bug>: Sync SSL session access for the APR connector. (remm)
+      </fix>
+      <add>
+        To ease migration from 8.0.x to 8.5.x, if the HTTP or AJP BIO connector
+        is explicitly configured, rather than failing to start the connector
+        because BIO has been removed, automatically switch to NIO and continue.
+        A warning will be logged to alert the user to the switch. (markt)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <fix>
+        Remove references to the Loader attribute
+        <code>searchExternalFirst</code> from the documentation since the
+        attribute is no longer supported. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.5.16 (markt)" rtext="2017-06-26">
   <subsection name="Catalina">
     <changelog>
       <fix>
@@ -119,7 +196,7 @@
         <bug>61197</bug>: Ensure that the charset name used in the
         <code>Content-Type</code> header has exactly the same form as that
         provided by the application. This reverts a behavioural change in
-        9.0.0.M21 that caused problems for some clients. (markt)
+        8.5.15 that caused problems for some clients. (markt)
       </fix>
       <fix>
         <bug>61201</bug>: Ensure that the <code>SCRIPT_NAME</code> environment

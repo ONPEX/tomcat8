@@ -32,6 +32,8 @@ import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
 import java.util.ArrayList;
@@ -73,6 +75,7 @@ import org.apache.catalina.connector.ResponseFacade;
 import org.apache.catalina.util.RequestUtil;
 import org.apache.catalina.util.ServerInfo;
 import org.apache.catalina.util.URLEncoder;
+import org.apache.tomcat.util.buf.B2CConverter;
 import org.apache.tomcat.util.res.StringManager;
 import org.apache.tomcat.util.security.PrivilegedGetTccl;
 import org.apache.tomcat.util.security.PrivilegedSetTccl;
@@ -237,6 +240,7 @@ public class DefaultServlet extends HttpServlet {
      * the platform default is used.
      */
     protected String fileEncoding = null;
+    private Charset fileEncodingCharset = null;
 
     /**
      * Minimum size for sendfile usage in bytes.
@@ -294,6 +298,16 @@ public class DefaultServlet extends HttpServlet {
                 Integer.parseInt(getServletConfig().getInitParameter("sendfileSize")) * 1024;
 
         fileEncoding = getServletConfig().getInitParameter("fileEncoding");
+        if (fileEncoding == null) {
+            fileEncodingCharset = Charset.defaultCharset();
+            fileEncoding = fileEncodingCharset.name();
+        } else {
+            try {
+                fileEncodingCharset = B2CConverter.getCharset(fileEncoding);
+            } catch (UnsupportedEncodingException e) {
+                throw new ServletException(e);
+            }
+        }
 
         globalXsltFile = getServletConfig().getInitParameter("globalXsltFile");
         contextXsltFile = getServletConfig().getInitParameter("contextXsltFile");
@@ -930,12 +944,7 @@ public class DefaultServlet extends HttpServlet {
             } catch (IllegalStateException e) {
                 // If it fails, we try to get a Writer instead if we're
                 // trying to serve a text file
-                if (!usingPrecompressedVersion &&
-                        ((contentType == null) ||
-                                (contentType.startsWith("text")) ||
-                                (contentType.endsWith("xml")) ||
-                                (contentType.contains("/javascript")))
-                        ) {
+                if (!usingPrecompressedVersion && isText(contentType)) {
                     writer = response.getWriter();
                     // Cannot reliably serve partial content with a Writer
                     ranges = FULL;
@@ -945,7 +954,7 @@ public class DefaultServlet extends HttpServlet {
             }
         }
 
-        // Check to see if a Filter, Valve of wrapper has written some content.
+        // Check to see if a Filter, Valve or wrapper has written some content.
         // If it has, disable range requests and setting of a content length
         // since neither can be done reliably.
         ServletResponse r = response;
@@ -1000,32 +1009,51 @@ public class DefaultServlet extends HttpServlet {
                     } else {
                         renderResult = resource.getInputStream();
                     }
-                    copy(resource, renderResult, writer, encoding);
+                    copy(renderResult, writer, encoding);
                 } else {
                     // Output is via an InputStream
                     if (resource.isDirectory()) {
                         renderResult = render(getPathPrefix(request), resource, encoding);
                     } else {
                         // Output is content of resource
-                        if (!checkSendfile(request, response, resource,
-                                contentLength, null)) {
-                            // sendfile not possible so check if resource
-                            // content is available directly
-                            byte[] resourceBody = resource.getContent();
-                            if (resourceBody == null) {
-                                // Resource content not available, use
-                                // inputstream
-                                renderResult = resource.getInputStream();
-                            } else {
-                                // Use the resource content directly
-                                ostream.write(resourceBody);
+                        // Check to see if conversion is required
+                        String outputEncoding = response.getCharacterEncoding();
+                        Charset charset = B2CConverter.getCharset(outputEncoding);
+                        if (!isText(contentType) || charset.equals(fileEncodingCharset)) {
+                            if (!checkSendfile(request, response, resource,
+                                    contentLength, null)) {
+                                // sendfile not possible so check if resource
+                                // content is available directly
+                                byte[] resourceBody = resource.getContent();
+                                if (resourceBody == null) {
+                                    // Resource content not available, use
+                                    // inputstream
+                                    renderResult = resource.getInputStream();
+                                } else {
+                                    // Use the resource content directly
+                                    ostream.write(resourceBody);
+                                }
                             }
+                        } else {
+                            // A conversion is required from fileEncoding to
+                            // response encoding
+                            byte[] resourceBody = resource.getContent();
+                            InputStream source;
+                            if (resourceBody == null) {
+                                source = resource.getInputStream();
+                            } else {
+                                source = new ByteArrayInputStream(resourceBody);
+                            }
+                            OutputStreamWriter osw = new OutputStreamWriter(ostream, charset);
+                            PrintWriter pw = new PrintWriter(osw);
+                            copy(source, pw, fileEncoding);
+                            pw.flush();
                         }
                     }
                     // If a stream was configured, it needs to be copied to
                     // the output (this method closes the stream)
                     if (renderResult != null) {
-                        copy(resource, renderResult, ostream);
+                        copy(renderResult, ostream);
                     }
                 }
             }
@@ -1090,6 +1118,13 @@ public class DefaultServlet extends HttpServlet {
             }
         }
     }
+
+
+    private boolean isText(String contentType) {
+        return  contentType == null || contentType.startsWith("text") ||
+                contentType.endsWith("xml") || contentType.contains("/javascript");
+    }
+
 
     private boolean pathEndsWithCompressedExtension(String path) {
         for (CompressionFormat format : compressionFormats) {
@@ -2136,10 +2171,29 @@ public class DefaultServlet extends HttpServlet {
      * @param ostream   The output stream to write to
      *
      * @exception IOException if an input/output error occurs
+     *
+     * @deprecated Unused. This will be removed in Tomcat 9.
+     *             Use {@link #copy(InputStream, ServletOutputStream)}
      */
+    @Deprecated
     protected void copy(WebResource resource, InputStream is,
                       ServletOutputStream ostream)
         throws IOException {
+        copy(is, ostream);
+    }
+
+
+    /**
+     * Copy the contents of the specified input stream to the specified
+     * output stream, and ensure that both streams are closed before returning
+     * (even in the face of an exception).
+     *
+     * @param is        The input stream to read the source resource from
+     * @param ostream   The output stream to write to
+     *
+     * @exception IOException if an input/output error occurs
+     */
+    protected void copy(InputStream is, ServletOutputStream ostream) throws IOException {
 
         IOException exception = null;
         InputStream istream = new BufferedInputStream(is, input);
@@ -2167,24 +2221,36 @@ public class DefaultServlet extends HttpServlet {
      * @param encoding  The encoding to use when reading the source input stream
      *
      * @exception IOException if an input/output error occurs
+     *
+     * @deprecated Unused. This will be removed in Tomcat 9.
+     *             Use {@link #copy(InputStream, PrintWriter, String)}
      */
+    @Deprecated
     protected void copy(WebResource resource, InputStream is, PrintWriter writer,
             String encoding) throws IOException {
+        copy(is, writer,encoding);
+    }
 
+
+    /**
+     * Copy the contents of the specified input stream to the specified
+     * output stream, and ensure that both streams are closed before returning
+     * (even in the face of an exception).
+     *
+     * @param is        The input stream to read the source resource from
+     * @param writer    The writer to write to
+     * @param encoding  The encoding to use when reading the source input stream
+     *
+     * @exception IOException if an input/output error occurs
+     */
+    protected void copy(InputStream is, PrintWriter writer, String encoding) throws IOException {
         IOException exception = null;
-
-        InputStream resourceInputStream = null;
-        if (resource.isFile()) {
-            resourceInputStream = resource.getInputStream();
-        } else {
-            resourceInputStream = is;
-        }
 
         Reader reader;
         if (encoding == null) {
-            reader = new InputStreamReader(resourceInputStream);
+            reader = new InputStreamReader(is);
         } else {
-            reader = new InputStreamReader(resourceInputStream, encoding);
+            reader = new InputStreamReader(is, encoding);
         }
 
         // Copy the input stream to the output stream
@@ -2194,8 +2260,9 @@ public class DefaultServlet extends HttpServlet {
         reader.close();
 
         // Rethrow any exception that has occurred
-        if (exception != null)
+        if (exception != null) {
             throw exception;
+        }
     }
 
 
