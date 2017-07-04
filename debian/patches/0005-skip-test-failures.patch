@@ -3,7 +3,7 @@ Author: Emmanuel Bourg <ebourg@apache.org>
 Forwarded: not-needed
 --- a/build.xml
 +++ b/build.xml
-@@ -1371,8 +1371,10 @@
+@@ -1372,8 +1372,10 @@
        </filterchain>
      </concat>
  
