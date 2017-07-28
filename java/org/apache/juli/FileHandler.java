@@ -389,6 +389,17 @@ public class FileHandler extends Handler {
         if (suffix == null) {
             suffix = getProperty(className + ".suffix", ".log");
         }
+
+        // https://bz.apache.org/bugzilla/show_bug.cgi?id=61232
+        boolean shouldCheckForRedundantSeparator = !rotatable && !prefix.isEmpty()
+                && !suffix.isEmpty();
+        // assuming separator is just one char, if there are use cases with
+        // more, the notion of separator might be introduced
+        if (shouldCheckForRedundantSeparator
+                && (prefix.charAt(prefix.length() - 1) == suffix.charAt(0))) {
+            suffix = suffix.substring(1);
+        }
+
         pattern = Pattern.compile("^(" + Pattern.quote(prefix) + ")\\d{4}-\\d{1,2}-\\d{1,2}("
                 + Pattern.quote(suffix) + ")$");
         String sMaxDays = getProperty(className + ".maxDays", String.valueOf(DEFAULT_MAX_DAYS));
@@ -561,7 +572,11 @@ public class FileHandler extends Handler {
     }
 
     private String obtainDateFromPath(Path path) {
-        String date = path.getFileName().toString();
+        Path fileName = path.getFileName();
+        if (fileName == null) {
+            return null;
+        }
+        String date = fileName.toString();
         if (pattern.matcher(date).matches()) {
             date = date.substring(prefix.length());
             return date.substring(0, date.length() - suffix.length());

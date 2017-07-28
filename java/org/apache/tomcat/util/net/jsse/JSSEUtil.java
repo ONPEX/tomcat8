@@ -52,7 +52,6 @@ import javax.net.ssl.ManagerFactoryParameters;
 import javax.net.ssl.SSLSessionContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509KeyManager;
 
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
@@ -171,7 +170,6 @@ public class JSSEUtil extends SSLUtilBase {
 
     @Override
     public KeyManager[] getKeyManagers() throws Exception {
-        String keystoreType = certificate.getCertificateKeystoreType();
         String keyAlias = certificate.getCertificateKeyAlias();
         String algorithm = sslHostConfig.getKeyManagerAlgorithm();
         String keyPass = certificate.getCertificateKeyPassword();
@@ -181,16 +179,23 @@ public class JSSEUtil extends SSLUtilBase {
             keyPass = certificate.getCertificateKeystorePassword();
         }
 
-        KeyManager[] kms = null;
-
         KeyStore ks = certificate.getCertificateKeystore();
 
-        if (ks == null) {
-            // create an in-memory keystore and import the private key
-            // and the certificate chain from the PEM files
-            ks = KeyStore.getInstance("JKS");
-            ks.load(null, null);
+        /*
+         * Always use an in memory key store.
+         * For PEM format keys and certificates, it allows them to be imported
+         * into the expected format.
+         * For Java key stores, it enables Tomcat to handle the case where
+         * multiple keys exist in the key store, each with a different password.
+         * The KeyManagerFactory can't handle that so using an in memory key
+         * store with just the required key works around that.
+         */
+        KeyStore inMemoryKeyStore = KeyStore.getInstance("JKS");
+        inMemoryKeyStore.load(null,  null);
 
+        char[] keyPassArray = keyPass.toCharArray();
+
+        if (ks == null) {
             PEMFile privateKeyFile = new PEMFile(SSLHostConfig.adjustRelativePath
                     (certificate.getCertificateKeyFile() != null ? certificate.getCertificateKeyFile() : certificate.getCertificateFile()),
                     keyPass);
@@ -206,33 +211,27 @@ public class JSSEUtil extends SSLUtilBase {
             if (keyAlias == null) {
                 keyAlias = "tomcat";
             }
-            ks.setKeyEntry(keyAlias, privateKeyFile.getPrivateKey(), keyPass.toCharArray(), chain.toArray(new Certificate[chain.size()]));
+            inMemoryKeyStore.setKeyEntry(keyAlias, privateKeyFile.getPrivateKey(), keyPass.toCharArray(), chain.toArray(new Certificate[chain.size()]));
+        } else {
+            if (keyAlias != null && !ks.isKeyEntry(keyAlias)) {
+                throw new IOException(sm.getString("jsse.alias_no_key_entry", keyAlias));
+            } else if (keyAlias == null) {
+                Enumeration<String> aliases = ks.aliases();
+                if (!aliases.hasMoreElements()) {
+                    throw new IOException(sm.getString("jsse.noKeys"));
+                }
+                keyAlias = aliases.nextElement();
+            }
+
+            inMemoryKeyStore.setKeyEntry(keyAlias, ks.getKey(keyAlias, keyPassArray), keyPassArray,
+                    ks.getCertificateChain(keyAlias));
         }
 
-        if (keyAlias != null && !ks.isKeyEntry(keyAlias)) {
-            throw new IOException(sm.getString("jsse.alias_no_key_entry", keyAlias));
-        }
 
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
-        kmf.init(ks, keyPass.toCharArray());
+        kmf.init(inMemoryKeyStore, keyPassArray);
 
-        kms = kmf.getKeyManagers();
-        if (kms == null) {
-            return kms;
-        }
-
-        if (keyAlias != null) {
-            String alias = keyAlias;
-            // JKS keystores always convert the alias name to lower case
-            if ("JKS".equals(keystoreType)) {
-                alias = alias.toLowerCase(Locale.ENGLISH);
-            }
-            for(int i = 0; i < kms.length; i++) {
-                kms[i] = new JSSEKeyManager((X509KeyManager)kms[i], alias);
-            }
-        }
-
-        return kms;
+        return kmf.getKeyManagers();
     }
 
 
