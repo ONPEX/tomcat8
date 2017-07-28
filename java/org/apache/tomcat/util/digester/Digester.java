@@ -1988,7 +1988,7 @@ public class Digester extends DefaultHandler2 {
                     newAttrs.setValue(i, newValue);
                 }
             } catch (Exception e) {
-                // ignore - let the attribute have its original value
+                log.warn(sm.getString("digester.failedToUpdateAttributes", newAttrs.getLocalName(i), value), e);
             }
         }
 

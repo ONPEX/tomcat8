@@ -44,7 +44,49 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues do not "pop up" wrt. others).
 -->
-<section name="Tomcat 8.5.18 (markt)">
+<section name="Tomcat 8.5.19 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        Performance improvements for service loader look-ups (and look-ups of
+        other class loader resources) when the web application is deployed in a
+        packed WAR file. (markt)
+      </fix>
+      <fix>
+        <bug>61253</bug>: Add warn message when Digester.updateAttributes
+        throws an exception instead of ignoring it. (csutherl)
+      </fix>
+      <fix>
+        Correct a further regression in the fix for <bug>49464</bug> that could
+        cause an byte order mark character to appear at the start of content
+        included by the <code>DefaultServlet</code>. (markt)
+      </fix>
+      <fix>
+        <bug>61313</bug>: Make the read timeout configurable in the
+        <code>JNDIRealm</code> and ensure that a read timeout will result in an
+        attempt to fail over to the alternateURL. Based on patches by Peter
+        Maloney and Felix Schumacher. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <fix>
+        Correct the documentation for how <code>StandardRoot</code> is
+        configured. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <fix>
+        <bug>61316</bug>: Fix corruption of UTF-16 encoded source files in
+        released source distributions. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.5.18 (markt)" rtext="not released">
   <subsection name="Catalina">
     <changelog>
       <fix>

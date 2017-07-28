@@ -263,6 +263,7 @@
     <include name="**/*.launch"/>
     <include name="**/*.license"/>
     <include name="**/*.manifest"/>
+    <include name="**/*.md"/>
     <include name="**/*.mdl"/>
     <include name="**/*.MF"/>
     <include name="**/*.notice"/>
@@ -284,6 +285,10 @@
     <include name="**/*.xml"/>
     <include name="**/*.xsd"/>
     <include name="**/*.xsl"/>
+    <!-- Exclude files that use 16-bit encodings. -->
+    <!-- This prevents fixcrlf corrupting them during a release -->
+    <exclude name="**/bom-none-prolog-utf16?e.jspx"/>
+    <exclude name="**/bom-utf16?e-prolog-*.jsp*"/>
   </patternset>
 
 
@@ -562,6 +567,7 @@
         <!-- Exclude simple test files -->
         <exclude name="test/webapp/bug53257/**/*.txt"/>
         <exclude name="test/webapp/bug49nnn/bug49464-ibm850.txt"/>
+        <exclude name="test/webapp/bug49nnn/bug49464-utf8-bom.txt"/>
         <exclude name="test/webapp-fragments/WEB-INF/classes/*.txt"/>
         <exclude name="test/webresources/**"/>
         <!-- Exclude test files with unusual encodings -->
