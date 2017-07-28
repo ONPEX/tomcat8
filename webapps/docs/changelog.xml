@@ -44,7 +44,64 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues do not "pop up" wrt. others).
 -->
-<section name="Tomcat 8.5.17 (markt)">
+<section name="Tomcat 8.5.18 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        <bug>61232</bug>: When log rotation is disabled only one separator will
+        be used when generating the log file name. For example if the prefix is
+        <code>catalina.</code> and the suffix is <code>.log</code> then the log
+        file name will be <code>catalina.log</code> instead of
+        <code>catalina..log</code>. Patch provided by Katya Stoycheva.
+        (violetagg)
+      </fix>
+      <fix>
+        <bug>61264</bug>: Correct a regression in the refactoring to use
+        <code>Charset</code> rather than <code>String</code> to store request
+        character encoding that prevented <code>getReader()</code> throwing an
+        <code>UnsupportedEncodingException</code> if the user agent specifies
+        an unsupported character encoding. (markt)
+      </fix>
+      <fix>
+        Correct a regression in the fix for <bug>49464</bug> that could cause an
+        incorrect <code>Content-Length</code> header to be sent by the
+        <code>DefaultServlet</code> if the encoding of a static is not
+        consistent with the encoding of the response. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        Enable TLS connectors to use Java key stores that contain multiple keys
+        where each key has a separate password. Based on a patch by Frank
+        Taffelt. (markt)
+      </fix>
+      <fix>
+        Improve the handling of HTTP/2 stream resets due to excessive headers
+        when a continuation frame is used. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <add>
+        <bug>53031</bug>: Add support for the <code>fork</code> option when
+        compiling JSPs with the Jasper Ant task and javac. (markt)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <add>
+        <bug>52791</bug>: Add the ability to set the defaults used by the
+        Windows installer from a configuration file. Patch provided by Sandra
+        Madden. (markt)
+      </add>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.5.17 (markt)" rtext="not released">
   <subsection name="Catalina">
     <changelog>
       <fix>
