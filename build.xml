@@ -445,7 +445,6 @@
   <!-- Pattern sets for embedded JARs -->
   <!-- Every standard pattern set above should be included in an embedded JAR -->
   <patternset id="files.tomcat-embed-core" >
-    <patternset refid="files.annotations-api" />
     <patternset refid="files.catalina" />
     <patternset refid="files.servlet-api" />
     <patternset refid="files.jaspic-api" />
@@ -460,7 +459,6 @@
     <include name="org/apache/tomcat/jni/**" />
     <include name="org/apache/jk/**" />
     <include name="org/apache/tomcat/util/**" />
-
   </patternset>
 
   <patternset id="files.tomcat-embed-jasper" >
@@ -484,6 +482,9 @@
     <!--<patternset refid="files.catalina-ha" />-->
     <!-- Ant tasks not included in embedded -->
     <!--<patternset refid="files.catalina-ant" />-->
+    <!-- Annotations API is a separate dependency to avoid JRE 9 issues -->
+    <!-- See BZ 61439 -->
+    <!--<patternset refid="files.annotations-api" />-->
 
   <!-- Pattern sets for extras JARs -->
   <patternset id="files.tomcat-extras-ws">
@@ -566,8 +567,6 @@
         <exclude name="java/org/apache/**/parser/Token*.java" />
         <!-- Exclude simple test files -->
         <exclude name="test/webapp/bug53257/**/*.txt"/>
-        <exclude name="test/webapp/bug49nnn/bug49464-ibm850.txt"/>
-        <exclude name="test/webapp/bug49nnn/bug49464-utf8-bom.txt"/>
         <exclude name="test/webapp-fragments/WEB-INF/classes/*.txt"/>
         <exclude name="test/webresources/**"/>
         <!-- Exclude test files with unusual encodings -->
@@ -1229,6 +1228,7 @@
     <copy file="${tomcat-dbcp.jar}" todir="${tomcat.embed}"
       failonerror="false"/>
     <copy file="${jdt.jar}" todir="${tomcat.embed}" />
+    <copy file="${annotations-api.jar}" todir="${tomcat.embed}" />
 
     <!-- Note the meta-inf below will work as long as there is only one JAR
          that needs to add entries. If there is more than one a more complex
@@ -1590,6 +1590,7 @@
               excludeFilter="res/findbugs/filter-false-positives.xml" >
       <sourcePath path="${basedir}/java" />
       <class location="${tomcat.classes}" />
+      <class location="${test.classes}" />
       <auxClasspath>
         <fileset file="${jdt.jar}" />
         <fileset file="${ant.core.lib}" />

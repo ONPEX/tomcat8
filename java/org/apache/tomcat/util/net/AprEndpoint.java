@@ -43,6 +43,7 @@ import org.apache.tomcat.jni.OS;
 import org.apache.tomcat.jni.Poll;
 import org.apache.tomcat.jni.Pool;
 import org.apache.tomcat.jni.SSL;
+import org.apache.tomcat.jni.SSLConf;
 import org.apache.tomcat.jni.SSLContext;
 import org.apache.tomcat.jni.SSLContext.SNICallBack;
 import org.apache.tomcat.jni.SSLSocket;
@@ -55,6 +56,7 @@ import org.apache.tomcat.util.collections.SynchronizedStack;
 import org.apache.tomcat.util.net.AbstractEndpoint.Acceptor.AcceptorState;
 import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 import org.apache.tomcat.util.net.SSLHostConfig.Type;
+import org.apache.tomcat.util.net.openssl.OpenSSLConf;
 import org.apache.tomcat.util.net.openssl.OpenSSLEngine;
 
 
@@ -370,6 +372,7 @@ public class AprEndpoint extends AbstractEndpoint<Long> implements SNICallBack {
         // Initialize SSL if needed
         if (isSSLEnabled()) {
             for (SSLHostConfig sslHostConfig : sslHostConfigs.values()) {
+                sslHostConfig.setConfigType(getSslConfigType());
                 createSSLContext(sslHostConfig);
             }
             SSLHostConfig defaultSSLHostConfig = sslHostConfigs.get(getDefaultSSLHostConfigName());
@@ -544,6 +547,81 @@ public class AprEndpoint extends AbstractEndpoint<Long> implements SNICallBack {
             String[] protocolsArray = protocols.toArray(new String[0]);
             SSLContext.setAlpnProtos(ctx, protocolsArray, SSL.SSL_SELECTOR_FAILURE_NO_ADVERTISE);
         }
+
+        // If client authentication is being used, OpenSSL requires that
+        // this is set so always set it in case an app is configured to require
+        // it
+        SSLContext.setSessionIdContext(ctx, SSLContext.DEFAULT_SESSION_ID_CONTEXT);
+
+        long cctx;
+        OpenSSLConf openSslConf = sslHostConfig.getOpenSslConf();
+        if (openSslConf != null) {
+            // Create OpenSSLConfCmd context if used
+            try {
+                if (log.isDebugEnabled())
+                    log.debug(sm.getString("endpoint.apr.makeConf"));
+                cctx = SSLConf.make(rootPool,
+                                    SSL.SSL_CONF_FLAG_FILE |
+                                    SSL.SSL_CONF_FLAG_SERVER |
+                                    SSL.SSL_CONF_FLAG_CERTIFICATE |
+                                    SSL.SSL_CONF_FLAG_SHOW_ERRORS);
+            } catch (Exception e) {
+                throw new Exception(sm.getString("endpoint.apr.errMakeConf"), e);
+            }
+            if (cctx != 0) {
+                // Check OpenSSLConfCmd if used
+                if (log.isDebugEnabled())
+                    log.debug(sm.getString("endpoint.apr.checkConf"));
+                try {
+                    if (!openSslConf.check(cctx)) {
+                        log.error(sm.getString("endpoint.apr.errCheckConf"));
+                        throw new Exception(sm.getString("endpoint.apr.errCheckConf"));
+                    }
+                } catch (Exception e) {
+                    throw new Exception(sm.getString("endpoint.apr.errCheckConf"), e);
+                }
+                // Apply OpenSSLConfCmd if used
+                if (log.isDebugEnabled())
+                    log.debug(sm.getString("endpoint.apr.applyConf"));
+                try {
+                    if (!openSslConf.apply(cctx, ctx)) {
+                        log.error(sm.getString("endpoint.apr.errApplyConf"));
+                        throw new Exception(sm.getString("endpoint.apr.errApplyConf"));
+                    }
+                } catch (Exception e) {
+                    throw new Exception(sm.getString("endpoint.apr.errApplyConf"), e);
+                }
+                // Reconfigure the enabled protocols
+                int opts = SSLContext.getOptions(ctx);
+                List<String> enabled = new ArrayList<>();
+                // Seems like there is no way to explicitly disable SSLv2Hello
+                // in OpenSSL so it is always enabled
+                enabled.add(Constants.SSL_PROTO_SSLv2Hello);
+                if ((opts & SSL.SSL_OP_NO_TLSv1) == 0) {
+                    enabled.add(Constants.SSL_PROTO_TLSv1);
+                }
+                if ((opts & SSL.SSL_OP_NO_TLSv1_1) == 0) {
+                    enabled.add(Constants.SSL_PROTO_TLSv1_1);
+                }
+                if ((opts & SSL.SSL_OP_NO_TLSv1_2) == 0) {
+                    enabled.add(Constants.SSL_PROTO_TLSv1_2);
+                }
+                if ((opts & SSL.SSL_OP_NO_SSLv2) == 0) {
+                    enabled.add(Constants.SSL_PROTO_SSLv2);
+                }
+                if ((opts & SSL.SSL_OP_NO_SSLv3) == 0) {
+                    enabled.add(Constants.SSL_PROTO_SSLv3);
+                }
+                sslHostConfig.setEnabledProtocols(
+                        enabled.toArray(new String[enabled.size()]));
+                // Reconfigure the enabled ciphers
+                sslHostConfig.setEnabledCiphers(SSLContext.getCiphers(ctx));
+            }
+        } else {
+            cctx = 0;
+        }
+
+        sslHostConfig.setOpenSslConfContext(Long.valueOf(cctx));
         sslHostConfig.setOpenSslContext(Long.valueOf(ctx));
     }
 
@@ -554,6 +632,11 @@ public class AprEndpoint extends AbstractEndpoint<Long> implements SNICallBack {
         if (ctx != null) {
             SSLContext.free(ctx.longValue());
             sslHostConfig.setOpenSslContext(null);
+        }
+        Long cctx = sslHostConfig.getOpenSslConfContext();
+        if (cctx != null) {
+            SSLConf.free(cctx.longValue());
+            sslHostConfig.setOpenSslConfContext(null);
         }
     }
 
@@ -1999,7 +2082,7 @@ public class AprEndpoint extends AbstractEndpoint<Long> implements SNICallBack {
                      0, data.fdpool);
                 // Set the socket to nonblocking mode
                 Socket.timeoutSet(data.socket, 0);
-                while (true) {
+                while (sendfileRunning) {
                     long nw = Socket.sendfilen(data.socket, data.fd,
                                                data.pos, data.length, 0);
                     if (nw < 0) {
@@ -2830,11 +2913,16 @@ public class AprEndpoint extends AbstractEndpoint<Long> implements SNICallBack {
 
 
         @Override
-        public void doClientAuth(SSLSupport sslSupport) {
+        public void doClientAuth(SSLSupport sslSupport) throws IOException {
             long socket = getSocket().longValue();
             // Configure connection to require a certificate
-            SSLSocket.setVerify(socket, SSL.SSL_CVERIFY_REQUIRE, -1);
-            SSLSocket.renegotiate(socket);
+            try {
+                SSLSocket.setVerify(socket, SSL.SSL_CVERIFY_REQUIRE, -1);
+                SSLSocket.renegotiate(socket);
+            } catch (Throwable t) {
+                ExceptionUtils.handleThrowable(t);
+                throw new IOException(sm.getString("socket.sslreneg"), t);
+            }
         }
 
 

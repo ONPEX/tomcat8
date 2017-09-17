@@ -44,7 +44,290 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues do not "pop up" wrt. others).
 -->
-<section name="Tomcat 8.5.19 (markt)">
+<section name="Tomcat 8.5.21 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        Before generating an error page in the <code>ErrorReportValve</code>,
+        check to see if I/O is still permitted for the associated connection
+        before generating the error page so that the page generation can be
+        skipped if the page is never going to be sent. (markt)
+      </fix>
+      <add>
+        <bug>61189</bug>: Add the ability to set environment variables for
+        individual CGI scripts. Based on a patch by jm009. (markt)
+      </add>
+      <fix>
+        <bug>61210</bug>: When running under a SecurityManager, do not print a
+        warning about not being able to read a logging configuration file when
+        that file does not exist. (markt)
+      </fix>
+      <add>
+        <bug>61280</bug>: Add RFC 7617 support to the
+        <code>BasicAuthenticator</code>. Note that the default configuration
+        does not change the existing behaviour. (markt)
+      </add>
+      <fix>
+        <bug>61424</bug>: Avoid a possible <code>StackOverflowError</code> when
+        running under a <code>SecurityManager</code> and using
+        <code>Subject.doAs()</code>. (markt)
+      </fix>
+      <add>
+        <bug>61489</bug>: When using the CGI servlet, make the generation of
+        command line arguments from the query string (as per section 4.4 of RFC
+        3875) optional. The feature is enabled by default for consistency with
+        previous releases. Based on a patch by jm009. (markt)
+      </add>
+      <fix>
+        <bug>61503</bug>: This corrects a potential regression in the fix for
+        <bug>60940</bug> with an alternative solution that adds the
+        <code>JarEntry</code> objects normally skipped by a
+        <code>JarInputStream</code> only if those entries exist. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <update>
+        The minimum required Tomcat Native version has been increased to 1.2.14.
+        This version includes a new API needed for correct client certificate
+        support when using a Java connector with OpenSSL TLS implementation and
+        support for the <code>SSL_CONF</code> OpenSSL API. (rjung)
+      </update>
+      <add>
+        Add support for the OpenSSL <code>SSL_CONF</code> API when using
+        TLS with OpenSSL implementation. It can be used by adding
+        <code>OpenSSLConf</code> elements underneath <code>SSLHostConfig</code>.
+        The new element contains a list of <code>OpenSSLConfCmd</code> elements,
+        each with the attributes <code>name</code> and <code>value</code>.
+        (rjung)
+      </add>
+      <fix>
+        When using a Java connector in combination with the OpenSSL TLS
+        implementation, do not configure each SSL connection object via
+        the OpenSSLEngine. For OpenSSL the SSL object inherits its
+        settings from the SSL_CTX which we have already configured.
+        (rjung)
+      </fix>
+      <fix>
+        When using JSSE TLS configuration with the OpenSSL implementation and
+        client certificates: include client CA subjects in the TLS handshake
+        so that the client can choose an appropriate client certificate to
+        present. (rjung)
+      </fix>
+      <fix>
+        If an invalid option is specified for the
+        <code>certificateVerification</code> attribute of an
+        <code>SSLHostConfig</code> element, treat it as <code>required</code>
+        which is the most secure / restrictive option in addition to reporting
+        the configuration error. (markt)
+      </fix>
+      <fix>
+        Improve the handling of client disconnections during the TLS
+        renegotiation handshake. (markt)
+      </fix>
+      <fix>
+        Prevent exceptions being thrown during normal shutdown of NIO
+        connections. This enables TLS connections to close cleanly. (markt)
+      </fix>
+      <fix>
+        Fix possible race condition when setting IO listeners on an upgraded
+        connection. (remm)
+      </fix>
+      <fix>
+        <bug>48655</bug>: Enable Tomcat to shutdown cleanly when using sendfile,
+        the APR/native connector and a multi-part download is in progress.
+        (markt)
+      </fix>
+      <fix>
+        <bug>58244</bug>: Handle the case when OpenSSL resumes a TLS session
+        using a ticket and the full client certificate chain is not available.
+        In this case the client certificate without the chain will be presented
+        to the application. (markt)
+      </fix>
+      <fix>
+        Improve the warning message when JSSE and OpenSSL configuration styles
+        are mixed on the same <code>SSLHostConfig</code>. (markt)
+      </fix>
+      <fix>
+        <bug>61415</bug>: Fix TLS renegotiation with OpenSSL based connections
+        and session caching. (markt)
+      </fix>
+      <fix>
+        Delay checking that the configured attributes for an
+        <code>SSLHostConfig</code> instance are consistent with the configured
+        SSL implementation until <code>Connector</code> start to avoid incorrect
+        warnings when the SSL implementation changes during initialisation.
+        (markt)
+      </fix>
+      <fix>
+        <bug>61450</bug>: Fix default key alias algorithm. (remm)
+      </fix>
+      <fix>
+        <bug>61451</bug>: Correct a regression in the fix to enable the use of
+        Java key stores that contained multiple keys that did not all have the
+        same password. The regression broke support for any key store that did
+        not store keys in PKCS #8 format such as hardware key stores and Windows
+        key stores. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="WebSocket">
+    <changelog>
+      <fix>
+        <bug>60523</bug>: Reduce the number of packets used to send WebSocket
+        messages by not flushing between the header and the payload when the
+        two are written together. (markt)
+      </fix>
+      <fix>
+        <bug>61491</bug>: When using the <code>permessage-deflate</code>
+        extension, correctly handle the sending of empty messages after
+        non-empty messages to avoid the <code>IllegalArgumentException</code>.
+        (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Web applications">
+    <changelog>
+      <fix>
+        Show connector cipher list in the manager web application in the
+        correct cipher order. (rjung)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Tribes">
+    <changelog>
+      <fix>
+        To avoid unexpected session timeout notification from backup session,
+        update the access time when receiving the map member notification
+        message. (kfujino)
+      </fix>
+      <fix>
+        Add member info to the log message when the failure detection check
+        fails in <code>TcpFailureDetector</code>. (kfujino)
+      </fix>
+      <fix>
+        Avoid Ping timeout until the added map member by receiving
+        <code>MSG_START</code> message is completely started. (kfujino)
+      </fix>
+      <fix>
+        When sending a channel message, make sure that the Sender has connected.
+        (kfujino)
+      </fix>
+      <fix>
+        Correct the backup node selection logic that node 0 is returned twice
+        consecutively. (kfujino)
+      </fix>
+      <fix>
+        Fix race condition of <code>responseMap</code> in
+        <code>RpcChannel</code>. (kfujino)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="jdbc-pool">
+    <changelog>
+      <fix>
+        <bug>61391</bug>: Ensure that failed queries are logged if the
+        <code>SlowQueryReport</code> interceptor is configured to do so and the
+        connection has been abandoned. Patch provided by Craig Webb. (markt)
+      </fix>
+      <fix>
+        <bug>61425</bug>: Ensure that transaction of idle connection has
+        terminated  when the <code>testWhileIdle</code> is set to
+        <code>true</code> and <code>defaultAutoCommit</code> is set to
+        <code>false</code>. Patch provided by WangZheng. (kfujino)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <fix>
+        <bug>61439</bug>: Remove the Java Annotation API classes from
+        tomcat-embed-core.jar and package them in a separate JAR in the
+        embedded distribution to provide end users with greater flexibility to
+        handle potential conflicts with the JRE and/or other JARs. (markt)
+      </fix>
+      <fix>
+        <bug>61441</bug>: Improve the detection of <code>JAVA_HOME</code> by the
+        <code>daemon.sh</code> script when running on a platform where Java has
+        been installed from an RPM. (rjung)
+      </fix>
+      <update>
+        Update the packaged version of the Tomcat Native Library to 1.2.14 to
+        pick up the latest Windows binaries built with APR 1.6.2 and OpenSSL
+        1.0.2l. (markt)
+      </update>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.5.20 (markt)" rtext="2017-08-08">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        Revert the fix for <bug>49464</bug> since it continued to trigger
+        regressions. (markt)
+      </fix>
+      <fix>
+        Correct a bug in the <code>PushBuilder</code> implementation that
+        meant push URLs containing <code>%nn</code> sequences were not correctly
+        decoded. Identified by FindBugs. (markt)
+      </fix>
+      <add>
+        <bug>61164</bug>: Add support for the <code>%X</code> pattern in the
+        <code>AccessLogValve</code> that reports the connection status at the
+        end of the request. Patch provided by Zemian Deng. (markt)
+      </add>
+      <fix>
+        <bug>61351</bug>: Correctly handle %nn decoding of URL patterns in
+        web.xml and similar locations that may legitimately contain characters
+        that are not permitted by RFC 3986. (markt)
+      </fix>
+      <add>
+        <bug>61366</bug>: Add a new attribute, <code>localDataSource</code>, to
+        the <code>JDBCStore</code> that allows the Store to be configured to use
+        a DataSource defined by the web application rather than the default of
+        using a globally defined DataSource. Patch provided by Jonathan
+        Horowitz. (markt)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <fix>
+        <bug>61086</bug>: Ensure to explicitly signal an empty request body for
+        HTTP 205 responses. Additional fix to r1795278. Based on a patch
+        provided by Alexandr Saperov. (violetagg)
+      </fix>
+      <update>
+        <bug>61345</bug>: Add a server listener that can be used to do system
+        property replacement from the property source configured in the
+        digester. (remm)
+      </update>
+      <add>
+        Add additional logging to record problems that occur while waiting for
+        the NIO pollers to stop during the Connector stop process. (markt)
+      </add>
+    </changelog>
+  </subsection>
+  <subsection name="Jasper">
+    <changelog>
+      <fix>
+        <bug>61364</bug>: Ensure that files are closed after detecting encoding
+        of JSPs so that files do not remain locked by the file system. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="WebSocket">
+    <changelog>
+      <add>
+        <bug>57767</bug>: Add support to the WebSocket client for following
+        redirects when attempting to establish a WebSocket connection. Patch
+        provided by J Fernandez. (markt)
+      </add>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.5.19 (markt)" rtext="2017-07-28">
   <subsection name="Catalina">
     <changelog>
       <fix>

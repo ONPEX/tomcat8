@@ -26,6 +26,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class SSLContext {
 
+    public static final byte[] DEFAULT_SESSION_ID_CONTEXT =
+            new byte[] { 'd', 'e', 'f', 'a', 'u', 'l', 't' };
+
     /**
      * Create a new SSL context.
      *
@@ -109,6 +112,13 @@ public final class SSLContext {
      * @param options  See SSL.SSL_OP_* for option flags.
      */
     public static native void clearOptions(long ctx, int options);
+
+    /**
+     * Returns all cipher suites that are enabled for negotiation in an SSL handshake.
+     * @param ctx Server or Client context to use.
+     * @return ciphers
+     */
+    public static native String[] getCiphers(long ctx);
 
     /**
      * Sets the "quiet shutdown" flag for <b>ctx</b> to be
@@ -562,4 +572,12 @@ public final class SSLContext {
      * @return {@code true} if success, {@code false} otherwise.
      */
     public static native boolean addChainCertificateRaw(long ctx, byte[] cert);
+
+    /**
+     * Add a CA certificate we accept as issuer for peer certs
+     * @param ctx Server or Client context to use.
+     * @param cert Byte array with the certificate in DER encoding.
+     * @return {@code true} if success, {@code false} otherwise.
+     */
+    public static native boolean addClientCACertificateRaw(long ctx, byte[] cert);
 }

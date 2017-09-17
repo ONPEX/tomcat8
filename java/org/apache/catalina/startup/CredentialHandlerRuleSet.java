@@ -25,6 +25,7 @@ import org.apache.tomcat.util.digester.RuleSetBase;
  * CredentialHandler such as the <code>NestedCredentialHandler</code> that used
  * nested CredentialHandlers.</p>
  */
+@SuppressWarnings("deprecation")
 public class CredentialHandlerRuleSet extends RuleSetBase {
 
 
@@ -61,7 +62,6 @@ public class CredentialHandlerRuleSet extends RuleSetBase {
      *  trailing slash character)
      */
     public CredentialHandlerRuleSet(String prefix) {
-        this.namespaceURI = null;
         this.prefix = prefix;
     }
 

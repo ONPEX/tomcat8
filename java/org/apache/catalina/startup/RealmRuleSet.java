@@ -28,6 +28,7 @@ import org.apache.tomcat.util.digester.RuleSetBase;
  * element.  This <code>RuleSet</code> supports Realms such as the
  * <code>CombinedRealm</code> that used nested Realms.</p>
  */
+@SuppressWarnings("deprecation")
 public class RealmRuleSet extends RuleSetBase {
 
 
@@ -64,7 +65,6 @@ public class RealmRuleSet extends RuleSetBase {
      *  trailing slash character)
      */
     public RealmRuleSet(String prefix) {
-        this.namespaceURI = null;
         this.prefix = prefix;
     }
 

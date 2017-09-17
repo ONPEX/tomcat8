@@ -14,36 +14,30 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.apache.coyote.http2;
+package org.apache.tomcat.util.net.openssl;
 
-public class Flags {
+import java.io.Serializable;
 
-    private Flags() {
-        // Utility class. Hide default constructor
+public class OpenSSLConfCmd implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    private String name = null;
+    private String value = null;
+
+    public String getName() {
+        return name;
     }
 
-
-    public static boolean isEndOfStream(int flags) {
-        return (flags & 0x01) != 0;
+    public void setName(String name) {
+        this.name = name;
     }
 
-
-    public static boolean isAck(int flags) {
-        return (flags & 0x01) != 0;
+    public String getValue() {
+        return value;
     }
 
-
-    public static boolean isEndOfHeaders(int flags) {
-        return (flags & 0x04) != 0;
-    }
-
-
-    public static boolean hasPadding(int flags) {
-        return (flags & 0x08) != 0;
-    }
-
-
-    public static boolean hasPriority(int flags) {
-        return (flags & 0x20) != 0;
+    public void setValue(String value) {
+        this.value = value;
     }
 }

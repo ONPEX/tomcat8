@@ -30,7 +30,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.PropertyPermission;
+import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -292,7 +294,7 @@ public class Digester extends DefaultHandler2 {
      * The Log to which most logging calls will be made.
      */
     protected Log log = LogFactory.getLog(Digester.class);
-    protected StringManager sm = StringManager.getManager(Digester.class);
+    protected static final StringManager sm = StringManager.getManager(Digester.class);
 
     /**
      * The Log to which all SAX event related logging calls will be made.
@@ -303,6 +305,30 @@ public class Digester extends DefaultHandler2 {
     public Digester() {
         if (propertySource != null) {
             source = new IntrospectionUtils.PropertySource[] { propertySource, source[0] };
+        }
+    }
+
+
+    public static void replaceSystemProperties() {
+        Log log = LogFactory.getLog(Digester.class);
+        if (propertySource != null) {
+            IntrospectionUtils.PropertySource[] propertySources =
+                    new IntrospectionUtils.PropertySource[] { propertySource };
+            Properties properties = System.getProperties();
+            Set<String> names = properties.stringPropertyNames();
+            for (String name : names) {
+                String value = System.getProperty(name);
+                if (value != null) {
+                    try {
+                        String newValue = IntrospectionUtils.replaceProperties(value, null, propertySources);
+                        if (!value.equals(newValue)) {
+                            System.setProperty(name, newValue);
+                        }
+                    } catch (Exception e) {
+                        log.warn(sm.getString("digester.failedToUpdateSystemProperty", name, value), e);
+                    }
+                }
+            }
         }
     }
 
@@ -580,7 +606,10 @@ public class Digester extends DefaultHandler2 {
     /**
      * @return the namespace URI that will be applied to all subsequently
      * added <code>Rule</code> objects.
+     *
+     * @deprecated Unused. Will be removed in Tomcat 9
      */
+    @Deprecated
     public String getRuleNamespaceURI() {
 
         return (getRules().getNamespaceURI());
@@ -595,7 +624,10 @@ public class Digester extends DefaultHandler2 {
      * @param ruleNamespaceURI Namespace URI that must match on all
      *  subsequently added rules, or <code>null</code> for matching
      *  regardless of the current namespace URI
+     *
+     * @deprecated Unused. Will be removed in Tomcat 9
      */
+    @Deprecated
     public void setRuleNamespaceURI(String ruleNamespaceURI) {
 
         getRules().setNamespaceURI(ruleNamespaceURI);
@@ -1551,6 +1583,7 @@ public class Digester extends DefaultHandler2 {
     public void addRuleSet(RuleSet ruleSet) {
 
         String oldNamespaceURI = getRuleNamespaceURI();
+        @SuppressWarnings("deprecation")
         String newNamespaceURI = ruleSet.getNamespaceURI();
         if (log.isDebugEnabled()) {
             if (newNamespaceURI == null) {

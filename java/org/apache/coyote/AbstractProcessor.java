@@ -302,6 +302,10 @@ public abstract class AbstractProcessor extends AbstractProcessorLight implement
             ((AtomicBoolean) param).set(getErrorState().isError());
             break;
         }
+        case IS_IO_ALLOWED: {
+            ((AtomicBoolean) param).set(getErrorState().isIoAllowed());
+            break;
+        }
         case CLOSE_NOW: {
             // Prevent further writes to the response
             setSwallowResponse();
@@ -363,7 +367,11 @@ public abstract class AbstractProcessor extends AbstractProcessorLight implement
             break;
         }
         case REQ_SSL_CERTIFICATE: {
-            sslReHandShake();
+            try {
+                sslReHandShake();
+            } catch (IOException ioe) {
+                setErrorState(ErrorState.CLOSE_CONNECTION_NOW, ioe);
+            }
             break;
         }
 
@@ -625,8 +633,12 @@ public abstract class AbstractProcessor extends AbstractProcessorLight implement
     /**
      * Processors that can perform a TLS re-handshake (e.g. HTTP/1.1) should
      * override this method and implement the re-handshake.
+     *
+     * @throws IOException If authentication is required then there will be I/O
+     *                     with the client and this exception will be thrown if
+     *                     that goes wrong
      */
-    protected void sslReHandShake() {
+    protected void sslReHandShake() throws IOException {
         // NO-OP
     }
 
