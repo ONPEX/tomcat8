@@ -34,6 +34,7 @@ import javax.net.ssl.TrustManagerFactory;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.compat.JreCompat;
+import org.apache.tomcat.util.net.openssl.OpenSSLConf;
 import org.apache.tomcat.util.net.openssl.ciphers.Cipher;
 import org.apache.tomcat.util.net.openssl.ciphers.OpenSSLCipherConfigurationParser;
 import org.apache.tomcat.util.res.StringManager;
@@ -69,10 +70,11 @@ public class SSLHostConfig implements Serializable {
 
     private String hostName = DEFAULT_SSL_HOST_NAME;
 
+    private transient Long openSslConfContext = new Long(0);
     // OpenSSL can handle multiple certs in a single config so the reference to
     // the context is here at the virtual host level. JSSE can't so the
     // reference is held on the certificate.
-    private transient Long openSslContext;
+    private transient Long openSslContext = new Long(0);
 
     // Configuration properties
 
@@ -113,10 +115,21 @@ public class SSLHostConfig implements Serializable {
     private boolean disableCompression = true;
     private boolean disableSessionTickets = false;
     private boolean insecureRenegotiation = false;
+    private OpenSSLConf openSslConf = null;
 
     public SSLHostConfig() {
         // Set defaults that can't be (easily) set when defining the fields.
         setProtocols(Constants.SSL_PROTO_ALL);
+    }
+
+
+    public Long getOpenSslConfContext() {
+        return openSslConfContext;
+    }
+
+
+    public void setOpenSslConfContext(Long openSslConfContext) {
+        this.openSslConfContext = openSslConfContext;
     }
 
 
@@ -188,7 +201,7 @@ public class SSLHostConfig implements Serializable {
     }
 
 
-    void setEnabledProtocols(String[] enabledProtocols) {
+    public void setEnabledProtocols(String[] enabledProtocols) {
         this.enabledProtocols = enabledProtocols;
     }
 
@@ -203,7 +216,7 @@ public class SSLHostConfig implements Serializable {
     }
 
 
-    void setEnabledCiphers(String[] enabledCiphers) {
+    public void setEnabledCiphers(String[] enabledCiphers) {
         this.enabledCiphers = enabledCiphers;
     }
 
@@ -235,6 +248,22 @@ public class SSLHostConfig implements Serializable {
         }
 
         certificates.add(certificate);
+    }
+
+
+    public OpenSSLConf getOpenSslConf() {
+        return openSslConf;
+    }
+
+
+    public void setOpenSslConf(OpenSSLConf conf) {
+        if (conf == null) {
+            throw new IllegalArgumentException(sm.getString("sslHostConfig.opensslconf.null"));
+        } else if (openSslConf != null) {
+            throw new IllegalArgumentException(sm.getString("sslHostConfig.opensslconf.alreadySet"));
+        }
+        setProperty("<OpenSSLConf>", Type.OPENSSL);
+        openSslConf = conf;
     }
 
 
@@ -277,7 +306,15 @@ public class SSLHostConfig implements Serializable {
 
 
     public void setCertificateVerification(String certificateVerification) {
-        this.certificateVerification = CertificateVerification.fromString(certificateVerification);
+        try {
+            this.certificateVerification =
+                    CertificateVerification.fromString(certificateVerification);
+        } catch (IllegalArgumentException iae) {
+            // If the specified value is not recognised, default to the
+            // strictest possible option.
+            this.certificateVerification = CertificateVerification.REQUIRED;
+            throw iae;
+        }
     }
 
 

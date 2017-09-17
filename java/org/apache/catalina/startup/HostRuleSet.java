@@ -31,6 +31,7 @@ import org.apache.tomcat.util.digester.RuleSetBase;
  *
  * @author Craig R. McClanahan
  */
+@SuppressWarnings("deprecation")
 public class HostRuleSet extends RuleSetBase {
 
 
@@ -63,7 +64,6 @@ public class HostRuleSet extends RuleSetBase {
      *  trailing slash character)
      */
     public HostRuleSet(String prefix) {
-        this.namespaceURI = null;
         this.prefix = prefix;
     }
 

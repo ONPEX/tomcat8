@@ -45,6 +45,12 @@ import org.apache.tomcat.websocket.server.WsContextListener;
  */
 public class TestCustomSsl extends TomcatBaseTest {
 
+    private static enum TrustType {
+        ALL,
+        CA,
+        NONE
+    }
+
     @Test
     public void testCustomSslImplementation() throws Exception {
 
@@ -67,7 +73,7 @@ public class TestCustomSsl extends TomcatBaseTest {
         connector.setProperty("sslProtocol", "tls");
 
         File keystoreFile =
-            new File("test/org/apache/tomcat/util/net/localhost.jks");
+            new File(TesterSupport.LOCALHOST_JKS);
         connector.setAttribute(
                 "keystoreFile", keystoreFile.getAbsolutePath());
 
@@ -86,16 +92,21 @@ public class TestCustomSsl extends TomcatBaseTest {
     }
 
     @Test
-    public void testCustomTrustManager1() throws Exception {
-        doTestCustomTrustManager(false);
+    public void testCustomTrustManagerAll() throws Exception {
+        doTestCustomTrustManager(TrustType.ALL);
     }
 
     @Test
-    public void testCustomTrustManager2() throws Exception {
-        doTestCustomTrustManager(true);
+    public void testCustomTrustManagerCA() throws Exception {
+        doTestCustomTrustManager(TrustType.CA);
     }
 
-    private void doTestCustomTrustManager(boolean serverTrustAll)
+    @Test
+    public void testCustomTrustManagerNone() throws Exception {
+        doTestCustomTrustManager(TrustType.NONE);
+    }
+
+    private void doTestCustomTrustManager(TrustType trustType)
             throws Exception {
 
         Tomcat tomcat = getTomcatInstance();
@@ -113,9 +124,12 @@ public class TestCustomSsl extends TomcatBaseTest {
             // Unexpected
             fail("Unexpected handler type");
         }
-        if (serverTrustAll) {
+        if (trustType.equals(TrustType.ALL)) {
             tomcat.getConnector().setAttribute("trustManagerClassName",
                     "org.apache.tomcat.util.net.TesterSupport$TrustAllCerts");
+        } else if (trustType.equals(TrustType.CA)) {
+            tomcat.getConnector().setAttribute("trustManagerClassName",
+                    "org.apache.tomcat.util.net.TesterSupport$SequentialTrustManager");
         }
 
         // Start Tomcat
@@ -135,22 +149,36 @@ public class TestCustomSsl extends TomcatBaseTest {
             rc = getUrl("https://localhost:" + getPort() + "/protected", res,
                 null, null);
         } catch (SocketException se) {
-            if (serverTrustAll) {
+            if (!trustType.equals(TrustType.NONE)) {
                 fail(se.getMessage());
                 se.printStackTrace();
             }
         } catch (SSLException he) {
-            if (serverTrustAll) {
+            if (!trustType.equals(TrustType.NONE)) {
                 fail(he.getMessage());
                 he.printStackTrace();
             }
         }
-        if (serverTrustAll) {
-            assertEquals(200, rc);
-            assertEquals("OK-" + TesterSupport.ROLE, res.toString());
-        } else {
+
+        if (trustType.equals(TrustType.CA)) {
+            if (log.isDebugEnabled()) {
+                int count = TesterSupport.getLastClientAuthRequestedIssuerCount();
+                log.debug("Last client KeyManager usage: " + TesterSupport.getLastClientAuthKeyManagerUsage() +
+                          ", " + count + " requested Issuers, first one: " +
+                          (count > 0 ? TesterSupport.getLastClientAuthRequestedIssuer(0).getName() : "NONE"));
+                log.debug("Expected requested Issuer: " + TesterSupport.getClientAuthExpectedIssuer());
+            }
+            assertTrue("Checking requested client issuer against " +
+                       TesterSupport.getClientAuthExpectedIssuer(),
+                       TesterSupport.checkLastClientAuthRequestedIssuers());
+        }
+
+        if (trustType.equals(TrustType.NONE)) {
             assertTrue(rc != 200);
             assertEquals("", res.toString());
+        } else {
+            assertEquals(200, rc);
+            assertEquals("OK-" + TesterSupport.ROLE, res.toString());
         }
     }
 }

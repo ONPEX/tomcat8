@@ -29,6 +29,7 @@ import org.apache.tomcat.util.digester.RuleSetBase;
  *
  * @author Craig R. McClanahan
  */
+@SuppressWarnings("deprecation")
 public class ContextRuleSet extends RuleSetBase {
 
 
@@ -81,7 +82,6 @@ public class ContextRuleSet extends RuleSetBase {
      *  created
      */
     public ContextRuleSet(String prefix, boolean create) {
-        this.namespaceURI = null;
         this.prefix = prefix;
         this.create = create;
     }

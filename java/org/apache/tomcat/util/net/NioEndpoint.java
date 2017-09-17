@@ -284,15 +284,17 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                 pollers[i] = null;
             }
             try {
-                getStopLatch().await(selectorTimeout + 100, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException ignore) {
+                if (!getStopLatch().await(selectorTimeout + 100, TimeUnit.MILLISECONDS)) {
+                    log.warn(sm.getString("endpoint.nio.stopLatchAwaitFail"));
+                }
+            } catch (InterruptedException e) {
+                log.warn(sm.getString("endpoint.nio.stopLatchAwaitInterrupted"), e);
             }
             shutdownExecutor();
             eventCache.clear();
             nioChannels.clear();
             processorCache.clear();
         }
-
     }
 
 
@@ -724,6 +726,22 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                     getHandler().release(ka);
                 }
                 if (key.isValid()) key.cancel();
+                // If it is available, close the NioChannel first which should
+                // in turn close the underlying SocketChannel. The NioChannel
+                // needs to be closed first, if available, to ensure that TLS
+                // connections are shut down cleanly.
+                if (ka != null) {
+                    try {
+                        ka.getSocket().close(true);
+                    } catch (Exception e){
+                        if (log.isDebugEnabled()) {
+                            log.debug(sm.getString(
+                                    "endpoint.debug.socketCloseFail"), e);
+                        }
+                    }
+                }
+                // The SocketChannel is also available via the SelectionKey. If
+                // it hasn't been closed in the block above, close it now.
                 if (key.channel().isOpen()) {
                     try {
                         key.channel().close();
@@ -732,16 +750,6 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                             log.debug(sm.getString(
                                     "endpoint.debug.channelCloseFail"), e);
                         }
-                    }
-                }
-                try {
-                    if (ka!=null) {
-                        ka.getSocket().close(true);
-                    }
-                } catch (Exception e){
-                    if (log.isDebugEnabled()) {
-                        log.debug(sm.getString(
-                                "endpoint.debug.socketCloseFail"), e);
                     }
                 }
                 try {
@@ -1374,18 +1382,14 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
 
 
         @Override
-        public void doClientAuth(SSLSupport sslSupport) {
+        public void doClientAuth(SSLSupport sslSupport) throws IOException {
             SecureNioChannel sslChannel = (SecureNioChannel) getSocket();
             SSLEngine engine = sslChannel.getSslEngine();
             if (!engine.getNeedClientAuth()) {
                 // Need to re-negotiate SSL connection
                 engine.setNeedClientAuth(true);
-                try {
-                    sslChannel.rehandshake(getEndpoint().getConnectionTimeout());
-                    ((JSSESupport) sslSupport).setSession(engine.getSession());
-                } catch (IOException ioe) {
-                    log.warn(sm.getString("socket.sslreneg",ioe));
-                }
+                sslChannel.rehandshake(getEndpoint().getConnectionTimeout());
+                ((JSSESupport) sslSupport).setSession(engine.getSession());
             }
         }
 

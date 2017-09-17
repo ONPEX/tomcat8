@@ -30,6 +30,7 @@ import org.apache.tomcat.util.digester.RuleSetBase;
  * @author Craig R. McClanahan
  * @author Remy Maucherat
  */
+@SuppressWarnings("deprecation")
 public class NamingRuleSet extends RuleSetBase {
 
 
@@ -62,7 +63,6 @@ public class NamingRuleSet extends RuleSetBase {
      *  trailing slash character)
      */
     public NamingRuleSet(String prefix) {
-        this.namespaceURI = null;
         this.prefix = prefix;
     }
 

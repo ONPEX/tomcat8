@@ -31,6 +31,7 @@ import org.xml.sax.Attributes;
  *
  * @author Craig R. McClanahan
  */
+@SuppressWarnings("deprecation")
 public class MemoryRuleSet extends RuleSetBase {
 
 
@@ -65,11 +66,8 @@ public class MemoryRuleSet extends RuleSetBase {
      *  trailing slash character)
      */
     public MemoryRuleSet(String prefix) {
-
         super();
-        this.namespaceURI = null;
         this.prefix = prefix;
-
     }
 
 
