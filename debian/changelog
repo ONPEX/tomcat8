@@ -5,6 +5,7 @@ tomcat8 (8.5.21-1) UNRELEASED; urgency=medium
   [ Emmanuel Bourg ]
   * New upstream release
     - Refreshed the patches
+    - Disabled Checkstyle
 
   [ Miguel Landaeta ]
   * Remove myself from uploaders. (Closes: #871892)
