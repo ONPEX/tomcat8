@@ -1,4 +1,4 @@
-tomcat8 (8.5.21-1) UNRELEASED; urgency=medium
+tomcat8 (8.5.21-1) unstable; urgency=medium
 
   * Team upload.
 
@@ -6,12 +6,15 @@ tomcat8 (8.5.21-1) UNRELEASED; urgency=medium
   * New upstream release
     - Refreshed the patches
     - Disabled Checkstyle
+  * Changed the Class-Path manifest entry of tomcat8-jasper.jar to use
+    the specification jars from libtomcat8-java instead of libservlet3.1-java
+    (Closes: #867247)
 
   [ Miguel Landaeta ]
   * Remove myself from uploaders. (Closes: #871892)
   * Update copyright info.
 
- -- Miguel Landaeta <nomadium@debian.org>  Thu, 10 Aug 2017 21:48:14 +0100
+ -- Emmanuel Bourg <ebourg@apache.org>  Wed, 20 Sep 2017 10:06:56 +0200
 
 tomcat8 (8.5.16-1) unstable; urgency=medium
 
