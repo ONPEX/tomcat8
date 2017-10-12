@@ -1,10 +1,10 @@
-tomcat8 (8.5.23-1) UNRELEASED; urgency=medium
+tomcat8 (8.5.23-1) unstable; urgency=medium
 
   * Team upload.
   * New upstream release
   * Standards-Version updated to 4.1.1
 
- -- Emmanuel Bourg <ebourg@apache.org>  Thu, 12 Oct 2017 23:58:19 +0200
+ -- Emmanuel Bourg <ebourg@apache.org>  Fri, 13 Oct 2017 00:01:48 +0200
 
 tomcat8 (8.5.21-1) unstable; urgency=medium
 
