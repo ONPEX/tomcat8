@@ -87,6 +87,53 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     // ------------------------------------------------ HTTP specific properties
     // ------------------------------------------ managed in the ProtocolHandler
 
+    private boolean allowHostHeaderMismatch = true;
+    /**
+     * Will Tomcat accept an HTTP 1.1 request where the host header does not
+     * agree with the host specified (if any) in the request line?
+     *
+     * @return {@code true} if Tomcat will allow such requests, otherwise
+     *         {@code false}
+     */
+    public boolean getAllowHostHeaderMismatch() {
+        return allowHostHeaderMismatch;
+    }
+    /**
+     * Will Tomcat accept an HTTP 1.1 request where the host header does not
+     * agree with the host specified (if any) in the request line?
+     *
+     * @param allowHostHeaderMismatch {@code true} to allow such requests,
+     *                                {@code false} to reject them with a 400
+     */
+    public void setAllowHostHeaderMismatch(boolean allowHostHeaderMismatch) {
+        this.allowHostHeaderMismatch = allowHostHeaderMismatch;
+    }
+
+
+    private boolean rejectIllegalHeaderName = false;
+    /**
+     * If an HTTP request is received that contains an illegal header name (i.e.
+     * the header name is not a token) will the request be rejected (with a 400
+     * response) or will the illegal header be ignored.
+     *
+     * @return {@code true} if the request will be rejected or {@code false} if
+     *         the header will be ignored
+     */
+    public boolean getRejectIllegalHeaderName() { return rejectIllegalHeaderName; }
+    /**
+     * If an HTTP request is received that contains an illegal header name (i.e.
+     * the header name is not a token) should the request be rejected (with a
+     * 400 response) or should the illegal header be ignored.
+     *
+     * @param rejectIllegalHeaderName   {@code true} to reject requests with
+     *                                  illegal header names, {@code false} to
+     *                                  ignore the header
+     */
+    public void setRejectIllegalHeaderName(boolean rejectIllegalHeaderName) {
+        this.rejectIllegalHeaderName = rejectIllegalHeaderName;
+    }
+
+
     /**
      * Maximum size of the post which will be saved when processing certain
      * requests, such as a POST.
@@ -807,7 +854,8 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     @SuppressWarnings("deprecation")
     @Override
     protected Processor createProcessor() {
-        Http11Processor processor = new Http11Processor(getMaxHttpHeaderSize(), getEndpoint(),
+        Http11Processor processor = new Http11Processor(getMaxHttpHeaderSize(),
+                getAllowHostHeaderMismatch(), getRejectIllegalHeaderName(), getEndpoint(),
                 getMaxTrailerSize(), allowedTrailerHeaders, getMaxExtensionSize(),
                 getMaxSwallowSize(), httpUpgradeProtocols, getSendReasonPhrase());
         processor.setAdapter(getAdapter());

@@ -44,7 +44,105 @@
   They eventually become mixed with the numbered issues. (I.e., numbered
   issues do not "pop up" wrt. others).
 -->
-<section name="Tomcat 8.5.21 (markt)">
+<section name="Tomcat 8.5.23 (markt)">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        Use the correct path when loading the JVM <code>logging.properties</code>
+        file for Java 9. (rjung)
+      </fix>
+      <fix>
+        Add additional validation to the resource handling required to fix
+        CVE-2017-12617 on Windows. The checks were being performed elsewhere but
+        adding them to the resource handling ensures that the checks are always
+        performed. (markt)
+      </fix>
+      <fix>
+        <bug>61554</bug>: Exclude test files in unusual encodings and markdown
+        files intended for display in GitHub from RAT analysis. Patch provided
+        by Chris Thistlethwaite. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <fix>
+        <bug>61563</bug>: Correct typos in Spanish translation. Patch provided by
+        Gonzalo Vásquez. (csutherl)
+      </fix>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.5.22 (markt)" rtext="not released">
+  <subsection name="Catalina">
+    <changelog>
+      <fix>
+        <bug>60963</bug>: Add <code>ExtractingRoot</code>, a new
+        <code>WebResourceRoot</code> implementation that extracts JARs to the
+        work directory for improved performance when deploying packed WAR files.
+        (markt)
+      </fix>
+      <add>
+        Add an option to reject requests that contain HTTP headers with invalid
+        (non-token) header names with a 400 response. (markt)
+      </add>
+      <fix>
+        <bug>61542</bug>: Fix CVE-2017-12617 and prevent JSPs from being
+        uploaded via a specially crafted request when HTTP PUT was enabled.
+        (markt)
+      </fix>
+      <fix>
+        Implement the requirements of RFC 7230 (and RFC 2616) that HTTP/1.1
+        requests must include a <code>Host</code> header and any request that
+        does not must be rejected with a 400 response. (markt)
+      </fix>
+      <fix>
+        Implement the requirements of RFC 7230 that any HTTP/1.1 request that
+        specifies a host in the request line, must specify the same host in the
+        <code>Host</code> header and that any such request that does not, must
+        be rejected with a 400 response. This check is optional but disabled by
+        default. It may be enabled with the
+        <code>allowHostHeaderMismatch</code> attribute of the Connector. (markt)
+      </fix>
+      <fix>
+        Implement the requirements of RFC 7230 that any HTTP/1.1 request that
+        contains multiple <code>Host</code> headers is rejected with a 400
+        response. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Coyote">
+    <changelog>
+      <update>
+        Add a way to set the property source in embedded mode. (remm)
+      </update>
+      <fix>
+        <bug>61557</bug>: Correct a further regression in the fix to enable the
+        use of Java key stores that contain multiple keys that do not all have
+        the same password. The regression broke support for some FIPS compliant
+        key stores. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="jdbc-pool">
+    <changelog>
+      <fix>
+        <bug>61545</bug>: Correctly handle invocations of methods defined in the
+        <code>PooledConnection</code> interface when using pooled XA
+        connections. Patch provided by Nils Winkler. (markt)
+      </fix>
+    </changelog>
+  </subsection>
+  <subsection name="Other">
+    <changelog>
+      <fix>
+        Update fix for <bug>59904</bug> so that values less than zero are accepted
+        instead of throwing a NegativeArraySizeException. (remm)
+      </fix>
+    </changelog>
+  </subsection>
+</section>
+<section name="Tomcat 8.5.21 (markt)" rtext="2017-09-19">
   <subsection name="Catalina">
     <changelog>
       <fix>
