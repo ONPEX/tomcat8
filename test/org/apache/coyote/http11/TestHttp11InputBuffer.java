@@ -33,6 +33,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 import org.apache.catalina.Context;
+import org.apache.catalina.connector.Connector;
 import org.apache.catalina.startup.SimpleHttpClient;
 import org.apache.catalina.startup.TesterServlet;
 import org.apache.catalina.startup.Tomcat;
@@ -77,6 +78,7 @@ public class TestHttp11InputBuffer extends TomcatBaseTest {
                 String[] request = new String[1];
                 request[0] =
                     "GET http://localhost:8080/test HTTP/1.1" + CRLF +
+                    "Host: localhost:8080" + CRLF +
                     "X-Bug48839: abcd" + CRLF +
                     "\tefgh" + CRLF +
                     "Connection: close" + CRLF +
@@ -126,6 +128,28 @@ public class TestHttp11InputBuffer extends TomcatBaseTest {
                 out.println(values.nextElement());
             }
         }
+    }
+
+
+    @Test
+    public void testBug51557Valid() {
+
+        Bug51557Client client = new Bug51557Client("X-Bug51557Valid", "1234");
+
+        client.doRequest();
+        assertTrue(client.isResponse200());
+        assertEquals("1234abcd", client.getResponseBody());
+        assertTrue(client.isResponseBodyOK());
+    }
+
+
+    @Test
+    public void testBug51557Invalid() {
+
+        Bug51557Client client = new Bug51557Client("X-Bug51557=Invalid", "1234", true);
+
+        client.doRequest();
+        assertTrue(client.isResponse400());
     }
 
 
@@ -220,17 +244,25 @@ public class TestHttp11InputBuffer extends TomcatBaseTest {
      */
     private class Bug51557Client extends SimpleHttpClient {
 
-        private String headerName;
-        private String headerLine;
+        private final String headerName;
+        private final String headerLine;
+        private final boolean rejectIllegalHeaderName;
 
         public Bug51557Client(String headerName) {
             this.headerName = headerName;
             this.headerLine = headerName;
+            this.rejectIllegalHeaderName = false;
         }
 
         public Bug51557Client(String headerName, String headerValue) {
+            this(headerName, headerValue, false);
+        }
+
+        public Bug51557Client(String headerName, String headerValue,
+                boolean rejectIllegalHeaderName) {
             this.headerName = headerName;
             this.headerLine = headerName + ": " + headerValue;
+            this.rejectIllegalHeaderName = rejectIllegalHeaderName;
         }
 
         private Exception doRequest() {
@@ -243,8 +275,12 @@ public class TestHttp11InputBuffer extends TomcatBaseTest {
             root.addServletMappingDecoded("/test", "Bug51557");
 
             try {
+                Connector connector = tomcat.getConnector();
+                connector.setProperty("rejectIllegalHeaderName",
+                        Boolean.toString(rejectIllegalHeaderName));
                 tomcat.start();
-                setPort(tomcat.getConnector().getLocalPort());
+                setPort(connector.getLocalPort());
+
 
                 // Open connection
                 connect();
@@ -252,6 +288,7 @@ public class TestHttp11InputBuffer extends TomcatBaseTest {
                 String[] request = new String[1];
                 request[0] =
                     "GET http://localhost:8080/test HTTP/1.1" + CRLF +
+                    "Host: localhost:8080" + CRLF +
                     headerLine + CRLF +
                     "X-Bug51557: abcd" + CRLF +
                     "Connection: close" + CRLF +
@@ -385,6 +422,7 @@ public class TestHttp11InputBuffer extends TomcatBaseTest {
                 request[0] =
                     newLines +
                     "GET http://localhost:8080/test HTTP/1.1" + CRLF +
+                    "Host: localhost:8080" + CRLF +
                     "X-Bug48839: abcd" + CRLF +
                     "\tefgh" + CRLF +
                     "Connection: close" + CRLF +
@@ -452,6 +490,7 @@ public class TestHttp11InputBuffer extends TomcatBaseTest {
                 String[] request = new String[2];
                 request[0] = "GET http://localhost:8080/test HTTP/1.1" + CR;
                 request[1] = LF +
+                        "Host: localhost:8080" + CRLF +
                         "Connection: close" + CRLF +
                         CRLF;
 
@@ -511,14 +550,17 @@ public class TestHttp11InputBuffer extends TomcatBaseTest {
             root.addServletMappingDecoded("/test", "Bug59089");
 
             try {
+                Connector connector = tomcat.getConnector();
+                connector.setProperty("rejectIllegalHeaderName", "false");
                 tomcat.start();
-                setPort(tomcat.getConnector().getLocalPort());
+                setPort(connector.getLocalPort());
 
                 // Open connection
                 connect();
 
                 String[] request = new String[1];
                 request[0] = "GET http://localhost:8080/test HTTP/1.1" + CRLF +
+                        "Host: localhost:8080" + CRLF +
                         "X-Header: Ignore" + CRLF +
                         "X-Header" + (char) 130 + ": Broken" + CRLF + CRLF;
 

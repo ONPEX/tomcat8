@@ -331,6 +331,13 @@
       configured with <code>::</code>.</p>
     </attribute>
 
+    <attribute name="allowHostHeaderMismatch" required="false">
+      <p>By default Tomcat will reject requests that specify a host in the
+      request line but specify a different host in the host header. This
+      chekc can be disabled by setting this attribute to <code>false</code>. If
+      not specified, the default is <code>false</code>.</p>
+    </attribute>
+
     <attribute name="allowedTrailerHeaders" required="false">
       <p>By default Tomcat will ignore all trailer headers when processing
       chunked input. For a header to be processed, it must be added to this
@@ -549,6 +556,15 @@
       the maxThreads setting. If using Servlet 3.0 asynchronous processing, a
       good default is to use the larger of maxThreads and the maximum number of
       expected concurrent requests (synchronous and asynchronous).</p>
+    </attribute>
+
+    <attribute name="rejectIllegalHeaderName" required="false">
+      <p>If an HTTP request is received that contains an illegal header name
+      (i.e. the header name is not a token) this setting determines if the
+      request will be rejected with a 400 response (<code>true</code>) or if the
+      illegal header be ignored (<code>false</code>). The default value is
+      <code>false</code> which will cause the request to be processed but the
+      illegal header will be ignored.</p>
     </attribute>
 
     <attribute name="restrictedUserAgents" required="false">
